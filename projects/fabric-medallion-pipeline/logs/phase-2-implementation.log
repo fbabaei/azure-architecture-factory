@@ -1,0 +1,52 @@
+[2026-03-19T00:03:16Z] Phase 2 started — Implementation scaffolding from architecture diagram
+[2026-03-19T00:03:16Z] Reading diagram: projects/fabric-medallion-pipeline/diagrams/fabric-medallion-pipeline.drawio
+[2026-03-19T00:03:16Z] Reading companion notes: projects/fabric-medallion-pipeline/diagrams/fabric-medallion-pipeline.md
+[2026-03-19T00:03:17Z] Scaffolding services: bronze-ingestion, silver-processor, gold-aggregator, pipeline-orchestrator, shared-lib
+
+=== SERVICES SCAFFOLDED ===
+
+1. src/shared-lib/
+   - config.py        — PipelineConfig, StorageConfig, SnowflakeConfig, ObservabilityConfig, ResilienceConfig
+   - models.py        — RawEvent, ValidatedEvent, CustomerMetric, EventTypeMetric, LineageRecord
+   - resilience.py    — with_retry decorator, circuit breaker, exponential backoff
+   - governance.py    — mask_customer_id, mask_amount, apply_field_governance, emit_lineage
+   - monitoring.py    — configure_logging (structured JSON), emit_pipeline_event
+   - __init__.py
+   - requirements.txt
+
+2. src/bronze-ingestion/
+   - main.py          — Reads ADLS Gen2 / Snowflake Mirror; writes Bronze JSONL
+   - requirements.txt
+
+3. src/silver-processor/
+   - main.py          — Validates, deduplicates, masks fields; writes Silver JSONL
+   - requirements.txt
+
+4. src/gold-aggregator/
+   - main.py          — Aggregates by customer + event type; writes Gold JSONL
+   - requirements.txt
+
+5. src/pipeline-orchestrator/
+   - main.py          — Runs bronze → silver → gold in sequence with fail-fast
+   - requirements.txt
+
+=== AZURE RESOURCE MAPPING ===
+  ADLS Gen2            → infra/modules/storage/adls.bicep
+  Managed Identity     → infra/modules/security/managed-identity.bicep
+  Key Vault            → infra/modules/security/keyvault.bicep
+  App Insights         → infra/modules/monitoring/appinsights.bicep
+  Log Analytics        → infra/modules/monitoring/log-analytics.bicep
+  Container App Env    → infra/modules/compute/containerappenv.bicep
+  Container Registry   → infra/modules/compute/container-registry.bicep
+  Main orchestrator    → infra/main.bicep
+  Dev params           → infra/params/dev.bicepparam
+  Test params          → infra/params/test.bicepparam
+  Prod params          → infra/params/prod.bicepparam
+
+=== TESTS ===
+  tests/test_pipeline.py — 15 unit tests covering: governance masking, retry, bronze, silver, gold, lineage
+
+[2026-03-19T00:08:00Z] Phase 2 COMPLETE
+  Services: 5 (bronze-ingestion, silver-processor, gold-aggregator, pipeline-orchestrator, shared-lib)
+  Infra modules: 7 (adls, managed-identity, keyvault, appinsights, log-analytics, containerappenv, container-registry)
+  Tests: 15 unit tests in tests/test_pipeline.py

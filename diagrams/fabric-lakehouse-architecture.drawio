@@ -1,0 +1,133 @@
+<mxfile host="65bd71144e">
+    <diagram name="Microsoft Fabric Lakehouse Architecture" id="fabric-arch">
+        <mxGraphModel dx="1088" dy="715" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1400" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Microsoft Fabric Lakehouse Architecture - Medallion Pattern" style="text;fontSize=20;fontStyle=bold;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="20" width="1000" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="sources-header" value="DATA SOURCES" style="text;fontSize=12;fontStyle=bold;align=center;fillColor=#e6f3ff;strokeColor=#0078d4;strokeWidth=2;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="75" width="1000" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="adls" value="ADLS Gen2&#xa;(Shortcuts)" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="115" width="150" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="snowflake" value="Snowflake&#xa;(Mirrored Data)" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="115" width="150" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="other-sources" value="External Sources&#xa;(APIs, Databases)" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="115" width="150" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="medallion-header" value="MEDALLION ARCHITECTURE - FABRIC WORKSPACES" style="text;fontSize=12;fontStyle=bold;align=center;fillColor=#f0f0f0;strokeColor=#666;strokeWidth=2;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="215" width="1000" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="bronze-container" value="BRONZE WORKSPACE&#xa;(Raw Data)" style="rounded=1;whiteSpace=wrap;strokeColor=#8b6914;strokeWidth=3;fillColor=#fdf0d5;fontSize=11;fontStyle=bold;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="260" width="250" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="bronze-tables" value="Raw Lakehouse&#xa;Tables&#xa;(Python ETL)" style="rounded=1;whiteSpace=wrap;strokeColor=#8b6914;strokeWidth=2;fillColor=#ffe8b6;fontSize=9;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="290" width="210" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="bronze-monitor" value="Data Quality&#xa;Monitoring" style="rounded=1;whiteSpace=wrap;strokeColor=#666;strokeWidth=1;fillColor=#e8e8e8;fontSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="380" width="210" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="silver-container" value="SILVER WORKSPACE&#xa;(Transformed Data)" style="rounded=1;whiteSpace=wrap;strokeColor=#7a8c8c;strokeWidth=3;fillColor=#e8f1f1;fontSize=11;fontStyle=bold;" parent="1" vertex="1">
+                    <mxGeometry x="425" y="260" width="250" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="silver-tables" value="Processed Lakehouse&#xa;Tables&#xa;(Python Transform)" style="rounded=1;whiteSpace=wrap;strokeColor=#7a8c8c;strokeWidth=2;fillColor=#d1e1e1;fontSize=9;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="445" y="290" width="210" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="silver-monitor" value="Data Quality &amp;&#xa;Lineage Tracking" style="rounded=1;whiteSpace=wrap;strokeColor=#666;strokeWidth=1;fillColor=#e8e8e8;fontSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="445" y="380" width="210" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="gold-container" value="GOLD WORKSPACE&#xa;(Analytics Ready)" style="rounded=1;whiteSpace=wrap;strokeColor=#b8860b;strokeWidth=3;fillColor=#fff8dc;fontSize=11;fontStyle=bold;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="260" width="250" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="gold-tables" value="Semantic Model&#xa;(Lakehouse Tables)&#xa;Python Aggregations" style="rounded=1;whiteSpace=wrap;strokeColor=#b8860b;strokeWidth=2;fillColor=#ffecb3;fontSize=9;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="290" width="210" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="powerbi" value="Power BI Reports&#xa;&amp; Dashboards" style="rounded=1;whiteSpace=wrap;strokeColor=#f3a602;strokeWidth=2;fillColor=#ffe8a3;fontSize=9;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="380" width="210" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333;strokeWidth=2;endArrow=classic;" parent="1" source="adls" target="bronze-tables" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333;strokeWidth=2;endArrow=classic;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="snowflake" target="bronze-tables" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="375" y="200"/>
+                            <mxPoint x="175" y="200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor:#333;strokeWidth=2;endArrow=classic;exitX=0.573;exitY=1.009;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" target="bronze-tables" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="580.45" y="180" as="sourcePoint"/>
+                        <mxPoint x="169.5" y="274.37" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="581" y="199"/>
+                            <mxPoint x="175" y="199"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor:#333;strokeWidth=2;endArrow=classic;" parent="1" source="bronze-tables" target="silver-tables" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333;strokeWidth=2;endArrow=classic;" parent="1" source="silver-tables" target="gold-tables" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor:#f3a602;strokeWidth=2;endArrow=classic;" parent="1" source="gold-tables" target="powerbi" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="governance-header" value="GOVERNANCE, SECURITY &amp; MONITORING" style="text;fontSize=12;fontStyle=bold;align=center;fillColor=#ffe6e6;strokeColor=#dd3236;strokeWidth=2;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="490" width="1000" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="purview" value="Microsoft Purview&#xa;(Metadata &amp;&#xa;Governance)" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="azure-policy" value="Azure Policy&#xa;(Compliance &amp;&#xa;Enforcement)" style="rounded=1;whiteSpace=wrap;strokeColor=#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="235" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="rbac" value="Synapse RBAC&#xa;(Access Control)" style="rounded=1;whiteSpace=wrap;strokeColor=#dd3236;strokeWidth=2;fillColor:#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="defender" value="Microsoft Defender&#xa;for Cloud&#xa;(Threat Detection)" style="rounded=1;whiteSpace=wrap;strokeColor=#dd3236;strokeWidth=2;fillColor:#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="565" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="dlp" value="Data Exfiltration&#xa;Prevention&#xa;(DLP Policies)" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="audit" value="Audit Logging&#xa;&amp; Compliance" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="895" y="535" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="monitoring-header" value="MONITORING &amp; OBSERVABILITY" style="text;fontSize=12;fontStyle=bold;align=center;fillColor=#d4edda;strokeColor=#107c10;strokeWidth=2;rounded=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="650" width="1000" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="fabric-monitor" value="Fabric Built-in&#xa;Monitoring&#xa;(Workspace)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="azure-monitor" value="Azure Monitor&#xa;&amp; Log Analytics&#xa;(Metrics &amp; Logs)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="235" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="data-quality" value="Data Quality&#xa;Monitoring&#xa;(Schema &amp; Values)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="perf-monitor" value="Query &amp;&#xa;Performance&#xa;Monitoring" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="565" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="realtime-dash" value="Real-time&#xa;Dashboards&#xa;(Power BI)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="alerting" value="Automated Alerts&#xa;(Fabric &amp; Azure)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#d4edda;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="895" y="695" width="140" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="principles-header" value="KEY ARCHITECTURE PRINCIPLES" style="text;fontSize=11;fontStyle=bold;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="820" width="1000" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="principles" value="• Medallion Pattern: Raw (Bronze) → Cleaned (Silver) → Analytics-Ready (Gold)&#xa;• Workspace Separation: Independent workspaces for each layer enable isolation and governance&#xa;• Python ETL: Flexible transformations using Python notebooks across all layers&#xa;• Data Lineage: Purview tracks data origin, transformations, and dependencies&#xa;• Mirrored Data: Snowflake data synchronized to Fabric for unified analytics&#xa;• Semantic Model: Gold layer semantic models enable Power BI for self-service analytics&#xa;• Zero Trust Security: RBAC + DLP + Defender for Cloud enforce security at all levels&#xa;• Real-time Monitoring: Fabric monitoring + Azure Monitor provide comprehensive observability" style="text;fontSize=9;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="845" width="1000" height="130" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

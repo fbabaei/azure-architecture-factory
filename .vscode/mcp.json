@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"Draw io MCP": {
+			"url": "http://localhost:8080/mcp",
+			"type": "http"
+		},
+		"raw io MCP": {
+			"url": "http://localhost:8080/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
