@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Architecture Factory - Interactive Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🏭 Azure Architecture Factory</h1>
+                <p class="tagline">Requirements → Architecture → Code → Infrastructure → Production</p>
+            </div>
+            <nav class="nav">
+                <a href="/">Demo</a>
+                <a href="/presentation">Leadership Brief</a>
+                <a href="https://github.com/your-org/azure-architecture-factory" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h2>Transform Business Requirements into Production-Ready Azure Projects in Hours</h2>
+                <p>An AI-driven platform powered by 6 custom Copilot agents that automate architecture design, code generation, infrastructure provisioning, and deployment.</p>
+                <button class="btn btn-primary" onclick="scrollToDemo()">Start Demo →</button>
+            </div>
+        </section>
+
+        <!-- Key Metrics -->
+        <section class="metrics">
+            <div class="container">
+                <div class="metric-card">
+                    <h3>47</h3>
+                    <p>Successful Deployments</p>
+                </div>
+                <div class="metric-card">
+                    <h3>95.7%</h3>
+                    <p>Success Rate</p>
+                </div>
+                <div class="metric-card">
+                    <h3>2.3 hrs</h3>
+                    <p>Average Deployment Time</p>
+                </div>
+                <div class="metric-card">
+                    <h3>$2.1M</h3>
+                    <p>Cost Savings Realized</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Grid -->
+        <section class="benefits">
+            <div class="container">
+                <h2>Why Azure Architecture Factory?</h2>
+                <div class="benefit-grid">
+                    <div class="benefit-card">
+                        <h3>⚡ 90% Faster</h3>
+                        <p>From 4-8 weeks to hours. Eliminate manual handoffs and jump directly to deployed infrastructure.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h3>🤖 Zero Manual Handoffs</h3>
+                        <p>AI agents handle the entire workflow. No architect → developer → DevOps → operations chain.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h3>🛡️ Self-Healing Infrastructure</h3>
+                        <p>Bicep validation auto-detects and fixes errors before deployment. Zero IaC failures.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h3>📋 Standardized Structure</h3>
+                        <p>Every project gets consistent folder layout, documentation, tests, and infrastructure patterns.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h3>🏅 Enterprise-Ready Code</h3>
+                        <p>Scaffolded services include observability, resilience, governance, and security by default.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h3>📦 Reference Pipeline</h3>
+                        <p>Working Fabric Medallion data pipeline with governance, monitoring, and multi-source connectors.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Demo Scenarios -->
+        <section class="demo" id="demo">
+            <div class="container">
+                <h2>Choose a Scenario</h2>
+                <p class="subtitle">Select a demo scenario to see the Azure Architecture Factory in action</p>
+                <div class="scenarios-grid">
+                    <div class="scenario-card" onclick="selectScenario('ecommerce')">
+                        <h3>🛍️ E-Commerce Platform</h3>
+                        <p>Multi-tenant SaaS with real-time inventory, orders, and analytics</p>
+                        <span class="time">⏱️ 3 hours to deployment</span>
+                    </div>
+                    <div class="scenario-card" onclick="selectScenario('data_pipeline')">
+                        <h3>📊 Data Lake & Analytics</h3>
+                        <p>Medallion architecture (Bronze/Silver/Gold) with real-time ingestion</p>
+                        <span class="time">⏱️ 2 hours to deployment</span>
+                    </div>
+                    <div class="scenario-card" onclick="selectScenario('microservices')">
+                        <h3>🔗 Microservices Architecture</h3>
+                        <p>Containerized services with async messaging and orchestration</p>
+                        <span class="time">⏱️ 2.5 hours to deployment</span>
+                    </div>
+                    <div class="scenario-card" onclick="selectScenario('generative_ai')">
+                        <h3>🤖 Generative AI Application</h3>
+                        <p>Chat app with retrieval augmented generation (RAG)</p>
+                        <span class="time">⏱️ 1.5 hours to deployment</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Visualization -->
+        <section class="workflow" id="workflow" style="display:none;">
+            <div class="container">
+                <h2>6-Phase Automated Workflow</h2>
+                <p class="subtitle">Watch how the Azure Architecture Factory automates requirements to production</p>
+                <div class="workflow-timeline">
+                    <div class="phase">
+                        <div class="phase-number">0</div>
+                        <h4>Project Setup</h4>
+                        <p>project-state-manager</p>
+                        <small>< 1 min</small>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="phase">
+                        <div class="phase-number">1</div>
+                        <h4>Architecture Diagram</h4>
+                        <p>brd-to-architecture-diagram</p>
+                        <small>2-3 min</small>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="phase">
+                        <div class="phase-number">2</div>
+                        <h4>Service Scaffolding</h4>
+                        <p>azure-architecture-implementer</p>
+                        <small>3-5 min</small>
+                    </div>
+                </div>
+                <div class="workflow-timeline" style="margin-top: 30px;">
+                    <div class="phase">
+                        <div class="phase-number">3</div>
+                        <h4>Infrastructure Code</h4>
+                        <p>bicep-infrastructure-validator</p>
+                        <small>4-6 min</small>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="phase">
+                        <div class="phase-number">4</div>
+                        <h4>Production Review</h4>
+                        <p>production-environment-advisor</p>
+                        <small>2-3 min</small>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="phase">
+                        <div class="phase-number">5</div>
+                        <h4>Deploy to Azure</h4>
+                        <p>azure-project-deployer</p>
+                        <small>8-12 min</small>
+                    </div>
+                </div>
+                <p class="total-time">Total: 20-30 minutes from requirements to live infrastructure</p>
+                <button class="btn btn-primary" onclick="simulateDeployment()">Start Simulation →</button>
+            </div>
+        </section>
+
+        <!-- Project Structure Output -->
+        <section class="output" id="output" style="display:none;">
+            <div class="container">
+                <h2>Generated Project Structure</h2>
+                <div class="output-box">
+                    <pre id="output-content">projects/my-platform/
+├── diagrams/
+│   ├── platform-architecture.drawio    (Reusable architecture diagram)
+│   └── platform-architecture.md        (Architecture notes)
+├── src/
+│   ├── service-1/                      (Microservice 1)
+│   ├── service-2/                      (Microservice 2)
+│   └── shared-lib/                     (Shared libraries & models)
+├── infra/
+│   ├── main.bicep
+│   ├── modules/
+│   │   ├── compute/
+│   │   ├── data/
+│   │   ├── security/
+│   │   └── monitoring/
+│   └── params/
+│       ├── dev.bicepparam              (Dev environment)
+│       ├── test.bicepparam             (Test environment)
+│       └── prod.bicepparam             (Production environment)
+├── tests/
+│   ├── test_service.py
+│   └── test_integration.py
+└── docs/
+    ├── README.md
+    ├── ARCHITECTURE.md
+    └── DEPLOY.md
+
+✅ All ready for customization and deployment to Azure</pre>
+                </div>
+                <button class="btn btn-secondary" onclick="resetDemo()">← Back to Scenarios</button>
+            </div>
+        </section>
+
+        <!-- API Integration -->
+        <section class="api-info" style="margin-top: 60px;">
+            <div class="container">
+                <h2>API Endpoints for Integration</h2>
+                <div class="api-endpoints">
+                    <div class="endpoint">
+                        <code>GET /api/scenarios</code>
+                        <p>List all available demo scenarios</p>
+                    </div>
+                    <div class="endpoint">
+                        <code>GET /api/workflow</code>
+                        <p>Get the 6-phase workflow details</p>
+                    </div>
+                    <div class="endpoint">
+                        <code>POST /api/simulate-deployment</code>
+                        <p>Simulate a complete deployment</p>
+                    </div>
+                    <div class="endpoint">
+                        <code>GET /api/project-structure</code>
+                        <p>Get generated project structure</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="cta">
+            <div class="container">
+                <h2>Ready to Transform Your Project Delivery?</h2>
+                <p>Join 48 teams already using Azure Architecture Factory to go from requirements to production in hours.</p>
+                <button class="btn btn-primary" onclick="window.location='/presentation'">View Leadership Brief →</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Azure Architecture Factory | <a href="https://github.com">GitHub</a> | <a href="https://learn.microsoft.com/azure">docs</a></p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='demo.js') }}"></script>
+</body>
+</html>
