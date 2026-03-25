@@ -4,6 +4,190 @@
 
 const API_BASE = '/api';
 
+function formatPrettyJson(data) {
+    return JSON.stringify(data, null, 2);
+}
+
+function delay(ms) {
+    return new Promise(resolve => window.setTimeout(resolve, ms));
+}
+
+async function fetchJsonWithRetry(url, options = {}, retryCount = 1) {
+    let lastError = null;
+
+    for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+        try {
+            const response = await fetch(url, {
+                cache: 'no-store',
+                credentials: 'same-origin',
+                ...options,
+            });
+
+            const rawText = await response.text();
+            let data = null;
+
+            try {
+                data = rawText ? JSON.parse(rawText) : null;
+            } catch {
+                throw new Error(`Server returned a non-JSON response (${response.status}).`);
+            }
+
+            if (!response.ok) {
+                throw new Error(data?.message || `Request failed with HTTP ${response.status}.`);
+            }
+
+            return data;
+        } catch (error) {
+            lastError = error;
+            if (attempt < retryCount) {
+                await delay(600 * (attempt + 1));
+                continue;
+            }
+        }
+    }
+
+    throw lastError || new Error('Request failed.');
+}
+
+async function refreshProjectLinkStatus(showToast = false) {
+    try {
+        const response = await fetch(`${API_BASE}/project-link-status`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        for (const project of data.projects || []) {
+            const badge = document.getElementById(`project-status-${project.id}`);
+            const link = document.getElementById(`project-link-${project.id}`);
+
+            if (badge) {
+                badge.classList.remove('project-runtime-pending', 'project-runtime-running', 'project-runtime-offline');
+                badge.classList.add(project.running ? 'project-runtime-running' : 'project-runtime-offline');
+                badge.textContent = project.running
+                    ? `Running${project.status_code ? ` (${project.status_code})` : ''}`
+                    : 'Offline';
+            }
+
+            if (link) {
+                link.classList.toggle('is-disabled', !project.running);
+                link.setAttribute('aria-disabled', String(!project.running));
+                link.textContent = project.running ? project.cta : 'Offline';
+                if (!project.running) {
+                    link.setAttribute('tabindex', '-1');
+                } else {
+                    link.removeAttribute('tabindex');
+                }
+            }
+        }
+
+        if (showToast) {
+            showNotification('Project link statuses refreshed.', 'success');
+        }
+    } catch (error) {
+        console.error('Error refreshing project link status:', error);
+        if (showToast) {
+            showNotification('Failed to refresh project link statuses.', 'error');
+        }
+    }
+}
+
+async function loadLiveProjectResults(showToast = false) {
+    const statusEl = document.getElementById('live-status');
+    const bronzeCountEl = document.getElementById('live-bronze-count');
+    const silverCountEl = document.getElementById('live-silver-count');
+    const goldCustomerCountEl = document.getElementById('live-gold-customer-count');
+    const goldEventCountEl = document.getElementById('live-gold-event-count');
+    const customerMetricsEl = document.getElementById('live-customer-metrics');
+    const eventMetricsEl = document.getElementById('live-event-metrics');
+
+    if (!statusEl) {
+        return;
+    }
+
+    statusEl.textContent = 'Loading latest project outputs...';
+
+    try {
+        const response = await fetch(`${API_BASE}/live-project-results`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const counts = data.counts || {};
+
+        bronzeCountEl.textContent = counts.bronze ?? 0;
+        silverCountEl.textContent = counts.silver ?? 0;
+        goldCustomerCountEl.textContent = counts.gold_customer_metrics ?? 0;
+        goldEventCountEl.textContent = counts.gold_event_type_metrics ?? 0;
+
+        customerMetricsEl.textContent = data.customer_metrics?.length
+            ? formatPrettyJson(data.customer_metrics)
+            : 'No customer metrics yet.';
+
+        eventMetricsEl.textContent = data.event_type_metrics?.length
+            ? formatPrettyJson(data.event_type_metrics)
+            : 'No event-type metrics yet.';
+
+        statusEl.textContent = data.last_updated
+            ? `Last updated: ${new Date(data.last_updated).toLocaleString()}`
+            : 'No pipeline output files found yet.';
+
+        if (showToast) {
+            showNotification('Live project results refreshed.', 'success');
+        }
+    } catch (error) {
+        console.error('Error loading live project results:', error);
+        statusEl.textContent = 'Failed to load live results.';
+        customerMetricsEl.textContent = 'Unable to read project outputs.';
+        eventMetricsEl.textContent = 'Unable to read project outputs.';
+        if (showToast) {
+            showNotification('Failed to refresh live project results.', 'error');
+        }
+    }
+}
+
+async function runLiveProjectPipeline() {
+    const statusEl = document.getElementById('live-status');
+    const runBtn = document.getElementById('run-pipeline-btn');
+    const originalText = runBtn ? runBtn.textContent : 'Run Pipeline Now';
+
+    if (runBtn) {
+        runBtn.disabled = true;
+        runBtn.textContent = 'Running...';
+    }
+
+    if (statusEl) {
+        statusEl.textContent = 'Running actual project pipeline...';
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/run-live-project`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.status !== 'success') {
+            throw new Error(data.message || 'Pipeline run failed');
+        }
+
+        showNotification('Pipeline run completed. Refreshing results...', 'success');
+        await loadLiveProjectResults();
+    } catch (error) {
+        console.error('Error running live project pipeline:', error);
+        if (statusEl) {
+            statusEl.textContent = `Pipeline run failed: ${error.message}`;
+        }
+        showNotification('Pipeline run failed.', 'error');
+    } finally {
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.textContent = originalText;
+        }
+    }
+}
+
 /**
  * Scroll to demo section
  */
@@ -135,11 +319,89 @@ function showNotification(message, type = 'info') {
 }
 
 /**
+ * Run the order management platform test suite and display results.
+ */
+async function runOrderManagementTests() {
+    const statusEl = document.getElementById('order-mgmt-status');
+    const runBtn = document.getElementById('run-order-mgmt-btn');
+    const countsEl = document.getElementById('order-mgmt-counts');
+    const detailsEl = document.getElementById('order-mgmt-details');
+    const testList = document.getElementById('order-test-list');
+    const rawOutput = document.getElementById('order-raw-output');
+
+    if (runBtn) { runBtn.disabled = true; runBtn.textContent = '⏳ Running...'; }
+    if (statusEl) { statusEl.textContent = 'Running order management test suite...'; }
+    if (countsEl) { countsEl.style.display = 'none'; }
+    if (detailsEl) { detailsEl.style.display = 'none'; }
+    if (rawOutput) { rawOutput.textContent = 'Waiting for test output...'; }
+    if (testList) { testList.innerHTML = ''; }
+
+    try {
+        const data = await fetchJsonWithRetry(`/api/run-order-management?ts=${Date.now()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+            },
+            body: '{}',
+        }, 1);
+
+        if (data.status === 'error') {
+            throw new Error(data.message || 'Unknown error');
+        }
+
+        // Update counters
+        document.getElementById('order-passed-count').textContent = data.passed ?? 0;
+        document.getElementById('order-failed-count').textContent = data.failed ?? 0;
+        document.getElementById('order-total-count').textContent = data.total ?? 0;
+        document.getElementById('order-summary-time').textContent = data.summary || '-';
+
+        // Build test result list
+        if (testList) {
+            testList.innerHTML = (data.tests || []).map(t => {
+                const cls = t.result === 'PASSED' ? 'test-passed' : (t.result === 'FAILED' ? 'test-failed' : 'test-error');
+                const badgeCls = t.result === 'PASSED' ? 'badge-passed' : (t.result === 'FAILED' ? 'badge-failed' : 'badge-error');
+                return `<li class="${cls}"><span class="test-badge ${badgeCls}">${t.result}</span>${t.name}</li>`;
+            }).join('') || '<li>No test results parsed.</li>';
+        }
+
+        if (rawOutput) { rawOutput.textContent = data.output || '(no output)'; }
+
+        if (countsEl) { countsEl.style.display = 'grid'; }
+        if (detailsEl) { detailsEl.style.display = 'grid'; }
+
+        const icon = data.status === 'success' ? '✅' : '❌';
+        if (statusEl) {
+            statusEl.textContent = `${icon} ${data.summary || 'Tests complete'} — ran at ${new Date(data.ran_at).toLocaleTimeString()}`;
+        }
+
+        showNotification(
+            data.status === 'success' ? `All ${data.passed} tests passed!` : `${data.failed} test(s) failed.`,
+            data.status === 'success' ? 'success' : 'error'
+        );
+    } catch (error) {
+        console.error('Error running order management tests:', error);
+        if (statusEl) { statusEl.textContent = `Error: ${error.message}`; }
+        if (rawOutput) {
+            rawOutput.textContent = `The browser request failed before the test result could be rendered.\n\n${error.message}`;
+        }
+        if (detailsEl) { detailsEl.style.display = 'grid'; }
+        showNotification('Order management tests failed to run.', 'error');
+    } finally {
+        if (runBtn) { runBtn.disabled = false; runBtn.textContent = '▶ Run Tests Now'; }
+    }
+}
+
+/**
  * Load async data on page load
  */
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // You can pre-load data here if needed
+        await refreshProjectLinkStatus();
+        await loadLiveProjectResults();
+        window.setInterval(() => {
+            refreshProjectLinkStatus(false);
+        }, 15000);
         console.log('Azure Architecture Factory Demo initialized');
     } catch (error) {
         console.error('Error initializing demo:', error);

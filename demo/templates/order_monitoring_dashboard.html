@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management Monitoring Dashboard</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #111827; border-bottom: 1px solid #1f2937; }
+        .title { font-size: 16px; font-weight: 600; }
+        .actions a { color: #93c5fd; text-decoration: none; margin-left: 16px; }
+        .actions a:hover { text-decoration: underline; }
+        .frame-wrap { width: 100%; height: calc(100vh - 53px); }
+        iframe { border: 0; width: 100%; height: 100%; background: #fff; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="title">Order Management Platform - Monitoring Dashboard</div>
+        <div class="actions">
+            <a href="/">Main Demo</a>
+            <a href="/medallion-dashboard">Medallion Dashboard</a>
+            <a href="/order-monitoring-dashboard/raw" target="_blank">Open Raw Dashboard</a>
+        </div>
+    </div>
+
+    <div class="frame-wrap">
+        <iframe src="/order-monitoring-dashboard/raw" title="Order Monitoring Dashboard"></iframe>
+    </div>
+</body>
+</html>

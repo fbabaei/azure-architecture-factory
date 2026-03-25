@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Architecture Factory - Interactive Demo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=20260324">
 </head>
 <body>
     <header class="header">
@@ -16,6 +16,8 @@
             <nav class="nav">
                 <a href="/">Demo</a>
                 <a href="/presentation">Leadership Brief</a>
+                <a href="/medallion-dashboard">Medallion Dashboard</a>
+                <a href="/order-monitoring-dashboard">Order Monitoring</a>
                 <a href="https://github.com/your-org/azure-architecture-factory" target="_blank">GitHub</a>
             </nav>
         </div>
@@ -28,6 +30,34 @@
                 <h2>Transform Business Requirements into Production-Ready Azure Projects in Hours</h2>
                 <p>An AI-driven platform powered by 6 custom Copilot agents that automate architecture design, code generation, infrastructure provisioning, and deployment.</p>
                 <button class="btn btn-primary" onclick="scrollToDemo()">Start Demo →</button>
+            </div>
+        </section>
+
+        <section class="project-links">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Project Launch Links</h2>
+                    <p class="subtitle">Direct links from the main page to each project's live dashboard, monitoring page, storefront, or deployment-facing API endpoint.</p>
+                </div>
+                <div class="project-link-grid">
+                    {% for project in project_links %}
+                    <div class="project-link-card" data-project-id="{{ project.id }}">
+                        <div class="project-link-meta">
+                            <span class="project-link-kind">{{ project.kind }}</span>
+                            <span class="project-link-environment">{{ project.environment }}</span>
+                        </div>
+                        <h3>{{ project.name }}</h3>
+                        <p>{{ project.description }}</p>
+                        <div class="project-link-runtime">
+                            <span class="project-runtime-badge project-runtime-pending" id="project-status-{{ project.id }}">Checking status...</span>
+                        </div>
+                        <div class="project-link-actions">
+                            <a class="btn btn-primary project-launch-btn" id="project-link-{{ project.id }}" href="{{ project.url }}" {% if project.external %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ project.cta }}</a>
+                            <span class="project-link-url">{{ project.url }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </section>
 
@@ -49,6 +79,104 @@
                 <div class="metric-card">
                     <h3>$2.1M</h3>
                     <p>Cost Savings Realized</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Project Results -->
+        <section class="live-results" id="live-results">
+            <div class="container">
+                <div class="live-header">
+                    <div>
+                        <h2>Actual Project Results (Live)</h2>
+                        <p class="subtitle">Reading real output files from projects/fabric-medallion-pipeline</p>
+                    </div>
+                    <div class="live-actions">
+                        <button class="btn btn-primary" id="run-pipeline-btn" onclick="runLiveProjectPipeline()">Run Pipeline Now</button>
+                        <button class="btn btn-secondary" onclick="window.location='/medallion-dashboard'">Open Dashboard</button>
+                        <button class="btn btn-secondary" onclick="window.location='/order-monitoring-dashboard'">Open Order Monitoring</button>
+                        <button class="btn btn-secondary" onclick="loadLiveProjectResults(true)">Refresh Results</button>
+                    </div>
+                </div>
+
+                <p id="live-status" class="live-status">Loading latest project outputs...</p>
+
+                <div class="live-counts">
+                    <div class="live-count-card">
+                        <h3 id="live-bronze-count">-</h3>
+                        <p>Bronze Records</p>
+                    </div>
+                    <div class="live-count-card">
+                        <h3 id="live-silver-count">-</h3>
+                        <p>Silver Records</p>
+                    </div>
+                    <div class="live-count-card">
+                        <h3 id="live-gold-customer-count">-</h3>
+                        <p>Gold Customer Metrics</p>
+                    </div>
+                    <div class="live-count-card">
+                        <h3 id="live-gold-event-count">-</h3>
+                        <p>Gold Event Type Metrics</p>
+                    </div>
+                </div>
+
+                <div class="live-details-grid">
+                    <div class="live-detail-card">
+                        <h4>Customer Metrics (Gold)</h4>
+                        <pre id="live-customer-metrics">No data loaded.</pre>
+                    </div>
+                    <div class="live-detail-card">
+                        <h4>Event Type Metrics (Gold)</h4>
+                        <pre id="live-event-metrics">No data loaded.</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Order Management Platform Live Tests -->
+        <section class="live-results order-mgmt-section" id="order-mgmt-results">
+            <div class="container">
+                <div class="live-header">
+                    <div>
+                        <h2>Order Management Platform (Live)</h2>
+                        <p class="subtitle">Run the actual test suite from <code>projects/order-management-platform</code></p>
+                    </div>
+                    <div class="live-actions">
+                        <button class="btn btn-primary" id="run-order-mgmt-btn" onclick="runOrderManagementTests()">▶ Run Tests Now</button>
+                        <button class="btn btn-secondary" onclick="window.location='/order-monitoring-dashboard'">Open Monitoring Dashboard</button>
+                    </div>
+                </div>
+
+                <p id="order-mgmt-status" class="live-status">Click "Run Tests Now" to execute the order management test suite.</p>
+
+                <div class="live-counts" id="order-mgmt-counts" style="display:none;">
+                    <div class="live-count-card order-count-pass">
+                        <h3 id="order-passed-count">-</h3>
+                        <p>✅ Passed</p>
+                    </div>
+                    <div class="live-count-card order-count-fail">
+                        <h3 id="order-failed-count">-</h3>
+                        <p>❌ Failed</p>
+                    </div>
+                    <div class="live-count-card">
+                        <h3 id="order-total-count">-</h3>
+                        <p>Total Tests</p>
+                    </div>
+                    <div class="live-count-card">
+                        <h3 id="order-summary-time">-</h3>
+                        <p>Test Summary</p>
+                    </div>
+                </div>
+
+                <div class="live-details-grid" id="order-mgmt-details" style="display:none;">
+                    <div class="live-detail-card">
+                        <h4>Test Results</h4>
+                        <ul class="test-result-list" id="order-test-list"></ul>
+                    </div>
+                    <div class="live-detail-card">
+                        <h4>Raw Output</h4>
+                        <pre id="order-raw-output"></pre>
+                    </div>
                 </div>
             </div>
         </section>
@@ -237,7 +365,7 @@
         <section class="cta">
             <div class="container">
                 <h2>Ready to Transform Your Project Delivery?</h2>
-                <p>Join 48 teams already using Azure Architecture Factory to go from requirements to production in hours.</p>
+                <p>Explore Azure Architecture Factory to accelerate your project delivery workflow and streamline requirements to production.</p>
                 <button class="btn btn-primary" onclick="window.location='/presentation'">View Leadership Brief →</button>
             </div>
         </section>
@@ -249,6 +377,6 @@
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='demo.js') }}"></script>
+    <script src="{{ url_for('static', filename='demo.js') }}?v=20260324"></script>
 </body>
 </html>

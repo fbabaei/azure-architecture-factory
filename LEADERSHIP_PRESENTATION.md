@@ -25,11 +25,11 @@ The **Azure Architecture Factory** is an AI-driven automation platform that comp
 - **One-Command Deployment** to Azure with zero manual intervention
 
 ### The Payoff
-- ⚡ **90% faster** delivery (hours vs weeks)
-- 📊 **95.7% deployment success rate** (vs 40% industry average)
-- 💰 **$2.1M+ cost savings** already realized across 12 organizations
-- 🛡️ **Zero deployment failures** from infrastructure code errors
-- 📈 **48 teams** actively using and benefiting from the platform
+- ⚡ **Accelerated delivery** from requirements to production
+- 📊 **Improved consistency** through standardized patterns
+- 💰 **Reduced operational costs** and complexity
+- 🛡️ **Reliable infrastructure** from tested templates
+- 📈 **Scalable architecture** approach applicable across organizations
 
 ---
 

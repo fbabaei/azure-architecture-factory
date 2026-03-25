@@ -1,0 +1,18 @@
+{
+  "venvPath": "..\\..",
+  "venv": ".venv",
+  "reportMissingImports": "none",
+  "include": [
+    "src",
+    "tests",
+    "run_pipeline.py"
+  ],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [
+        "src"
+      ]
+    }
+  ]
+}

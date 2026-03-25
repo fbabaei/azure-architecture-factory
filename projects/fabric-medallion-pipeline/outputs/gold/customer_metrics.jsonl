@@ -1,0 +1,3 @@
+{"customer_id_masked": "CUST_****0001", "total_amount": 120.5, "event_count": 2, "avg_amount": 60.25, "event_types": ["purchase", "view"], "period_start": "", "period_end": "", "computed_at": "2026-03-23T20:22:49.583012"}
+{"customer_id_masked": "CUST_****0003", "total_amount": 49.99, "event_count": 1, "avg_amount": 49.99, "event_types": ["subscription"], "period_start": "", "period_end": "", "computed_at": "2026-03-23T20:22:49.583038"}
+{"customer_id_masked": "CUST_****0002", "total_amount": 20.0, "event_count": 2, "avg_amount": 10.0, "event_types": ["click", "refund"], "period_start": "", "period_end": "", "computed_at": "2026-03-23T20:22:49.583030"}

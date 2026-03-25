@@ -147,14 +147,14 @@ az webapp up --resource-group mygroup --name aaf-demo
 
 ## Performance Metrics
 
-The demo data reflects real Azure Architecture Factory results:
+The demo showcases Azure Architecture Factory capabilities:
 
-- **47 deployments** completed successfully
-- **95.7% success rate** (industry average: 40%)
-- **2.3 hours average** time-to-deployment (vs 4-8 weeks manual)
-- **12 organizations** using the platform
-- **48 teams** actively engaged
-- **$2.1M+ cost savings** realized
+- **Streamlined deployments** with automation
+- **Improved success rates** through standardized patterns
+- **Faster time-to-deployment** with infrastructure templates
+- **Reduced operational overhead** and complexity
+- **Consistent architecture** across projects
+- **Cost-effective** infrastructure provisioning
 
 ## Browser Support
 

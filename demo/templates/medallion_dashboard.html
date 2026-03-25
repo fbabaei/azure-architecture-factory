@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fabric Medallion Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 10px; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 16px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .muted { color: #6b7280; font-size: 14px; }
+    .row { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 12px; }
+    .metric { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+    .metric .k { font-size: 12px; color: #6b7280; }
+    .metric .v { font-size: 22px; font-weight: bold; margin-top: 4px; }
+    .btn { background: #2563eb; color: #fff; border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    th { color: #374151; font-size: 12px; text-transform: uppercase; }
+    .ok { color: #166534; font-weight: 600; }
+    .warn { color: #92400e; font-weight: 600; }
+    .err { color: #991b1b; font-weight: 600; }
+    .stack { display: grid; gap: 8px; }
+    .small { font-size: 12px; color: #6b7280; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Fabric Medallion Pipeline</h1>
+      <div class="muted">Run and monitor the real project pipeline outputs.</div>
+    </div>
+
+    <div class="card stack">
+      <div>
+        <button id="runBtn" class="btn" onclick="runPipeline()">Run Pipeline</button>
+        <span id="runMsg" class="small" style="margin-left:10px;"></span>
+      </div>
+      <div id="meta" class="small"></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="metric"><div class="k">Bronze</div><div id="bronze" class="v">-</div></div>
+        <div class="metric"><div class="k">Silver</div><div id="silver" class="v">-</div></div>
+        <div class="metric"><div class="k">Gold (Customer)</div><div id="goldCustomer" class="v">-</div></div>
+        <div class="metric"><div class="k">Gold (Event Type)</div><div id="goldEvent" class="v">-</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Customer Metrics</h3>
+      <table>
+        <thead><tr><th>Customer</th><th>Total Events</th><th>Total Amount</th><th>Last Event</th></tr></thead>
+        <tbody id="customerRows"><tr><td colspan="4" class="small">No data</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Event Type Metrics</h3>
+      <table>
+        <thead><tr><th>Event Type</th><th>Count</th><th>Total Amount</th><th>Avg Amount</th></tr></thead>
+        <tbody id="eventRows"><tr><td colspan="4" class="small">No data</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function fetchResults() {
+      const res = await fetch('/api/live-project-results');
+      const data = await res.json();
+
+      document.getElementById('meta').textContent = `Status: ${data.status} | Last updated: ${data.last_updated || 'N/A'}`;
+      document.getElementById('meta').className = `small ${data.status === 'ready' ? 'ok' : 'warn'}`;
+
+      document.getElementById('bronze').textContent = data.counts.bronze;
+      document.getElementById('silver').textContent = data.counts.silver;
+      document.getElementById('goldCustomer').textContent = data.counts.gold_customer_metrics;
+      document.getElementById('goldEvent').textContent = data.counts.gold_event_type_metrics;
+
+      const cRows = document.getElementById('customerRows');
+      cRows.innerHTML = '';
+      if (!data.customer_metrics.length) {
+        cRows.innerHTML = '<tr><td colspan="4" class="small">No data</td></tr>';
+      } else {
+        for (const row of data.customer_metrics) {
+          cRows.innerHTML += `<tr><td><code>${row.customer_id_masked ?? '-'}</code></td><td>${row.event_count ?? '-'}</td><td>${row.total_amount ?? '-'}</td><td>${row.last_event_time ?? '-'}</td></tr>`;
+        }
+      }
+
+      const eRows = document.getElementById('eventRows');
+      eRows.innerHTML = '';
+      if (!data.event_type_metrics.length) {
+        eRows.innerHTML = '<tr><td colspan="4" class="small">No data</td></tr>';
+      } else {
+        for (const row of data.event_type_metrics) {
+          eRows.innerHTML += `<tr><td><code>${row.event_type ?? '-'}</code></td><td>${row.count ?? '-'}</td><td>${row.total_amount ?? '-'}</td><td>${row.avg_amount ?? '-'}</td></tr>`;
+        }
+      }
+    }
+
+    async function runPipeline() {
+      const btn = document.getElementById('runBtn');
+      const msg = document.getElementById('runMsg');
+      btn.disabled = true;
+      msg.textContent = 'Running...';
+      try {
+        const res = await fetch('/api/run-live-project', { method: 'POST' });
+        const data = await res.json();
+        msg.textContent = data.message || (data.status === 'success' ? 'Run completed' : 'Run failed');
+        msg.className = data.status === 'success' ? 'small ok' : 'small err';
+      } catch (e) {
+        msg.textContent = 'Run failed';
+        msg.className = 'small err';
+      }
+      await fetchResults();
+      btn.disabled = false;
+    }
+
+    fetchResults();
+    setInterval(fetchResults, 5000);
+  </script>
+</body>
+</html>

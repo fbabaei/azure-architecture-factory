@@ -1,0 +1,241 @@
+<mxfile host="65bd71144e">
+    <diagram id="q4t-Z6eUdHJabqO-4_-Q" name="Page-1">
+        <mxGraphModel dx="1242" dy="732" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" background="#ffffff" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Azure Storage Self-Service Provisioning Platform" style="text;html=1;fontStyle=1;fontSize=20;fontColor=#0078D4;align=left;verticalAlign=middle;whiteSpace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="640" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Designed with ICON_SOURCES.md Azure icon conventions" style="text;html=1;fontSize=11;fontColor=#555555;align=left;verticalAlign=middle;whiteSpace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="56" width="520" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="col1" value="Access &amp; Request" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#F5FBFF;strokeColor=#B7D8F7;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="210" width="300" height="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="portal" value="Self-Service Web Portal&#xa;(Container Apps)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col1" vertex="1">
+                    <mxGeometry x="82.5" y="210" width="135" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="users" value="Business Users / App Teams" style="rounded=1;html=1;fillColor=#EFF6FC;strokeColor=#0078D4;fontColor=#0F172A;fontStyle=1;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="150" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="col2" value="Provisioning Services" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#F8FBFF;strokeColor=#C7DAF0;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="170" width="390" height="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" value="Provisioning API&#xa;(Container Apps)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col2" vertex="1">
+                    <mxGeometry x="110" y="20" width="130" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos" value="Request State / Audit&#xa;(Cosmos DB)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Databases/cosmos-db.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col2" vertex="1">
+                    <mxGeometry x="260" y="300" width="130" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" value="state/audit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="col2" source="api" target="cosmos" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eventgrid" value="Event Grid" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/event-grid.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col2" vertex="1">
+                    <mxGeometry x="110" y="495" width="130" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="func" value="Provisioning Workflow&#xa;(Azure Functions)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-functions.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col2" vertex="1">
+                    <mxGeometry x="110" y="240" width="130" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="orchestrate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="col2" source="api" target="func" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" value="events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D83B01;strokeWidth=1.8;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="col2" source="func" target="eventgrid" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="col3" value="Storage Provisioning Targets" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#F6FFF8;strokeColor=#BFDFC8;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="100" width="320" height="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage" value="Azure Storage Account" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-storage.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col3" vertex="1">
+                    <mxGeometry x="120" y="20" width="130" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="adls" value="ADLS Gen2" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-data-lake.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col3" vertex="1">
+                    <mxGeometry x="110" y="410" width="130" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" value="secrets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="col3" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="-220" y="160" as="sourcePoint"/>
+                        <mxPoint x="515" y="50" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="-220" y="290"/>
+                            <mxPoint x="180" y="290"/>
+                            <mxPoint x="180" y="50"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="col4" value="Security, Monitoring, Governance" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#FFF9F3;strokeColor=#F0C69A;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="100" width="390" height="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="foundry" value="Azure AI Foundry (Policy Assistant)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/AI/azure-ai-studio.svg;imageWidth=68;imageHeight=68;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col4" vertex="1">
+                    <mxGeometry x="210" y="400" width="160" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="purview" value="Microsoft Purview" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Governance/microsoft-purview.svg;imageWidth=68;imageHeight=68;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col4" vertex="1">
+                    <mxGeometry x="80" y="400" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="monitor" value="Azure Monitor" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/azure-monitor.svg;imageWidth=68;imageHeight=68;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col4" vertex="1">
+                    <mxGeometry x="260" y="40" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="kv" value="Key Vault" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Security/key-vault.svg;imageWidth=68;imageHeight=68;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" parent="col4" vertex="1">
+                    <mxGeometry x="160" y="40" width="120" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;" parent="1" source="users" target="portal" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="OIDC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7A52A1;strokeWidth=1.6;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" target="portal" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="190" y="355" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" value="submit request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="portal" target="api" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="313" y="510"/>
+                            <mxPoint x="470" y="510"/>
+                            <mxPoint x="470" y="235"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" value="provision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="func" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" value="provision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="func" target="adls" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" value="telemetry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="func" target="monitor" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" value="catalog/register" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="storage" target="purview" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" value="policy guidance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7A52A1;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" parent="1" source="foundry" target="api" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1420" y="270"/>
+                            <mxPoint x="630" y="270"/>
+                            <mxPoint x="630" y="245"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="CctCajljU8YG3krgfdo4" name="Page-1">
+        <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" background="#ffffff" math="0" shadow="0" compressed="0" formatted="0" name="Azure Storage Self-Service Provisioning" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Azure Storage Self-Service Provisioning Platform" style="text;html=1;fontStyle=1;fontSize=21;fontColor=#0078D4;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="20" width="900" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="Streamlined request-to-provisioning workflow with integrated governance" style="text;html=1;fontSize=11;fontColor=#4b5563;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="58" width="620" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane1" value="Access Layer" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#F5FBFF;strokeColor=#B7D8F7;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="100" width="280" height="650" as="geometry"/>
+                </mxCell>
+                <mxCell id="users" value="Business Users / App Teams" style="rounded=1;html=1;fillColor=#EFF6FC;strokeColor=#0078D4;fontColor=#0F172A;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+                    <mxGeometry x="70" y="160" width="220" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="aad" value="Microsoft Entra ID" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Identity-Access/azure-active-directory.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="280" width="150" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="portal" value="Self-Service Portal&#xa;(Container Apps)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="95" y="450" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane2" value="Control Plane" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#F8FBFF;strokeColor=#C7DAF0;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="100" width="420" height="650" as="geometry"/>
+                </mxCell>
+                <mxCell id="apim" value="API Management" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/api-management.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="190" width="150" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" value="Provisioning API&#xa;(Container Apps)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="585" y="190" width="160" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="func" value="Workflow Engine&#xa;(Azure Functions)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-functions.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="495" y="370" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos" value="Request State / Audit&#xa;(Cosmos DB)" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Databases/cosmos-db.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="640" y="525" width="150" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="eventgrid" value="Event Grid" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/event-grid.svg;imageWidth=72;imageHeight=72;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="420" y="525" width="150" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane3" value="Data + Governance + Security" style="swimlane;html=1;rounded=1;startSize=28;horizontal=0;fillColor=#FFF9F3;strokeColor=#F0C69A;fontStyle=1;fontSize=13;container=1;pointerEvents=0;" vertex="1" parent="1">
+                    <mxGeometry x="820" y="100" width="550" height="650" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage" value="Azure Storage Account" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-storage.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="900" y="190" width="160" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="adls" value="ADLS Gen2" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-data-lake.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="1100" y="190" width="160" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="keyvault" value="Azure Key Vault" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Security/key-vault.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="900" y="460" width="160" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="monitor" value="Azure Monitor" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/azure-monitor.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="1100" y="460" width="160" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="purview" value="Microsoft Purview" style="shape=image;image=https://learn.microsoft.com/en-us/azure/architecture/media/icons/Governance/microsoft-purview.svg;imageWidth=70;imageHeight=70;verticalLabelPosition=bottom;labelPosition=center;align=center;verticalAlign=top;html=1;fontSize=11;spacingTop=6;" vertex="1" parent="1">
+                    <mxGeometry x="975" y="620" width="170" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="users" target="portal">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="OIDC / SSO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7A52A1;strokeWidth=1.6;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="aad" target="portal">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="portal" target="apim">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="route / authz" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="apim" target="api">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" value="orchestrate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="api" target="func">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" value="events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D83B01;strokeWidth=1.8;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="func" target="eventgrid">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" value="state / audit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="api" target="cosmos">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" value="provision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="func" target="storage">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="730" y="350"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" value="provision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#107C10;strokeWidth=1.8;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="func" target="adls">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="730" y="390"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e10" value="secret lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="api" target="keyvault">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="260"/>
+                            <mxPoint x="870" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" value="telemetry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="func" target="monitor">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="760" y="500"/>
+                            <mxPoint x="1180" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e12" value="catalog / lineage" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="storage" target="purview">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" value="catalog / lineage" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E81123;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="adls" target="purview">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
