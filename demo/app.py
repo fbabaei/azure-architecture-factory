@@ -72,6 +72,14 @@ DEMO_SCENARIOS = {
         "services": ["Azure OpenAI", "AI Search", "Cosmos DB", "App Service", "Monitor"],
         "timeline": "1.5 hours to deployment"
     },
+    "aks_microservices": {
+        "name": "AKS Microservice Platform",
+        "description": "Kubernetes-based microservice architecture with GitOps and platform guardrails",
+        "industry": "Technology",
+        "complexity": "Advanced",
+        "services": ["AKS", "Azure Container Registry", "Application Gateway", "Azure Monitor", "Key Vault"],
+        "timeline": "3.5 hours to deployment"
+    },
 }
 
 AGENT_PHASES = [
@@ -168,6 +176,44 @@ METRICS = {
     "teams": 48
 }
 
+AKS_DEMO = {
+    "title": "AKS Microservice Design Demo",
+    "summary": "A production-oriented AKS blueprint generated with Azure Architecture Factory conventions.",
+    "service_boundary": [
+        "Edge Layer: Azure Application Gateway + WAF (ingress)",
+        "Workload Layer: AKS namespaces for core-api, catalog, ordering, and payments",
+        "Data Layer: Azure Database for PostgreSQL + Azure Cache for Redis",
+        "Platform Layer: Azure Container Registry, Key Vault, Azure Monitor, and Log Analytics",
+    ],
+    "delivery_flow": [
+        "Phase 0: project-state-manager initializes project folder and manifests",
+        "Phase 1: brd-to-architecture-diagram generates AKS-centric architecture",
+        "Phase 2: azure-architecture-implementer scaffolds services and shared libraries",
+        "Phase 3: bicep-infrastructure-validator emits AKS/network/security modules",
+        "Phase 4: production-environment-advisor validates readiness and operations",
+        "Phase 5: azure-project-deployer executes deployment with captured outputs",
+    ],
+    "azure_resources": [
+        "Azure Kubernetes Service (private cluster optional)",
+        "Azure Container Registry with image pull via managed identity",
+        "Application Gateway Ingress Controller (AGIC)",
+        "Azure Key Vault CSI driver for secret injection",
+        "Azure Monitor Container Insights + Application Insights",
+        "Log Analytics workspace and alert rules",
+    ],
+    "deployment_endpoints": [
+        {"name": "API Gateway", "url": "https://aks-api.contoso.example"},
+        {"name": "Operations Dashboard", "url": "https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/microsoft.containerservice%2Fmanagedclusters"},
+        {"name": "Grafana (optional)", "url": "https://grafana.contoso.example"},
+    ],
+    "security_controls": [
+        "Workload identity for pod-to-Azure access",
+        "Network policies + namespace isolation",
+        "Ingress WAF policy and TLS termination",
+        "Least-privilege RBAC and Key Vault secret references",
+    ],
+}
+
 PROJECT_LINKS = [
     {
         "id": "fabric-medallion",
@@ -188,6 +234,17 @@ PROJECT_LINKS = [
         "url": "/order-monitoring-dashboard",
         "cta": "Open Monitoring",
         "kind": "Monitoring",
+        "external": False,
+        "status_mode": "internal",
+    },
+    {
+        "id": "aks-microservices",
+        "name": "AKS Microservice Demo",
+        "description": "Architecture and deployment blueprint for AKS-based microservices.",
+        "environment": "Embedded in main demo",
+        "url": "/aks-microservices-demo",
+        "cta": "Open AKS Demo",
+        "kind": "Architecture",
         "external": False,
         "status_mode": "internal",
     },
@@ -322,6 +379,28 @@ def simulate_deployment():
         "status": "deployment_complete"
     })
 
+
+@app.route('/api/aks/simulate-deployment', methods=['POST'])
+def simulate_aks_deployment():
+    """Simulate an AKS microservice deployment timeline."""
+    phases = [
+        {"name": "Cluster Baseline", "details": "Create AKS node pools, identity, and network profile.", "duration_seconds": 45},
+        {"name": "Platform Add-ons", "details": "Enable ingress, CSI drivers, and observability agents.", "duration_seconds": 35},
+        {"name": "Registry & Pull", "details": "Publish and validate microservice images from ACR.", "duration_seconds": 30},
+        {"name": "Workload Release", "details": "Deploy namespaces, services, HPAs, and ingress rules.", "duration_seconds": 40},
+        {"name": "Policy & Security", "details": "Apply network policies, workload identity, and Key Vault refs.", "duration_seconds": 30},
+        {"name": "Smoke Tests", "details": "Run health checks and baseline synthetic transactions.", "duration_seconds": 20},
+    ]
+
+    return jsonify({
+        "status": "deployment_complete",
+        "deployment_id": f"aks-deploy-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        "started_at": datetime.now().isoformat(),
+        "timeline": phases,
+        "endpoints": AKS_DEMO["deployment_endpoints"],
+        "summary": "AKS platform and microservices released successfully in simulation mode.",
+    })
+
 @app.route('/api/project-structure')
 def get_project_structure():
     """Get the generated project structure"""
@@ -441,6 +520,12 @@ def presentation():
 def medallion_dashboard():
     """Fabric Medallion live dashboard page."""
     return render_template('medallion_dashboard.html')
+
+
+@app.route('/aks-microservices-demo')
+def aks_microservices_demo():
+    """AKS microservice design demo page."""
+    return render_template('aks_microservices_demo.html', aks_demo=AKS_DEMO)
 
 
 @app.route('/api/run-order-management', methods=['POST'])

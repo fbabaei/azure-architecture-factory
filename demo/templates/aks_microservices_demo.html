@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ aks_demo.title }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #0b3a66; color: #fff; }
+    .topbar a { color: #dbeafe; text-decoration: none; margin-left: 16px; }
+    .topbar a:hover { text-decoration: underline; }
+    .wrap { max-width: 1120px; margin: 20px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 14px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 0 0 12px; font-size: 20px; color: #0b3a66; }
+    .muted { color: #6b7280; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 7px 0; }
+    .pill { display: inline-flex; margin-right: 8px; margin-bottom: 8px; background: #e0f2fe; color: #075985; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+    .links { display: grid; gap: 10px; }
+    .link-row { display: flex; justify-content: space-between; align-items: center; border: 1px solid #dbeafe; border-radius: 8px; padding: 10px 12px; background: #f8fbff; }
+    .btn { background: #2563eb; color: white; text-decoration: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+    .btn-run { border: 0; cursor: pointer; }
+    .run-meta { margin-top: 8px; }
+    .timeline { margin-top: 12px; display: grid; gap: 8px; }
+    .timeline-item { border: 1px solid #dbeafe; border-radius: 8px; padding: 10px 12px; background: #f8fbff; }
+    .timeline-item .phase { font-weight: 700; color: #0b3a66; }
+    .timeline-item .duration { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .status-ok { color: #166534; font-weight: 700; }
+    .status-warn { color: #92400e; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>☸️ AKS Microservice Design Demo</strong></div>
+    <div>
+      <a href="/">Main Demo</a>
+      <a href="/presentation">Leadership Brief</a>
+      <a href="/medallion-dashboard">Medallion Dashboard</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>{{ aks_demo.title }}</h1>
+      <p class="muted">{{ aks_demo.summary }}</p>
+      <span class="pill">Azure Kubernetes Service</span>
+      <span class="pill">Azure Architecture Factory</span>
+      <span class="pill">GitOps Delivery</span>
+      <span class="pill">Production Guardrails</span>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Service Boundary</h2>
+        <ul>
+          {% for item in aks_demo.service_boundary %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Delivery Flow (Factory Agents)</h2>
+        <ul>
+          {% for item in aks_demo.delivery_flow %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Azure Resources</h2>
+        <ul>
+          {% for item in aks_demo.azure_resources %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Security Controls</h2>
+        <ul>
+          {% for item in aks_demo.security_controls %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Deployment Targets</h2>
+      <div class="links">
+        {% for endpoint in aks_demo.deployment_endpoints %}
+        <div class="link-row">
+          <div>
+            <strong>{{ endpoint.name }}</strong><br/>
+            <span class="muted">{{ endpoint.url }}</span>
+          </div>
+          <a class="btn" href="{{ endpoint.url }}" target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>AKS Deployment Simulation</h2>
+      <p class="muted">Run a simulated Azure Architecture Factory deployment timeline for this AKS design.</p>
+      <button id="runAksBtn" class="btn btn-run" onclick="runAksSimulation()">Run AKS Deployment Simulation</button>
+      <div id="runAksMeta" class="run-meta muted">No simulation run yet.</div>
+      <div id="aksTimeline" class="timeline"></div>
+    </div>
+  </div>
+
+  <script>
+    async function runAksSimulation() {
+      const btn = document.getElementById('runAksBtn');
+      const meta = document.getElementById('runAksMeta');
+      const timeline = document.getElementById('aksTimeline');
+
+      btn.disabled = true;
+      btn.textContent = 'Running...';
+      meta.className = 'run-meta status-warn';
+      meta.textContent = 'Executing simulated AKS deployment timeline...';
+      timeline.innerHTML = '';
+
+      try {
+        const response = await fetch('/api/aks/simulate-deployment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        meta.className = 'run-meta status-ok';
+        meta.textContent = `${result.summary} (ID: ${result.deployment_id})`;
+
+        for (const step of result.timeline || []) {
+          const item = document.createElement('div');
+          item.className = 'timeline-item';
+          item.innerHTML = `
+            <div class="phase">${step.name}</div>
+            <div>${step.details}</div>
+            <div class="duration">Estimated duration: ${step.duration_seconds}s</div>
+          `;
+          timeline.appendChild(item);
+        }
+      } catch (error) {
+        meta.className = 'run-meta status-warn';
+        meta.textContent = `Simulation failed: ${error.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run AKS Deployment Simulation';
+      }
+    }
+  </script>
+</body>
+</html>
