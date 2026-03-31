@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../aks-microservices-demo"
+		},
+		{
+			"path": "../ecommerce-demo"
+		},
+		{
+			"path": "../fabric-medallion-pipeline"
+		},
+		{
+			"path": "../order-management-platform"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}
