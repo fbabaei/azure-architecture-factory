@@ -22,7 +22,7 @@ A 10-slide executive presentation covering:
 4. **How It Works** - 6-phase automated workflow
 5. **Proven Results** - Real metrics (47 deployments, 95.7% success)
 6. **Key Benefits** - 90% faster, zero manual handoffs, self-healing IaC
-7. **Reference Implementation** - Fabric Medallion pipeline
+7. **Sample Portfolio** - Multiple example projects and readiness evidence
 8. **Use Cases** - Various workload scenarios
 9. **Financial Impact** - ROI and cost savings
 10. **Next Steps** - Implementation roadmap

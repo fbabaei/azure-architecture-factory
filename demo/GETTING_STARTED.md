@@ -46,7 +46,7 @@ Visit:
 **Choose a scenario** and watch how the Azure Architecture Factory works:
 
 1. 🛍️ **E-Commerce Platform** - Multi-tenant SaaS (3 hours to deployment)
-2. 📊 **Data Lake & Analytics** - Medallion architecture (2 hours to deployment)
+2. 📊 **Data & Analytics Platform** - Multi-stage analytics delivery (2 hours to deployment)
 3. 🔗 **Microservices Architecture** - Containerized services (2.5 hours to deployment)
 4. 🤖 **Generative AI Application** - RAG chat app (1.5 hours to deployment)
 

@@ -1,3 +1,0 @@
-{"event_id":"EVT-1001","customer_id":"CUST-0001","event_type":"purchase","amount":120.5,"timestamp":"2026-03-22T09:00:00","source":"adls"}
-{"event_id":"EVT-1002","customer_id":"CUST-0002","event_type":"refund","amount":20.0,"timestamp":"2026-03-22T09:05:00","source":"adls"}
-{"event_id":"EVT-1003","customer_id":"CUST-0001","event_type":"view","amount":0,"timestamp":"2026-03-22T09:07:00","source":"adls"}

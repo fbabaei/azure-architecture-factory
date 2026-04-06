@@ -16,8 +16,8 @@
             <nav class="nav">
                 <a href="/">Demo</a>
                 <a href="/presentation">Leadership Brief</a>
+                <a href="/factory-readiness">Factory Readiness</a>
                 <a href="/aks-microservices-demo">AKS Microservices Demo</a>
-                <a href="/medallion-dashboard">Medallion Dashboard</a>
                 <a href="/order-monitoring-dashboard">Order Monitoring</a>
                 <a href="https://github.com/your-org/azure-architecture-factory" target="_blank">GitHub</a>
             </nav>
@@ -66,69 +66,79 @@
         <section class="metrics">
             <div class="container">
                 <div class="metric-card">
-                    <h3>47</h3>
-                    <p>Successful Deployments</p>
+                    <h3>{{ metrics.project_count }}</h3>
+                    <p>Sample Projects Assessed</p>
                 </div>
                 <div class="metric-card">
-                    <h3>95.7%</h3>
-                    <p>Success Rate</p>
+                    <h3>{{ metrics.full_lifecycle_count }}</h3>
+                    <p>Full Lifecycle Evidence Projects</p>
                 </div>
                 <div class="metric-card">
-                    <h3>2.3 hrs</h3>
-                    <p>Average Deployment Time</p>
+                    <h3>{{ metrics.production_like_count }}</h3>
+                    <p>Production-Like Outputs</p>
                 </div>
                 <div class="metric-card">
-                    <h3>$2.1M</h3>
-                    <p>Cost Savings Realized</p>
+                    <h3>{{ metrics.testable_project_count }}</h3>
+                    <p>Runnable Validation Suites</p>
                 </div>
             </div>
         </section>
 
-        <!-- Live Project Results -->
+        <!-- Factory Readiness Results -->
         <section class="live-results" id="live-results">
             <div class="container">
                 <div class="live-header">
                     <div>
-                        <h2>Actual Project Results (Live)</h2>
-                        <p class="subtitle">Reading real output files from projects/fabric-medallion-pipeline</p>
+                        <h2>Factory Readiness Report</h2>
+                        <p class="subtitle">Evidence from the current sample-project portfolio showing how completely the factory turns requirements into production-style deliverables.</p>
                     </div>
                     <div class="live-actions">
-                        <button class="btn btn-primary" id="run-pipeline-btn" onclick="runLiveProjectPipeline()">Run Pipeline Now</button>
-                        <button class="btn btn-secondary" onclick="window.location='/medallion-dashboard'">Open Dashboard</button>
-                        <button class="btn btn-secondary" onclick="window.location='/order-monitoring-dashboard'">Open Order Monitoring</button>
-                        <button class="btn btn-secondary" onclick="loadLiveProjectResults(true)">Refresh Results</button>
+                        <button class="btn btn-primary" id="run-readiness-btn" onclick="runFactoryValidation()">Run Validation Suite</button>
+                        <button class="btn btn-secondary" onclick="window.location='/factory-readiness'">Open Dashboard</button>
+                        <button class="btn btn-secondary" onclick="loadFactoryReadiness(true)">Refresh Evidence</button>
                     </div>
                 </div>
 
-                <p id="live-status" class="live-status">Loading latest project outputs...</p>
+                <p id="live-status" class="live-status">Loading readiness evidence...</p>
 
                 <div class="live-counts">
                     <div class="live-count-card">
-                        <h3 id="live-bronze-count">-</h3>
-                        <p>Bronze Records</p>
+                        <h3 id="live-project-count">-</h3>
+                        <p>Sample Projects Reviewed</p>
                     </div>
                     <div class="live-count-card">
-                        <h3 id="live-silver-count">-</h3>
-                        <p>Silver Records</p>
+                        <h3 id="live-full-lifecycle-count">-</h3>
+                        <p>Projects With Diagram, Code, Docs, Tests</p>
                     </div>
                     <div class="live-count-card">
-                        <h3 id="live-gold-customer-count">-</h3>
-                        <p>Gold Customer Metrics</p>
+                        <h3 id="live-production-count">-</h3>
+                        <p>Production-Like Project Outputs</p>
                     </div>
                     <div class="live-count-card">
-                        <h3 id="live-gold-event-count">-</h3>
-                        <p>Gold Event Type Metrics</p>
+                        <h3 id="live-testable-count">-</h3>
+                        <p>Runnable Validation Suites</p>
                     </div>
                 </div>
 
                 <div class="live-details-grid">
                     <div class="live-detail-card">
-                        <h4>Customer Metrics (Gold)</h4>
-                        <pre id="live-customer-metrics">No data loaded.</pre>
+                        <h4>Assessment</h4>
+                        <div id="factory-assessment" class="rich-list">No assessment loaded.</div>
                     </div>
                     <div class="live-detail-card">
-                        <h4>Event Type Metrics (Gold)</h4>
-                        <pre id="live-event-metrics">No data loaded.</pre>
+                        <h4>Project Evidence</h4>
+                        <div id="factory-project-metrics" class="rich-list">No evidence loaded.</div>
+                    </div>
+                </div>
+
+                <div class="live-details-grid validation-grid">
+                    <div class="live-detail-card">
+                        <h4>Validation Suites</h4>
+                        <div id="factory-validation-summary" class="rich-list">No validation run yet.</div>
+                    </div>
+                    <div class="live-detail-card">
+                        <h4>Validation Output</h4>
+                        <pre id="factory-validation-output">Run the validation suite to capture test results here.</pre>
                     </div>
                 </div>
             </div>
@@ -209,7 +219,7 @@
                     </div>
                     <div class="benefit-card">
                         <h3>📦 Reference Pipeline</h3>
-                        <p>Working Fabric Medallion data pipeline with governance, monitoring, and multi-source connectors.</p>
+                        <p>Multiple sample outputs show architecture, code, docs, tests, and deployment patterns across several workload types.</p>
                     </div>
                 </div>
             </div>
@@ -227,8 +237,8 @@
                         <span class="time">⏱️ 3 hours to deployment</span>
                     </div>
                     <div class="scenario-card" onclick="selectScenario('data_pipeline')">
-                        <h3>📊 Data Lake & Analytics</h3>
-                        <p>Medallion architecture (Bronze/Silver/Gold) with real-time ingestion</p>
+                        <h3>📊 Data & Analytics Platform</h3>
+                        <p>Ingestion, transformation, governance, and semantic analytics outputs</p>
                         <span class="time">⏱️ 2 hours to deployment</span>
                     </div>
                     <div class="scenario-card" onclick="selectScenario('microservices')">

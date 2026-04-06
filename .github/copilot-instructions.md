@@ -17,9 +17,9 @@
 - Favor explicit configuration objects and dependency injection over module-level globals.
 
 ## Build and Test
-- Install Python dependencies from `fabric_medallion/requirements.txt`.
-- Run the local pipeline with `python .\fabric_medallion\run_pipeline.py --mode sample`.
-- Run tests with `python -m unittest discover .\fabric_medallion\tests`.
+- Install demo dependencies from `demo/requirements.txt` when working on the developer portal.
+- Run the order-management validation suite with `python -m pytest .\projects\order-management-platform\tests\unit .\projects\order-management-platform\tests\integration -v --tb=short --no-header`.
+- Run the storage self-service validation suite with `python -m unittest discover .\projects\storage-self-service-provisioning\tests`.
 
 ## Documentation
 - Keep the root `README.md` focused on repo orientation.

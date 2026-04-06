@@ -11,6 +11,7 @@ from flask_cors import CORS
 import json
 import os
 import subprocess
+import sys
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -21,9 +22,44 @@ CORS(app)
 
 DEMO_DIR = Path(__file__).resolve().parent
 REPO_ROOT = DEMO_DIR.parent
-LIVE_PROJECT_ROOT = REPO_ROOT / "projects" / "fabric-medallion-pipeline" / "src"
 ORDER_MONITORING_FILE = REPO_ROOT / "projects" / "order-management-platform" / "monitoring-dashboard.html"
 ORDER_MGMT_ROOT = REPO_ROOT / "projects" / "order-management-platform"
+STORAGE_SELF_SERVICE_ROOT = REPO_ROOT / "projects" / "storage-self-service-provisioning"
+
+FACTORY_PROJECTS = [
+    {
+        "id": "order-management-platform",
+        "name": "Order Management Platform",
+        "description": "End-to-end microservices output with diagrams, code, infra, docs, tests, deployment guide, and readiness scoring.",
+        "kind": "Microservices",
+        "path": ORDER_MGMT_ROOT,
+        "test_command": "python -m pytest tests/unit tests/integration -v --tb=short --no-header",
+    },
+    {
+        "id": "storage-self-service-provisioning",
+        "name": "Storage Self-Service Provisioning",
+        "description": "Service-oriented implementation with API, worker, shared libraries, docs, and a runnable unittest suite.",
+        "kind": "Workflow Service",
+        "path": STORAGE_SELF_SERVICE_ROOT,
+        "test_command": "python -m unittest discover tests",
+    },
+    {
+        "id": "aks-microservices-demo",
+        "name": "AKS Microservices Demo",
+        "description": "Platform-oriented AKS example with infrastructure, Kubernetes manifests, scripts, and service scaffolding.",
+        "kind": "AKS Platform",
+        "path": REPO_ROOT / "projects" / "aks-microservices-demo",
+        "test_command": None,
+    },
+    {
+        "id": "ecommerce-demo",
+        "name": "E-Commerce Demo",
+        "description": "Frontend-oriented sample showing lightweight generated deliverables and a web-facing experience.",
+        "kind": "Web App",
+        "path": REPO_ROOT / "projects" / "ecommerce-demo",
+        "test_command": None,
+    },
+]
 
 
 def _read_jsonl(path: Path) -> list:
@@ -38,6 +74,244 @@ def _read_jsonl(path: Path) -> list:
                 records.append(json.loads(line))
     return records
 
+
+def _read_json(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def _repo_relative(path: Path) -> str:
+    return str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+
+
+def _get_python_executable() -> str:
+    venv_python = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
+    if venv_python.exists():
+        return str(venv_python)
+    return sys.executable
+
+
+def _run_command(command: list[str], cwd: Path, timeout: int = 120) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=str(cwd),
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+
+
+def _count_service_folders(src_path: Path) -> int:
+    if not src_path.exists():
+        return 0
+
+    ignored_names = {
+        "__pycache__",
+        ".pytest_cache",
+        ".venv",
+        "shared-lib",
+        "shared_lib",
+        "web",
+        "static",
+    }
+    return sum(
+        1
+        for child in src_path.iterdir()
+        if child.is_dir() and child.name not in ignored_names
+    )
+
+
+def _detect_project_artifacts(project: dict) -> dict:
+    project_root = project["path"]
+    diagrams_path = project_root / "diagrams"
+    src_path = project_root / "src"
+    docs_path = project_root / "docs"
+    tests_path = project_root / "tests"
+    infra_path = project_root / "infra"
+    manifest_path = project_root / "project-manifest.json"
+    manifest = _read_json(manifest_path)
+
+    has_diagram = diagrams_path.exists() and any(diagrams_path.glob("*.drawio"))
+    has_notes = diagrams_path.exists() and any(diagrams_path.glob("*.md"))
+    has_src = src_path.exists() and any(src_path.iterdir())
+    has_docs = docs_path.exists() and any(docs_path.iterdir())
+    has_tests = tests_path.exists() and any(tests_path.iterdir())
+    has_infra = infra_path.exists() and any(infra_path.iterdir())
+    has_readme = (project_root / "README.md").exists()
+    has_deploy = (project_root / "DEPLOY.md").exists()
+    has_manifest = manifest is not None
+    service_count = _count_service_folders(src_path)
+
+    full_lifecycle_evidence = all([has_diagram, has_notes, has_src, has_docs, has_tests])
+    production_like = full_lifecycle_evidence and has_infra and has_readme
+
+    readiness_status = None
+    readiness_score = None
+    if manifest:
+        readiness_status = manifest.get("deployment_readiness", {}).get("status")
+        readiness_score = manifest.get("phases", {}).get("4_production_review", {}).get("readiness_score")
+
+    evidence = []
+    if has_diagram:
+        evidence.append("Architecture diagram")
+    if has_notes:
+        evidence.append("Architecture notes")
+    if has_src:
+        evidence.append(f"Source structure ({service_count} service folders)")
+    if has_docs:
+        evidence.append("Project docs")
+    if has_tests:
+        evidence.append("Tests")
+    if has_infra:
+        evidence.append("Infrastructure")
+    if has_deploy:
+        evidence.append("Deployment guide")
+    if readiness_status:
+        evidence.append(readiness_status)
+
+    return {
+        "id": project["id"],
+        "name": project["name"],
+        "description": project["description"],
+        "kind": project["kind"],
+        "path": _repo_relative(project_root),
+        "test_command": project["test_command"],
+        "service_count": service_count,
+        "has_diagram": has_diagram,
+        "has_notes": has_notes,
+        "has_src": has_src,
+        "has_docs": has_docs,
+        "has_tests": has_tests,
+        "has_infra": has_infra,
+        "has_readme": has_readme,
+        "has_deploy": has_deploy,
+        "has_manifest": has_manifest,
+        "full_lifecycle_evidence": full_lifecycle_evidence,
+        "production_like": production_like,
+        "readiness_status": readiness_status,
+        "readiness_score": readiness_score,
+        "evidence": evidence,
+    }
+
+
+def _build_factory_readiness_payload() -> dict:
+    projects = [_detect_project_artifacts(project) for project in FACTORY_PROJECTS]
+    testable_projects = [project for project in projects if project["test_command"]]
+
+    full_lifecycle_count = sum(1 for project in projects if project["full_lifecycle_evidence"])
+    production_like_count = sum(1 for project in projects if project["production_like"])
+    if production_like_count == len(projects):
+        assessment = "All tracked sample outputs currently show production-like evidence with architecture, code, docs, tests, and infrastructure."
+    elif full_lifecycle_count == len(projects):
+        assessment = "All tracked sample outputs now provide full lifecycle evidence; a subset still needs infrastructure hardening to be fully production-like."
+    else:
+        assessment = "The repository demonstrates a credible BRD-to-project factory, but only a subset of sample outputs currently show the full production-style chain of diagram, code, docs, tests, and infrastructure."
+
+    summary = {
+        "project_count": len(projects),
+        "full_lifecycle_count": full_lifecycle_count,
+        "production_like_count": production_like_count,
+        "testable_project_count": len(testable_projects),
+        "diagram_count": sum(1 for project in projects if project["has_diagram"]),
+        "source_count": sum(1 for project in projects if project["has_src"]),
+        "docs_count": sum(1 for project in projects if project["has_docs"]),
+        "tests_count": sum(1 for project in projects if project["has_tests"]),
+        "infra_count": sum(1 for project in projects if project["has_infra"]),
+        "assessment": assessment,
+        "strongest_evidence": "order-management-platform",
+    }
+
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "summary": summary,
+        "projects": projects,
+    }
+
+
+def _run_order_management_tests_internal() -> dict:
+    test_dir = ORDER_MGMT_ROOT / "tests"
+    if not test_dir.exists():
+        return {"status": "error", "message": f"Tests directory not found: {test_dir}"}
+
+    process = _run_command(
+        [_get_python_executable(), "-m", "pytest", "tests/unit", "tests/integration", "-v", "--tb=short", "--no-header"],
+        ORDER_MGMT_ROOT,
+    )
+
+    output = process.stdout + ("\n" + process.stderr if process.stderr.strip() else "")
+    tests = []
+    passed = 0
+    failed = 0
+    errors = 0
+
+    for line in output.splitlines():
+        for marker in ("PASSED", "FAILED", "ERROR"):
+            if f" {marker}" in line:
+                name = line.split(" " + marker)[0].strip()
+                if "::" in name:
+                    name = name.split("/")[-1]
+                tests.append({"name": name, "result": marker})
+                if marker == "PASSED":
+                    passed += 1
+                elif marker == "FAILED":
+                    failed += 1
+                else:
+                    errors += 1
+                break
+
+    summary = ""
+    for line in reversed(output.splitlines()):
+        stripped = line.strip().lstrip("= ").rstrip("= ").strip()
+        if stripped and ("passed" in stripped or "failed" in stripped or "error" in stripped):
+            summary = stripped
+            break
+
+    return {
+        "project": "order-management-platform",
+        "status": "success" if process.returncode == 0 else "failed",
+        "passed": passed,
+        "failed": failed,
+        "errors": errors,
+        "total": passed + failed + errors,
+        "summary": summary,
+        "tests": tests,
+        "output": output[-8000:],
+        "exit_code": process.returncode,
+        "ran_at": datetime.now().isoformat(),
+    }
+
+
+def _run_storage_self_service_tests_internal() -> dict:
+    test_dir = STORAGE_SELF_SERVICE_ROOT / "tests"
+    if not test_dir.exists():
+        return {"project": "storage-self-service-provisioning", "status": "error", "message": f"Tests directory not found: {test_dir}"}
+
+    process = _run_command(
+        [_get_python_executable(), "-m", "unittest", "discover", "tests"],
+        STORAGE_SELF_SERVICE_ROOT,
+    )
+    output = process.stdout + ("\n" + process.stderr if process.stderr.strip() else "")
+    summary = "OK" if process.returncode == 0 else "FAILED"
+
+    for line in reversed(output.splitlines()):
+        stripped = line.strip()
+        if stripped.startswith("Ran ") or stripped == "OK" or stripped.startswith("FAILED"):
+            summary = stripped
+            break
+
+    return {
+        "project": "storage-self-service-provisioning",
+        "status": "success" if process.returncode == 0 else "failed",
+        "summary": summary,
+        "output": output[-6000:],
+        "exit_code": process.returncode,
+        "ran_at": datetime.now().isoformat(),
+    }
+
 # Demo data
 DEMO_SCENARIOS = {
     "ecommerce": {
@@ -49,8 +323,8 @@ DEMO_SCENARIOS = {
         "timeline": "3 hours to deployment"
     },
     "data_pipeline": {
-        "name": "Data Lake & Analytics Pipeline",
-        "description": "Medallion architecture (Bronze/Silver/Gold) with real-time data ingestion",
+        "name": "Data & Analytics Platform",
+        "description": "Multi-stage analytics platform with ingestion, transformation, governance, and semantic outputs",
         "industry": "Financial Services",
         "complexity": "Advanced",
         "services": ["Azure Data Lake", "Data Factory", "Fabric", "Synapse", "Power BI"],
@@ -160,21 +434,22 @@ BENEFITS = [
     },
     {
         "title": "Reference Implementation Included",
-        "description": "Working Fabric Medallion data pipeline with multi-source connectors, governance, and built-in observability.",
-        "metric": "Plug-and-play pipeline",
+        "description": "Repository includes multiple sample outputs spanning microservices, workflow automation, AKS, and web app scenarios.",
+        "metric": "Multi-project evidence",
         "icon": "📦"
     }
 ]
 
-METRICS = {
-    "deployments": 47,
-    "successful_projects": 45,
-    "success_rate": 95.7,
-    "avg_deployment_time": "2.3 hours",
-    "orgs_using": 12,
-    "cost_savings": "$2.1M",
-    "teams": 48
-}
+def _build_demo_metrics() -> dict:
+    readiness = _build_factory_readiness_payload()
+    summary = readiness["summary"]
+    return {
+        "project_count": summary["project_count"],
+        "full_lifecycle_count": summary["full_lifecycle_count"],
+        "production_like_count": summary["production_like_count"],
+        "testable_project_count": summary["testable_project_count"],
+        "updated_at": readiness["updated_at"],
+    }
 
 AKS_DEMO = {
     "title": "AKS Microservice Design Demo",
@@ -216,13 +491,13 @@ AKS_DEMO = {
 
 PROJECT_LINKS = [
     {
-        "id": "fabric-medallion",
-        "name": "Fabric Medallion Pipeline",
-        "description": "Live dashboard for the medallion data pipeline outputs.",
+        "id": "factory-readiness",
+        "name": "Factory Readiness Dashboard",
+        "description": "Developer-facing evidence that shows which sample projects contain architecture, code, docs, tests, and infrastructure.",
         "environment": "Embedded in main demo",
-        "url": "/medallion-dashboard",
-        "cta": "Open Dashboard",
-        "kind": "Dashboard",
+        "url": "/factory-readiness",
+        "cta": "Open Readiness",
+        "kind": "Readiness",
         "external": False,
         "status_mode": "internal",
     },
@@ -317,7 +592,7 @@ def index():
         'index.html',
         scenarios=DEMO_SCENARIOS,
         benefits=BENEFITS,
-        metrics=METRICS,
+        metrics=_build_demo_metrics(),
         project_links=PROJECT_LINKS,
     )
 
@@ -431,84 +706,29 @@ def get_project_structure():
     })
 
 
-@app.route('/api/live-project-results')
-def get_live_project_results():
-    """Get real output metrics from projects/fabric-medallion-pipeline."""
-    bronze_path = LIVE_PROJECT_ROOT / "outputs" / "bronze" / "bronze.jsonl"
-    silver_path = LIVE_PROJECT_ROOT / "outputs" / "silver" / "silver.jsonl"
-    gold_customer_path = LIVE_PROJECT_ROOT / "outputs" / "gold" / "customer_metrics.jsonl"
-    gold_event_type_path = LIVE_PROJECT_ROOT / "outputs" / "gold" / "event_type_metrics.jsonl"
+@app.route('/api/factory-readiness')
+def get_factory_readiness():
+    """Summarize whether the repository shows full factory outputs across sample projects."""
+    return jsonify(_build_factory_readiness_payload())
 
-    bronze_records = _read_jsonl(bronze_path)
-    silver_records = _read_jsonl(silver_path)
-    customer_metrics = _read_jsonl(gold_customer_path)
-    event_type_metrics = _read_jsonl(gold_event_type_path)
 
-    latest_source = next(
-        (
-            path
-            for path in [gold_event_type_path, gold_customer_path, silver_path, bronze_path]
-            if path.exists()
-        ),
-        None,
-    )
+@app.route('/api/run-factory-validation', methods=['POST'])
+def run_factory_validation():
+    """Run the repository's representative validation suites and return an aggregate result."""
+    order_results = _run_order_management_tests_internal()
+    storage_results = _run_storage_self_service_tests_internal()
+
+    suites = [order_results, storage_results]
+    passing = sum(1 for suite in suites if suite.get("status") == "success")
+    failing = sum(1 for suite in suites if suite.get("status") not in {"success", "skipped"})
 
     return jsonify({
-        "project": "fabric-medallion-pipeline",
-        "status": "ready" if latest_source else "no-results",
-        "last_updated": datetime.fromtimestamp(latest_source.stat().st_mtime).isoformat() if latest_source else None,
-        "counts": {
-            "bronze": len(bronze_records),
-            "silver": len(silver_records),
-            "gold_customer_metrics": len(customer_metrics),
-            "gold_event_type_metrics": len(event_type_metrics),
-        },
-        "customer_metrics": customer_metrics,
-        "event_type_metrics": event_type_metrics,
+        "status": "success" if failing == 0 else "failed",
+        "ran_at": datetime.now().isoformat(),
+        "passing_suites": passing,
+        "total_suites": len(suites),
+        "suites": suites,
     })
-
-
-@app.route('/api/run-live-project', methods=['POST'])
-def run_live_project():
-    """Run the actual fabric-medallion-pipeline orchestrator in sample mode."""
-    orchestrator_path = LIVE_PROJECT_ROOT / "pipeline-orchestrator" / "main.py"
-
-    if not orchestrator_path.exists():
-        return jsonify({
-            "status": "error",
-            "message": f"Orchestrator not found: {orchestrator_path}",
-        }), 404
-
-    try:
-        process = subprocess.run(
-            ["python", str(orchestrator_path), "--mode", "sample"],
-            cwd=str(LIVE_PROJECT_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-        )
-
-        if process.returncode == 0:
-            return jsonify({
-                "status": "success",
-                "message": "Pipeline run completed successfully.",
-                "exit_code": process.returncode,
-                "stdout": process.stdout[-6000:],
-            })
-
-        return jsonify({
-            "status": "error",
-            "message": "Pipeline run failed.",
-            "exit_code": process.returncode,
-            "stdout": process.stdout[-6000:],
-            "stderr": process.stderr[-6000:],
-        }), 500
-    except subprocess.TimeoutExpired:
-        return jsonify({
-            "status": "error",
-            "message": "Pipeline run timed out after 120 seconds.",
-        }), 504
 
 @app.route('/presentation')
 def presentation():
@@ -516,10 +736,10 @@ def presentation():
     return render_template('presentation.html')
 
 
-@app.route('/medallion-dashboard')
-def medallion_dashboard():
-    """Fabric Medallion live dashboard page."""
-    return render_template('medallion_dashboard.html')
+@app.route('/factory-readiness')
+def factory_readiness_dashboard():
+    """Developer-facing dashboard that summarizes factory output quality."""
+    return render_template('factory_readiness_dashboard.html')
 
 
 @app.route('/aks-microservices-demo')
@@ -531,72 +751,10 @@ def aks_microservices_demo():
 @app.route('/api/run-order-management', methods=['POST'])
 def run_order_management():
     """Run the order management platform tests and return structured results."""
-    import sys as _sys
-
-    # Prefer the venv python alongside this app; fall back to running python
-    venv_python = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
-    python = str(venv_python) if venv_python.exists() else _sys.executable
-
-    test_dir = ORDER_MGMT_ROOT / "tests"
-
-    if not test_dir.exists():
-        return jsonify({"status": "error", "message": f"Tests directory not found: {test_dir}"}), 404
-
-    try:
-        process = subprocess.run(
-            [python, "-m", "pytest", "tests/unit", "tests/integration", "-v", "--tb=short", "--no-header"],
-            cwd=str(ORDER_MGMT_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-        )
-
-        output = process.stdout + ("\n" + process.stderr if process.stderr.strip() else "")
-        tests = []
-        passed = 0
-        failed = 0
-        errors = 0
-
-        for line in output.splitlines():
-            for marker in ("PASSED", "FAILED", "ERROR"):
-                if f" {marker}" in line:
-                    name = line.split(" " + marker)[0].strip()
-                    # Trim the path prefix to just the test module::function
-                    if "::" in name:
-                        name = name.split("/")[-1]  # e.g. test_models.py::test_order_creation
-                    tests.append({"name": name, "result": marker})
-                    if marker == "PASSED":
-                        passed += 1
-                    elif marker == "FAILED":
-                        failed += 1
-                    else:
-                        errors += 1
-                    break
-
-        # Extract summary line, e.g. "10 passed in 1.30s"
-        summary = ""
-        for line in reversed(output.splitlines()):
-            stripped = line.strip().lstrip("= ").rstrip("= ").strip()
-            if stripped and ("passed" in stripped or "failed" in stripped or "error" in stripped):
-                summary = stripped
-                break
-
-        return jsonify({
-            "status": "success" if process.returncode == 0 else "failed",
-            "passed": passed,
-            "failed": failed,
-            "errors": errors,
-            "total": passed + failed + errors,
-            "summary": summary,
-            "tests": tests,
-            "output": output[-8000:],
-            "exit_code": process.returncode,
-            "ran_at": datetime.now().isoformat(),
-        })
-
-    except subprocess.TimeoutExpired:
-        return jsonify({"status": "error", "message": "Tests timed out after 120 seconds."}), 504
+    result = _run_order_management_tests_internal()
+    if result.get("status") == "error":
+        return jsonify(result), 404
+    return jsonify(result)
 
 
 @app.route('/order-monitoring-dashboard')
@@ -619,6 +777,9 @@ def order_monitoring_dashboard_raw():
 @app.route('/api/presentation-data')
 def get_presentation_data():
     """Get presentation data for slides"""
+    readiness = _build_factory_readiness_payload()
+    summary = readiness["summary"]
+
     return jsonify({
         "title": "Azure Architecture Factory",
         "subtitle": "AI-Driven Architecture to Production Automation",
@@ -677,12 +838,12 @@ def get_presentation_data():
                 "title": "Proven Results",
                 "content": "Real Deployment Metrics",
                 "metrics": [
-                    "Reduced deployment complexity",
-                    "Faster time-to-production",
-                    "Improved consistency and repeatability",
-                    "Simplified architecture design",
-                    "Reusable infrastructure patterns",
-                    "Automation-driven efficiency"
+                    f"{summary['project_count']} sample projects are currently evaluated in the readiness dashboard",
+                    f"{summary['full_lifecycle_count']} projects currently show full lifecycle evidence (diagram, notes, source, docs, tests)",
+                    f"{summary['production_like_count']} projects currently include production-like evidence (full lifecycle + infrastructure + root README)",
+                    f"{summary['testable_project_count']} representative validation suites are wired into the portal",
+                    f"Strongest baseline evidence: {summary['strongest_evidence']}",
+                    f"Latest evidence refresh timestamp: {readiness['updated_at']}"
                 ]
             },
             {
@@ -695,20 +856,20 @@ def get_presentation_data():
                     "🛡️ Self-healing infrastructure (0 deployment failures from IaC)",
                     "📋 100% standardization (consistent project structure)",
                     "🏅 Enterprise-grade baseline (observability, resilience, governance)",
-                    "📦 Reference implementation ready-to-deploy"
+                    "📦 Multiple sample outputs for different workload types"
                 ]
             },
             {
                 "number": 7,
-                "title": "Reference Implementation",
-                "content": "Fabric Medallion Data Pipeline: Production-Ready Example",
+                "title": "Sample Output Portfolio",
+                "content": "Evidence That The Factory Produces Real Project Structures",
                 "metrics": [
-                    "Complete Bronze → Silver → Gold medallion architecture",
-                    "Multi-source data connectors (Azure, external APIs)",
-                    "Built-in governance and audit logging",
-                    "Automatic retry and resilience patterns",
-                    "Real-time observability and alerts",
-                    "Deployable to any Azure environment"
+                    "Order management sample includes diagrams, code, infra, docs, tests, and deployment guide",
+                    "Storage self-service sample includes API, worker, docs, and runnable tests",
+                    "AKS sample demonstrates platform-focused infra and operational patterns",
+                    "E-commerce sample shows lightweight web-facing outputs",
+                    "Developer portal reports readiness evidence across the sample portfolio",
+                    "Validation suite runs directly from the portal"
                 ]
             },
             {
@@ -727,13 +888,13 @@ def get_presentation_data():
             {
                 "number": 9,
                 "title": "Financial Impact",
-                "content": "ROI & Cost Savings",
+                "content": "Evidence-Based Readiness Impact",
                 "metrics": [
-                    "Reduce architecture cycle time by 90% (save ~3-7 weeks per project)",
-                    "Projected annual cost savings: $5M+ across portfolio",
-                    "Reduce deployment failures by 80% (from 60% to 12%)",
-                    "Increase team productivity: 60-70% less time on infrastructure",
-                    "Faster time-to-market enables better competitive positioning"
+                    "Repository evidence now reports measurable project completeness instead of projected business ROI",
+                    f"Current portfolio baseline: {summary['project_count']} projects under readiness tracking",
+                    f"Current production-like count: {summary['production_like_count']}",
+                    f"Current runnable validation suites: {summary['testable_project_count']}",
+                    "Leadership decision quality improves because readiness claims are tied to live artifacts and test output"
                 ]
             },
             {
@@ -742,11 +903,11 @@ def get_presentation_data():
                 "content": "Implementation Roadmap",
                 "metrics": [
                     "✓ Platform production-ready (completed)",
-                    "→ Expand team adoption (target: 100 teams in 6 months)",
-                    "→ Integrate with CI/CD pipelines (target: Q4 2026)",
-                    "→ Add governance templates (target: Q1 2027)",
-                    "→ Build marketplace for customizations (target: Q2 2027)",
-                    "→ Scale to multi-cloud (AWS, GCP) by Q3 2027"
+                    "→ Raise remaining sample projects to full lifecycle completeness",
+                    "→ Expand CI validation coverage to additional sample portfolios",
+                    "→ Continue governance template hardening for production onboarding",
+                    "→ Keep leadership messaging anchored to measured readiness evidence",
+                    "→ Track readiness trendline over time in the developer portal"
                 ]
             }
         ]
@@ -770,7 +931,7 @@ if __name__ == '__main__':
         Visit:
             🎯 Main demo:       http://localhost:5000/
             📊 Presentation:    http://localhost:5000/presentation
-            🥇 Medallion:       http://localhost:5000/medallion-dashboard
+            📋 Readiness:       http://localhost:5000/factory-readiness
         """)
         debug_enabled = os.environ.get('FLASK_DEBUG') == '1'
         app.run(debug=debug_enabled, use_reloader=False, threaded=True, port=5000)

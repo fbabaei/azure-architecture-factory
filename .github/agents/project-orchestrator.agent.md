@@ -274,7 +274,7 @@ projects/<slug>/
 ```
 Use the project-orchestrator agent.
 Input: BRD.md
-Project name: fabric-medallion-v2
+Project name: customer-analytics-platform
 Environment: dev
 Region: eastus
 Deploy: false

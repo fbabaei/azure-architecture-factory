@@ -4,10 +4,6 @@
 
 const API_BASE = '/api';
 
-function formatPrettyJson(data) {
-    return JSON.stringify(data, null, 2);
-}
-
 function delay(ms) {
     return new Promise(resolve => window.setTimeout(resolve, ms));
 }
@@ -92,65 +88,122 @@ async function refreshProjectLinkStatus(showToast = false) {
     }
 }
 
-async function loadLiveProjectResults(showToast = false) {
+function renderFactoryAssessment(summary) {
+    const assessmentEl = document.getElementById('factory-assessment');
+    if (!assessmentEl) {
+        return;
+    }
+
+    assessmentEl.innerHTML = `
+        <div class="rich-item">
+            <strong>Assessment</strong>
+            <p>${summary.assessment}</p>
+        </div>
+        <div class="rich-item">
+            <strong>Strongest Evidence</strong>
+            <p>${summary.strongest_evidence}</p>
+        </div>
+        <div class="rich-item">
+            <strong>Coverage Snapshot</strong>
+            <p>${summary.diagram_count} projects with diagrams, ${summary.source_count} with source code, ${summary.docs_count} with project docs, ${summary.tests_count} with tests, ${summary.infra_count} with infrastructure.</p>
+        </div>
+    `;
+}
+
+function renderFactoryProjects(projects) {
+    const projectMetricsEl = document.getElementById('factory-project-metrics');
+    if (!projectMetricsEl) {
+        return;
+    }
+
+    projectMetricsEl.innerHTML = projects.map(project => `
+        <div class="rich-item">
+            <strong>${project.name}</strong>
+            <p>${project.description}</p>
+            <p><span class="pill-inline">${project.kind}</span><span class="pill-inline">${project.path}</span></p>
+            <p>${project.evidence.join(' • ')}</p>
+        </div>
+    `).join('');
+}
+
+function renderValidationResults(data, showToast = false) {
+    const summaryEl = document.getElementById('factory-validation-summary');
+    const outputEl = document.getElementById('factory-validation-output');
+
+    if (summaryEl) {
+        summaryEl.innerHTML = (data.suites || []).map(suite => `
+            <div class="rich-item">
+                <strong>${suite.project}</strong>
+                <p>Status: ${suite.status}</p>
+                <p>${suite.summary || suite.message || 'No summary available.'}</p>
+            </div>
+        `).join('');
+    }
+
+    if (outputEl) {
+        outputEl.textContent = (data.suites || [])
+            .map(suite => `${suite.project}\n${suite.output || suite.message || 'No output available.'}`)
+            .join('\n\n------------------------------\n\n');
+    }
+
+    if (showToast) {
+        showNotification(
+            data.status === 'success' ? 'Validation suite completed successfully.' : 'Validation suite completed with failures.',
+            data.status === 'success' ? 'success' : 'error'
+        );
+    }
+}
+
+async function loadFactoryReadiness(showToast = false) {
     const statusEl = document.getElementById('live-status');
-    const bronzeCountEl = document.getElementById('live-bronze-count');
-    const silverCountEl = document.getElementById('live-silver-count');
-    const goldCustomerCountEl = document.getElementById('live-gold-customer-count');
-    const goldEventCountEl = document.getElementById('live-gold-event-count');
-    const customerMetricsEl = document.getElementById('live-customer-metrics');
-    const eventMetricsEl = document.getElementById('live-event-metrics');
+    const projectCountEl = document.getElementById('live-project-count');
+    const fullLifecycleCountEl = document.getElementById('live-full-lifecycle-count');
+    const productionCountEl = document.getElementById('live-production-count');
+    const testableCountEl = document.getElementById('live-testable-count');
 
     if (!statusEl) {
         return;
     }
 
-    statusEl.textContent = 'Loading latest project outputs...';
+    statusEl.textContent = 'Loading readiness evidence...';
 
     try {
-        const response = await fetch(`${API_BASE}/live-project-results`);
+        const response = await fetch(`${API_BASE}/factory-readiness`);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
 
         const data = await response.json();
-        const counts = data.counts || {};
+        const summary = data.summary || {};
 
-        bronzeCountEl.textContent = counts.bronze ?? 0;
-        silverCountEl.textContent = counts.silver ?? 0;
-        goldCustomerCountEl.textContent = counts.gold_customer_metrics ?? 0;
-        goldEventCountEl.textContent = counts.gold_event_type_metrics ?? 0;
+        projectCountEl.textContent = summary.project_count ?? 0;
+        fullLifecycleCountEl.textContent = summary.full_lifecycle_count ?? 0;
+        productionCountEl.textContent = summary.production_like_count ?? 0;
+        testableCountEl.textContent = summary.testable_project_count ?? 0;
 
-        customerMetricsEl.textContent = data.customer_metrics?.length
-            ? formatPrettyJson(data.customer_metrics)
-            : 'No customer metrics yet.';
+        renderFactoryAssessment(summary);
+        renderFactoryProjects(data.projects || []);
 
-        eventMetricsEl.textContent = data.event_type_metrics?.length
-            ? formatPrettyJson(data.event_type_metrics)
-            : 'No event-type metrics yet.';
-
-        statusEl.textContent = data.last_updated
-            ? `Last updated: ${new Date(data.last_updated).toLocaleString()}`
-            : 'No pipeline output files found yet.';
+        statusEl.textContent = data.updated_at
+            ? `Readiness evidence refreshed: ${new Date(data.updated_at).toLocaleString()}`
+            : 'Readiness evidence loaded.';
 
         if (showToast) {
-            showNotification('Live project results refreshed.', 'success');
+            showNotification('Factory readiness evidence refreshed.', 'success');
         }
     } catch (error) {
-        console.error('Error loading live project results:', error);
-        statusEl.textContent = 'Failed to load live results.';
-        customerMetricsEl.textContent = 'Unable to read project outputs.';
-        eventMetricsEl.textContent = 'Unable to read project outputs.';
+        console.error('Error loading factory readiness:', error);
+        statusEl.textContent = 'Failed to load readiness evidence.';
         if (showToast) {
-            showNotification('Failed to refresh live project results.', 'error');
+            showNotification('Failed to refresh readiness evidence.', 'error');
         }
     }
 }
 
-async function runLiveProjectPipeline() {
+async function runFactoryValidation() {
     const statusEl = document.getElementById('live-status');
-    const runBtn = document.getElementById('run-pipeline-btn');
-    const originalText = runBtn ? runBtn.textContent : 'Run Pipeline Now';
+    const runBtn = document.getElementById('run-readiness-btn');
+    const originalText = runBtn ? runBtn.textContent : 'Run Validation Suite';
 
     if (runBtn) {
         runBtn.disabled = true;
@@ -158,28 +211,28 @@ async function runLiveProjectPipeline() {
     }
 
     if (statusEl) {
-        statusEl.textContent = 'Running actual project pipeline...';
+        statusEl.textContent = 'Running representative validation suites...';
     }
 
     try {
-        const response = await fetch(`${API_BASE}/run-live-project`, {
+        const response = await fetch(`${API_BASE}/run-factory-validation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
 
-        if (!response.ok || data.status !== 'success') {
-            throw new Error(data.message || 'Pipeline run failed');
+        if (!response.ok) {
+            throw new Error(data.message || 'Validation run failed');
         }
 
-        showNotification('Pipeline run completed. Refreshing results...', 'success');
-        await loadLiveProjectResults();
+        renderValidationResults(data, true);
+        await loadFactoryReadiness();
     } catch (error) {
-        console.error('Error running live project pipeline:', error);
+        console.error('Error running factory validation:', error);
         if (statusEl) {
-            statusEl.textContent = `Pipeline run failed: ${error.message}`;
+            statusEl.textContent = `Validation run failed: ${error.message}`;
         }
-        showNotification('Pipeline run failed.', 'error');
+        showNotification('Validation run failed.', 'error');
     } finally {
         if (runBtn) {
             runBtn.disabled = false;
@@ -398,7 +451,7 @@ async function runOrderManagementTests() {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         await refreshProjectLinkStatus();
-        await loadLiveProjectResults();
+        await loadFactoryReadiness();
         window.setInterval(() => {
             refreshProjectLinkStatus(false);
         }, 15000);
