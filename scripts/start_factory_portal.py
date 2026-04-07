@@ -6,7 +6,6 @@ Serves factory projects, BRD intake API, and project management dashboard
 
 import json
 import logging
-import os
 import pathlib
 import subprocess
 import sys
@@ -14,11 +13,12 @@ import threading
 import uuid
 from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import unquote
+from urllib.parse import urlparse
 
 
 # Configuration
 FACTORY_REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
+CSA_TEMPLATE_ROOT = (FACTORY_REPO_ROOT.parent / "csa-roadmap-template").resolve()
 PORT = 5501
 BIND_ADDRESS = "127.0.0.1"
 
@@ -42,19 +42,38 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests"""
-        if self.path.startswith("/api/brd-runs/"):
-            run_id = self.path.split("/")[-1]
+        parsed = urlparse(self.path)
+        request_path = parsed.path
+
+        if request_path == "/":
+            self.send_response(302)
+            self.send_header("Location", "/factory-portal.html")
+            self.end_headers()
+            return
+
+        if request_path.startswith("/api/brd-runs/"):
+            run_id = request_path.split("/")[-1]
             return self._handle_run_status(run_id)
+
+        if request_path == "/factory-projects.generated.json":
+            return self._serve_json_feed()
 
         # Default file serving
         return super().do_GET()
 
     def do_POST(self):
         """Handle POST requests"""
-        if self.path == "/api/brd-intake":
+        if urlparse(self.path).path == "/api/brd-intake":
             return self._handle_brd_intake()
 
         self._send_json({"error": "Not found"}, 404)
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
 
     def _handle_brd_intake(self):
         """Handle BRD intake submission"""
@@ -185,6 +204,21 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         self._send_json(run, 200)
+
+    def _serve_json_feed(self):
+        """Serve the generated project feed from the CSA roadmap repo."""
+        feed_path = CSA_TEMPLATE_ROOT / "factory-projects.generated.json"
+
+        if not feed_path.exists():
+            return self._send_json({"generatedAt": None, "projects": []}, 200)
+
+        try:
+            payload = json.loads(feed_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            logger.warning("Failed to read project feed: %s", exc)
+            return self._send_json({"error": "Invalid project feed"}, 500)
+
+        return self._send_json(payload, 200)
 
     def _send_json(self, payload, status=200):
         """Send JSON response"""
