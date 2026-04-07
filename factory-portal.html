@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Architecture Factory | Project Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0078d4;
+            --primary-dark: #005a9e;
+            --secondary: #50e6ff;
+            --accent: #ff8c00;
+            --bg-dark: #0d1117;
+            --bg-light: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --border: #30363d;
+            --success: #3fb950;
+            --error: #f85149;
+            --warning: #d29922;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            background-image: 
+                linear-gradient(135deg, rgba(0, 120, 212, 0.05) 0%, transparent 50%),
+                linear-gradient(225deg, rgba(80, 230, 255, 0.03) 0%, transparent 50%);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--bg-light) 0%, rgba(0, 120, 212, 0.1) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 2rem;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .brd-intake-panel {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            max-width: 800px;
+        }
+
+        .brd-intake-panel h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            display: none;
+            font-weight: 500;
+        }
+
+        .status-message.visible {
+            display: block;
+        }
+
+        .status-message.info {
+            background: rgba(0, 120, 212, 0.1);
+            color: var(--secondary);
+            border: 1px solid var(--primary);
+        }
+
+        .status-message.success {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-message.error {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .project-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .project-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(0, 120, 212, 0.2);
+            transform: translateY(-4px);
+            background: rgba(0, 120, 212, 0.05);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .project-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .project-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-ready {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-processing {
+            background: rgba(210, 153, 34, 0.2);
+            color: var(--warning);
+        }
+
+        .status-failed {
+            background: rgba(248, 81, 73, 0.2);
+            color: var(--error);
+        }
+
+        .project-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(0, 120, 212, 0.1);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .project-link {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 120, 212, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--secondary);
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .project-link:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        footer {
+            background: var(--bg-light);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(0, 120, 212, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" fill="currentColor"/>
+                </svg>
+                Azure Architecture Factory
+            </div>
+            <nav>
+                <a href="#projects" class="active">Projects</a>
+                <a href="#intake">BRD Intake</a>
+                <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section>
+            <h1>Architecture Factory</h1>
+            <p class="section-subtitle">
+                End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment
+            </p>
+        </section>
+
+        <!-- Stats -->
+        <div class="stats" id="stats-container">
+            <div class="stat-card">
+                <div class="stat-number">-</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">-</div>
+                <div class="stat-label">Ready</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">-</div>
+                <div class="stat-label">Tests Passed</div>
+            </div>
+        </div>
+
+        <!-- BRD Intake -->
+        <section id="intake">
+            <h2>Submit Business Requirements</h2>
+            <div class="brd-intake-panel">
+                <h3>📋 New BRD Input</h3>
+                <form onsubmit="return submitBrd(event)">
+                    <div class="form-group">
+                        <label for="brd-file-name">Project Name / BRD Filename</label>
+                        <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="brd-content">Business Requirements Document (Markdown)</label>
+                        <textarea id="brd-content" placeholder="# Project: [Name]
+
+## Business Goal
+[What problem are we solving?]
+
+## Key Requirements
+- [Requirement 1]
+- [Requirement 2]
+
+## Success Criteria
+- [Metric 1]
+- [Metric 2]
+
+## Timeline
+[Expected delivery]" required></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
+                    </div>
+                    <div class="status-message" id="brd-intake-status"></div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Generated Projects -->
+        <section id="projects">
+            <h2>Generated Projects</h2>
+            <div id="projects-container">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h3>No projects yet</h3>
+                    <p>Submit a BRD above to generate your first architecture project</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Azure Architecture Factory | <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" style="color: var(--primary);">View on GitHub</a></p>
+        <p style="margin-top: 0.5rem; font-size: 0.85rem;">Powered by automated architecture generation, AI-driven design, and comprehensive testing</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const API_BASE = window.location.origin;
+        const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
+        const API_RUN_STATUS = (id) => `${API_BASE}/api/brd-runs/${id}`;
+
+        async function submitBrd(event) {
+            event.preventDefault();
+
+            const fileName = document.getElementById('brd-file-name').value.trim();
+            const content = document.getElementById('brd-content').value.trim();
+            const button = document.getElementById('submit-brd-btn');
+            const statusDiv = document.getElementById('brd-intake-status');
+
+            if (!fileName || !content) {
+                setBrdStatus('Please fill in all fields', true);
+                return false;
+            }
+
+            button.disabled = true;
+            setBrdStatus(`<span class="loading"></span> Submitting BRD...`, false);
+
+            try {
+                const response = await fetch(API_BRD_INTAKE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: `${fileName}.md`, content })
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(err || `HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const runId = result.id;
+
+                setBrdStatus(`Run started (ID: ${runId}). Waiting for processing...`, false);
+                pollRunStatus(runId);
+            } catch (error) {
+                setBrdStatus(`Error: ${error.message}`, true);
+                button.disabled = false;
+            }
+
+            return false;
+        }
+
+        async function pollRunStatus(runId) {
+            let attempts = 0;
+            const maxAttempts = 180; // 6 minutes
+            const interval = 2000; // 2 seconds
+
+            const timer = setInterval(async () => {
+                attempts++;
+
+                try {
+                    const response = await fetch(API_RUN_STATUS(runId));
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const status = await response.json();
+
+                    if (status.status === 'completed') {
+                        clearInterval(timer);
+                        handleRunCompletion(status);
+                        return;
+                    }
+
+                    if (status.status === 'failed') {
+                        clearInterval(timer);
+                        setBrdStatus(`Failed: ${status.result?.message || 'Unknown error'}`, true);
+                        document.getElementById('submit-brd-btn').disabled = false;
+                        return;
+                    }
+
+                    setBrdStatus(
+                        `<span class="loading"></span> Processing (${Math.round(attempts * interval / 1000)}s)...`,
+                        false
+                    );
+                } catch (error) {
+                    if (attempts >= maxAttempts) {
+                        clearInterval(timer);
+                        setBrdStatus(`Timeout: ${error.message}`, true);
+                        document.getElementById('submit-brd-btn').disabled = false;
+                    }
+                }
+            }, interval);
+        }
+
+        function handleRunCompletion(status) {
+            if (status.result?.status === 'success') {
+                setBrdStatus(
+                    `✅ Success! Project generated: ${status.result.project}. Refreshing...`,
+                    false
+                );
+                setTimeout(() => {
+                    document.getElementById('brd-file-name').value = '';
+                    document.getElementById('brd-content').value = '';
+                    loadProjects();
+                    document.getElementById('submit-brd-btn').disabled = false;
+                }, 2000);
+            } else {
+                setBrdStatus(`Failed: ${status.result?.message || 'Unknown error'}`, true);
+                document.getElementById('submit-brd-btn').disabled = false;
+            }
+        }
+
+        function setBrdStatus(message, isError) {
+            const div = document.getElementById('brd-intake-status');
+            div.innerHTML = message;
+            div.className = `status-message visible ${isError ? 'error' : 'info'}`;
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/factory-projects.generated.json`);
+                const data = await response.json();
+                renderProjects(data.projects || []);
+                updateStats(data.projects || []);
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                document.getElementById('projects-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Error loading projects</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(projects) {
+            const ready = projects.filter(p => p.status?.includes('Ready')).length;
+            const stats = document.getElementById('stats-container');
+            stats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${projects.length}</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${ready}</div>
+                    <div class="stat-label">Ready</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${projects.filter(p => p.status?.includes('Passed')).length}</div>
+                    <div class="stat-label">Tests Passed</div>
+                </div>
+            `;
+        }
+
+        function renderProjects(projects) {
+            if (projects.length === 0) {
+                document.getElementById('projects-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>No projects yet</h3>
+                        <p>Submit a BRD above to generate your first architecture project</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = projects.map(project => `
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title">${escapeHtml(project.title || project.slug)}</div>
+                        <span class="project-status ${getStatusClass(project.status)}">${escapeHtml(project.status)}</span>
+                    </div>
+                    <p class="project-description">
+                        Generated from: <strong>${escapeHtml(project.generatedFrom)}</strong>
+                    </p>
+                    <div class="project-meta">
+                        <span class="meta-tag">📅 ${new Date(project.generatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div class="project-links">
+                        ${project.links ? `
+                            ${project.links.readme ? `<a href="${project.links.readme}" class="project-link">📖 README</a>` : ''}
+                            ${project.links.diagram ? `<a href="${project.links.diagram}" class="project-link">🏗️ Architecture</a>` : ''}
+                            ${project.links.deploy ? `<a href="${project.links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
+                            ${project.links.traceability ? `<a href="${project.links.traceability}" class="project-link">📊 Traceability</a>` : ''}
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('projects-container').innerHTML = `<div class="projects-grid">${html}</div>`;
+        }
+
+        function getStatusClass(status) {
+            if (!status) return '';
+            if (status.includes('Ready')) return 'status-ready';
+            if (status.includes('Processing')) return 'status-processing';
+            return 'status-failed';
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Load projects on page load
+        document.addEventListener('DOMContentLoaded', loadProjects);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadProjects, 30000);
+    </script>
+</body>
+</html>
