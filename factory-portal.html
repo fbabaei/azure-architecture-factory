@@ -648,6 +648,42 @@
         const diagramTitle = document.getElementById('diagram-title');
         const diagramOpenTab = document.getElementById('diagram-open-tab');
         const diagramClose = document.getElementById('diagram-close');
+        const diagramEmbedUrl = 'https://embed.diagrams.net/?embed=1&ui=min&spin=1&proto=json';
+        let diagramEmbedReady = false;
+        let pendingDiagramXml = null;
+
+        function parseDiagramMessage(data) {
+            if (!data) return null;
+            if (typeof data === 'string') {
+                try {
+                    return JSON.parse(data);
+                } catch {
+                    return null;
+                }
+            }
+            if (typeof data === 'object') {
+                return data;
+            }
+            return null;
+        }
+
+        function ensureDiagramFrameInitialized() {
+            if (!diagramFrame) return;
+            if (!diagramFrame.src) {
+                diagramFrame.src = diagramEmbedUrl;
+            }
+        }
+
+        function sendDiagramXml(xml) {
+            if (!diagramFrame || !diagramFrame.contentWindow) return;
+            const payload = {
+                action: 'load',
+                xml,
+                autosave: 0,
+                modified: 'unsavedChanges'
+            };
+            diagramFrame.contentWindow.postMessage(JSON.stringify(payload), '*');
+        }
 
         function toAbsolutePath(path) {
             if (!path) return '';
@@ -655,18 +691,34 @@
             return `${window.location.origin}/${String(path).replace(/^\/+/, '')}`;
         }
 
-        function openDiagramInPortal(diagramPath) {
+        async function openDiagramInPortal(diagramPath) {
             if (!diagramPath || !diagramModal || !diagramFrame) return;
             const absoluteDiagramUrl = toAbsolutePath(diagramPath);
-            const viewerUrl = `https://viewer.diagrams.net/?url=${encodeURIComponent(absoluteDiagramUrl)}`;
 
-            diagramFrame.src = viewerUrl;
-            diagramTitle.textContent = `Architecture Diagram: ${diagramPath.split('/').pop()}`;
-            if (diagramOpenTab) {
-                diagramOpenTab.href = absoluteDiagramUrl;
+            try {
+                const response = await fetch(absoluteDiagramUrl, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`Unable to load diagram (${response.status})`);
+                }
+                const xml = await response.text();
+
+                diagramTitle.textContent = `Architecture Diagram: ${diagramPath.split('/').pop()}`;
+                if (diagramOpenTab) {
+                    diagramOpenTab.href = absoluteDiagramUrl;
+                }
+
+                ensureDiagramFrameInitialized();
+                diagramModal.classList.add('open');
+                diagramModal.setAttribute('aria-hidden', 'false');
+
+                if (diagramEmbedReady) {
+                    sendDiagramXml(xml);
+                } else {
+                    pendingDiagramXml = xml;
+                }
+            } catch (error) {
+                alert(`Diagram load failed: ${error.message}`);
             }
-            diagramModal.classList.add('open');
-            diagramModal.setAttribute('aria-hidden', 'false');
         }
 
         function closeDiagramModal() {
@@ -691,6 +743,19 @@
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeDiagramModal();
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            const message = parseDiagramMessage(event.data);
+            if (!message) return;
+
+            if (message.event === 'init') {
+                diagramEmbedReady = true;
+                if (pendingDiagramXml) {
+                    sendDiagramXml(pendingDiagramXml);
+                    pendingDiagramXml = null;
+                }
             }
         });
 
