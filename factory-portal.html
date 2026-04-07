@@ -717,7 +717,11 @@
                 return;
             }
 
-            const html = projects.map(project => `
+            const html = projects.map(project => {
+                const links = project.links || {};
+                const architectureOverview = links.architectureOverview || (project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
+
+                return `
                 <div class="project-card">
                     <div class="project-header">
                         <div class="project-title">${escapeHtml(project.title || project.slug)}</div>
@@ -730,15 +734,15 @@
                         <span class="meta-tag">📅 ${new Date(project.generatedAt).toLocaleDateString()}</span>
                     </div>
                     <div class="project-links">
-                        ${project.links ? `
-                            ${project.links.readme ? `<a href="${project.links.readme}" class="project-link">📖 README</a>` : ''}
-                            ${project.links.diagram ? `<a href="${project.links.diagram}" class="project-link">🏗️ Architecture</a>` : ''}
-                            ${project.links.deploy ? `<a href="${project.links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
-                            ${project.links.traceability ? `<a href="${project.links.traceability}" class="project-link">📊 Traceability</a>` : ''}
-                        ` : ''}
+                        ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
+                        ${links.diagram ? `<a href="${links.diagram}" class="project-link">🏗️ Diagram</a>` : ''}
+                        ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
+                        ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
+                        ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             document.getElementById('projects-container').innerHTML = `<div class="projects-grid">${html}</div>`;
         }
