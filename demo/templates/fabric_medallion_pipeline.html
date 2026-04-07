@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fabric Medallion Pipeline</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #0b3a66; color: #fff; }
+    .topbar a { color: #dbeafe; text-decoration: none; margin-left: 16px; }
+    .topbar a:hover { text-decoration: underline; }
+    .wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 14px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 0 0 12px; font-size: 20px; color: #0b3a66; }
+    .muted { color: #6b7280; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .metric { background: #f8fbff; border: 1px solid #dbeafe; border-radius: 8px; padding: 14px; }
+    .metric h3 { margin: 0 0 8px; color: #0b3a66; }
+    .metric p, .metric li { font-size: 14px; line-height: 1.6; }
+    .pill { display: inline-flex; margin-right: 8px; margin-bottom: 8px; background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 700; }
+    ul { margin: 0; padding-left: 18px; }
+    code { background: #eff6ff; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>🏅 Fabric Medallion Pipeline</strong></div>
+    <div>
+      <a href="/">Main Demo</a>
+      <a href="/factory-readiness">Factory Readiness</a>
+      <a href="/brd-readiness">BRD Readiness</a>
+      <a href="/presentation">Leadership Brief</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Fabric Medallion Pipeline</h1>
+      <p class="muted">Restored sample project showing a Bronze, Silver, and Gold data-pipeline design with governance, resilience, Bicep infrastructure, and runnable tests.</p>
+      <div>
+        <span class="pill">Data Pipeline</span>
+        <span class="pill">Bronze/Silver/Gold</span>
+        <span class="pill">Bicep</span>
+        <span class="pill">Pytest</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card metric">
+        <h3>What It Demonstrates</h3>
+        <ul>
+          <li>ADLS and Snowflake-aligned ingestion into Bronze storage</li>
+          <li>Validation, deduplication, and masking in Silver</li>
+          <li>Aggregated analytics outputs in Gold</li>
+          <li>Shared governance, resilience, and monitoring helpers</li>
+        </ul>
+      </div>
+      <div class="card metric">
+        <h3>Project Artifacts</h3>
+        <ul>
+          <li><code>projects/fabric-medallion-pipeline/diagrams</code></li>
+          <li><code>projects/fabric-medallion-pipeline/docs</code></li>
+          <li><code>projects/fabric-medallion-pipeline/infra</code></li>
+          <li><code>projects/fabric-medallion-pipeline/tests</code></li>
+        </ul>
+      </div>
+      <div class="card metric">
+        <h3>Validation</h3>
+        <ul>
+          <li>Included in the portal-wide validation suite</li>
+          <li>Direct command: <code>python -m pytest tests -v --tb=short --no-header</code></li>
+          <li>Project path: <code>projects/fabric-medallion-pipeline</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

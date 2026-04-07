@@ -17,4 +17,6 @@ Key repository areas:
 - [infra/README.md](infra/README.md) for shared Bicep modules and deployment guidance
 - [demo](demo) for the developer-facing portal and readiness dashboard
 
+Current sample portfolio includes order management, storage self-service, AKS microservices, e-commerce, and the restored Fabric Medallion pipeline reference.
+
 If you are evaluating whether the repository is ready for broader internal use, use [docs/README.md](docs/README.md) as the canonical overview and [demo/app.py](demo/app.py) for the developer portal entrypoint.

@@ -42,6 +42,7 @@ The repo now presents a portfolio of sample outputs in [../projects](../projects
 - `storage-self-service-provisioning` demonstrates a service-oriented implementation with runnable tests and operational flow.
 - `aks-microservices-demo` shows platform and infrastructure-oriented output for AKS workloads.
 - `ecommerce-demo` provides a lightweight web-facing example.
+- `fabric-medallion-pipeline` restores the original data-pipeline sample with Bronze, Silver, and Gold stages, governance helpers, analytics outputs, and Bicep infrastructure.
 
 This mix is useful because it shows where the factory already produces production-style outputs and where some sample types are still lighter-weight.
 
@@ -68,8 +69,12 @@ python app.py
 1. [QUICKSTART.md](QUICKSTART.md)
 2. [PRD.md](PRD.md)
 3. [BRD.md](BRD.md)
-4. [../demo/README.md](../demo/README.md)
+4. [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md)
+5. [BRD_READINESS_SCORECARD.md](BRD_READINESS_SCORECARD.md)
+6. [../demo/README.md](../demo/README.md)
 
 ## Current Positioning
 
-This repository is best described as an internal architecture-delivery factory with reusable agent workflows and a portfolio of sample outputs. It is no longer centered on a single data-pipeline reference implementation.
+This repository is best described as an internal architecture-delivery factory with reusable agent workflows and a portfolio of sample outputs. The Fabric Medallion sample is available again as one reference implementation, but it is no longer the sole centerpiece of the repository.
+
+Use [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md) before assuming an incoming BRD is suitable for fully automated execution.

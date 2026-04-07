@@ -10,6 +10,9 @@ This repository supports three main workflows:
 
 Use `project-orchestrator` when you want the repository to create an isolated project folder from requirements.
 
+Before using the orchestrator on a new requirements document, classify it with [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md).
+Use [BRD_READINESS_SCORECARD.md](BRD_READINESS_SCORECARD.md) if you want a documented scored review.
+
 Example prompt:
 
 ```text
@@ -62,15 +65,15 @@ These two suites are the current validation baseline surfaced by the demo portal
 ## 4. Launch The Developer Portal
 
 ```powershell
-cd demo
-pip install -r requirements.txt
-python app.py
+pip install -r .\demo\requirements.txt
+.\scripts\start_portal_from_anywhere.ps1
 ```
 
 Portal endpoints:
 
 - `http://localhost:5000/` main demo
 - `http://localhost:5000/factory-readiness` readiness dashboard
+- `http://localhost:5000/brd-readiness` BRD readiness dashboard
 - `http://localhost:5000/order-monitoring-dashboard` order-management monitoring view
 - `http://localhost:5000/presentation` leadership brief
 
@@ -82,8 +85,19 @@ Current sample outputs under `projects/` are intentionally mixed:
 - `storage-self-service-provisioning`: service-oriented implementation with runnable tests
 - `aks-microservices-demo`: infrastructure and platform-oriented output
 - `ecommerce-demo`: lightweight web sample
+- `fabric-medallion-pipeline`: restored data-pipeline sample with medallion stages, governance helpers, and runnable tests
 
 Use them as evidence of what the factory can already produce and where it still needs more standardization.
+
+## 5a. Gate New BRDs First
+
+Use [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md) to classify incoming requirements as:
+
+- `Auto-Ready`
+- `Auto-Ready With Guardrails`
+- `Architect Review Required`
+
+This repository is strong for many Azure-first BRDs, but this gate should be used before treating it as universally ready for any requirements document.
 
 ## 6. Repo Layout
 

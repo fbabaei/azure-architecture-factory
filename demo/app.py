@@ -8,6 +8,7 @@ of the Azure Architecture Factory platform.
 
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
+import argparse
 import json
 import os
 import subprocess
@@ -25,6 +26,7 @@ REPO_ROOT = DEMO_DIR.parent
 ORDER_MONITORING_FILE = REPO_ROOT / "projects" / "order-management-platform" / "monitoring-dashboard.html"
 ORDER_MGMT_ROOT = REPO_ROOT / "projects" / "order-management-platform"
 STORAGE_SELF_SERVICE_ROOT = REPO_ROOT / "projects" / "storage-self-service-provisioning"
+FABRIC_MEDALLION_ROOT = REPO_ROOT / "projects" / "fabric-medallion-pipeline"
 
 FACTORY_PROJECTS = [
     {
@@ -58,6 +60,14 @@ FACTORY_PROJECTS = [
         "kind": "Web App",
         "path": REPO_ROOT / "projects" / "ecommerce-demo",
         "test_command": None,
+    },
+    {
+        "id": "fabric-medallion-pipeline",
+        "name": "Fabric Medallion Pipeline",
+        "description": "Data pipeline sample with Bronze, Silver, and Gold stages, governance helpers, Bicep infrastructure, and a runnable test suite.",
+        "kind": "Data Pipeline",
+        "path": FABRIC_MEDALLION_ROOT,
+        "test_command": "python -m pytest tests -v --tb=short --no-header",
     },
 ]
 
@@ -312,6 +322,52 @@ def _run_storage_self_service_tests_internal() -> dict:
         "ran_at": datetime.now().isoformat(),
     }
 
+
+def _run_fabric_medallion_tests_internal() -> dict:
+    test_dir = FABRIC_MEDALLION_ROOT / "tests"
+    if not test_dir.exists():
+        return {"project": "fabric-medallion-pipeline", "status": "error", "message": f"Tests directory not found: {test_dir}"}
+
+    process = _run_command(
+        [_get_python_executable(), "-m", "pytest", "tests", "-v", "--tb=short", "--no-header"],
+        FABRIC_MEDALLION_ROOT,
+    )
+    output = process.stdout + ("\n" + process.stderr if process.stderr.strip() else "")
+
+    passed = 0
+    failed = 0
+    errors = 0
+    for line in output.splitlines():
+        for marker in ("PASSED", "FAILED", "ERROR"):
+            if f" {marker}" in line:
+                if marker == "PASSED":
+                    passed += 1
+                elif marker == "FAILED":
+                    failed += 1
+                else:
+                    errors += 1
+                break
+
+    summary = ""
+    for line in reversed(output.splitlines()):
+        stripped = line.strip().lstrip("= ").rstrip("= ").strip()
+        if stripped and ("passed" in stripped or "failed" in stripped or "error" in stripped):
+            summary = stripped
+            break
+
+    return {
+        "project": "fabric-medallion-pipeline",
+        "status": "success" if process.returncode == 0 else "failed",
+        "passed": passed,
+        "failed": failed,
+        "errors": errors,
+        "total": passed + failed + errors,
+        "summary": summary,
+        "output": output[-8000:],
+        "exit_code": process.returncode,
+        "ran_at": datetime.now().isoformat(),
+    }
+
 # Demo data
 DEMO_SCENARIOS = {
     "ecommerce": {
@@ -489,6 +545,35 @@ AKS_DEMO = {
     ],
 }
 
+BRD_SCORECARD_ITEMS = [
+    {"section": "Scope", "label": "Primary business outcome is explicit", "weight": 2},
+    {"section": "Scope", "label": "Main users, systems, or personas are identified", "weight": 2},
+    {"section": "Scope", "label": "Core capabilities are bounded and specific", "weight": 2},
+    {"section": "Scope", "label": "Success criteria are stated", "weight": 1},
+    {"section": "Workload Shape", "label": "Target workload type is recognizable", "weight": 2},
+    {"section": "Workload Shape", "label": "Interaction model is clear", "weight": 2},
+    {"section": "Workload Shape", "label": "Service boundaries or domains can be inferred", "weight": 2},
+    {"section": "Workload Shape", "label": "Request is not a vague combination of unrelated systems", "weight": 1},
+    {"section": "Azure Fit", "label": "Azure is explicitly required or clearly acceptable", "weight": 3},
+    {"section": "Azure Fit", "label": "Hosting model maps to Azure services", "weight": 3},
+    {"section": "Azure Fit", "label": "Required integrations are Azure-compatible", "weight": 3},
+    {"section": "Azure Fit", "label": "No hard dependency contradicts Azure-first delivery", "weight": 3},
+    {"section": "Data", "label": "Main data entities or documents are named", "weight": 2},
+    {"section": "Data", "label": "Inputs and outputs are identified", "weight": 2},
+    {"section": "Data", "label": "External integrations are described", "weight": 2},
+    {"section": "Data", "label": "Data sensitivity or classification is mentioned", "weight": 2},
+    {"section": "NFRs", "label": "Security expectations are stated", "weight": 3},
+    {"section": "NFRs", "label": "Availability or resiliency expectations are stated", "weight": 2},
+    {"section": "NFRs", "label": "Monitoring or operational visibility is expected", "weight": 2},
+    {"section": "NFRs", "label": "Environment expectations are stated", "weight": 2},
+    {"section": "Delivery Readiness", "label": "Enough detail exists to create a diagram", "weight": 2},
+    {"section": "Delivery Readiness", "label": "Enough detail exists to scaffold source structure", "weight": 2},
+    {"section": "Delivery Readiness", "label": "Enough detail exists to generate infra assumptions", "weight": 2},
+    {"section": "Delivery Readiness", "label": "Enough detail exists to derive testable paths", "weight": 2},
+]
+
+BRD_SCORECARD_MAX = sum(item["weight"] * 2 for item in BRD_SCORECARD_ITEMS)
+
 PROJECT_LINKS = [
     {
         "id": "factory-readiness",
@@ -546,6 +631,17 @@ PROJECT_LINKS = [
         "external": True,
         "status_mode": "healthcheck",
         "health_url": "http://127.0.0.1:8000/health",
+    },
+    {
+        "id": "fabric-medallion",
+        "name": "Fabric Medallion Pipeline",
+        "description": "Sample data-pipeline project page with architecture, artifacts, and validation entry points.",
+        "environment": "Embedded in main demo",
+        "url": "/fabric-medallion-pipeline",
+        "cta": "Open Project",
+        "kind": "Project",
+        "external": False,
+        "status_mode": "internal",
     },
 ]
 
@@ -717,8 +813,9 @@ def run_factory_validation():
     """Run the repository's representative validation suites and return an aggregate result."""
     order_results = _run_order_management_tests_internal()
     storage_results = _run_storage_self_service_tests_internal()
+    medallion_results = _run_fabric_medallion_tests_internal()
 
-    suites = [order_results, storage_results]
+    suites = [order_results, storage_results, medallion_results]
     passing = sum(1 for suite in suites if suite.get("status") == "success")
     failing = sum(1 for suite in suites if suite.get("status") not in {"success", "skipped"})
 
@@ -740,6 +837,22 @@ def presentation():
 def factory_readiness_dashboard():
     """Developer-facing dashboard that summarizes factory output quality."""
     return render_template('factory_readiness_dashboard.html')
+
+
+@app.route('/brd-readiness')
+def brd_readiness_dashboard():
+    """Interactive BRD readiness scorecard for portal users."""
+    return render_template(
+        'brd_readiness_dashboard.html',
+        scorecard_items=BRD_SCORECARD_ITEMS,
+        scorecard_max=BRD_SCORECARD_MAX,
+    )
+
+
+@app.route('/fabric-medallion-pipeline')
+def fabric_medallion_pipeline():
+    """Project summary page for the restored Fabric Medallion sample."""
+    return render_template('fabric_medallion_pipeline.html')
 
 
 @app.route('/aks-microservices-demo')
@@ -868,6 +981,7 @@ def get_presentation_data():
                     "Storage self-service sample includes API, worker, docs, and runnable tests",
                     "AKS sample demonstrates platform-focused infra and operational patterns",
                     "E-commerce sample shows lightweight web-facing outputs",
+                    "Fabric Medallion sample demonstrates a data-pipeline architecture with governance, medallion stages, and Bicep assets",
                     "Developer portal reports readiness evidence across the sample portfolio",
                     "Validation suite runs directly from the portal"
                 ]
@@ -922,16 +1036,20 @@ def server_error(error):
     return jsonify({"error": "Server error"}), 500
 
 if __name__ == '__main__':
+        parser = argparse.ArgumentParser(description='Run the Azure Architecture Factory demo portal.')
+        parser.add_argument('--port', type=int, default=int(os.environ.get('PORT', '5000')))
+        args = parser.parse_args()
+
         print("""
         ╔════════════════════════════════════════════════════════════════╗
         ║          Azure Architecture Factory - Demo Application         ║
-        ║                  Starting on http://localhost:5000             ║
+        ║                  Starting on http://localhost:{port:<4}             ║
         ╚════════════════════════════════════════════════════════════════╝
 
         Visit:
-            🎯 Main demo:       http://localhost:5000/
-            📊 Presentation:    http://localhost:5000/presentation
-            📋 Readiness:       http://localhost:5000/factory-readiness
-        """)
+            🎯 Main demo:       http://localhost:{port}/
+            📊 Presentation:    http://localhost:{port}/presentation
+            📋 Readiness:       http://localhost:{port}/factory-readiness
+        """.format(port=args.port))
         debug_enabled = os.environ.get('FLASK_DEBUG') == '1'
-        app.run(debug=debug_enabled, use_reloader=False, threaded=True, port=5000)
+        app.run(debug=debug_enabled, use_reloader=False, threaded=True, port=args.port)
