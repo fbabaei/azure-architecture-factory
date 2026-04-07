@@ -1,18 +1,18 @@
 # Azure Architecture Factory - Interactive Demo
 
-A modern web-based demonstration of the Azure Architecture Factory platform, featuring interactive scenario selection, workflow visualization, and a comprehensive leadership presentation.
+A web-based demonstration of the Azure Architecture Factory platform, featuring scenario walkthroughs, repository readiness evidence, and BRD intake scoring.
 
 ## Features
 
-### 🎯 Interactive Demo Application
+### Interactive Demo Application
 
 - **4 Demo Scenarios**: E-Commerce, Data Pipeline, Microservices, Generative AI
-- **6-Phase Workflow Visualization**: See how requirements become production-ready code
-- **Project Structure Preview**: View the automatically generated project layout
-- **Real-time Simulation**: Simulate deployments and preview endpoints
+- **6-Phase Workflow Visualization**: See how requirements become project structure and deployment assets
+- **Factory Readiness Dashboard**: Review evidence across the sample portfolio
+- **BRD Readiness Dashboard**: Score new BRDs before sending them into the factory
 - **Responsive Design**: Works on desktop, tablet, and mobile
 
-### 📊 Leadership Presentation
+### Leadership Presentation
 
 A 10-slide executive presentation covering:
 
@@ -20,56 +20,67 @@ A 10-slide executive presentation covering:
 2. **Business Impact** - Time-to-market and cost implications
 3. **The Solution** - Azure Architecture Factory overview
 4. **How It Works** - 6-phase automated workflow
-5. **Proven Results** - Real metrics (47 deployments, 95.7% success)
+5. **Proven Results** - Measured repository evidence and tracked sample completeness
 6. **Key Benefits** - 90% faster, zero manual handoffs, self-healing IaC
 7. **Sample Portfolio** - Multiple example projects and readiness evidence
 8. **Use Cases** - Various workload scenarios
-9. **Financial Impact** - ROI and cost savings
+9. **Financial Impact** - Evidence-based readiness impact
 10. **Next Steps** - Implementation roadmap
 
 ## Quick Start
 
 ### Installation
 
-```bash
-cd demo
-pip install -r requirements.txt
-python app.py
+```powershell
+pip install -r .\demo\requirements.txt
+.\scripts\start_portal_from_anywhere.ps1
 ```
 
-### Access the Demo
+Optional flags:
 
-- **Demo App**: http://localhost:5000/
-- **Leadership Brief**: http://localhost:5000/presentation
-- **API Docs**: http://localhost:5000/api/{endpoint}
+```powershell
+.\scripts\start_portal_from_anywhere.ps1 -NoOpen
+.\scripts\start_portal_from_anywhere.ps1 -Port 5001
+.\scripts\start_portal_from_anywhere.ps1 -Foreground
+```
+
+## Access the Demo
+
+- **Demo App**: <http://localhost:5000/>
+- **Factory Readiness**: <http://localhost:5000/factory-readiness>
+- **BRD Readiness**: <http://localhost:5000/brd-readiness>
+- **Leadership Brief**: <http://localhost:5000/presentation>
+- **API Docs**: <http://localhost:5000/api/{endpoint}>
 
 ## API Endpoints
 
 ### Scenarios
+
 - `GET /api/scenarios` - List all demo scenarios
 - `GET /api/scenario/<scenario_id>` - Get scenario details
 
 ### Workflow
+
 - `GET /api/workflow` - Get the 6-phase workflow
 
 ### Deployment
+
 - `POST /api/simulate-deployment` - Simulate a deployment
 - `GET /api/project-structure` - Get generated project structure
 
 ### Presentation
+
 - `GET /api/presentation-data` - Get presentation slides (JSON)
 
 ## Presentation Navigation
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `→` or `Space` | Next slide |
-| `←` | Previous slide |
-| `F` | Toggle fullscreen |
-| `Esc` | Exit fullscreen |
-| Scroll Up/Down | Navigate slides |
+- `→` or `Space`: Next slide
+- `←`: Previous slide
+- `F`: Toggle fullscreen
+- `Esc`: Exit fullscreen
+- Scroll Up/Down: Navigate slides
 
 ### Mouse & Touch
 
@@ -79,7 +90,7 @@ python app.py
 
 ## Project Structure
 
-```
+```text
 demo/
 ├── app.py                          # Flask application
 ├── requirements.txt                # Python dependencies
@@ -119,7 +130,7 @@ Edit `app.py` in the `@app.route('/api/presentation-data')` function to update s
 - Demo styles: `static/styles.css`
 - Presentation styles: `static/presentation.css`
 
-## Deployment
+## Container Deployment
 
 ### Docker
 
@@ -134,6 +145,7 @@ CMD ["python", "app.py"]
 ```
 
 Build and run:
+
 ```bash
 docker build -t aaf-demo .
 docker run -p 5000:5000 aaf-demo
@@ -166,19 +178,16 @@ The demo showcases Azure Architecture Factory capabilities:
 
 ## Troubleshooting
 
-### Port Already in Use
+### Port Already In Use
 
-```bash
-# Find process on port 5000
-lsof -i :5000
-
-# Kill the process or use different port
-python app.py --port 5001
+```powershell
+netstat -ano | findstr :5000
+.\scripts\start_portal_from_anywhere.ps1 -Port 5001
 ```
 
 ### Static Files Not Loading
 
-Ensure you're running from the `demo/` directory and Flask can access `templates/` and `static/` folders.
+Use the repo-root launcher so the demo always starts with the correct working directory.
 
 ### Presentation Not Loading
 
@@ -209,6 +218,7 @@ Same as parent project
 ## Support
 
 For issues or questions about the demo:
-1. Check [PROJECT_ROOT]/README.md
+
+1. Check the repository README.
 2. Review [PROJECT_ROOT]/QUICKSTART.md
 3. Open an issue on GitHub

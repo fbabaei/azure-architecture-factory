@@ -11,19 +11,19 @@ This guide will get you up and running with the interactive demo in 5 minutes.
 
 ### Step 1: Install Dependencies
 
-```bash
-cd demo
-pip install -r requirements.txt
+```powershell
+pip install -r .\demo\requirements.txt
 ```
 
 ### Step 2: Start the Demo Server
 
-```bash
-python app.py
+```powershell
+.\scripts\start_portal_from_anywhere.ps1
 ```
 
 You'll see:
-```
+
+```text
 ╔════════════════════════════════════════════════════════════════╗
 ║          Azure Architecture Factory - Demo Application         ║
 ║                  Starting on http://localhost:5000             ║
@@ -52,16 +52,23 @@ Visit:
 
 Click any scenario to see the 6-phase automated workflow.
 
+### Readiness Dashboards
+
+- **Factory Readiness**: Review which sample projects currently include diagrams, source, docs, tests, and infrastructure.
+- **BRD Readiness**: Score an incoming BRD and classify it as auto-ready, auto-ready with guardrails, or architect review required.
+
 ### Leadership Presentation (`/presentation`)
 
 A 10-slide executive brief covering:
+
 - The problem (4-8 weeks to production)
 - The solution (Azure Architecture Factory)
-- Real results (47 deployments, 95.7% success rate)
-- Financial impact ($2.1M+ saved)
+- Measured repository evidence across the tracked sample portfolio
+- Evidence-based readiness impact instead of placeholder ROI claims
 - ROI and next steps
 
 **Navigate using:**
+
 - Arrow buttons or arrow keys (`←` / `→`)
 - Space bar for next slide
 - `F` for fullscreen
@@ -70,25 +77,28 @@ A 10-slide executive brief covering:
 ## Demo Features
 
 ### Scenario Simulation
+
 - Click any scenario card to see how the platform works
 - Watch the 6-phase workflow in action
 - See generated project structure
 - Preview deployed endpoints
 
 ### API Integration
+
 - All API endpoints are documented and accessible
 - JSON responses for programmatic access
 - Easy integration into your own systems
 
 ### Metrics Dashboard
-- 47 successful deployments
-- 95.7% success rate (vs 40% industry average)
-- Average deployment time: 2.3 hours (vs 4-8 weeks)
-- $2.1M in cost savings realized
+
+- Repository-level readiness counts derived from current sample artifacts
+- Production-like evidence counts across the sample portfolio
+- Runnable validation-suite counts surfaced through the portal
+- BRD intake scoring with weighted classification
 
 ## File Structure
 
-```
+```text
 demo/
 ├── app.py                   # Flask application
 ├── requirements.txt         # Dependencies
@@ -162,33 +172,24 @@ Edit the `@app.route('/api/presentation-data')` section in `app.py`:
 
 ## Troubleshooting
 
-### Port 5000 Already in Use
+### Port 5000 Already In Use
 
-```bash
-# Find what's using port 5000
-lsof -i :5000
-
-# Kill the process
-kill -9 <PID>
-
-# Or use a different port
-python app.py --port 5001
+```powershell
+netstat -ano | findstr :5000
+.\scripts\start_portal_from_anywhere.ps1 -Port 5001
 ```
 
 ### Module Not Found
 
 Make sure you installed dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Static Files Not Loading
 
-Ensure you're running from the `demo/` directory:
-```bash
-cd azure-architecture-factory/demo
-python app.py
-```
+Start the portal through `.\scripts\start_portal_from_anywhere.ps1` so the app always runs from the correct working directory.
 
 ## Next Steps
 
@@ -209,9 +210,9 @@ python app.py
 
 If you encounter issues:
 
-1. Check that Flask is installed: `pip list | grep Flask`
+1. Check that Flask is installed: `pip show Flask`
 2. Ensure Python 3.8+: `python --version`
-3. Check port availability: `netstat -an | grep 5000`
+3. Check port availability: `netstat -ano | findstr :5000`
 4. Review Flask error messages in console
 
 ## Advanced: Docker Deployment
@@ -227,6 +228,7 @@ docker run -p 5000:5000 aaf-demo
 ```
 
 Dockerfile:
+
 ```dockerfile
 FROM python:3.9-slim
 WORKDIR /app
