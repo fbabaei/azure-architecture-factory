@@ -458,6 +458,74 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .diagram-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 24, 36, 0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            z-index: 1200;
+        }
+
+        .diagram-modal.open {
+            display: flex;
+        }
+
+        .diagram-shell {
+            width: min(1200px, 98vw);
+            height: min(820px, 92vh);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #fff;
+            box-shadow: 0 20px 45px rgba(10, 24, 36, 0.25);
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .diagram-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid var(--border);
+            background: #f3f9ff;
+        }
+
+        .diagram-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .diagram-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .diagram-action {
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--primary-dark);
+            border-radius: 6px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .diagram-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
     </style>
 </head>
 <body>
@@ -556,11 +624,82 @@
         <p style="margin-top: 0.5rem; font-size: 0.85rem;">Powered by automated architecture generation, AI-driven design, and comprehensive testing</p>
     </footer>
 
+    <div class="diagram-modal" id="diagram-modal" aria-hidden="true">
+        <div class="diagram-shell">
+            <div class="diagram-toolbar">
+                <span class="diagram-title" id="diagram-title">Architecture Diagram</span>
+                <div class="diagram-actions">
+                    <a id="diagram-open-tab" class="diagram-action" href="#" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
+                    <button id="diagram-close" class="diagram-action" type="button">Close</button>
+                </div>
+            </div>
+            <iframe id="diagram-frame" class="diagram-frame" title="Architecture Diagram Viewer"></iframe>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
         const API_RUN_STATUS = (id) => `${API_BASE}/api/brd-runs/${id}`;
+
+        const diagramModal = document.getElementById('diagram-modal');
+        const diagramFrame = document.getElementById('diagram-frame');
+        const diagramTitle = document.getElementById('diagram-title');
+        const diagramOpenTab = document.getElementById('diagram-open-tab');
+        const diagramClose = document.getElementById('diagram-close');
+
+        function toAbsolutePath(path) {
+            if (!path) return '';
+            if (/^https?:\/\//i.test(path)) return path;
+            return `${window.location.origin}/${String(path).replace(/^\/+/, '')}`;
+        }
+
+        function openDiagramInPortal(diagramPath) {
+            if (!diagramPath || !diagramModal || !diagramFrame) return;
+            const absoluteDiagramUrl = toAbsolutePath(diagramPath);
+            const viewerUrl = `https://viewer.diagrams.net/?url=${encodeURIComponent(absoluteDiagramUrl)}`;
+
+            diagramFrame.src = viewerUrl;
+            diagramTitle.textContent = `Architecture Diagram: ${diagramPath.split('/').pop()}`;
+            if (diagramOpenTab) {
+                diagramOpenTab.href = absoluteDiagramUrl;
+            }
+            diagramModal.classList.add('open');
+            diagramModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeDiagramModal() {
+            if (!diagramModal || !diagramFrame) return;
+            diagramFrame.src = '';
+            diagramModal.classList.remove('open');
+            diagramModal.setAttribute('aria-hidden', 'true');
+        }
+
+        if (diagramClose) {
+            diagramClose.addEventListener('click', closeDiagramModal);
+        }
+
+        if (diagramModal) {
+            diagramModal.addEventListener('click', (event) => {
+                if (event.target === diagramModal) {
+                    closeDiagramModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeDiagramModal();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const link = event.target.closest('.diagram-inline-link');
+            if (!link) return;
+            event.preventDefault();
+            openDiagramInPortal(link.dataset.diagramPath || link.getAttribute('href'));
+        });
 
         async function submitBrd(event) {
             event.preventDefault();
@@ -738,7 +877,7 @@
                     </div>
                     <div class="project-links">
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
-                        ${diagram ? `<a href="${diagram}" class="project-link">🏗️ Draw.io Diagram</a>` : ''}
+                        ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                         ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
