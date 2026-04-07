@@ -720,6 +720,9 @@
             const html = projects.map(project => {
                 const links = project.links || {};
                 const architectureOverview = links.architectureOverview || (project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
+                const diagram = links.diagram
+                    ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
+                    : (project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
 
                 return `
                 <div class="project-card">
@@ -735,7 +738,7 @@
                     </div>
                     <div class="project-links">
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
-                        ${links.diagram ? `<a href="${links.diagram}" class="project-link">🏗️ Diagram</a>` : ''}
+                        ${diagram ? `<a href="${diagram}" class="project-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                         ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
