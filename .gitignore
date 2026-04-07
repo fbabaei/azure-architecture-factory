@@ -1,0 +1,10 @@
+# Generated BRD intake artifacts from local portal smoke tests
+/docs/intake/
+/scripts/docs/intake/
+
+# Generated projects from local portal and pipeline verification
+/projects/factory-portal-smoke-test-*/
+/projects/portal-e2e-success-*/
+/projects/post-quota-test-*/
+/projects/project-e-ticket-triage-assistant/
+/projects/ticket-triage-assistant/
