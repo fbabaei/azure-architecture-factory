@@ -1,0 +1,26 @@
+{
+  "project": "project-e-ticket-triage-assistant",
+  "status": "restored",
+  "source_brd": "docs/BRD_PRODUCTION_READY.md",
+  "created_at": "2026-04-06T00:00:00Z",
+  "generator": "manual-restore",
+  "title": "Project E Ticket Triage Assistant",
+  "requirements_detected": [
+    "Classify and route support tickets",
+    "Improve support engineer productivity",
+    "Apply governance and observability controls"
+  ],
+  "success_criteria_detected": [
+    "Increase triage precision",
+    "Reduce mean time to route",
+    "Maintain low latency"
+  ],
+  "capabilities": {
+    "openai": true,
+    "copilot": true,
+    "ml": true,
+    "governance": true,
+    "workflow": true,
+    "api": true
+  }
+}
