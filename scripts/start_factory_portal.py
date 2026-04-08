@@ -5,8 +5,11 @@ Serves factory projects, BRD intake API, and project management dashboard
 """
 
 import json
+import hmac
 import logging
+import os
 import pathlib
+import re
 import subprocess
 import sys
 import threading
@@ -62,6 +65,9 @@ FACTORY_REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
 CSA_TEMPLATE_ROOT = (FACTORY_REPO_ROOT.parent / "csa-roadmap-template").resolve()
 PORT = 5501
 BIND_ADDRESS = "127.0.0.1"
+MAX_REQUEST_BYTES = 1_000_000  # 1 MB intake payload limit
+ALLOWED_ORIGIN = os.environ.get("FACTORY_PORTAL_ALLOWED_ORIGIN", f"http://{BIND_ADDRESS}:{PORT}")
+API_KEY_ENV = "FACTORY_PORTAL_API_KEY"
 
 # Thread-safe run tracking
 RUNS = {}
@@ -73,6 +79,18 @@ logging.basicConfig(
     format="[%(asctime)s] %(levelname)s: %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_brd_filename(raw_name: str) -> str:
+    """Return a safe BRD filename constrained to a simple .md basename."""
+    name = pathlib.Path((raw_name or "brd.md").strip()).name
+    if not name:
+        raise ValueError("Filename is empty")
+    if not name.lower().endswith(".md"):
+        name = f"{name}.md"
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", name):
+        raise ValueError("Filename contains invalid characters")
+    return name
 
 
 class FactoryPortalHandler(SimpleHTTPRequestHandler):
@@ -110,22 +128,59 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """Handle POST requests"""
         path = urlparse(self.path).path
         if path == "/api/brd-intake":
+            if not self._require_api_key_for_mutation():
+                return
             return self._handle_brd_intake()
         if path == "/api/brd-upload":
+            if not self._require_api_key_for_mutation():
+                return
             return self._handle_brd_upload()
 
         self._send_json({"error": "Not found"}, 404)
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Factory-Api-Key")
+        self.send_header("Vary", "Origin")
         self.end_headers()
+
+    def _require_api_key_for_mutation(self) -> bool:
+        """Optionally require API key for mutation endpoints when configured."""
+        expected_key = os.environ.get(API_KEY_ENV, "").strip()
+        if not expected_key:
+            return True
+
+        provided_key = self.headers.get("X-Factory-Api-Key", "")
+        if not hmac.compare_digest(provided_key, expected_key):
+            self._send_json({"error": "Unauthorized"}, 401)
+            return False
+        return True
+
+    def _safe_content_length(self) -> int | None:
+        """Return validated content length or emit an error response."""
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send_json({"error": "Invalid Content-Length"}, 400)
+            return None
+
+        if content_length <= 0:
+            self._send_json({"error": "Missing request body"}, 400)
+            return None
+
+        if content_length > MAX_REQUEST_BYTES:
+            self._send_json({"error": f"Payload too large (max {MAX_REQUEST_BYTES} bytes)"}, 413)
+            return None
+
+        return content_length
 
     def _handle_brd_intake(self):
         """Handle BRD intake submission (JSON body)"""
-        content_length = int(self.headers.get("Content-Length", 0))
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
         try:
             body = self.rfile.read(content_length).decode("utf-8")
             payload = json.loads(body)
@@ -133,7 +188,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": f"Invalid request: {e}"}, 400)
             return
 
-        file_name = payload.get("fileName", "brd.md").strip()
+        try:
+            file_name = _sanitize_brd_filename(payload.get("fileName", "brd.md"))
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
         content = payload.get("content", "").strip()
 
         if not file_name or not content:
@@ -146,7 +205,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """Save BRD file and launch pipeline worker thread."""
         brds_dir = FACTORY_REPO_ROOT / "docs" / "intake"
         brds_dir.mkdir(parents=True, exist_ok=True)
-        brd_path = brds_dir / file_name
+        brd_path = (brds_dir / file_name).resolve()
+
+        if brds_dir.resolve() not in brd_path.parents:
+            self._send_json({"error": "Resolved BRD path is outside intake directory"}, 400)
+            return
 
         try:
             brd_path.write_text(content, encoding="utf-8")
@@ -252,7 +315,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Expected multipart/form-data"}, 415)
             return
 
-        content_length = int(self.headers.get("Content-Length", 0))
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
         raw_body = self.rfile.read(content_length)
 
         try:
@@ -279,10 +344,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         uploaded_filename = brd_field.get("filename") or "brd.md"
-        if project_name_field:
-            file_name = project_name_field if project_name_field.endswith(".md") else f"{project_name_field}.md"
-        else:
-            file_name = uploaded_filename if uploaded_filename.endswith(".md") else f"{uploaded_filename}.md"
+        try:
+            if project_name_field:
+                file_name = _sanitize_brd_filename(project_name_field)
+            else:
+                file_name = _sanitize_brd_filename(uploaded_filename)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
 
         return self._save_and_start_run(file_name, content)
 
@@ -295,7 +364,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Run not found"}, 404)
             return
 
-        self._send_json(run, 200)
+        # Return a sanitized status payload to avoid leaking command output and local paths.
+        safe_run = {
+            "id": run.get("id"),
+            "status": run.get("status"),
+            "createdAt": run.get("createdAt"),
+            "startedAt": run.get("startedAt"),
+            "finishedAt": run.get("finishedAt"),
+            "returnCode": run.get("returnCode"),
+            "result": run.get("result"),
+        }
+        self._send_json(safe_run, 200)
 
     def _serve_json_feed(self):
         """Serve the generated project feed from the CSA roadmap repo."""
@@ -362,15 +441,16 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(response)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
         self.wfile.write(response)
 
     def end_headers(self):
         """Add CORS headers to all responses"""
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Factory-Api-Key")
+        self.send_header("Vary", "Origin")
+        self.send_header("X-Content-Type-Options", "nosniff")
         super().end_headers()
 
     def log_message(self, format, *args):

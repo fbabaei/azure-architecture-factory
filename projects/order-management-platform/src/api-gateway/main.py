@@ -23,11 +23,18 @@ telemetry = TelemetryClient()
 
 app = FastAPI(title="API Gateway", version="1.0.0")
 
+
+def _get_allowed_origins() -> list[str]:
+    """Read allowed CORS origins from env without defaulting to wildcard."""
+    raw = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return origins or ["http://localhost:3000"]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_get_allowed_origins(),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,8 +47,12 @@ SERVICE_REGISTRY = {
     "analytics": os.getenv("ANALYTICS_SERVICE_URL", "http://analytics-service:8005"),
 }
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key-change-in-production")
+JWT_SECRET = os.getenv("JWT_SECRET", "")
 JWT_ALGORITHM = "HS256"
+ENABLE_DEMO_AUTH_TOKEN_ENDPOINT = os.getenv("ENABLE_DEMO_AUTH_TOKEN_ENDPOINT", "false").lower() == "true"
+
+if not JWT_SECRET:
+    logger.warning("JWT_SECRET is not configured; authenticated endpoints will reject requests.")
 
 # Rate limiters per user (simplified for demo)
 rate_limiters = {}
@@ -78,6 +89,9 @@ health_registry.register(APIGatewayHealthCheck())
 
 def validate_jwt_token(token: Optional[str] = Header(None, alias="Authorization")) -> dict:
     """Validate JWT token from Authorization header."""
+    if not JWT_SECRET:
+        raise HTTPException(status_code=503, detail="JWT configuration missing")
+
     if not token:
         raise HTTPException(status_code=401, detail="Missing authorization token")
     
@@ -135,6 +149,12 @@ async def readiness():
 @app.post("/auth/token")
 async def auth_token(request: Request):
     """Generate JWT token for testing/demo."""
+    if not ENABLE_DEMO_AUTH_TOKEN_ENDPOINT:
+        raise HTTPException(status_code=404, detail="Endpoint not enabled")
+
+    if not JWT_SECRET:
+        raise HTTPException(status_code=503, detail="JWT configuration missing")
+
     body = await request.json()
     user_id = body.get("user_id", "demo-user")
     
