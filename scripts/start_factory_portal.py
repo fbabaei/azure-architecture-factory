@@ -282,6 +282,53 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         return self._save_and_start_run(file_name, content)
 
+    def _handle_run_status(self, run_id):
+        """Handle run status query"""
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+
+        if not run:
+            self._send_json({"error": "Run not found"}, 404)
+            return
+
+        self._send_json(run, 200)
+
+    def _serve_json_feed(self):
+        """Serve the generated project feed from the CSA roadmap repo."""
+        feed_path = CSA_TEMPLATE_ROOT / "factory-projects.generated.json"
+
+        if not feed_path.exists():
+            return self._send_json({"generatedAt": None, "projects": []}, 200)
+
+        try:
+            payload = json.loads(feed_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            logger.warning("Failed to read project feed: %s", exc)
+            return self._send_json({"error": "Invalid project feed"}, 500)
+
+        return self._send_json(payload, 200)
+
+    def _send_json(self, payload, status=200):
+        """Send JSON response"""
+        response = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(response)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+        self.wfile.write(response)
+
+    def end_headers(self):
+        """Add CORS headers to all responses"""
+        self.send_header("Access-Control-Allow-Origin", "*")
+        super().end_headers()
+
+    def log_message(self, format, *args):
+        """Custom logging"""
+        logger.info("%s - %s" % (self.client_address[0], format % args))
+
 
 def main():
     httpd = HTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
