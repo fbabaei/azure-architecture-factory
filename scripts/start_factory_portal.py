@@ -4,8 +4,6 @@ Dedicated Azure Architecture Factory Portal Server
 Serves factory projects, BRD intake API, and project management dashboard
 """
 
-import cgi
-import io
 import json
 import logging
 import pathlib
@@ -16,6 +14,47 @@ import uuid
 from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse
+
+
+def _parse_multipart_form(content_type: str, body: bytes) -> dict:
+    """Parse multipart/form-data body without the removed cgi module.
+    Returns {field_name: {"data": bytes, "filename": str | None}}.
+    """
+    boundary = None
+    for token in content_type.split(";"):
+        token = token.strip()
+        if token.lower().startswith("boundary="):
+            boundary = token[9:].strip().strip('"')
+            break
+    if not boundary:
+        return {}
+
+    delimiter = ("--" + boundary).encode()
+    fields: dict = {}
+
+    for raw_part in body.split(delimiter)[1:]:
+        if raw_part.startswith(b"--"):
+            break  # end delimiter
+        sep = b"\r\n\r\n" if b"\r\n\r\n" in raw_part else b"\n\n"
+        if sep not in raw_part:
+            continue
+        header_bytes, data = raw_part.split(sep, 1)
+        data = data.rstrip(b"\r\n")
+
+        name: str | None = None
+        filename: str | None = None
+        for line in header_bytes.decode("utf-8", errors="replace").splitlines():
+            if "Content-Disposition" in line:
+                for tok in line.split(";"):
+                    tok = tok.strip()
+                    if tok.startswith("name="):
+                        name = tok[5:].strip().strip('"')
+                    elif tok.startswith("filename="):
+                        filename = tok[9:].strip().strip('"')
+        if name:
+            fields[name] = {"data": data, "filename": filename}
+
+    return fields
 
 
 # Configuration
@@ -79,59 +118,6 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
-
-    def _handle_brd_upload(self):
-        """Handle multipart/form-data BRD file upload."""
-        content_type = self.headers.get("Content-Type", "")
-        if "multipart/form-data" not in content_type:
-            self._send_json({"error": "Expected multipart/form-data"}, 415)
-            return
-
-        content_length = int(self.headers.get("Content-Length", 0))
-        raw_body = self.rfile.read(content_length)
-
-        # Parse multipart using cgi.FieldStorage
-        environ = {
-            "REQUEST_METHOD": "POST",
-            "CONTENT_TYPE": content_type,
-            "CONTENT_LENGTH": str(content_length),
-        }
-        try:
-            fields = cgi.FieldStorage(
-                fp=io.BytesIO(raw_body),
-                headers=self.headers,
-                environ=environ,
-            )
-        except Exception as exc:
-            self._send_json({"error": f"Failed to parse multipart body: {exc}"}, 400)
-            return
-
-        project_name_field = fields.getvalue("project_name", "").strip()
-        brd_file_field = fields["brd_file"] if "brd_file" in fields else None
-
-        if not brd_file_field:
-            self._send_json({"error": "Missing brd_file field"}, 400)
-            return
-
-        raw_content = brd_file_field.file.read() if hasattr(brd_file_field, "file") else b""
-        try:
-            content = raw_content.decode("utf-8")
-        except UnicodeDecodeError:
-            self._send_json({"error": "BRD file must be UTF-8 encoded text"}, 400)
-            return
-
-        if not content.strip():
-            self._send_json({"error": "Uploaded BRD file is empty"}, 400)
-            return
-
-        # Derive filename: prefer project_name field, fall back to uploaded filename
-        uploaded_filename = getattr(brd_file_field, "filename", "") or "brd.md"
-        if project_name_field:
-            file_name = project_name_field if project_name_field.endswith(".md") else f"{project_name_field}.md"
-        else:
-            file_name = uploaded_filename if uploaded_filename.endswith(".md") else f"{uploaded_filename}.md"
-
-        return self._save_and_start_run(file_name, content)
 
     def _handle_brd_intake(self):
         """Handle BRD intake submission (JSON body)"""
@@ -255,58 +241,51 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     }
                 )
 
-    def _handle_run_status(self, run_id):
-        """Handle run status query"""
-        with RUNS_LOCK:
-            run = RUNS.get(run_id)
-
-        if not run:
-            self._send_json({"error": "Run not found"}, 404)
+    def _handle_brd_upload(self):
+        """Handle multipart/form-data BRD file upload."""
+        content_type = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in content_type:
+            self._send_json({"error": "Expected multipart/form-data"}, 415)
             return
 
-        self._send_json(run, 200)
-
-    def _serve_json_feed(self):
-        """Serve the generated project feed from the CSA roadmap repo."""
-        feed_path = CSA_TEMPLATE_ROOT / "factory-projects.generated.json"
-
-        if not feed_path.exists():
-            return self._send_json({"generatedAt": None, "projects": []}, 200)
+        content_length = int(self.headers.get("Content-Length", 0))
+        raw_body = self.rfile.read(content_length)
 
         try:
-            payload = json.loads(feed_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            logger.warning("Failed to read project feed: %s", exc)
-            return self._send_json({"error": "Invalid project feed"}, 500)
+            fields = _parse_multipart_form(content_type, raw_body)
+        except Exception as exc:
+            self._send_json({"error": f"Failed to parse multipart body: {exc}"}, 400)
+            return
 
-        return self._send_json(payload, 200)
+        project_name_field = (fields.get("project_name") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        brd_field = fields.get("brd_file")
 
-    def _send_json(self, payload, status=200):
-        """Send JSON response"""
-        response = json.dumps(payload).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(response)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
-        self.wfile.write(response)
+        if not brd_field:
+            self._send_json({"error": "Missing brd_file field"}, 400)
+            return
 
-    def end_headers(self):
-        """Add CORS headers to all responses"""
-        self.send_header("Access-Control-Allow-Origin", "*")
-        super().end_headers()
+        try:
+            content = brd_field["data"].decode("utf-8")
+        except UnicodeDecodeError:
+            self._send_json({"error": "BRD file must be UTF-8 encoded text"}, 400)
+            return
 
-    def log_message(self, format, *args):
-        """Custom logging"""
-        logger.info("%s - %s" % (self.client_address[0], format % args))
+        if not content.strip():
+            self._send_json({"error": "Uploaded BRD file is empty"}, 400)
+            return
+
+        uploaded_filename = brd_field.get("filename") or "brd.md"
+        if project_name_field:
+            file_name = project_name_field if project_name_field.endswith(".md") else f"{project_name_field}.md"
+        else:
+            file_name = uploaded_filename if uploaded_filename.endswith(".md") else f"{uploaded_filename}.md"
+
+        return self._save_and_start_run(file_name, content)
 
 
 def main():
-    """Start the factory portal server"""
-    server_address = (BIND_ADDRESS, PORT)
-    httpd = HTTPServer(server_address, FactoryPortalHandler)
+    httpd = HTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
+    httpd.allow_reuse_address = True
 
     print("\n" + "=" * 80)
     print("AZURE ARCHITECTURE FACTORY - DEDICATED PORTAL")
