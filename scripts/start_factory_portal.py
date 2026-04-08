@@ -96,6 +96,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             run_id = request_path.split("/")[-1]
             return self._handle_run_status(run_id)
 
+        if request_path.startswith("/api/project-analysis/"):
+            slug = request_path.split("/")[-1]
+            return self._handle_project_analysis(slug)
+
         if request_path == "/factory-projects.generated.json":
             return self._serve_json_feed()
 
@@ -307,6 +311,50 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return self._send_json({"error": "Invalid project feed"}, 500)
 
         return self._send_json(payload, 200)
+
+    def _handle_project_analysis(self, slug):
+        """Generate and serve analysis for a project by slug."""
+        feed_path = CSA_TEMPLATE_ROOT / "factory-projects.generated.json"
+        
+        if not feed_path.exists():
+            return self._send_json({"error": "Project feed not found"}, 404)
+        
+        try:
+            feed = json.loads(feed_path.read_text(encoding="utf-8"))
+            projects = feed.get("projects", [])
+            project = next((p for p in projects if p.get("slug") == slug), None)
+            
+            if not project:
+                return self._send_json({"error": f"Project '{slug}' not found"}, 404)
+            
+            # Generate analysis from project metadata
+            analysis = self._generate_project_analysis(project)
+            return self._send_json(analysis, 200)
+        except json.JSONDecodeError:
+            return self._send_json({"error": "Invalid project feed"}, 500)
+
+    def _generate_project_analysis(self, project):
+        """Generate analysis content for a project from its metadata."""
+        title = project.get("title", project.get("slug", "Unknown"))
+        generated_from = project.get("generatedFrom", "Unknown BRD")
+        status = project.get("status", "Unknown")
+        
+        # Build generic analysis based on project metadata
+        analysis = {
+            "title": title,
+            "projectSlug": project.get("slug", ""),
+            "generatedFrom": generated_from,
+            "designChoice": f"Generated from: {generated_from}",
+            "benefits": [
+                "Automated architecture generation from business requirements",
+                "Consistent application of Azure best practices",
+                "Infrastructure as Code generated and validated",
+            ],
+            "alternativeConsidered": "Manual architecture design (rejected for time and consistency)",
+            "status": status,
+        }
+        
+        return analysis
 
     def _send_json(self, payload, status=200):
         """Send JSON response"""

@@ -500,6 +500,78 @@
             margin-bottom: 0.6rem;
         }
 
+        .analysis-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .analysis-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .analysis-modal-content {
+            background: var(--bg-light);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .analysis-modal-close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .analysis-modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .analysis-modal-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-top: 0;
+            padding-right: 2rem;
+        }
+
+        .analysis-modal-label {
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 1.2rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .analysis-modal-text {
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .section-5-panel ul,
         .section-5-panel li {
             font-size: 0.7rem;
@@ -1427,6 +1499,15 @@
         </div>
     </div>
 
+    <!-- Dynamic Analysis Modal -->
+    <div id="analysis-modal" class="analysis-modal">
+        <div class="analysis-modal-content">
+            <button class="analysis-modal-close" onclick="closeDynamicAnalysis()">✕</button>
+            <h2 class="analysis-modal-title" id="modal-project-title">Project Analysis</h2>
+            <div id="modal-analysis-content"></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
@@ -1770,7 +1851,11 @@
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
-                        <a href="${analysisId ? `#${analysisId}` : '#design-analysis'}" class="project-link">🧠 View Analysis</a>
+                        <a href="${analysisId ? `#${analysisId}` : '#'}" 
+                           class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
+                           data-project-slug="${project.slug || ''}"
+                           ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
+                           🧠 View Analysis</a>
                         ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
@@ -1836,6 +1921,65 @@
 
         // Auto-refresh every 30 seconds
         setInterval(loadProjects, 30000);
+
+        // Dynamic analysis modal functions
+        async function openDynamicAnalysis(event, projectSlug) {
+            event.preventDefault();
+            if (!projectSlug) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/project-analysis/${projectSlug}`);
+                if (!response.ok) {
+                    console.error(`Failed to load analysis: ${response.status}`);
+                    return;
+                }
+                const analysis = await response.json();
+                displayAnalysisModal(analysis);
+            } catch (error) {
+                console.error('Error loading dynamic analysis:', error);
+            }
+        }
+
+        function displayAnalysisModal(analysis) {
+            const modal = document.getElementById('analysis-modal');
+            const title = document.getElementById('modal-project-title');
+            const content = document.getElementById('modal-analysis-content');
+
+            title.textContent = `${analysis.title} - Analysis`;
+
+            content.innerHTML = `
+                <div class="analysis-modal-label">Generated From</div>
+                <div class="analysis-modal-text">${escapeHtml(analysis.generatedFrom)}</div>
+
+                <div class="analysis-modal-label">Design Choice</div>
+                <div class="analysis-modal-text">${escapeHtml(analysis.designChoice)}</div>
+
+                <div class="analysis-modal-label">Benefits</div>
+                <div class="analysis-modal-text">
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        ${(analysis.benefits || []).map(b => `<li>${escapeHtml(b)}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="analysis-modal-label">Alternative Considered</div>
+                <div class="analysis-modal-text">${escapeHtml(analysis.alternativeConsidered)}</div>
+
+                <div class="analysis-modal-label">Status</div>
+                <div class="analysis-modal-text"><span class="project-status ${getStatusClass(analysis.status)}">${escapeHtml(analysis.status)}</span></div>
+            `;
+
+            modal.classList.add('show');
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeDynamicAnalysis();
+                }
+            });
+        }
+
+        function closeDynamicAnalysis() {
+            const modal = document.getElementById('analysis-modal');
+            modal.classList.remove('show');
+        }
     </script>
 </body>
 </html>
