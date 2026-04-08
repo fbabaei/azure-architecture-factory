@@ -4,6 +4,8 @@ Dedicated Azure Architecture Factory Portal Server
 Serves factory projects, BRD intake API, and project management dashboard
 """
 
+import cgi
+import io
 import json
 import logging
 import pathlib
@@ -63,8 +65,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests"""
-        if urlparse(self.path).path == "/api/brd-intake":
+        path = urlparse(self.path).path
+        if path == "/api/brd-intake":
             return self._handle_brd_intake()
+        if path == "/api/brd-upload":
+            return self._handle_brd_upload()
 
         self._send_json({"error": "Not found"}, 404)
 
@@ -75,8 +80,61 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
+    def _handle_brd_upload(self):
+        """Handle multipart/form-data BRD file upload."""
+        content_type = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in content_type:
+            self._send_json({"error": "Expected multipart/form-data"}, 415)
+            return
+
+        content_length = int(self.headers.get("Content-Length", 0))
+        raw_body = self.rfile.read(content_length)
+
+        # Parse multipart using cgi.FieldStorage
+        environ = {
+            "REQUEST_METHOD": "POST",
+            "CONTENT_TYPE": content_type,
+            "CONTENT_LENGTH": str(content_length),
+        }
+        try:
+            fields = cgi.FieldStorage(
+                fp=io.BytesIO(raw_body),
+                headers=self.headers,
+                environ=environ,
+            )
+        except Exception as exc:
+            self._send_json({"error": f"Failed to parse multipart body: {exc}"}, 400)
+            return
+
+        project_name_field = fields.getvalue("project_name", "").strip()
+        brd_file_field = fields["brd_file"] if "brd_file" in fields else None
+
+        if not brd_file_field:
+            self._send_json({"error": "Missing brd_file field"}, 400)
+            return
+
+        raw_content = brd_file_field.file.read() if hasattr(brd_file_field, "file") else b""
+        try:
+            content = raw_content.decode("utf-8")
+        except UnicodeDecodeError:
+            self._send_json({"error": "BRD file must be UTF-8 encoded text"}, 400)
+            return
+
+        if not content.strip():
+            self._send_json({"error": "Uploaded BRD file is empty"}, 400)
+            return
+
+        # Derive filename: prefer project_name field, fall back to uploaded filename
+        uploaded_filename = getattr(brd_file_field, "filename", "") or "brd.md"
+        if project_name_field:
+            file_name = project_name_field if project_name_field.endswith(".md") else f"{project_name_field}.md"
+        else:
+            file_name = uploaded_filename if uploaded_filename.endswith(".md") else f"{uploaded_filename}.md"
+
+        return self._save_and_start_run(file_name, content)
+
     def _handle_brd_intake(self):
-        """Handle BRD intake submission"""
+        """Handle BRD intake submission (JSON body)"""
         content_length = int(self.headers.get("Content-Length", 0))
         try:
             body = self.rfile.read(content_length).decode("utf-8")
@@ -92,7 +150,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Missing fileName or content"}, 400)
             return
 
-        # Save BRD file
+        return self._save_and_start_run(file_name, content)
+
+    def _save_and_start_run(self, file_name: str, content: str):
+        """Save BRD file and launch pipeline worker thread."""
         brds_dir = FACTORY_REPO_ROOT / "docs" / "intake"
         brds_dir.mkdir(parents=True, exist_ok=True)
         brd_path = brds_dir / file_name

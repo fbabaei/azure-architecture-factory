@@ -1054,6 +1054,13 @@
                                 <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
                             </div>
                             <div class="form-group">
+                                <label for="brd-upload">Upload BRD File (.md or .txt)</label>
+                                <input type="file" id="brd-upload" accept=".md,.txt,text/markdown,text/plain">
+                                <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
+                                    Optional. If provided, file content is used instead of pasted markdown.
+                                </p>
+                            </div>
+                            <div class="form-group">
                                 <label for="brd-content">Business Requirements Document (Markdown)</label>
                                 <textarea id="brd-content" placeholder="# Project: [Name]
 
@@ -1073,7 +1080,7 @@
 - [Metric 2]
 
 ## Timeline
-[Expected delivery]" required></textarea>
+[Expected delivery]"></textarea>
                             </div>
                             <div class="button-group">
                                 <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
@@ -1424,7 +1431,7 @@
     <script>
         const API_BASE = window.location.origin;
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
-        const API_RUN_STATUS = (id) => `${API_BASE}/api/brd-runs/${id}`;
+                const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
 
         const diagramModal = document.getElementById('diagram-modal');
         const diagramFrame = document.getElementById('diagram-frame');
@@ -1552,13 +1559,19 @@
         async function submitBrd(event) {
             event.preventDefault();
 
-            const fileName = document.getElementById('brd-file-name').value.trim();
-            const content = document.getElementById('brd-content').value.trim();
+            const fileNameInput = document.getElementById('brd-file-name').value.trim();
+            const contentInput = document.getElementById('brd-content').value.trim();
+            const uploadInput = document.getElementById('brd-upload');
+            const uploadedFile = uploadInput?.files?.[0] || null;
             const button = document.getElementById('submit-brd-btn');
-            const statusDiv = document.getElementById('brd-intake-status');
 
-            if (!fileName || !content) {
-                setBrdStatus('Please fill in all fields', true);
+            if (!fileNameInput) {
+                setBrdStatus('Please provide a project name / filename.', true);
+                return false;
+            }
+
+            if (!contentInput && !uploadedFile) {
+                setBrdStatus('Provide BRD markdown text or upload a BRD file.', true);
                 return false;
             }
 
@@ -1566,11 +1579,22 @@
             setBrdStatus(`<span class="loading"></span> Submitting BRD...`, false);
 
             try {
-                const response = await fetch(API_BRD_INTAKE, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileName: `${fileName}.md`, content })
-                });
+                let response;
+
+                if (uploadedFile) {
+                    // Multipart upload — file sent directly to server without browser-side read
+                    const form = new FormData();
+                    form.append('project_name', normalizeBrdFileName(fileNameInput));
+                    form.append('brd_file', uploadedFile, uploadedFile.name);
+                    response = await fetch(API_BRD_UPLOAD, { method: 'POST', body: form });
+                } else {
+                    // JSON text intake
+                    response = await fetch(API_BRD_INTAKE, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fileName: normalizeBrdFileName(fileNameInput), content: contentInput })
+                    });
+                }
 
                 if (!response.ok) {
                     const err = await response.text();
@@ -1617,10 +1641,8 @@
                         return;
                     }
 
-                    setBrdStatus(
-                        `<span class="loading"></span> Processing (${Math.round(attempts * interval / 1000)}s)...`,
-                        false
-                    );
+                    const elapsed = Math.round(attempts * interval / 1000);
+                    setBrdStatus(renderRunProgress(status, elapsed), false);
                 } catch (error) {
                     if (attempts >= maxAttempts) {
                         clearInterval(timer);
@@ -1633,20 +1655,40 @@
 
         function handleRunCompletion(status) {
             if (status.result?.status === 'success') {
+                const projectName = status.result.project || 'new project';
+                const runLog = status.result.runLog
+                    ? `<br/><small>Run log: ${escapeHtml(status.result.runLog)}</small>`
+                    : '';
+
                 setBrdStatus(
-                    `✅ Success! Project generated: ${status.result.project}. Refreshing...`,
+                    `✅ Success! Project generated: ${projectName}. Refreshing...${runLog}`,
                     false
                 );
                 setTimeout(() => {
                     document.getElementById('brd-file-name').value = '';
                     document.getElementById('brd-content').value = '';
+                    const upload = document.getElementById('brd-upload');
+                    if (upload) upload.value = '';
                     loadProjects();
                     document.getElementById('submit-brd-btn').disabled = false;
                 }, 2000);
             } else {
-                setBrdStatus(`Failed: ${status.result?.message || 'Unknown error'}`, true);
+                const stage = status.result?.stage ? ` (stage: ${status.result.stage})` : '';
+                setBrdStatus(`Failed${stage}: ${status.result?.message || 'Unknown error'}`, true);
                 document.getElementById('submit-brd-btn').disabled = false;
             }
+        }
+
+        function normalizeBrdFileName(inputName) {
+            const raw = String(inputName || '').trim();
+            if (!raw) return 'brd.md';
+            return /\.md$/i.test(raw) ? raw : `${raw}.md`;
+        }
+
+        function renderRunProgress(status, elapsedSeconds) {
+            const runState = String(status?.status || 'running').toLowerCase();
+            const stateLabel = runState.charAt(0).toUpperCase() + runState.slice(1);
+            return `<span class="loading"></span> ${stateLabel} (${elapsedSeconds}s)...`;
         }
 
         function setBrdStatus(message, isError) {
