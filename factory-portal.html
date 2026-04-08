@@ -6,6 +6,10 @@
     <title>Azure Architecture Factory | Project Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        html {
+            font-size: 92%;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -32,7 +36,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg-dark);
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.45;
             background-image: 
                 linear-gradient(135deg, rgba(0, 120, 212, 0.08) 0%, transparent 55%),
                 linear-gradient(225deg, rgba(80, 230, 255, 0.10) 0%, transparent 45%),
@@ -42,7 +46,7 @@
         header {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(222, 239, 251, 0.96) 100%);
             border-bottom: 1px solid var(--border);
-            padding: 2rem 0;
+            padding: 0.9rem 0;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -50,9 +54,9 @@
         }
 
         .header-container {
-            max-width: 1400px;
+            max-width: 1050px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -61,27 +65,27 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            font-size: 1.5rem;
+            gap: 0.65rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary);
         }
 
         .logo svg {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
         }
 
         nav {
             display: flex;
-            gap: 2rem;
+            gap: 1.25rem;
             align-items: center;
         }
 
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 500;
             transition: color 0.2s;
         }
@@ -91,18 +95,36 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1050px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 1.5rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container > section:first-of-type {
+            order: 1;
+        }
+
+        #stats-container {
+            order: 2;
+        }
+
+        #design-analysis {
+            order: 3;
+        }
+
+        .projects-intake-wrapper {
+            order: 4;
         }
 
         section {
-            margin-bottom: 4rem;
+            margin-bottom: 2rem;
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -112,58 +134,59 @@
 
         .section-subtitle {
             color: var(--text-secondary);
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
         }
 
         h2 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
+            font-size: 1.35rem;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.6rem;
         }
 
         h2::before {
             content: '';
             display: inline-block;
-            width: 4px;
-            height: 2rem;
+            width: 3px;
+            height: 1.6rem;
             background: linear-gradient(180deg, var(--primary), var(--secondary));
-            border-radius: 2px;
+            border-radius: 1px;
         }
 
         .brd-intake-panel {
             background: var(--bg-light);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 3rem;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
             max-width: 800px;
             box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
         }
 
         .brd-intake-panel h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
             color: var(--primary);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.8rem;
         }
 
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             color: var(--text-primary);
+            font-size: 0.9rem;
         }
 
         input[type="text"],
         textarea {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.6rem;
             border: 1px solid var(--border);
             background: #f8fbfe;
             color: var(--text-primary);
@@ -182,36 +205,37 @@
 
         textarea {
             resize: vertical;
-            min-height: 150px;
+            min-height: 110px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .button-group {
             display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            gap: 0.75rem;
+            margin-top: 1rem;
         }
 
         button {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             border: none;
             border-radius: 4px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
 
         .btn-primary {
             background: var(--primary);
             color: white;
+            font-weight: 600;
         }
 
         .btn-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 120, 212, 0.2);
         }
 
         .btn-primary:disabled {
@@ -221,11 +245,12 @@
         }
 
         .status-message {
-            padding: 1rem;
+            padding: 0.75rem;
             border-radius: 4px;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
             display: none;
             font-weight: 500;
+            font-size: 0.9rem;
         }
 
         .status-message.visible {
@@ -252,46 +277,50 @@
 
         .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+            margin-top: 0.8rem;
         }
 
         .project-card {
             background: var(--bg-light);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
+            border-radius: 6px;
+            padding: 0.65rem;
             transition: all 0.3s;
             cursor: pointer;
-            box-shadow: 0 14px 32px rgba(18, 50, 74, 0.08);
+            box-shadow: 0 2px 6px rgba(18, 50, 74, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .project-card:hover {
             border-color: var(--primary);
-            box-shadow: 0 18px 36px rgba(0, 120, 212, 0.18);
-            transform: translateY(-4px);
-            background: #f4faff;
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.12);
+            transform: translateY(-2px);
+            background: #fafcff;
         }
 
         .project-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
 
         .project-title {
-            font-size: 1.2rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--primary);
         }
 
         .project-status {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
+            padding: 0.15rem 0.45rem;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -313,45 +342,44 @@
 
         .project-description {
             color: var(--text-secondary);
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            display: none;
         }
 
         .project-meta {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+            display: none;
         }
 
         .meta-tag {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
+            gap: 0.3rem;
+            padding: 0.18rem 0.5rem;
             background: var(--bg-soft);
-            border-radius: 4px;
-            font-size: 0.8rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
             color: var(--primary-dark);
         }
 
         .project-links {
             display: flex;
-            gap: 1rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
+            width: 100%;
         }
 
         .project-link {
             flex: 1;
-            min-width: 100px;
-            padding: 0.5rem 1rem;
+            min-width: 70px;
+            padding: 0.3rem 0.5rem;
             background: #eef7ff;
             border: 1px solid var(--primary);
             color: var(--primary-dark);
             text-decoration: none;
             border-radius: 4px;
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -361,87 +389,409 @@
             color: white;
         }
 
+        .analysis-groups {
+            display: grid;
+            gap: 0.5rem;
+            margin: 0.6rem 0 1.2rem;
+        }
+
+        .analysis-group {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-light);
+            overflow: hidden;
+        }
+
+        .analysis-group summary {
+            cursor: pointer;
+            list-style: none;
+            font-weight: 700;
+            color: var(--primary-dark);
+            padding: 0.6rem 0.75rem;
+            background: #f0f6ff;
+            font-size: 0.9rem;}
+
+        .analysis-body {
+            padding: 0.6rem 0.75rem;
+            display: grid;
+            gap: 0.25rem;
+        }
+
+        .analysis-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .analysis-top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-top-grid > .analysis-top-block:first-child {
+            grid-column: 1 / -1;
+            position: relative;
+            top: -1in;
+        }
+
+        .analysis-top-grid > .analysis-top-block:nth-child(2) {
+            grid-column: 1;
+        }
+
+        .analysis-top-block h3 {
+            margin-bottom: 0.4rem;
+        }
+
+        .analysis-top-block p {
+            margin-bottom: 0.6rem;
+        }
+
+        .llm-rationale-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0.8rem;
+            align-items: start;
+        }
+
+        .llm-rationale-grid .analysis-groups {
+            margin: 0;
+        }
+
+        .section-3a-panel .analysis-group summary {
+            font-size: 0.64rem;
+        }
+
+        .section-3a-panel .analysis-group {
+            width: 66%;
+            max-width: 66%;
+        }
+
+        .section-3a-panel {
+            position: relative;
+            left: -66%;
+        }
+
+        .section-3a-panel .analysis-body,
+        .section-3a-panel .analysis-body p {
+            font-size: 0.54rem;
+            line-height: 1.2;
+        }
+
+        .section-3a-panel .analysis-label {
+            font-size: 0.49rem;
+        }
+
+        .section-3a-panel > p {
+            font-size: 0.62rem;
+            line-height: 1.25;
+        }
+
+        .section-3-table-wrap {
+            width: 50%;
+            max-width: 50%;
+        }
+
+        .section-3-description {
+            margin-bottom: 0.6rem;
+        }
+
+        .section-5-panel ul,
+        .section-5-panel li {
+            font-size: 0.7rem;
+            line-height: 1.35;
+        }
+
+        .section-5-panel ul {
+            margin-left: 1rem;
+            padding-left: 1rem;
+        }
+
+        .learn-more-box {
+            width: 50%;
+            max-width: 50%;
+            padding: 0.9rem !important;
+        }
+
+        .learn-more-box h3 {
+            font-size: 0.86rem;
+            margin-bottom: 0.35rem !important;
+        }
+
+        .learn-more-box p {
+            font-size: 0.7rem;
+            line-height: 1.3;
+        }
+
+        .analysis-right-rail {
+            width: 33.333%;
+            max-width: 33.333%;
+            margin-left: auto;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-right-rail .analysis-group summary {
+            font-size: 0.62rem;
+        }
+
+        .analysis-right-rail .analysis-body,
+        .analysis-right-rail .analysis-body p {
+            font-size: 0.54rem;
+            line-height: 1.2;
+        }
+
+        .analysis-right-rail .analysis-label {
+            font-size: 0.48rem;
+        }
+        .pattern-table-wrap {
+            width: 33.333%;
+            max-width: 33.333%;
+        }
+
+        .pattern-table-wrap table {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .data-table-wrap {
+            width: 66.67%;
+            max-width: 66.67%;
+        }
+
+        .data-table-wrap table {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .analysis-top-grid > .analysis-right-rail {
+            grid-column: 2;
+            width: 100%;
+            margin: 0;
+        }
+
+        .benefits-risk-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .benefits-risk-grid .projects-grid {
+            margin-bottom: 0 !important;
+        }
+
+        .benefits-risk-grid ul {
+            margin-bottom: 0 !important;
+        }
+
+        .section-four-grid {
+            display: flex !important;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            align-items: stretch;
+        }
+
+        .section-four-grid .project-card {
+            padding: 0.35rem;
+            flex: 1 1 120px;
+            max-width: 160px;
+            min-height: 70px;
+        }
+
+        .section-four-grid .project-title {
+            font-size: 0.58rem;
+            line-height: 1.2;
+        }
+
+        .section-four-grid p {
+            font-size: 0.52rem;
+            line-height: 1.2;
+        }
+
+        .factory-philosophy-panel {
+            width: 62%;
+            max-width: 62%;
+            position: relative;
+            left: -4%;
+        }
+
+        #design-analysis table {
+            font-size: 0.62rem !important;
+            width: 86% !important;
+            max-width: 86% !important;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #design-analysis th,
+        #design-analysis td {
+            font-size: 0.62rem !important;
+            line-height: 1.25;
+        }
+
         .empty-state {
             text-align: center;
-            padding: 3rem 2rem;
+            padding: 2rem 1.5rem;
             color: var(--text-secondary);
         }
 
         .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
             color: var(--text-primary);
         }
 
         footer {
             background: var(--bg-light);
             border-top: 1px solid var(--border);
-            padding: 2rem;
-            margin-top: 4rem;
+            padding: 1.25rem;
+            margin-top: 2rem;
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 3rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-bottom: 2rem;
+            max-width: 420px;
         }
 
         .stat-card {
             background: var(--bg-light);
             border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: 8px;
+            padding: 0.55rem;
+            border-radius: 6px;
             text-align: center;
             box-shadow: 0 12px 28px rgba(18, 50, 74, 0.06);
+            flex: 1 1 120px;
+            min-width: 110px;
         }
 
         .stat-number {
-            font-size: 2rem;
+            font-size: 1.15rem;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.15rem;
         }
 
         .stat-label {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.68rem;
         }
 
         @media (max-width: 768px) {
             h1 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
 
             h2 {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
             }
 
             .header-container {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.75rem;
                 text-align: center;
             }
 
             nav {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.75rem;
             }
 
             .projects-grid {
                 grid-template-columns: 1fr;
             }
 
+            .llm-rationale-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-3a-panel {
+                left: 0;
+            }
+
+            .section-3a-panel .analysis-group {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .analysis-right-rail {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .analysis-top-grid > .analysis-right-rail {
+                grid-column: 1;
+            }
+
+            .benefits-risk-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-four-grid {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+            }
+
+            .analysis-top-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-top-grid > .analysis-top-block:first-child {
+                top: 0;
+            }
+
+            .section-3-table-wrap {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .factory-philosophy-panel {
+                width: 100%;
+                max-width: 100%;
+                left: 0;
+            }
+
+            .learn-more-box {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .pattern-table-wrap {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .data-table-wrap {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #design-analysis table {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
             .container {
-                padding: 1.5rem;
+                padding: 1rem 1rem;
             }
         }
 
@@ -477,11 +827,11 @@
         .diagram-shell {
             width: min(1200px, 98vw);
             height: min(820px, 92vh);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             border: 1px solid var(--border);
             background: #fff;
-            box-shadow: 0 20px 45px rgba(10, 24, 36, 0.25);
+            box-shadow: 0 8px 20px rgba(10, 24, 36, 0.15);
             display: grid;
             grid-template-rows: auto 1fr;
         }
@@ -490,14 +840,14 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.75rem;
-            padding: 0.65rem 0.9rem;
+            gap: 0.6rem;
+            padding: 0.5rem 0.7rem;
             border-bottom: 1px solid var(--border);
             background: #f3f9ff;
         }
 
         .diagram-title {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: var(--primary-dark);
         }
@@ -512,9 +862,9 @@
             border: 1px solid var(--border);
             background: #ffffff;
             color: var(--primary-dark);
-            border-radius: 6px;
-            padding: 0.35rem 0.65rem;
-            font-size: 0.8rem;
+            border-radius: 4px;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
             text-decoration: none;
@@ -525,6 +875,96 @@
             height: 100%;
             border: 0;
             background: #fff;
+        }
+
+        .projects-intake-wrapper {
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        .projects-intake-wrapper #projects {
+            max-width: 620px;
+            justify-self: start;
+        }
+
+        .design-analysis-header-row {
+            margin-bottom: 0.75rem;
+        }
+
+        .design-analysis-heading .section-subtitle {
+            margin-bottom: 0;
+        }
+
+        .philosophy-intake-row {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1rem;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .philosophy-intake-row #intake {
+            margin-bottom: 0;
+            position: relative;
+            left: -1in;
+            top: -1in;
+        }
+
+        .philosophy-intake-row #intake h2 {
+            margin-top: 0;
+        }
+
+        #projects .projects-grid {
+            gap: 0.45rem;
+            margin-top: 0.45rem;
+        }
+
+        #projects .project-card {
+            padding: 0.45rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(18, 50, 74, 0.06);
+        }
+
+        #projects .project-header {
+            margin-bottom: 0.3rem;
+        }
+
+        #projects .project-title {
+            font-size: 0.8rem;
+        }
+
+        #projects .project-status {
+            font-size: 0.58rem;
+            padding: 0.1rem 0.35rem;
+        }
+
+        #projects .project-link {
+            min-width: 58px;
+            font-size: 0.62rem;
+            padding: 0.22rem 0.35rem;
+        }
+
+        .projects-intake-wrapper section {
+            margin-bottom: 0;
+        }
+
+        .projects-intake-wrapper h2 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .projects-intake-wrapper #projects {
+                max-width: 100%;
+            }
+
+            .philosophy-intake-row {
+                grid-template-columns: 1fr;
+            }
+
+            .philosophy-intake-row #intake {
+                left: 0;
+                top: 0;
+            }
         }
     </style>
 </head>
@@ -540,6 +980,7 @@
             <nav>
                 <a href="#projects" class="active">Projects</a>
                 <a href="#intake">BRD Intake</a>
+                <a href="#design-analysis">Design Analysis</a>
                 <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
             </nav>
         </div>
@@ -570,19 +1011,51 @@
             </div>
         </div>
 
-        <!-- BRD Intake -->
-        <section id="intake">
-            <h2>Submit Business Requirements</h2>
-            <div class="brd-intake-panel">
-                <h3>📋 New BRD Input</h3>
-                <form onsubmit="return submitBrd(event)">
-                    <div class="form-group">
-                        <label for="brd-file-name">Project Name / BRD Filename</label>
-                        <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
+        <div class="projects-intake-wrapper">
+            <!-- Generated Projects -->
+            <section id="projects">
+                <h2>Generated Projects</h2>
+                <div id="projects-container">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>No projects yet</h3>
+                        <p>Submit a BRD to the left to generate your first architecture project</p>
                     </div>
-                    <div class="form-group">
-                        <label for="brd-content">Business Requirements Document (Markdown)</label>
-                        <textarea id="brd-content" placeholder="# Project: [Name]
+                </div>
+            </section>
+        </div>
+
+        <!-- Design Analysis -->
+        <section id="design-analysis">
+            <div class="design-analysis-header-row">
+                <div class="design-analysis-heading">
+                    <h2>Design Analysis & Rationale</h2>
+                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
+                </div>
+            </div>
+
+            <div class="philosophy-intake-row">
+                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px;">
+                    <h3 style="color: var(--primary); margin-top: 0;">Factory Design Philosophy</h3>
+                    <p>
+                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity. 
+                        Each project uses cloud-native patterns that align with real enterprise workloads, including 
+                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                    </p>
+                </div>
+
+                <section id="intake">
+                    <h2>Submit Business Requirements</h2>
+                    <div class="brd-intake-panel">
+                        <h3>📋 New BRD Input</h3>
+                        <form onsubmit="return submitBrd(event)">
+                            <div class="form-group">
+                                <label for="brd-file-name">Project Name / BRD Filename</label>
+                                <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="brd-content">Business Requirements Document (Markdown)</label>
+                                <textarea id="brd-content" placeholder="# Project: [Name]
 
 ## Business Goal
 [What problem are we solving?]
@@ -591,32 +1064,342 @@
 - [Requirement 1]
 - [Requirement 2]
 
+## Out of Scope / What Not to Include
+- [Not included 1]
+- [Not included 2]
+
 ## Success Criteria
 - [Metric 1]
 - [Metric 2]
 
 ## Timeline
 [Expected delivery]" required></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
+                            </div>
+                            <div class="status-message" id="brd-intake-status"></div>
+                        </form>
                     </div>
-                    <div class="button-group">
-                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
+                </section>
+            </div>
+
+            <div class="analysis-top-grid">
+                <div class="analysis-top-block">
+                    <h3>1. Architectural Pattern Selection</h3>
+                    <p>Projects in the factory use microservices or domain-driven service boundaries depending on workload characteristics.</p>
+                    <div class="pattern-table-wrap" style="overflow-x: auto; margin-bottom: 0; border: 1px solid var(--border); border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead style="background: #f0f6ff;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Pattern</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Best For</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Tradeoffs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Microservices (Container Apps)</strong></td>
+                                    <td style="padding: 12px;">Stateless, event-driven workloads; independent scaling</td>
+                                    <td style="padding: 12px;">✓ Fine-grained scaling<br/>✗ Operational complexity</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Kubernetes (AKS)</strong></td>
+                                    <td style="padding: 12px;">Large, complex multi-service systems; cost-sensitive</td>
+                                    <td style="padding: 12px;">✓ Dense packing<br/>✗ Steep learning curve</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Serverless Functions</strong></td>
+                                    <td style="padding: 12px;">Short-lived, event-driven jobs; pay-per-execution</td>
+                                    <td style="padding: 12px;">✓ Zero idle cost<br/>✗ Cold starts</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;"><strong>Monolith (App Service)</strong></td>
+                                    <td style="padding: 12px;">Simple CRUD applications, small teams</td>
+                                    <td style="padding: 12px;">✓ Simpler to reason about<br/>✗ Harder scaling</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="status-message" id="brd-intake-status"></div>
-                </form>
+                </div>
+
+                <div class="analysis-top-block">
+                    <h3>2. Data Layer & Persistence Strategy</h3>
+                    <p>Each project selects datastores based on access patterns, consistency requirements, and scale characteristics.</p>
+                    <div class="pattern-table-wrap data-table-wrap" style="overflow-x: auto; margin-bottom: 0; border: 1px solid var(--border); border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead style="background: #f0f6ff;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Datastore</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Why Selected</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Alternative</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Cosmos DB (NoSQL)</strong></td>
+                                    <td style="padding: 12px;">Document flexibility, multi-region replication, high throughput</td>
+                                    <td style="padding: 12px;">PostgreSQL (operational overhead)</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>SQL Database</strong></td>
+                                    <td style="padding: 12px;">Relational integrity, ACID guarantees, familiar schema</td>
+                                    <td style="padding: 12px;">Cosmos DB (overkill)</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Blob Storage</strong></td>
+                                    <td style="padding: 12px;">Immutable archive, massive scale, cost-effective</td>
+                                    <td style="padding: 12px;">Cosmos DB (wrong pattern)</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;"><strong>Azure Search</strong></td>
+                                    <td style="padding: 12px;">Full-text search, semantic ranking for LLM responses</td>
+                                    <td style="padding: 12px;">PostgreSQL fulltext (less performant)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <div class="analysis-right-rail">
+            <h3>2A. Project-by-Project Analysis Groups</h3>
+            <p>Use View Analysis from each project card to jump to the right group below.</p>
+            <div class="analysis-groups">
+                <details class="analysis-group" id="analysis-ticket-triage" open>
+                    <summary>Ticket Triage Assistant</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>Container Apps microservices with Service Bus and Cosmos DB for independent scaling and durable approval workflows.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Fault isolation, stronger auditability, and better handling of bursty ticket volumes.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>A single monolith was simpler but rejected due to scaling bottlenecks and weaker service isolation.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-order-management">
+                    <summary>Order Management Platform</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>Event-driven functions with Service Bus, SQL, and Storage to process order lifecycle steps asynchronously.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Lower cost under variable demand, durable retries, and stronger consistency for transactional data.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Pure synchronous APIs were rejected because downstream failures can block the full checkout flow.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-aks-microservices">
+                    <summary>AKS Microservices Demo</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>AKS and Helm for teams that require Kubernetes-native control and denser multi-service placement.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Advanced scheduling control, ecosystem compatibility, and platform-team governance flexibility.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Container Apps was easier operationally but offers less cluster-level control for advanced requirements.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-ecommerce">
+                    <summary>E-Commerce Demo</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>App Service and Static Web Apps with Cosmos DB and Search to maximize development velocity.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Simpler operations, fast delivery, and strong product discovery UX through search capabilities.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Full microservice decomposition was deferred to avoid unnecessary complexity early in product validation.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-storage-self-service">
+                    <summary>Storage Self-Service Provisioning</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>Functions with Event Grid and Key Vault for policy-driven provisioning with secure secret handling.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Strong governance automation, event decoupling, and clearer compliance checkpoints.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Manual request handling was rejected due to inconsistent operations and weak end-to-end traceability.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-fabric-medallion">
+                    <summary>Fabric Medallion Pipeline</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>Medallion zones on Fabric with Spark and Lakehouses to separate raw, curated, and serving layers.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Better data quality progression, stronger lineage, and repeatable transformations at scale.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Single-zone pipelines were rejected because quality issues propagate and are harder to contain.</p>
+                    </div>
+                </details>
+
+                <details class="analysis-group" id="analysis-brd-template">
+                    <summary>BRD-Based Project Template</summary>
+                    <div class="analysis-body">
+                        <span class="analysis-label">Design Choice</span>
+                        <p>Template-first project scaffolding with placeholders for architecture, infra, docs, and tests.</p>
+                        <span class="analysis-label">Benefits</span>
+                        <p>Consistent project structure, faster onboarding, and easier governance across generated outputs.</p>
+                        <span class="analysis-label">Alternative Considered</span>
+                        <p>Free-form initialization was rejected because outputs become inconsistent and difficult to review.</p>
+                    </div>
+                </details>
+            </div>
+            </div>
+            </div>
+
+            <h3>3. Language Model (LLM) Choices</h3>
+            <p class="section-3-description">Projects using AI features select language models based on task complexity, latency, cost, and safety requirements.</p>
+            <div class="llm-rationale-grid" style="margin-bottom: 2rem;">
+                <div>
+                    <div class="section-3-table-wrap" style="overflow-x: auto; margin-bottom: 0; border: 1px solid var(--border); border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                            <thead style="background: #f0f6ff;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Model</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Used In</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Best For</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--primary);">Tradeoffs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>GPT-4o</strong></td>
+                                    <td style="padding: 12px;">Ticket Triage (classification, drafting)</td>
+                                    <td style="padding: 12px;">Complex reasoning, multi-step workflows, high-quality outputs</td>
+                                    <td style="padding: 12px;">✓ Superior accuracy<br/>✗ Highest cost per request</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>GPT-4 Turbo</strong></td>
+                                    <td style="padding: 12px;">E-Commerce product descriptions</td>
+                                    <td style="padding: 12px;">High-quality text generation, 128K context window</td>
+                                    <td style="padding: 12px;">✓ Large context, strong output<br/>✗ Medium-high cost</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>GPT-3.5 Turbo</strong></td>
+                                    <td style="padding: 12px;">Order Management (routing)</td>
+                                    <td style="padding: 12px;">Fast, cost-effective classification and simple summarization</td>
+                                    <td style="padding: 12px;">✓ Low cost, fast<br/>✗ Less capable on complex tasks</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px;"><strong>Phi-3.5 (OSS)</strong></td>
+                                    <td style="padding: 12px;">Optional local inference</td>
+                                    <td style="padding: 12px;">Privacy-sensitive workflows, edge deployment</td>
+                                    <td style="padding: 12px;">✓ Cost-free, private<br/>✗ Lower quality than GPT-4</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px;"><strong>Embeddings (text-embedding-3-large)</strong></td>
+                                    <td style="padding: 12px;">Ticket Triage (semantic search)</td>
+                                    <td style="padding: 12px;">Vector similarity, semantic retrieval, RAG systems</td>
+                                    <td style="padding: 12px;">✓ High-quality embeddings<br/>✗ Requires vector DB</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section-3a-panel">
+                    <h3 style="margin-top: 0;">3A. Model Selection Rationale by Project</h3>
+                    <p>Each AI-enabled project selected models based on quality, latency, cost, and safety. Here's the reasoning:</p>
+                    <div class="analysis-groups">
+                        <details class="analysis-group" style="margin-bottom: 1rem;">
+                            <summary style="background: #f5f5f5;">Ticket Triage Assistant: GPT-4o for Classification + Drafting</summary>
+                            <div class="analysis-body">
+                                <span class="analysis-label">Why GPT-4o</span>
+                                <p><strong>Chosen Model:</strong> GPT-4o for ticket analysis and draft response generation.<br/><strong>Reasoning:</strong> Ticket triage requires understanding nuanced customer intent, multi-step reasoning (classify → route → draft response), and high-quality outputs that humans will review. GPT-4o excels at complex reasoning and produces more accurate, safer responses.</p>
+                                <span class="analysis-label">Alternatives Considered</span>
+                                <p>
+                                  <strong>GPT-3.5 Turbo:</strong> Faster and cheaper, but produces lower-quality drafts that require more human editing. Cost savings don't justify the review overhead in production.<br/>
+                                  <strong>Phi-3.5 (local):</strong> Free and private, but insufficient reasoning ability for nuanced customer interactions and compliance requirements.
+                                </p>
+                                <span class="analysis-label">Embeddings Layer</span>
+                                <p><strong>text-embedding-3-large</strong> is used for semantic search to retrieve similar past tickets. These embeddings feed into RAG (Retrieval-Augmented Generation) so the model can cite historical resolutions, making responses more trustworthy and reducing hallucinations.</p>
+                            </div>
+                        </details>
+
+                        <details class="analysis-group" style="margin-bottom: 1rem;">
+                            <summary style="background: #f5f5f5;">Order Management Platform: GPT-3.5 Turbo for Routing</summary>
+                            <div class="analysis-body">
+                                <span class="analysis-label">Why GPT-3.5 Turbo</span>
+                                <p><strong>Chosen Model:</strong> GPT-3.5 Turbo for order-to-fulfillment routing and state classification.<br/><strong>Reasoning:</strong> Order routing is simpler than ticket triage-mostly classification ("is this eligible for express shipping?") and straightforward text processing. GPT-3.5 Turbo processes these tasks accurately and costs ~10x less than GPT-4o. The speed is also acceptable for async processing pipelines.</p>
+                                <span class="analysis-label">Alternatives Considered</span>
+                                <p>
+                                  <strong>GPT-4o:</strong> Overkill for classification; wastes budget on unnecessary reasoning capability.<br/>
+                                  <strong>Phi-3.5 (local):</strong> Could work but would require fine-tuning on order data; higher operational burden for marginal cost savings.
+                                </p>
+                                <span class="analysis-label">Cost Impact</span>
+                                <p>At 1000 orders/day, GPT-3.5 Turbo costs ~$10/month vs. GPT-4o at ~$100/month. With async processing, latency is not a factor.</p>
+                            </div>
+                        </details>
+
+                        <details class="analysis-group" style="margin-bottom: 1rem;">
+                            <summary style="background: #f5f5f5;">E-Commerce Demo: GPT-4 Turbo for Product Descriptions</summary>
+                            <div class="analysis-body">
+                                <span class="analysis-label">Why GPT-4 Turbo</span>
+                                <p><strong>Chosen Model:</strong> GPT-4 Turbo for generating rich, SEO-friendly product descriptions from structured catalog data.<br/><strong>Reasoning:</strong> E-commerce product quality directly impacts conversion. GPT-4 Turbo offers better tone consistency, product knowledge, and can handle 128K context (entire product catalog in one prompt). Quality matters more than cost here.</p>
+                                <span class="analysis-label">Alternatives Considered</span>
+                                <p>
+                                  <strong>GPT-4o:</strong> Newer and slightly better, but 128K context in Turbo is sufficient and slightly cheaper.<br/>
+                                  <strong>GPT-3.5 Turbo:</strong> Produces generic, lower-quality descriptions that don't drive conversions.
+                                </p>
+                                <span class="analysis-label">Safety & Brand Risk</span>
+                                <p>Poor product descriptions can damage brand perception and lost sales revenue far exceeds the model cost. GPT-4 Turbo strikes the right balance between quality and cost.</p>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3>4. Key Benefits of Factory Designs</h3>
+                <div class="projects-grid section-four-grid" style="margin-bottom: 1rem;">
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Production-Ready from Day 1</div>
+                        <p>Every project includes observability (App Insights), error handling, RBAC with managed identity, and deployment automation.</p>
+                    </div>
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Decoupled Scaling</div>
+                        <p>Microservices and async messaging allow each component to scale independently without affecting others.</p>
+                    </div>
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Audit & Compliance Built-In</div>
+                        <p>Service Bus message capture, Cosmos DB change feeds, and audit logs ensure you can trace every state change.</p>
+                    </div>
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Testable Architecture</div>
+                        <p>Service boundaries enable unit and integration tests without end-to-end UI testing. Mock queues and storage for fast feedback.</p>
+                    </div>
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Cost Optimization</div>
+                        <p>Serverless components scale to zero. Cosmos DB uses pay-per-request mode. Container Apps uses per-vCore per-second billing.</p>
+                    </div>
+                    <div class="project-card" style="cursor: default;">
+                        <div class="project-title">Modular IaC</div>
+                        <p>Bicep modules are reusable across projects. Update security policies in one place; all projects inherit the change.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-5-panel">
+                <h3>5. When NOT to Use Factory Patterns</h3>
+                <ul style="line-height: 1.8; margin-bottom: 2rem;">
+                    <li><strong>Simple CRUD apps with &lt;10 QPS:</strong> Factory's microservice patterns add unnecessary overhead. Use a single App Service instead.</li>
+                    <li><strong>Real-time complex queries:</strong> Cosmos DB NoSQL is not a good fit for ad hoc analytics. Use SQL Database or Synapse Analytics.</li>
+                    <li><strong>Long-running batch jobs (&gt;60 minutes):</strong> Azure Functions have timeout limits. Use Data Factory or Spark on Databricks.</li>
+                    <li><strong>Synchronous request-response at scale:</strong> Service Bus queues add latency. For low-latency RPC, use direct HTTP/gRPC.</li>
+                </ul>
             </div>
         </section>
 
-        <!-- Generated Projects -->
-        <section id="projects">
-            <h2>Generated Projects</h2>
-            <div id="projects-container">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📦</div>
-                    <h3>No projects yet</h3>
-                    <p>Submit a BRD above to generate your first architecture project</p>
-                </div>
-            </div>
-        </section>
+    </div>
+
+    <div class="learn-more-box" style="background: #fffbf0; border-left: 4px solid var(--warning); padding: 1.5rem; border-radius: 4px; margin: 1rem auto 2rem;">
+        <h3 style="color: #8b6914; margin-top: 0; margin-bottom: 0.5rem;">💡 Learn More</h3>
+        <p style="margin: 0;">Each generated project includes detailed <strong>architecture decision records</strong> explaining the rationale for specific design choices. Check each project's <code>docs/architecture-overview.md</code> for deep-dives.</p>
     </div>
 
     <footer>
@@ -927,6 +1710,7 @@
                 const diagram = links.diagram
                     ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
                     : (project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
+                const analysisId = getAnalysisId(project);
 
                 return `
                 <div class="project-card">
@@ -944,6 +1728,7 @@
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
+                        <a href="${analysisId ? `#${analysisId}` : '#design-analysis'}" class="project-link">🧠 View Analysis</a>
                         ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
@@ -961,13 +1746,51 @@
             return 'status-failed';
         }
 
+        function normalizeProjectText(value) {
+            return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+
+        function getAnalysisId(project) {
+            const text = `${normalizeProjectText(project?.title)} ${normalizeProjectText(project?.slug)}`;
+            if (text.includes('ticket triage')) return 'analysis-ticket-triage';
+            if (text.includes('order management')) return 'analysis-order-management';
+            if (text.includes('aks microservices')) return 'analysis-aks-microservices';
+            if (text.includes('e commerce') || text.includes('ecommerce')) return 'analysis-ecommerce';
+            if (text.includes('storage self service')) return 'analysis-storage-self-service';
+            if (text.includes('fabric medallion')) return 'analysis-fabric-medallion';
+            if (text.includes('brd based') || text.includes('template')) return 'analysis-brd-template';
+            return '';
+        }
+
+        function openAnalysisFromHash() {
+            const hash = window.location.hash;
+            if (!hash || !hash.startsWith('#analysis-')) {
+                return;
+            }
+
+            const target = document.querySelector(hash);
+            if (!target) {
+                return;
+            }
+
+            if (target.tagName.toLowerCase() === 'details') {
+                target.open = true;
+            }
+
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         function escapeHtml(text) {
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         // Load projects on page load
-        document.addEventListener('DOMContentLoaded', loadProjects);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProjects();
+            openAnalysisFromHash();
+        });
+        window.addEventListener('hashchange', openAnalysisFromHash);
 
         // Auto-refresh every 30 seconds
         setInterval(loadProjects, 30000);
