@@ -389,6 +389,17 @@
             color: white;
         }
 
+        .projects-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .projects-header .project-link {
+            flex: 0 0 auto;
+        }
+
         .analysis-groups {
             display: grid;
             gap: 0.5rem;
@@ -1086,7 +1097,10 @@
         <div class="projects-intake-wrapper">
             <!-- Generated Projects -->
             <section id="projects">
-                <h2>Generated Projects</h2>
+                <div class="projects-header">
+                    <h2>Generated Projects</h2>
+                    <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
+                </div>
                 <div id="projects-container">
                     <div class="empty-state">
                         <div class="empty-state-icon">📦</div>
@@ -1513,6 +1527,8 @@
         const API_BASE = window.location.origin;
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
                 const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
+        let allProjects = [];
+        let showAllProjects = false;
 
         const diagramModal = document.getElementById('diagram-modal');
         const diagramFrame = document.getElementById('diagram-frame');
@@ -1782,8 +1798,11 @@
             try {
                 const response = await fetch(`${API_BASE}/factory-projects.generated.json`);
                 const data = await response.json();
-                renderProjects(data.projects || []);
-                updateStats(data.projects || []);
+                allProjects = data.projects || [];
+                const visibleProjects = getVisibleProjects(allProjects);
+                renderProjects(visibleProjects);
+                updateStats(visibleProjects);
+                updateProjectViewToggle(allProjects);
             } catch (error) {
                 console.error('Error loading projects:', error);
                 document.getElementById('projects-container').innerHTML = `
@@ -1794,6 +1813,41 @@
                     </div>
                 `;
             }
+        }
+
+        function getVisibleProjects(projects) {
+            return showAllProjects ? projects : getLatestProjects(projects);
+        }
+
+        function toggleProjectView() {
+            showAllProjects = !showAllProjects;
+            const visibleProjects = getVisibleProjects(allProjects);
+            renderProjects(visibleProjects);
+            updateStats(visibleProjects);
+            updateProjectViewToggle(allProjects);
+        }
+
+        function updateProjectViewToggle(projects) {
+            const toggle = document.getElementById('project-view-toggle');
+            if (!toggle) return;
+
+            const projectCount = projects.length;
+            toggle.hidden = projectCount <= 1;
+            toggle.textContent = showAllProjects
+                ? 'Show latest only'
+                : `Show all ${projectCount} projects`;
+        }
+
+        function getLatestProjects(projects) {
+            if (!projects.length) return [];
+
+            const latest = projects.reduce((currentLatest, project) => {
+                const currentTime = Date.parse(currentLatest.generatedAt || '') || 0;
+                const projectTime = Date.parse(project.generatedAt || '') || 0;
+                return projectTime > currentTime ? project : currentLatest;
+            }, projects[0]);
+
+            return [latest];
         }
 
         function updateStats(projects) {
