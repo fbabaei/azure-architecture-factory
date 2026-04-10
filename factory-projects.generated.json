@@ -1,0 +1,269 @@
+{
+  "generatedAt": "2026-04-10T23:18:10.178998Z",
+  "projects": [
+    {
+      "slug": "test-app-20260410231810",
+      "title": "Test App",
+      "status": "Ready",
+      "generatedFrom": "test-app.md",
+      "generatedAt": "2026-04-10T23:18:10.178998Z",
+      "links": {
+        "readme": "projects/test-app-20260410231810/README.md",
+        "deploy": "projects/test-app-20260410231810/DEPLOY.md",
+        "diagram": "projects/test-app-20260410231810/diagrams/test-app-20260410231810.drawio",
+        "architectureOverview": "projects/test-app-20260410231810/docs/architecture-overview.md",
+        "traceability": "projects/test-app-20260410231810/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260410-231810-test-app.log"
+    },
+    {
+      "slug": "test-app-20260410231750",
+      "title": "Test App",
+      "status": "Ready",
+      "generatedFrom": "test-app.md",
+      "generatedAt": "2026-04-10T23:17:50.859614Z",
+      "links": {
+        "readme": "projects/test-app-20260410231750/README.md",
+        "deploy": "projects/test-app-20260410231750/DEPLOY.md",
+        "diagram": "projects/test-app-20260410231750/diagrams/test-app-20260410231750.drawio",
+        "architectureOverview": "projects/test-app-20260410231750/docs/architecture-overview.md",
+        "traceability": "projects/test-app-20260410231750/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260410-231750-test-app.log"
+    },
+    {
+      "slug": "test-app-20260410231251",
+      "title": "Test App",
+      "status": "Ready",
+      "generatedFrom": "test-app.md",
+      "generatedAt": "2026-04-10T23:12:51.535588Z",
+      "links": {
+        "readme": "projects/test-app-20260410231251/README.md",
+        "deploy": "projects/test-app-20260410231251/DEPLOY.md",
+        "diagram": "projects/test-app-20260410231251/diagrams/test-app-20260410231251.drawio",
+        "architectureOverview": "projects/test-app-20260410231251/docs/architecture-overview.md",
+        "traceability": "projects/test-app-20260410231251/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260410-231251-test-app.log"
+    },
+    {
+      "slug": "test-app-20260410230341",
+      "title": "Test App",
+      "status": "Ready",
+      "generatedFrom": "test-app.md",
+      "generatedAt": "2026-04-10T23:03:41.459518Z",
+      "links": {
+        "readme": "projects/test-app-20260410230341/README.md",
+        "deploy": "projects/test-app-20260410230341/DEPLOY.md",
+        "diagram": "projects/test-app-20260410230341/diagrams/test-app-20260410230341.drawio",
+        "architectureOverview": "projects/test-app-20260410230341/docs/architecture-overview.md",
+        "traceability": "projects/test-app-20260410230341/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260410-230341-test-app.log"
+    },
+    {
+      "slug": "smart-inventory-tracker-20260408222513",
+      "title": "Smart Inventory Tracker 20260408222513",
+      "status": "Ready",
+      "generatedFrom": "smart-inventory-tracker.md",
+      "generatedAt": "2026-04-08T22:25:14.925433+00:00",
+      "links": {
+        "readme": "projects/smart-inventory-tracker-20260408222513/README.md",
+        "deploy": "projects/smart-inventory-tracker-20260408222513/DEPLOY.md",
+        "diagram": "projects/smart-inventory-tracker-20260408222513/diagrams/smart-inventory-tracker-20260408222513.drawio",
+        "architectureOverview": "projects/smart-inventory-tracker-20260408222513/docs/architecture-overview.md",
+        "traceability": "projects/smart-inventory-tracker-20260408222513/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-222512-smart-inventory-tracker.log"
+    },
+    {
+      "slug": "smart-inventory-tracker-20260408222512",
+      "title": "Smart Inventory Tracker 20260408222512",
+      "status": "Ready",
+      "generatedFrom": "smart-inventory-tracker.md",
+      "generatedAt": "2026-04-08T22:25:14.852803+00:00",
+      "links": {
+        "readme": "projects/smart-inventory-tracker-20260408222512/README.md",
+        "deploy": "projects/smart-inventory-tracker-20260408222512/DEPLOY.md",
+        "diagram": "projects/smart-inventory-tracker-20260408222512/diagrams/smart-inventory-tracker-20260408222512.drawio",
+        "architectureOverview": "projects/smart-inventory-tracker-20260408222512/docs/architecture-overview.md",
+        "traceability": "projects/smart-inventory-tracker-20260408222512/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-222512-smart-inventory-tracker.log"
+    },
+    {
+      "slug": "smart-inventory-tracker-20260408222352",
+      "title": "Smart Inventory Tracker 20260408222352",
+      "status": "Ready",
+      "generatedFrom": "smart-inventory-tracker.md",
+      "generatedAt": "2026-04-08T22:23:55.257460+00:00",
+      "links": {
+        "readme": "projects/smart-inventory-tracker-20260408222352/README.md",
+        "deploy": "projects/smart-inventory-tracker-20260408222352/DEPLOY.md",
+        "diagram": "projects/smart-inventory-tracker-20260408222352/diagrams/smart-inventory-tracker-20260408222352.drawio",
+        "architectureOverview": "projects/smart-inventory-tracker-20260408222352/docs/architecture-overview.md",
+        "traceability": "projects/smart-inventory-tracker-20260408222352/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-222352-smart-inventory-tracker.log"
+    },
+    {
+      "slug": "smart-inventory-tracker-20260408222341",
+      "title": "Smart Inventory Tracker 20260408222341",
+      "status": "Ready",
+      "generatedFrom": "smart-inventory-tracker.md",
+      "generatedAt": "2026-04-08T22:23:42.395965+00:00",
+      "links": {
+        "readme": "projects/smart-inventory-tracker-20260408222341/README.md",
+        "deploy": "projects/smart-inventory-tracker-20260408222341/DEPLOY.md",
+        "diagram": "projects/smart-inventory-tracker-20260408222341/diagrams/smart-inventory-tracker-20260408222341.drawio",
+        "architectureOverview": "projects/smart-inventory-tracker-20260408222341/docs/architecture-overview.md",
+        "traceability": "projects/smart-inventory-tracker-20260408222341/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-222340-smart-inventory-tracker.log"
+    },
+    {
+      "slug": "smart-inventory-tracker-20260408222319",
+      "title": "Smart Inventory Tracker 20260408222319",
+      "status": "Ready",
+      "generatedFrom": "smart-inventory-tracker.md",
+      "generatedAt": "2026-04-08T22:23:22.610498+00:00",
+      "links": {
+        "readme": "projects/smart-inventory-tracker-20260408222319/README.md",
+        "deploy": "projects/smart-inventory-tracker-20260408222319/DEPLOY.md",
+        "diagram": "projects/smart-inventory-tracker-20260408222319/diagrams/smart-inventory-tracker-20260408222319.drawio",
+        "architectureOverview": "projects/smart-inventory-tracker-20260408222319/docs/architecture-overview.md",
+        "traceability": "projects/smart-inventory-tracker-20260408222319/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-222318-smart-inventory-tracker.log"
+    },
+    {
+      "slug": "csa-support-copilot-portal-e2e-20260408164913",
+      "title": "Csa Support Copilot Portal E2E 20260408164913",
+      "status": "Ready",
+      "generatedFrom": "csa-support-copilot-portal-e2e.md",
+      "generatedAt": "2026-04-08T16:49:15.168390+00:00",
+      "links": {
+        "readme": "projects/csa-support-copilot-portal-e2e-20260408164913/README.md",
+        "deploy": "projects/csa-support-copilot-portal-e2e-20260408164913/DEPLOY.md",
+        "diagram": "projects/csa-support-copilot-portal-e2e-20260408164913/diagrams/csa-support-copilot-portal-e2e-20260408164913.drawio",
+        "architectureOverview": "projects/csa-support-copilot-portal-e2e-20260408164913/docs/architecture-overview.md",
+        "traceability": "projects/csa-support-copilot-portal-e2e-20260408164913/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-164912-csa-support-copilot-portal-e2e.log"
+    },
+    {
+      "slug": "csa-support-copilot-20260408163834",
+      "title": "Csa Support Copilot 20260408163834",
+      "status": "Ready",
+      "generatedFrom": "csa-support-copilot.md",
+      "generatedAt": "2026-04-08T16:38:39.784020+00:00",
+      "links": {
+        "readme": "projects/csa-support-copilot-20260408163834/README.md",
+        "deploy": "projects/csa-support-copilot-20260408163834/DEPLOY.md",
+        "diagram": "projects/csa-support-copilot-20260408163834/diagrams/csa-support-copilot-20260408163834.drawio",
+        "architectureOverview": "projects/csa-support-copilot-20260408163834/docs/architecture-overview.md",
+        "traceability": "projects/csa-support-copilot-20260408163834/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-163834-csa-support-copilot.log"
+    },
+    {
+      "slug": "csa-support-copilot-20260408054647",
+      "title": "Csa Support Copilot 20260408054647",
+      "status": "Ready",
+      "generatedFrom": "csa-support-copilot.md",
+      "generatedAt": "2026-04-08T05:46:51.535001+00:00",
+      "links": {
+        "readme": "projects/csa-support-copilot-20260408054647/README.md",
+        "deploy": "projects/csa-support-copilot-20260408054647/DEPLOY.md",
+        "diagram": "projects/csa-support-copilot-20260408054647/diagrams/csa-support-copilot-20260408054647.drawio",
+        "architectureOverview": "projects/csa-support-copilot-20260408054647/docs/architecture-overview.md",
+        "traceability": "projects/csa-support-copilot-20260408054647/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260408-054647-csa-support-copilot.log"
+    },
+    {
+      "slug": "aiml-integration-20260407055820",
+      "title": "aiml integration 20260407055820",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-04-07T05:58:20.1143635Z",
+      "links": {
+        "architectureOverview": "projects/aiml-integration-20260407055820/docs/architecture-overview.md",
+        "readme": "projects/aiml-integration-20260407055820/README.md",
+        "deploy": "projects/aiml-integration-20260407055820/DEPLOY.md",
+        "traceability": "projects/aiml-integration-20260407055820/docs/traceability-matrix.md",
+        "diagram": "projects/aiml-integration-20260407055820/diagrams/aiml-integration-20260407055820.drawio"
+      }
+    },
+    {
+      "slug": "project-e-ticket-triage-assistant",
+      "title": "Project E Ticket Triage Assistant",
+      "status": "Ready",
+      "generatedFrom": "restored-existing-project",
+      "generatedAt": "2026-04-07T00:33:56.6531259Z",
+      "links": {
+        "readme": "projects/project-e-ticket-triage-assistant/README.md",
+        "architectureOverview": "projects/project-e-ticket-triage-assistant/docs/architecture-overview.md",
+        "deploy": "projects/project-e-ticket-triage-assistant/DEPLOY.md",
+        "diagram": "projects/project-e-ticket-triage-assistant/diagrams/project-e-ticket-triage-assistant.drawio",
+        "traceability": "projects/project-e-ticket-triage-assistant/docs/traceability-matrix.md"
+      }
+    },
+    {
+      "slug": "fabric-medallion-pipeline",
+      "title": "fabric medallion pipeline",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-04-07T00:26:32.2674164Z",
+      "links": {
+        "readme": "projects/fabric-medallion-pipeline/README.md",
+        "diagram": "projects/fabric-medallion-pipeline/diagrams/fabric-medallion-pipeline.drawio"
+      }
+    },
+    {
+      "slug": "storage-self-service-provisioning",
+      "title": "storage self service provisioning",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-04-06T23:57:44.6437697Z",
+      "links": {
+        "readme": "projects/storage-self-service-provisioning/README.md",
+        "diagram": "projects/storage-self-service-provisioning/diagrams/storage-self-service.drawio"
+      }
+    },
+    {
+      "slug": "ecommerce-demo",
+      "title": "ecommerce demo",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-04-06T23:57:44.1373521Z",
+      "links": {
+        "readme": "projects/ecommerce-demo/README.md",
+        "diagram": "projects/ecommerce-demo/diagrams/ecommerce-architecture.drawio"
+      }
+    },
+    {
+      "slug": "aks-microservices-demo",
+      "title": "aks microservices demo",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-04-06T23:57:43.1460562Z",
+      "links": {
+        "readme": "projects/aks-microservices-demo/README.md",
+        "diagram": "projects/aks-microservices-demo/diagrams/aks-microservices-demo.drawio"
+      }
+    },
+    {
+      "slug": "order-management-platform",
+      "title": "order management platform",
+      "status": "Ready",
+      "generatedFrom": "existing-project",
+      "generatedAt": "2026-03-23T21:10:18.0275354Z",
+      "links": {
+        "readme": "projects/order-management-platform/README.md",
+        "deploy": "projects/order-management-platform/DEPLOY.md",
+        "diagram": "projects/order-management-platform/diagrams/order-management-platform.drawio"
+      }
+    }
+  ]
+}

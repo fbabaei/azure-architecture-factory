@@ -21,9 +21,9 @@
             --primary-dark: #005a9e;
             --secondary: #50e6ff;
             --accent: #ff8c00;
-            --bg-dark: #edf4fb;
+            --bg-dark: #deebf8;
             --bg-light: #ffffff;
-            --bg-soft: #dfeefb;
+            --bg-soft: #cfe4f7;
             --text-primary: #12324a;
             --text-secondary: #5b7285;
             --border: #c9dceb;
@@ -37,10 +37,42 @@
             background: var(--bg-dark);
             color: var(--text-primary);
             line-height: 1.45;
+            min-height: 100vh;
+            position: relative;
+            isolation: isolate;
+            overflow-x: hidden;
             background-image: 
-                linear-gradient(135deg, rgba(0, 120, 212, 0.08) 0%, transparent 55%),
-                linear-gradient(225deg, rgba(80, 230, 255, 0.10) 0%, transparent 45%),
-                linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+                linear-gradient(135deg, rgba(0, 120, 212, 0.12) 0%, transparent 55%),
+                linear-gradient(225deg, rgba(80, 230, 255, 0.13) 0%, transparent 45%),
+                linear-gradient(180deg, #eef7ff 0%, #deebf8 100%);
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-repeat: no-repeat;
+        }
+
+        body::before {
+            opacity: 0.24;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%230078d4' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' d='M73 164h96c19 0 34-14 34-31 0-16-13-29-29-31-6-26-29-44-58-44-28 0-52 18-58 44-18 1-32 15-32 31 0 17 15 31 34 31h13'/%3E%3Cpath stroke-opacity='.16' d='M103 125h49'/%3E%3Cpath stroke-opacity='.16' d='M118 105h19'/%3E%3Cellipse stroke-opacity='.18' cx='177' cy='174' rx='32' ry='13'/%3E%3Cpath stroke-opacity='.18' d='M145 174v24c0 7 14 13 32 13s32-6 32-13v-24'/%3E%3Cpath stroke-opacity='.18' d='M145 186c0 7 14 13 32 13s32-6 32-13'/%3E%3Cpath stroke-opacity='.18' d='M145 198c0 7 14 13 32 13s32-6 32-13'/%3E%3C/g%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%2350e6ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect stroke-opacity='.2' x='63' y='63' width='134' height='134' rx='24'/%3E%3Cpath stroke-opacity='.17' d='M102 84v-19M130 84v-19M158 84v-19M102 195v-19M130 195v-19M158 195v-19M84 102H65M84 130H65M84 158H65M195 102h-19M195 130h-19M195 158h-19'/%3E%3Ccircle stroke-opacity='.22' cx='107' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='153' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='130' cy='153' r='10'/%3E%3Cpath stroke-opacity='.22' d='M116 112l28 36M144 112l-10 30M117 108h26'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 240px 240px, 220px 220px;
+            background-position: left -24px top 150px, right 4% top 520px;
+        }
+
+        body::after {
+            opacity: 0.2;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23005a9e' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' d='M130 49l53 21v39c0 37-21 72-53 90-32-18-53-53-53-90V70l53-21z'/%3E%3Cpath stroke-opacity='.2' d='M107 124l17 18 32-36'/%3E%3Ccircle stroke-opacity='.16' cx='72' cy='178' r='14'/%3E%3Ccircle stroke-opacity='.16' cx='130' cy='214' r='14'/%3E%3Ccircle stroke-opacity='.16' cx='188' cy='178' r='14'/%3E%3Cpath stroke-opacity='.16' d='M83 186l36 22M141 208l36-22'/%3E%3C/g%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%230078d4' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect stroke-opacity='.18' x='47' y='61' width='166' height='118' rx='24'/%3E%3Cpath stroke-opacity='.16' d='M47 101h166'/%3E%3Cpath stroke-opacity='.22' d='M88 137h84M88 161h54'/%3E%3Ccircle stroke-opacity='.18' cx='82' cy='83' r='5'/%3E%3Ccircle stroke-opacity='.18' cx='102' cy='83' r='5'/%3E%3Ccircle stroke-opacity='.18' cx='122' cy='83' r='5'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 230px 230px, 250px 250px;
+            background-position: right -28px bottom 160px, left 6% bottom 320px;
         }
 
         header {
@@ -51,6 +83,12 @@
             top: 0;
             z-index: 100;
             backdrop-filter: blur(12px);
+        }
+
+        header,
+        .container {
+            position: relative;
+            z-index: 1;
         }
 
         .header-container {
@@ -438,7 +476,7 @@
 
         .analysis-top-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 1rem;
             align-items: start;
             margin-bottom: 1rem;
@@ -446,8 +484,6 @@
 
         .analysis-top-grid > .analysis-top-block:first-child {
             grid-column: 1 / -1;
-            position: relative;
-            top: -1in;
         }
 
         .analysis-top-grid > .analysis-top-block:nth-child(2) {
@@ -478,13 +514,12 @@
         }
 
         .section-3a-panel .analysis-group {
-            width: 66%;
-            max-width: 66%;
+            width: 100%;
+            max-width: none;
         }
 
         .section-3a-panel {
-            position: relative;
-            left: -66%;
+            position: static;
         }
 
         .section-3a-panel .analysis-body,
@@ -503,8 +538,8 @@
         }
 
         .section-3-table-wrap {
-            width: 50%;
-            max-width: 50%;
+            width: 100%;
+            max-width: none;
         }
 
         .section-3-description {
@@ -595,8 +630,8 @@
         }
 
         .learn-more-box {
-            width: 50%;
-            max-width: 50%;
+            width: 100%;
+            max-width: none;
             padding: 0.9rem !important;
         }
 
@@ -611,9 +646,9 @@
         }
 
         .analysis-right-rail {
-            width: 33.333%;
-            max-width: 33.333%;
-            margin-left: auto;
+            width: 100%;
+            max-width: none;
+            margin-left: 0;
             margin-bottom: 1rem;
         }
 
@@ -631,8 +666,8 @@
             font-size: 0.48rem;
         }
         .pattern-table-wrap {
-            width: 33.333%;
-            max-width: 33.333%;
+            width: 100%;
+            max-width: none;
         }
 
         .pattern-table-wrap table {
@@ -643,8 +678,8 @@
         }
 
         .data-table-wrap {
-            width: 66.67%;
-            max-width: 66.67%;
+            width: 100%;
+            max-width: none;
         }
 
         .data-table-wrap table {
@@ -701,18 +736,17 @@
         }
 
         .factory-philosophy-panel {
-            width: 62%;
-            max-width: 62%;
-            position: relative;
-            left: -4%;
+            width: 100%;
+            max-width: none;
+            position: static;
         }
 
         #design-analysis table {
             font-size: 0.62rem !important;
-            width: 86% !important;
-            max-width: 86% !important;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         #design-analysis th,
@@ -780,6 +814,18 @@
         }
 
         @media (max-width: 768px) {
+            body::before {
+                opacity: 0.14;
+                background-size: 160px 160px, 145px 145px;
+                background-position: left -32px top 130px, right -18px top 520px;
+            }
+
+            body::after {
+                opacity: 0.12;
+                background-size: 150px 150px, 165px 165px;
+                background-position: right -24px bottom 190px, left -24px bottom 300px;
+            }
+
             h1 {
                 font-size: 1.5rem;
             }
@@ -960,6 +1006,103 @@
             background: #fff;
         }
 
+        .code-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 24, 36, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            z-index: 1250;
+        }
+
+        .code-modal.open {
+            display: flex;
+        }
+
+        .code-shell {
+            width: min(1280px, 98vw);
+            height: min(840px, 92vh);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(10, 24, 36, 0.2);
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .code-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            background: #f3f9ff;
+        }
+
+        .code-browser {
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) 1fr;
+            min-height: 0;
+        }
+
+        .code-file-list {
+            border-right: 1px solid var(--border);
+            padding: 0.75rem;
+            overflow: auto;
+            background: #fafcff;
+        }
+
+        .code-file-list button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: 0;
+            background: transparent;
+            border-radius: 4px;
+            padding: 0.4rem 0.55rem;
+            margin-bottom: 0.2rem;
+            font-size: 0.82rem;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .code-file-list button:hover,
+        .code-file-list button.active {
+            background: #e8f2ff;
+            color: var(--primary-dark);
+        }
+
+        .code-preview {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 0;
+        }
+
+        .code-preview-header {
+            padding: 0.65rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            background: #ffffff;
+        }
+
+        .code-preview-body {
+            margin: 0;
+            padding: 1rem;
+            overflow: auto;
+            background: #0f1720;
+            color: #e6edf5;
+            font-size: 0.8rem;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         .projects-intake-wrapper {
             display: block;
             margin-bottom: 2rem;
@@ -968,6 +1111,21 @@
         .projects-intake-wrapper #projects {
             max-width: 620px;
             justify-self: start;
+        }
+
+        .intake-link-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .intake-link-box {
+            width: min(420px, 100%);
+            padding: 0.9rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: linear-gradient(180deg, #eef7ff 0%, #dceeff 100%);
+            box-shadow: 0 10px 28px rgba(18, 50, 74, 0.12);
         }
 
         .design-analysis-header-row {
@@ -979,22 +1137,21 @@
         }
 
         .philosophy-intake-row {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 1rem;
-            align-items: start;
+            display: block;
             margin-bottom: 1rem;
         }
 
-        .philosophy-intake-row #intake {
+        .intake-link-row #intake {
             margin-bottom: 0;
-            position: relative;
-            left: -1in;
-            top: -1in;
+            position: static;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
-        .philosophy-intake-row #intake h2 {
-            margin-top: 0;
+        .intake-link-row #intake .intake-panel-content {
+            width: 100%;
         }
 
         #projects .projects-grid {
@@ -1035,18 +1192,93 @@
             margin-top: 0;
         }
 
+        .intake-toggle-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.9rem;
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(0, 120, 212, 0.2);
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+            text-align: left;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        .intake-toggle-link:hover {
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(18, 50, 74, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .intake-toggle-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .intake-toggle-title {
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .intake-toggle-description {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        .intake-toggle-icon {
+            flex: 0 0 auto;
+            width: 2rem;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: var(--primary);
+            color: #fff;
+            font-size: 1rem;
+            line-height: 1;
+            transition: transform 0.15s ease;
+        }
+
+        .intake-section.expanded .intake-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .intake-panel-content {
+            display: none;
+        }
+
+        .intake-section.expanded .intake-panel-content {
+            display: block;
+        }
+
         @media (max-width: 1024px) {
             .projects-intake-wrapper #projects {
                 max-width: 100%;
             }
 
-            .philosophy-intake-row {
-                grid-template-columns: 1fr;
+            .intake-link-row {
+                justify-content: stretch;
             }
 
-            .philosophy-intake-row #intake {
-                left: 0;
-                top: 0;
+            .intake-link-row #intake {
+                width: 100%;
+                align-items: stretch;
+            }
+
+            .intake-toggle-link {
+                text-align: left;
             }
         }
     </style>
@@ -1078,77 +1310,43 @@
             </p>
         </section>
 
-        <!-- Stats -->
-        <div class="stats" id="stats-container">
-            <div class="stat-card">
-                <div class="stat-number">-</div>
-                <div class="stat-label">Total Projects</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">-</div>
-                <div class="stat-label">Ready</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">-</div>
-                <div class="stat-label">Tests Passed</div>
-            </div>
-        </div>
-
-        <div class="projects-intake-wrapper">
-            <!-- Generated Projects -->
-            <section id="projects">
-                <div class="projects-header">
-                    <h2>Generated Projects</h2>
-                    <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
-                </div>
-                <div id="projects-container">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📦</div>
-                        <h3>No projects yet</h3>
-                        <p>Submit a BRD to the left to generate your first architecture project</p>
-                    </div>
-                </div>
-            </section>
-        </div>
-
         <!-- Design Analysis -->
         <section id="design-analysis">
-            <div class="design-analysis-header-row">
-                <div class="design-analysis-heading">
-                    <h2>Design Analysis & Rationale</h2>
-                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
-                </div>
-            </div>
-
-            <div class="philosophy-intake-row">
-                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px;">
-                    <h3 style="color: var(--primary); margin-top: 0;">Factory Design Philosophy</h3>
-                    <p>
-                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity. 
-                        Each project uses cloud-native patterns that align with real enterprise workloads, including 
-                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
-                    </p>
-                </div>
-
-                <section id="intake">
-                    <h2>Submit Business Requirements</h2>
-                    <div class="brd-intake-panel">
-                        <h3>📋 New BRD Input</h3>
-                        <form onsubmit="return submitBrd(event)">
-                            <div class="form-group">
-                                <label for="brd-file-name">Project Name / BRD Filename</label>
-                                <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="brd-upload">Upload BRD File (.md or .txt)</label>
-                                <input type="file" id="brd-upload" accept=".md,.txt,text/markdown,text/plain">
-                                <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
-                                    Optional. If provided, file content is used instead of pasted markdown.
-                                </p>
-                            </div>
-                            <div class="form-group">
-                                <label for="brd-content">Business Requirements Document (Markdown)</label>
-                                <textarea id="brd-content" placeholder="# Project: [Name]
+            <div class="intake-link-row">
+                <div class="intake-link-box">
+                    <section id="intake" class="intake-section">
+                        <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
+                            <span class="intake-toggle-copy">
+                                <span class="intake-toggle-title">Submit Business Requirements</span>
+                                <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project.</span>
+                            </span>
+                            <span class="intake-toggle-icon" aria-hidden="true">▾</span>
+                        </a>
+                        <div class="intake-panel-content">
+                            <div class="brd-intake-panel">
+                                <h3>📋 New BRD Input</h3>
+                                <form onsubmit="return submitBrd(event)">
+                                    <div class="form-group">
+                                        <label for="brd-file-name">Project Name / BRD Filename</label>
+                                        <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="portal-api-key">Portal API Key</label>
+                                        <input type="password" id="portal-api-key" placeholder="Required for hosted portal deployments with API key auth">
+                                        <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
+                                            Optional for local development. Required when the portal is deployed with <code>FACTORY_PORTAL_API_KEY</code> enabled.
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="brd-upload">Upload BRD File (.md or .txt)</label>
+                                        <input type="file" id="brd-upload" accept=".md,.txt,text/markdown,text/plain">
+                                        <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
+                                            Optional. If provided, file content is used instead of pasted markdown.
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="brd-content">Business Requirements Document (Markdown)</label>
+                                        <textarea id="brd-content" placeholder="# Project: [Name]
 
 ## Business Goal
 [What problem are we solving?]
@@ -1167,12 +1365,50 @@
 
 ## Timeline
 [Expected delivery]"></textarea>
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
+                                    </div>
+                                    <div class="status-message" id="brd-intake-status"></div>
+                                </form>
                             </div>
-                            <div class="button-group">
-                                <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
-                            </div>
-                            <div class="status-message" id="brd-intake-status"></div>
-                        </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="design-analysis-header-row">
+                <div class="design-analysis-heading">
+                    <h2>Design Analysis & Rationale</h2>
+                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
+                </div>
+            </div>
+
+            <div class="philosophy-intake-row">
+                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px;">
+                    <h3 style="color: var(--primary); margin-top: 0;">Factory Design Philosophy</h3>
+                    <p>
+                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity. 
+                        Each project uses cloud-native patterns that align with real enterprise workloads, including 
+                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="projects-intake-wrapper">
+                <section id="projects">
+                    <div class="projects-header">
+                        <h2>Generated Projects</h2>
+                        <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
+                    </div>
+                    <p class="section-subtitle" style="margin-bottom: 0.5rem;">Use the hosted actions to inspect generated files or download a ZIP copy to your local machine.</p>
+                    <div id="projects-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <h3>No projects yet</h3>
+                            <p>Submit a BRD above to generate your first architecture project.</p>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -1513,6 +1749,25 @@
         </div>
     </div>
 
+    <div class="code-modal" id="code-modal" aria-hidden="true">
+        <div class="code-shell">
+            <div class="code-toolbar">
+                <span class="diagram-title" id="code-modal-title">Generated Project Files</span>
+                <div class="diagram-actions">
+                    <button id="code-download-btn" class="diagram-action" type="button">Download ZIP</button>
+                    <button id="code-close" class="diagram-action" type="button">Close</button>
+                </div>
+            </div>
+            <div class="code-browser">
+                <div class="code-file-list" id="code-file-list"></div>
+                <div class="code-preview">
+                    <div class="code-preview-header" id="code-preview-path">Select a file to preview</div>
+                    <pre class="code-preview-body" id="code-preview-body">Choose a project file from the left to inspect generated code from the hosted portal.</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Dynamic Analysis Modal -->
     <div id="analysis-modal" class="analysis-modal">
         <div class="analysis-modal-content">
@@ -1525,8 +1780,14 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
+        const IS_HOSTED_PORTAL = !['127.0.0.1', 'localhost'].includes(window.location.hostname);
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
-                const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
+        const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
+        const API_PROJECT_FILES = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/files`;
+        const API_PROJECT_FILE = (projectSlug, relativePath) => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/file?path=${encodeURIComponent(relativePath)}`;
+        const API_PROJECT_DOWNLOAD = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/download`;
+        const API_RUN_STATUS = runId => `${API_BASE}/api/brd-runs/${encodeURIComponent(runId)}`;
+        const PORTAL_API_KEY_STORAGE_KEY = 'factoryPortalApiKey';
         let allProjects = [];
         let showAllProjects = false;
 
@@ -1538,6 +1799,14 @@
         const diagramEmbedUrl = 'https://embed.diagrams.net/?embed=1&ui=min&spin=1&proto=json';
         let diagramEmbedReady = false;
         let pendingDiagramXml = null;
+        const codeModal = document.getElementById('code-modal');
+        const codeModalTitle = document.getElementById('code-modal-title');
+        const codeFileList = document.getElementById('code-file-list');
+        const codePreviewPath = document.getElementById('code-preview-path');
+        const codePreviewBody = document.getElementById('code-preview-body');
+        const codeDownloadButton = document.getElementById('code-download-btn');
+        const codeCloseButton = document.getElementById('code-close');
+        let activeCodeProjectSlug = '';
 
         function parseDiagramMessage(data) {
             if (!data) return null;
@@ -1578,6 +1847,43 @@
             return `${window.location.origin}/${String(path).replace(/^\/+/, '')}`;
         }
 
+        function getPortalApiKey() {
+            return (document.getElementById('portal-api-key')?.value || '').trim();
+        }
+
+        function savePortalApiKey() {
+            const apiKey = getPortalApiKey();
+            if (apiKey) {
+                window.localStorage.setItem(PORTAL_API_KEY_STORAGE_KEY, apiKey);
+            } else {
+                window.localStorage.removeItem(PORTAL_API_KEY_STORAGE_KEY);
+            }
+        }
+
+        function restorePortalApiKey() {
+            const apiKeyInput = document.getElementById('portal-api-key');
+            if (!apiKeyInput) return;
+            const stored = window.localStorage.getItem(PORTAL_API_KEY_STORAGE_KEY);
+            if (stored) {
+                apiKeyInput.value = stored;
+            }
+            apiKeyInput.addEventListener('change', savePortalApiKey);
+            apiKeyInput.addEventListener('input', savePortalApiKey);
+        }
+
+        function buildMutationHeaders(baseHeaders = {}) {
+            const headers = { ...baseHeaders };
+            const apiKey = getPortalApiKey();
+            if (apiKey) {
+                headers['X-Factory-Api-Key'] = apiKey;
+            }
+            return headers;
+        }
+
+        function buildAuthenticatedHeaders(baseHeaders = {}) {
+            return buildMutationHeaders(baseHeaders);
+        }
+
         async function openDiagramInPortal(diagramPath) {
             if (!diagramPath || !diagramModal || !diagramFrame) return;
             const absoluteDiagramUrl = toAbsolutePath(diagramPath);
@@ -1615,6 +1921,16 @@
             diagramModal.setAttribute('aria-hidden', 'true');
         }
 
+        function closeCodeModal() {
+            if (!codeModal) return;
+            codeModal.classList.remove('open');
+            codeModal.setAttribute('aria-hidden', 'true');
+            activeCodeProjectSlug = '';
+            if (codeFileList) codeFileList.innerHTML = '';
+            if (codePreviewPath) codePreviewPath.textContent = 'Select a file to preview';
+            if (codePreviewBody) codePreviewBody.textContent = 'Choose a project file from the left to inspect generated code from the hosted portal.';
+        }
+
         if (diagramClose) {
             diagramClose.addEventListener('click', closeDiagramModal);
         }
@@ -1627,11 +1943,137 @@
             });
         }
 
+        if (codeCloseButton) {
+            codeCloseButton.addEventListener('click', closeCodeModal);
+        }
+
+        if (codeModal) {
+            codeModal.addEventListener('click', event => {
+                if (event.target === codeModal) {
+                    closeCodeModal();
+                }
+            });
+        }
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeDiagramModal();
+                closeCodeModal();
             }
         });
+
+        async function openCodeBrowser(projectSlug, projectTitle) {
+            if (!projectSlug || !codeModal || !codeFileList || !codePreviewPath || !codePreviewBody) return;
+
+            activeCodeProjectSlug = projectSlug;
+            codeModalTitle.textContent = `Generated Project Files: ${projectTitle || projectSlug}`;
+            codeFileList.innerHTML = '<div class="status-message visible info">Loading file list...</div>';
+            codePreviewPath.textContent = 'Select a file to preview';
+            codePreviewBody.textContent = 'Loading generated project files...';
+            codeModal.classList.add('open');
+            codeModal.setAttribute('aria-hidden', 'false');
+
+            try {
+                const response = await fetch(API_PROJECT_FILES(projectSlug), {
+                    headers: buildAuthenticatedHeaders(),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+
+                if (!payload.files?.length) {
+                    codeFileList.innerHTML = '<div class="status-message visible info">No files found for this generated project.</div>';
+                    codePreviewBody.textContent = 'This project does not currently expose previewable files.';
+                    return;
+                }
+
+                codeFileList.innerHTML = payload.files.map(file => `
+                    <button type="button"
+                            data-path="${escapeHtml(file.path)}"
+                            data-previewable="${file.previewable ? 'true' : 'false'}"
+                            onclick="previewProjectFile('${projectSlug}', '${encodeURIComponent(file.path)}', this)">
+                        ${file.previewable ? '📄' : '📦'} ${escapeHtml(file.path)}
+                    </button>
+                `).join('');
+
+                const firstPreviewable = payload.files.find(file => file.previewable) || payload.files[0];
+                if (firstPreviewable) {
+                    const matchingButton = Array.from(codeFileList.querySelectorAll('button')).find(button => button.dataset.path === firstPreviewable.path);
+                    previewProjectFile(projectSlug, encodeURIComponent(firstPreviewable.path), matchingButton || null);
+                }
+            } catch (error) {
+                codeFileList.innerHTML = `<div class="status-message visible error">${escapeHtml(error.message)}</div>`;
+                codePreviewBody.textContent = 'Unable to load project files from the hosted portal.';
+            }
+        }
+
+        async function previewProjectFile(projectSlug, encodedRelativePath, buttonElement) {
+            if (!codePreviewPath || !codePreviewBody || !projectSlug) return;
+
+            const relativePath = decodeURIComponent(encodedRelativePath);
+            if (codeFileList) {
+                codeFileList.querySelectorAll('button').forEach(button => button.classList.remove('active'));
+                if (buttonElement) {
+                    buttonElement.classList.add('active');
+                }
+            }
+
+            codePreviewPath.textContent = relativePath;
+            codePreviewBody.textContent = 'Loading file preview...';
+
+            try {
+                const response = await fetch(API_PROJECT_FILE(projectSlug, relativePath), {
+                    headers: buildAuthenticatedHeaders(),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+                codePreviewBody.textContent = payload.content || '';
+            } catch (error) {
+                codePreviewBody.textContent = `Preview unavailable: ${error.message}`;
+            }
+        }
+
+        async function downloadProjectArchive(projectSlug) {
+            if (!projectSlug) return;
+            try {
+                const response = await fetch(API_PROJECT_DOWNLOAD(projectSlug), {
+                    headers: buildAuthenticatedHeaders(),
+                });
+                if (!response.ok) {
+                    let message = `HTTP ${response.status}`;
+                    try {
+                        const payload = await response.json();
+                        message = payload.error || message;
+                    } catch {
+                        // Leave default message if the body is not JSON.
+                    }
+                    throw new Error(message);
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = `${projectSlug}.zip`;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(`Download failed: ${error.message}`);
+            }
+        }
+
+        if (codeDownloadButton) {
+            codeDownloadButton.addEventListener('click', () => {
+                if (activeCodeProjectSlug) {
+                    downloadProjectArchive(activeCodeProjectSlug);
+                }
+            });
+        }
 
         window.addEventListener('message', (event) => {
             const message = parseDiagramMessage(event.data);
@@ -1683,18 +2125,25 @@
                     const form = new FormData();
                     form.append('project_name', normalizeBrdFileName(fileNameInput));
                     form.append('brd_file', uploadedFile, uploadedFile.name);
-                    response = await fetch(API_BRD_UPLOAD, { method: 'POST', body: form });
+                    response = await fetch(API_BRD_UPLOAD, {
+                        method: 'POST',
+                        headers: buildMutationHeaders(),
+                        body: form
+                    });
                 } else {
                     // JSON text intake
                     response = await fetch(API_BRD_INTAKE, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: buildMutationHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ fileName: normalizeBrdFileName(fileNameInput), content: contentInput })
                     });
                 }
 
                 if (!response.ok) {
                     const err = await response.text();
+                    if (response.status === 401) {
+                        throw new Error('Unauthorized. Enter a valid Portal API Key for the hosted deployment.');
+                    }
                     throw new Error(err || `HTTP ${response.status}`);
                 }
 
@@ -1733,7 +2182,8 @@
 
                     if (status.status === 'failed') {
                         clearInterval(timer);
-                        setBrdStatus(`Failed: ${status.result?.message || 'Unknown error'}`, true);
+                        const failMsg = status.result?.message || status.stderr || 'Pipeline error — check server logs';
+                        setBrdStatus(`Failed: ${failMsg}`, true);
                         document.getElementById('submit-brd-btn').disabled = false;
                         return;
                     }
@@ -1751,8 +2201,11 @@
         }
 
         function handleRunCompletion(status) {
-            if (status.result?.status === 'success') {
-                const projectName = status.result.project || 'new project';
+            if (status.result?.status === 'success' || status.result?.status === 'complete') {
+                const proj = status.result.project;
+                const projectName = (proj && typeof proj === 'object')
+                    ? (proj.title || proj.slug || 'new project')
+                    : (proj || 'new project');
                 const runLog = status.result.runLog
                     ? `<br/><small>Run log: ${escapeHtml(status.result.runLog)}</small>`
                     : '';
@@ -1771,7 +2224,8 @@
                 }, 2000);
             } else {
                 const stage = status.result?.stage ? ` (stage: ${status.result.stage})` : '';
-                setBrdStatus(`Failed${stage}: ${status.result?.message || 'Unknown error'}`, true);
+                const failMsg = status.result?.message || status.stderr || 'Pipeline error — check server logs';
+                setBrdStatus(`Failed${stage}: ${failMsg}`, true);
                 document.getElementById('submit-brd-btn').disabled = false;
             }
         }
@@ -1779,7 +2233,16 @@
         function normalizeBrdFileName(inputName) {
             const raw = String(inputName || '').trim();
             if (!raw) return 'brd.md';
-            return /\.md$/i.test(raw) ? raw : `${raw}.md`;
+            // Strip .md suffix before slugifying so it doesn't become part of the slug
+            const withoutExt = raw.replace(/\.md$/i, '').trim();
+            // Convert to lowercase, replace spaces and disallowed chars with hyphens,
+            // collapse multiple hyphens, trim leading/trailing hyphens
+            const slug = withoutExt
+                .toLowerCase()
+                .replace(/[^a-z0-9._-]+/g, '-')
+                .replace(/-{2,}/g, '-')
+                .replace(/^-+|-+$/g, '') || 'brd';
+            return `${slug}.md`;
         }
 
         function renderRunProgress(status, elapsedSeconds) {
@@ -1793,6 +2256,35 @@
             div.innerHTML = message;
             div.className = `status-message visible ${isError ? 'error' : 'info'}`;
         }
+
+        function toggleIntakePanel(event, forceExpand = null) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            const intakeSection = document.getElementById('intake');
+            if (!intakeSection) return false;
+
+            const shouldExpand = forceExpand === null
+                ? !intakeSection.classList.contains('expanded')
+                : Boolean(forceExpand);
+
+            intakeSection.classList.toggle('expanded', shouldExpand);
+
+            if (shouldExpand) {
+                intakeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            return false;
+        }
+
+        function syncIntakeFromHash() {
+            if (window.location.hash === '#intake') {
+                toggleIntakePanel(null, true);
+            }
+        }
+
+        restorePortalApiKey();
 
         async function loadProjects() {
             try {
@@ -1816,6 +2308,9 @@
         }
 
         function getVisibleProjects(projects) {
+            if (IS_HOSTED_PORTAL) {
+                return getLatestProjects(projects);
+            }
             return showAllProjects ? projects : getLatestProjects(projects);
         }
 
@@ -1830,6 +2325,11 @@
         function updateProjectViewToggle(projects) {
             const toggle = document.getElementById('project-view-toggle');
             if (!toggle) return;
+
+            if (IS_HOSTED_PORTAL) {
+                toggle.hidden = true;
+                return;
+            }
 
             const projectCount = projects.length;
             toggle.hidden = projectCount <= 1;
@@ -1853,6 +2353,9 @@
         function updateStats(projects) {
             const ready = projects.filter(p => p.status?.includes('Ready')).length;
             const stats = document.getElementById('stats-container');
+            if (!stats) {
+                return;
+            }
             stats.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${projects.length}</div>
@@ -1905,6 +2408,8 @@
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
+                        <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${escapeHtml(project.title || project.slug)}'); return false;">💻 View Code</a>
+                        <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
@@ -1970,8 +2475,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadProjects();
             openAnalysisFromHash();
+            syncIntakeFromHash();
         });
         window.addEventListener('hashchange', openAnalysisFromHash);
+        window.addEventListener('hashchange', syncIntakeFromHash);
 
         // Auto-refresh every 30 seconds
         setInterval(loadProjects, 30000);

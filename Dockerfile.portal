@@ -1,0 +1,31 @@
+# Azure Architecture Factory Portal Server
+# Stdlib-only Python HTTP server — no pip dependencies
+
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Create non-root user
+RUN useradd -m -u 1000 portal && \
+    mkdir -p /app/docs/intake /app/projects /app/outputs/brd-runs && \
+    chown -R portal:portal /app
+
+# Copy application code
+COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/
+COPY factory-portal.html ./
+COPY docs/openapi.yaml docs/
+# Snapshot of the project feed baked into the image at build time
+COPY factory-projects.generated.json ./
+
+RUN chown -R portal:portal /app
+
+# The portal serves static files and generated starter assets directly from
+# the factory repository root inside the container.
+
+USER portal
+
+EXPOSE 5501
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "scripts/start_factory_portal.py"]
