@@ -427,6 +427,17 @@
             color: white;
         }
 
+        .project-link-copilot {
+            border-color: #0f6cbd;
+            background: #eaf4ff;
+            color: #0f5ea8;
+        }
+
+        .project-link-copilot:hover {
+            background: #0f6cbd;
+            color: #fff;
+        }
+
         .projects-header {
             display: flex;
             align-items: center;
@@ -2638,11 +2649,14 @@
                     ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
                     : (project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
                 const analysisId = getAnalysisId(project);
+                const safeTitle = escapeHtml(project.title || project.slug);
+                const generatedFrom = escapeHtml(project.generatedFrom || 'docs/intake/brd.md');
+                const safeDiagramPath = escapeHtml(diagram || '');
 
                 return `
                 <div class="project-card">
                     <div class="project-header">
-                        <div class="project-title">${escapeHtml(project.title || project.slug)}</div>
+                        <div class="project-title">${safeTitle}</div>
                         <span class="project-status ${getStatusClass(project.status)}">${escapeHtml(project.status)}</span>
                     </div>
                     <p class="project-description">
@@ -2655,8 +2669,9 @@
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
-                        <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${escapeHtml(project.title || project.slug)}'); return false;">💻 View Code</a>
+                                <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
+                                ${IS_HOSTED_PORTAL ? `<a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">🤖 Run with Copilot</a>` : ''}
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
@@ -2787,6 +2802,67 @@
         function closeDynamicAnalysis() {
             const modal = document.getElementById('analysis-modal');
             modal.classList.remove('show');
+        }
+
+        function buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath) {
+            const normalizedProject = String(projectSlug || projectTitle || 'my-project').trim() || 'my-project';
+            const sourceRef = String(generatedFrom || 'docs/intake/brd.md').trim() || 'docs/intake/brd.md';
+            const maybeDiagram = String(diagramPath || '').trim();
+            const maybeDiagramLine = maybeDiagram
+                ? `existing-diagram: ${maybeDiagram}`
+                : '';
+
+            return [
+                'Use project-orchestrator.',
+                `Input: ${sourceRef}`,
+                `Project name: ${normalizedProject}`,
+                'factory: true',
+                `factoryPortalUrl: ${window.location.origin}`,
+                'apiKey: <your-portal-api-key-or-issued-token>',
+                maybeDiagramLine,
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyTextToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return;
+            }
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.setAttribute('readonly', '');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
+            const prompt = buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath);
+            try {
+                await copyTextToClipboard(prompt);
+            } catch (error) {
+                console.error('Failed to copy Copilot prompt:', error);
+            }
+
+            // Try desktop VS Code first; if not installed, vscode.dev remains a safe fallback.
+            const desktopLink = `vscode://vscode.git/clone?url=${encodeURIComponent('https://github.com/fbabaei_microsoft/azure-architecture-factory')}`;
+            const webLink = 'https://vscode.dev/github/fbabaei_microsoft/azure-architecture-factory';
+
+            try {
+                window.open(desktopLink, '_blank', 'noopener,noreferrer');
+            } catch {
+                // Ignore and fallback below.
+            }
+            window.open(webLink, '_blank', 'noopener,noreferrer');
+
+            toggleIntakePanel(null, true);
+            setBrdStatus(
+                'Copied a ready project-orchestrator prompt to your clipboard and opened VS Code/vscode.dev. Paste into Copilot Chat to run.',
+                false
+            );
         }
     </script>
 </body>
