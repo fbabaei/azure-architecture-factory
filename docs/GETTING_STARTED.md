@@ -148,6 +148,81 @@ Project: projects/my-ecommerce-platform
 
 ---
 
+## Using with Remote Azure-Deployed Factory
+
+If the factory portal is **deployed to Azure** (not running locally at `127.0.0.1:5501`), configure `factory-handoff` to point to your remote endpoint.
+
+### Configuration
+
+Set these environment variables before invoking `factory-handoff`:
+
+```powershell
+$env:FACTORY_PORTAL_URL = "https://your-factory-deployment.azurewebsites.net"
+$env:FACTORY_PORTAL_API_KEY = "your-api-key-or-issued-token"
+```
+
+**Alternatively**, pass them as parameters to the agent:
+
+```
+Use factory-handoff.
+Project: projects/my-app
+factoryPortalUrl: https://your-factory-deployment.azurewebsites.net
+apiKey: your-api-key-or-issued-token
+```
+
+### Authentication Methods
+
+The remote factory supports:
+
+| Method | Setup | When to use |
+|---|---|---|
+| **No auth (dev)** | Leave `FACTORY_PORTAL_API_KEY` unset | Local development only |
+| **Master API key** | Set `FACTORY_PORTAL_API_KEY` to a secret string | Small teams, single admin |
+| **Issued HMAC token** | Request a token via admin panel; token is format `<payload>.<signature>` | Production, usage-counted, expiring tokens |
+| **Entra ID (Azure AD)** | Set `ENTRA_TENANT_ID` and `ENTRA_CLIENT_ID` on the server; pass Bearer token | Enterprise, federated identity |
+
+### Remote Factory Endpoints
+
+The Azure-deployed factory provides the same REST API as the local version:
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/brd-intake` | POST | Submit a BRD (JSON body) |
+| `/api/brd-upload` | POST | Submit a BRD (multipart file upload) |
+| `/api/brd-runs` | GET | List all pipeline runs |
+| `/api/brd-runs/{runId}` | GET | Get status of a specific run |
+| `/api/brd-runs/{runId}/project` | GET | Get generated project payload |
+| `/factory-portal.html` | GET | View the web dashboard |
+
+### Example: Promote to Remote Factory
+
+```powershell
+# Set remote factory credentials
+$env:FACTORY_PORTAL_URL = "https://my-factory.azurewebsites.net"
+$env:FACTORY_PORTAL_API_KEY = "my-secret-api-key"
+
+# In Copilot Chat:
+# Use factory-handoff.
+# Project: projects/my-app
+
+# Or during orchestration:
+# Use project-orchestrator.
+# Input: my-brd.md
+# Project name: my-app
+# factory: true
+# factoryPortalUrl: https://my-factory.azurewebsites.net
+# apiKey: my-secret-api-key
+```
+
+The `factory-handoff` agent will:
+1. Read the local project's BRD from `projects/my-app/docs/requirements.md`
+2. POST it to `https://my-factory.azurewebsites.net/api/brd-intake`
+3. Poll the remote factory for completion status
+4. Retrieve the factory-assigned project slug
+5. Update your local `project-manifest.json` with the remote run ID and portal link
+
+---
+
 ## Full End-to-End Scenario (Recommended Flow)
 
 ```
