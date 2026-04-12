@@ -1,0 +1,332 @@
+swagger: "2.0"
+info:
+  title: Azure Architecture Factory Portal API
+  version: "1.0.0"
+
+host: arch-factory-dev-portal.politebeach-70e24eed.eastus.azurecontainerapps.io
+basePath: /
+schemes:
+  - https
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: X-Factory-Api-Key
+    in: header
+
+security:
+  - api_key: []
+
+paths:
+  /api/brd-intake:
+    post:
+      summary: Submit BRD content for processing
+      operationId: submitBrd
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/BrdIntakeRequest"
+      responses:
+        202:
+          description: BRD accepted and queued for processing
+          schema:
+            $ref: "#/definitions/BrdIntakeResponse"
+        400:
+          description: Invalid request payload
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /api/brd-upload:
+    post:
+      summary: Upload a BRD markdown file for processing
+      operationId: uploadBrd
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: brd_file
+          type: file
+          required: true
+          description: Markdown BRD file to upload
+        - in: formData
+          name: project_name
+          type: string
+          required: false
+          description: Optional override for the saved BRD file name
+      responses:
+        202:
+          description: BRD file accepted and queued for processing
+          schema:
+            $ref: "#/definitions/BrdIntakeResponse"
+        400:
+          description: Missing or invalid file upload
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        415:
+          description: Unsupported media type
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /api/brd-runs:
+    get:
+      summary: List BRD processing runs
+      operationId: listBrdRuns
+      responses:
+        200:
+          description: Tracked run summaries
+          schema:
+            $ref: "#/definitions/RunListResponse"
+
+  /api/brd-runs/{runId}:
+    get:
+      summary: Get a single BRD processing run status
+      operationId: getBrdRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          type: string
+      responses:
+        200:
+          description: Run details
+          schema:
+            $ref: "#/definitions/RunDetail"
+        404:
+          description: Run not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /api/brd-runs/{runId}/project:
+    get:
+      summary: Get the generated project payload for a run
+      operationId: getBrdRunProject
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          type: string
+      responses:
+        200:
+          description: Generated project and analysis payload
+          schema:
+            $ref: "#/definitions/RunProjectResponse"
+        202:
+          description: Run accepted but generation is still in progress
+          schema:
+            $ref: "#/definitions/RunProjectResponse"
+        404:
+          description: Run not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /factory-projects.generated.json:
+    get:
+      summary: Get the generated project feed
+      operationId: listProjects
+      responses:
+        200:
+          description: Project feed
+          schema:
+            $ref: "#/definitions/ProjectFeed"
+
+  /api/project-analysis/{slug}:
+    get:
+      summary: Get generated project analysis metadata
+      operationId: getProjectAnalysis
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          type: string
+      responses:
+        200:
+          description: Project analysis payload
+          schema:
+            $ref: "#/definitions/ProjectAnalysis"
+        404:
+          description: Project not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+definitions:
+  BrdIntakeRequest:
+    type: object
+    required:
+      - fileName
+      - content
+    properties:
+      fileName:
+        type: string
+        description: Safe markdown file name used when persisting the BRD
+      content:
+        type: string
+        description: Markdown content of the BRD
+
+  BrdIntakeResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        description: BRD processing run identifier
+      status:
+        $ref: "#/definitions/RunStatus"
+      message:
+        type: string
+      brdFile:
+        type: string
+        description: Relative path to the saved BRD file
+
+  RunListResponse:
+    type: object
+    properties:
+      runs:
+        type: array
+        items:
+          $ref: "#/definitions/RunSummary"
+
+  RunSummary:
+    type: object
+    properties:
+      id:
+        type: string
+      brdFile:
+        type: string
+      status:
+        $ref: "#/definitions/RunStatus"
+      createdAt:
+        type: string
+        description: ISO 8601 timestamp
+      startedAt:
+        type: string
+        description: ISO 8601 timestamp
+      finishedAt:
+        type: string
+        description: ISO 8601 timestamp
+      returnCode:
+        type: integer
+
+  RunDetail:
+    allOf:
+      - $ref: "#/definitions/RunSummary"
+      - type: object
+        properties:
+          result:
+            $ref: "#/definitions/GeneratedRunResult"
+
+  RunProjectResponse:
+    type: object
+    properties:
+      run:
+        $ref: "#/definitions/RunDetail"
+      project:
+        $ref: "#/definitions/Project"
+      analysis:
+        $ref: "#/definitions/ProjectAnalysis"
+      warning:
+        type: string
+
+  GeneratedRunResult:
+    type: object
+    properties:
+      status:
+        $ref: "#/definitions/RunStatus"
+      project:
+        $ref: "#/definitions/Project"
+      analysis:
+        $ref: "#/definitions/ProjectAnalysis"
+      manifest:
+        type: string
+      orchestrationLog:
+        type: string
+
+  RunStatus:
+    type: string
+    enum:
+      - queued
+      - running
+      - completed
+      - error
+
+  ProjectFeed:
+    type: object
+    properties:
+      generatedAt:
+        type: string
+        description: ISO 8601 timestamp when the feed was last generated
+      projects:
+        type: array
+        items:
+          $ref: "#/definitions/Project"
+
+  Project:
+    type: object
+    properties:
+      slug:
+        type: string
+        description: Unique identifier for the project, e.g. smart-inventory-tracker-20260408222513
+      title:
+        type: string
+        description: Human-readable project title
+      status:
+        type: string
+        description: Project status, e.g. Ready, In Progress, Failed
+      generatedFrom:
+        type: string
+        description: Source BRD filename that generated this project
+      generatedAt:
+        type: string
+        description: ISO 8601 timestamp when this project was generated
+      links:
+        $ref: "#/definitions/ProjectLinks"
+      runLog:
+        type: string
+        description: Relative path to the pipeline run log file
+
+  ProjectLinks:
+    type: object
+    properties:
+      readme:
+        type: string
+        description: Relative path to the project README
+      deploy:
+        type: string
+        description: Relative path to the deployment guide
+      diagram:
+        type: string
+        description: Relative path to the architecture draw.io diagram
+      architectureOverview:
+        type: string
+        description: Relative path to the architecture overview document
+      traceability:
+        type: string
+        description: Relative path to the traceability matrix
+
+  ProjectAnalysis:
+    type: object
+    properties:
+      title:
+        type: string
+      projectSlug:
+        type: string
+      generatedFrom:
+        type: string
+      designChoice:
+        type: string
+      benefits:
+        type: array
+        items:
+          type: string
+      alternativeConsidered:
+        type: string
+      status:
+        type: string
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string

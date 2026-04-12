@@ -1323,6 +1323,28 @@
                             <span class="intake-toggle-icon" aria-hidden="true">▾</span>
                         </a>
                         <div class="intake-panel-content">
+                            <!-- User: Request Access Token -->
+                            <details id="request-token-panel" style="margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
+                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: var(--primary); user-select: none;">
+                                    📥 Request a Portal Access Token
+                                </summary>
+                                <div style="padding: 0 1rem 1.25rem;">
+                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Don’t have a token? Submit a request and the admin will issue one for you. You’ll receive it via Teams or email.</p>
+                                    <div class="form-group">
+                                        <label for="request-token-sub">Your name or email <span style="color:#c00;">*</span></label>
+                                        <input type="text" id="request-token-sub" placeholder="user@contoso.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="request-token-reason">Reason / intended use</label>
+                                        <input type="text" id="request-token-reason" placeholder="e.g., April demo session, testing a new BRD">
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="button" onclick="submitTokenRequest()" class="btn-primary">Submit Request</button>
+                                    </div>
+                                    <div id="token-request-status" style="margin-top: 0.75rem; font-size: 0.85rem;"></div>
+                                </div>
+                            </details>
+
                             <div class="brd-intake-panel">
                                 <h3>📋 New BRD Input</h3>
                                 <form onsubmit="return submitBrd(event)">
@@ -1331,8 +1353,8 @@
                                         <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="portal-api-key">Portal API Key</label>
-                                        <input type="password" id="portal-api-key" placeholder="Required for hosted portal deployments with API key auth">
+                                        <label for="portal-api-key">Portal Access Token</label>
+                                        <input type="password" id="portal-api-key" placeholder="Master key or issued token (e.g., eyJ...aGVs.3a4f...) — required when FACTORY_PORTAL_API_KEY is set">
                                         <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
                                             Optional for local development. Required when the portal is deployed with <code>FACTORY_PORTAL_API_KEY</code> enabled.
                                         </p>
@@ -1372,6 +1394,54 @@
                                     <div class="status-message" id="brd-intake-status"></div>
                                 </form>
                             </div>
+
+                            <!-- Admin: Issue Temporary Tokens -->
+                            <details id="admin-token-panel" style="margin-top: 1.5rem; border: 1px solid #c9a33a; border-radius: 6px; background: #fffdf2;"
+                                     ontoggle="if(this.open){ loadTokenList(); loadTokenRequests(); }">
+                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #7a5c00; user-select: none;">
+                                    🔑 Admin: Issue Temporary Tokens
+                                </summary>
+                                <div style="padding: 0 1rem 1.25rem;">
+                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Tokens are HMAC-signed, time-limited, and expire after a configurable number of uses. Share the generated token with users instead of the master key.</p>
+                                    <div class="form-group">
+                                        <label for="token-sub">Recipient (email or name)</label>
+                                        <input type="text" id="token-sub" placeholder="user@contoso.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="token-ttl">Expiry</label>
+                                        <select id="token-ttl" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                                            <option value="3600">1 hour</option>
+                                            <option value="14400">4 hours</option>
+                                            <option value="86400" selected>24 hours</option>
+                                            <option value="604800">7 days</option>
+                                            <option value="2592000">30 days</option>
+                                            <option value="0">Never expires ⚠️</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="token-max-uses">Max Uses <span style="font-weight:400;color:var(--text-secondary);">(0 = unlimited)</span></label>
+                                        <input type="number" id="token-max-uses" value="5" min="0" max="10000" style="width: 100px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="token-purpose">Purpose / Label</label>
+                                        <input type="text" id="token-purpose" placeholder="april-demo">
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="button" onclick="issueToken()" class="btn-primary">Generate Token</button>
+                                        <button type="button" onclick="loadTokenList()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh Usage</button>
+                                    </div>
+                                    <div id="admin-token-output" style="display:none; margin-top: 1rem; padding: 1rem; background: #f0f7ff; border-radius: 4px; border: 1px solid var(--primary);">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <strong style="font-size: 0.9rem;">Generated Token (send this to the user):</strong>
+                                            <button type="button" id="copy-token-btn" onclick="copyToken()" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--primary); background: white; border-radius: 3px;">Copy</button>
+                                        </div>
+                                        <code id="admin-token-value" style="display: block; word-break: break-all; font-size: 0.72rem; background: white; padding: 0.5rem; border-radius: 3px; border: 1px solid #ddd;"></code>
+                                        <p id="admin-token-meta" style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.82rem; color: var(--text-secondary);"></p>
+                                    </div>
+                                    <div id="admin-token-list" style="margin-top: 1.25rem;"></div>
+                                    <div id="admin-token-requests" style="margin-top: 1.5rem;"></div>
+                                </div>
+                            </details>
                         </div>
                     </section>
                 </div>
@@ -1883,6 +1953,183 @@
         function buildAuthenticatedHeaders(baseHeaders = {}) {
             return buildMutationHeaders(baseHeaders);
         }
+
+        // ── Admin token functions ────────────────────────────────────────────
+        async function issueToken() {
+            const apiKey = getPortalApiKey();
+            if (!apiKey) {
+                alert('Enter the master API key in the "Portal Access Token" field above first.');
+                return;
+            }
+            const sub = (document.getElementById('token-sub')?.value || '').trim();
+            const ttl = parseInt(document.getElementById('token-ttl')?.value || '86400', 10);
+            const maxUses = parseInt(document.getElementById('token-max-uses')?.value || '5', 10);
+            const purpose = (document.getElementById('token-purpose')?.value || 'manual').trim() || 'manual';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/issue-token`, {
+                    method: 'POST',
+                    headers: buildMutationHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ sub, ttl_seconds: ttl, max_uses: maxUses, purpose }),
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    alert(`Failed: ${data.error || resp.statusText}`);
+                    return;
+                }
+                const output = document.getElementById('admin-token-output');
+                const tokenEl = document.getElementById('admin-token-value');
+                const metaEl = document.getElementById('admin-token-meta');
+                if (tokenEl) tokenEl.textContent = data.token;
+                if (metaEl) {
+                    const expDate = data.exp === 0 ? 'Never' : new Date(data.exp * 1000).toLocaleString();
+                    const usesStr = data.max_uses > 0 ? data.max_uses : 'unlimited';
+                    metaEl.textContent = `For: ${data.sub || '(anyone)'} · Expires: ${expDate} · Max uses: ${usesStr} · Purpose: ${data.purpose}`;
+                }
+                if (output) output.style.display = 'block';
+                loadTokenList();
+            } catch (e) {
+                alert(`Error: ${e.message}`);
+            }
+        }
+
+        function copyToken() {
+            const val = document.getElementById('admin-token-value')?.textContent || '';
+            if (!val) return;
+            navigator.clipboard.writeText(val).then(() => {
+                const btn = document.getElementById('copy-token-btn');
+                if (btn) {
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+                }
+            });
+        }
+
+        async function loadTokenList() {
+            const apiKey = getPortalApiKey();
+            if (!apiKey) return;
+            const container = document.getElementById('admin-token-list');
+            if (!container) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/tokens`, {
+                    headers: buildMutationHeaders(),
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const tokens = data.tokens || [];
+                if (tokens.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0;">No tokens issued this session.</p>';
+                    return;
+                }
+                const rows = tokens.map(t => {
+                    const exp = t.exp === 0 ? '<span style="color:#906;">Never</span>' : new Date(t.exp * 1000).toLocaleString();
+                    const usesStr = t.max_uses > 0 ? t.max_uses : '∞';
+                    const status = t.expired ? '<span style="color:#c00;">expired</span>' : '<span style="color:#090;">active</span>';
+                    return `<tr>
+                        <td style="padding:5px 8px;">${t.sub || '—'}</td>
+                        <td style="padding:5px 8px;">${t.purpose || '—'}</td>
+                        <td style="padding:5px 8px; text-align:center;"><strong>${t.uses}</strong> / ${usesStr}</td>
+                        <td style="padding:5px 8px;">${exp}</td>
+                        <td style="padding:5px 8px;">${status}</td>
+                    </tr>`;
+                }).join('');
+                container.innerHTML = `
+                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem; border:1px solid var(--border); border-radius:4px; overflow:hidden;">
+                        <thead style="background:#f0f6ff;">
+                            <tr>
+                                <th style="padding:6px 8px; text-align:left; color:var(--primary);">Recipient</th>
+                                <th style="padding:6px 8px; text-align:left; color:var(--primary);">Purpose</th>
+                                <th style="padding:6px 8px; text-align:center; color:var(--primary);">Uses</th>
+                                <th style="padding:6px 8px; text-align:left; color:var(--primary);">Expires</th>
+                                <th style="padding:6px 8px; text-align:left; color:var(--primary);">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            } catch (_) { /* silent */ }
+        }
+        // ─── User token request ───────────────────────────────────────────────
+        async function submitTokenRequest() {
+            const sub    = (document.getElementById('request-token-sub')?.value || '').trim();
+            const reason = (document.getElementById('request-token-reason')?.value || '').trim();
+            const status = document.getElementById('token-request-status');
+            if (!sub) { if (status) status.innerHTML = '<span style="color:#c00;">Please enter your name or email.</span>'; return; }
+            try {
+                const resp = await fetch(`${API_BASE}/api/token-request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sub, reason }),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) {
+                    if (status) status.innerHTML = `<span style="color:#090;">✓ Request submitted (id: <code>${data.id || '?'}</code>). The admin will send you a token.</span>`;
+                    document.getElementById('request-token-sub').value = '';
+                    document.getElementById('request-token-reason').value = '';
+                } else {
+                    if (status) status.innerHTML = `<span style="color:#c00;">Error: ${data.error || resp.statusText}</span>`;
+                }
+            } catch (e) {
+                if (status) status.innerHTML = `<span style="color:#c00;">Network error: ${e.message}</span>`;
+            }
+        }
+
+        async function loadTokenRequests() {
+            const apiKey = getPortalApiKey();
+            if (!apiKey) return;
+            const container = document.getElementById('admin-token-requests');
+            if (!container) return;
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/token-requests`, {
+                    headers: buildMutationHeaders(),
+                });
+                if (!resp.ok) { container.innerHTML = ''; return; }
+                const data = await resp.json();
+                const reqs = data.requests || [];
+                if (reqs.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0.5rem 0 0;">No pending token requests.</p>';
+                    return;
+                }
+                const rows = reqs.map(r => {
+                    const ts = r.requested_at ? new Date(r.requested_at * 1000).toLocaleString() : '—';
+                    const statusBadge = r.status === 'pending'
+                        ? '<span style="color:#c60;">pending</span>'
+                        : `<span style="color:#090;">${r.status}</span>`;
+                    return `<tr>
+                        <td style="padding:5px 8px;">${r.sub || '—'}</td>
+                        <td style="padding:5px 8px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(r.reason||'').replace(/"/g,'&quot;')}">${r.reason || '—'}</td>
+                        <td style="padding:5px 8px;">${ts}</td>
+                        <td style="padding:5px 8px;">${statusBadge}</td>
+                        <td style="padding:5px 8px;">
+                            ${r.status === 'pending' ? `<button type="button" onclick="issueFromRequest('${(r.sub||'').replace(/'/g,"\\'")}','${(r.reason||'').replace(/'/g,"\\'")}'); return false;" style="padding:3px 10px; font-size:0.78rem; cursor:pointer;">Issue Token</button>` : ''}
+                        </td>
+                    </tr>`;
+                }).join('');
+                container.innerHTML = `
+                    <h4 style="font-size:0.88rem; color:#7a5c00; margin: 1rem 0 0.4rem;">Pending Token Requests</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem; border:1px solid #e8d07a; border-radius:4px; overflow:hidden;">
+                        <thead style="background:#fdf6dc;">
+                            <tr>
+                                <th style="padding:6px 8px; text-align:left; color:#7a5c00;">Requester</th>
+                                <th style="padding:6px 8px; text-align:left; color:#7a5c00;">Reason</th>
+                                <th style="padding:6px 8px; text-align:left; color:#7a5c00;">Requested At</th>
+                                <th style="padding:6px 8px; text-align:left; color:#7a5c00;">Status</th>
+                                <th style="padding:6px 8px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            } catch (_) { /* silent */ }
+        }
+
+        function issueFromRequest(sub, purpose) {
+            const subField     = document.getElementById('token-sub');
+            const purposeField = document.getElementById('token-purpose');
+            if (subField)     subField.value     = sub;
+            if (purposeField) purposeField.value = purpose;
+            subField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            subField?.focus();
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         async function openDiagramInPortal(diagramPath) {
             if (!diagramPath || !diagramModal || !diagramFrame) return;
