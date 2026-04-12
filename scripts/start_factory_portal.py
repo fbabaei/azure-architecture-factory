@@ -337,7 +337,7 @@ def _issue_token(sub: str, ttl_seconds: int, max_uses: int, purpose: str) -> dic
             "max_uses": max_uses, "purpose": purpose}
 
 
-def _validate_issued_token(token: str) -> dict | str:
+def _validate_issued_token(token: str) -> dict | str | None:
     """Validate an issued token. Returns claims dict on success, error string on failure."""
     master_key = os.environ.get(API_KEY_ENV, "").strip()
     if not master_key:
