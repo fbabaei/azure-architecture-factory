@@ -233,24 +233,63 @@
             border: 1px solid var(--border);
             border-top: 3px solid var(--primary);
             border-radius: 8px;
-            padding: 1.5rem 1.75rem 1.25rem;
             margin-bottom: 1.75rem;
+            overflow: hidden;
+        }
+
+        .executive-summary-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .executive-summary-toggle:hover { background: rgba(0,120,212,0.04); }
+
+        .executive-summary-toggle-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .executive-summary-toggle-icon {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            transition: transform 0.2s;
         }
 
         .executive-summary-title {
             font-size: 1.05rem;
             font-weight: 600;
             color: var(--primary);
-            margin: 0 0 0.5rem;
+            margin: 0;
         }
 
         .executive-summary-title::before { display: none; }
 
         .executive-summary-lead {
             color: var(--text-secondary);
-            font-size: 0.88rem;
-            line-height: 1.6;
-            margin: 0 0 1.1rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .executive-summary-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.25s ease;
+            padding: 0 1.75rem;
+        }
+
+        .executive-summary-body.open {
+            max-height: 1200px;
+            padding: 0 1.75rem 1.25rem;
         }
 
         .executive-summary-grid {
@@ -277,6 +316,7 @@
 
         @media (max-width: 800px) {
             .executive-summary-grid { grid-template-columns: 1fr; }
+            .executive-summary-toggle { align-items: flex-start; }
         }
 
         /* ── Modernization entry point ─────────────────────────────── */
@@ -1961,8 +2001,14 @@
 
         <!-- Executive Summary -->
         <section class="executive-summary" aria-label="Executive Summary">
-            <h2 class="executive-summary-title">What is the Azure Architecture Factory?</h2>
-            <p class="executive-summary-lead">A GitHub Copilot–powered delivery workspace that converts business requirements into a complete, deployable Azure project in one orchestrated flow. No manual diagram drawing, no ad-hoc scaffolding — the factory produces every artifact a team needs to build, validate, and ship to Azure.</p>
+            <a href="#executive-summary" class="executive-summary-toggle" onclick="toggleExecutiveSummary(event)" aria-expanded="false" aria-controls="executive-summary-body">
+                <span class="executive-summary-toggle-left">
+                    <span class="executive-summary-title">What is the Azure Architecture Factory?</span>
+                    <span class="executive-summary-lead">A GitHub Copilot–powered workspace: Business Requirements → Architecture → Code → Bicep → Azure.</span>
+                </span>
+                <span class="executive-summary-toggle-icon" aria-hidden="true">▸</span>
+            </a>
+            <div id="executive-summary-body" class="executive-summary-body">
             <div class="executive-summary-grid">
                 <div class="executive-summary-col">
                     <h4>Core Capabilities</h4>
@@ -1997,6 +2043,7 @@
                     </ol>
                 </div>
             </div>
+            </div><!-- /executive-summary-body -->
         </section>
 
         <div class="docs-csa-row">
@@ -4090,6 +4137,16 @@
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
+        }
+
+        function toggleExecutiveSummary(e) {
+            if (e) e.preventDefault();
+            const body = document.getElementById('executive-summary-body');
+            const link = document.querySelector('.executive-summary-toggle');
+            const icon = document.querySelector('.executive-summary-toggle-icon');
+            const isOpen = body.classList.toggle('open');
+            link.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            icon.textContent = isOpen ? '▾' : '▸';
         }
 
         function toggleModernizationPanel(e) {
