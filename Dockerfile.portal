@@ -15,6 +15,7 @@ COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/
 COPY factory-portal.html ./
 COPY README.md ./
 COPY docs/ docs/
+COPY assets/ assets/
 # Snapshot of the project feed baked into the image at build time
 COPY factory-projects.generated.json ./
 
