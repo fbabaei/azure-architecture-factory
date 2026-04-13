@@ -2254,7 +2254,7 @@
                                 </span>
                                 <span class="intake-toggle-icon" aria-hidden="true">▾</span>
                             </a>
-                            <button type="button" id="run-latest-copilot-btn" class="project-link project-link-copilot" onclick="return runLatestProjectWithCopilot()" disabled>&#9889; Open in GitHub Copilot</button>
+                            <button type="button" id="run-latest-copilot-btn" class="project-link project-link-copilot" onclick="return runLatestProjectWithCopilot()" disabled>&#9655; Run in GitHub Copilot</button>
                         </div>
                         <div class="intake-panel-content">
                             <!-- User: Request Access Token -->
@@ -2466,7 +2466,7 @@
                         <a href="docs/APP_MODERNIZATION_GUIDE.md" target="_blank" rel="noopener noreferrer" style="color: var(--accent);">📄 What can the factory do? Read the App Modernization Guide →</a>
                     </p>
                     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <button type="button" class="btn-primary" onclick="runModernizationWithCopilot()">&#9889; Open in GitHub Copilot</button>
+                        <button type="button" class="btn-primary" onclick="runModernizationWithCopilot()">&#9655; Run in GitHub Copilot</button>
                         <span id="mod-status" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
                     </div>
                     <p style="margin: 1rem 0 0; font-size: 0.82rem; color: var(--text-secondary);">
@@ -4068,7 +4068,7 @@
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
-                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">&#9889; Open in GitHub Copilot</a>
+                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">&#9655; Run in GitHub Copilot</a>
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
