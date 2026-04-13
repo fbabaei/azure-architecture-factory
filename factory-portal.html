@@ -2320,6 +2320,7 @@
                     <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
                     <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
                     <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
+                    <a href="docs/COST_ESTIMATION_GUIDE.md" class="doc-preview-link" data-doc-title="Cost Estimation Guide" rel="noopener noreferrer">💰 Cost Estimation</a>
                 </div>
             </div>
         </section>
@@ -4549,6 +4550,11 @@
                 q: 'Where are generated projects saved?',
                 a: 'Under <code>projects/&lt;slug&gt;/</code> in the repo root. Each folder has <code>README.md</code>, <code>project-manifest.json</code>, code, and <code>infra/</code>.',
                 icon: '📁'
+            },
+            {
+                q: 'How do I estimate costs for a generated project?',
+                a: 'Click <strong>💰 Cost Tools</strong> on any project card. It has three tabs:<br><br><strong>📊 Retail Pricing</strong> — scans the project\'s Bicep files, detects Azure resource types, and fetches live pay-as-you-go USD prices from the Azure Retail Prices API (no login needed).<br><br><strong>🧮 Pricing Calculator</strong> — opens the Azure Pricing Calculator pre-populated with this project\'s detected services so you can adjust volumes, tiers, and regions.<br><br><strong>🔍 What-If CLI</strong> — generates the exact <code>az bicep build</code> + <code>az deployment group what-if</code> commands to run locally against your subscription to preview resource changes before deploying.<br><br>For full guidance see the <a href="docs/COST_ESTIMATION_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/COST_ESTIMATION_GUIDE.md\',\'Cost Estimation Guide\')" style="color:#0078d4">Cost Estimation Guide →</a>',
+                icon: '💰'
             },
         ];
 
