@@ -227,6 +227,58 @@
             opacity: 0.85;
         }
 
+        /* ── Executive Summary ─────────────────────────────────────── */
+        .executive-summary {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: 1.5rem 1.75rem 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .executive-summary-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0 0 0.5rem;
+        }
+
+        .executive-summary-title::before { display: none; }
+
+        .executive-summary-lead {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin: 0 0 1.1rem;
+        }
+
+        .executive-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem 2rem;
+        }
+
+        .executive-summary-col h4 {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin: 0 0 0.5rem;
+        }
+
+        .executive-summary-col ul {
+            margin: 0;
+            padding-left: 1.15rem;
+            font-size: 0.875rem;
+            line-height: 1.75;
+        }
+
+        @media (max-width: 800px) {
+            .executive-summary-grid { grid-template-columns: 1fr; }
+        }
+
         /* ── Modernization entry point ─────────────────────────────── */
         .modernization-section {
             border: 1px solid var(--border);
@@ -1905,6 +1957,46 @@
             <p class="section-subtitle">
                 End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment
             </p>
+        </section>
+
+        <!-- Executive Summary -->
+        <section class="executive-summary" aria-label="Executive Summary">
+            <h2 class="executive-summary-title">What is the Azure Architecture Factory?</h2>
+            <p class="executive-summary-lead">A GitHub Copilot–powered delivery workspace that converts business requirements into a complete, deployable Azure project in one orchestrated flow. No manual diagram drawing, no ad-hoc scaffolding — the factory produces every artifact a team needs to build, validate, and ship to Azure.</p>
+            <div class="executive-summary-grid">
+                <div class="executive-summary-col">
+                    <h4>Core Capabilities</h4>
+                    <ul>
+                        <li><strong>BRD Intake</strong> — Submit a Business Requirements Document via the portal form; the factory pipeline starts automatically</li>
+                        <li><strong>Architecture Diagram</strong> — Generates an Azure draw.io diagram and companion notes from requirements</li>
+                        <li><strong>Code Scaffolding</strong> — Produces modular Python microservice source trees mapped to diagram components</li>
+                        <li><strong>Bicep Infrastructure</strong> — Creates parameterized Bicep modules for every Azure resource in the architecture</li>
+                        <li><strong>Infrastructure Validation</strong> — Auto-validates and self-heals Bicep syntax, logic, and module references before deployment</li>
+                        <li><strong>Production Readiness Review</strong> — Checklist of runtime, identity, secret, networking, and observability prerequisites</li>
+                        <li><strong>Optional Azure Deployment</strong> — Deploys the generated project to Azure via <code>azd up</code> or Bicep CLI</li>
+                        <li><strong>Project Registry</strong> — All outputs are isolated under <code>projects/&lt;slug&gt;/</code> and indexed for future reference</li>
+                    </ul>
+                </div>
+                <div class="executive-summary-col">
+                    <h4>Additional Features</h4>
+                    <ul>
+                        <li><strong>Legacy App Modernization</strong> — Point the agent at an existing codebase; it assesses the stack, maps components to Azure services, generates a BRD, and runs the full factory pipeline automatically</li>
+                        <li><strong>Monorepo Support</strong> — Detects multi-service projects and produces a separate Azure target mapping per service</li>
+                        <li><strong>Assessment-Only Mode</strong> — Run the modernization assessment and produce the BRD without triggering the full factory; review before committing</li>
+                        <li><strong>Design Analysis</strong> — Analyze an existing architecture diagram against Azure best practices and Well-Architected Framework pillars</li>
+                        <li><strong>CSA Support Copilot</strong> — Ask operational and technical CSA questions through the hosted MCP companion service</li>
+                        <li><strong>Portal Documentation</strong> — Quick access to Quick Start, Getting Started, and the App Modernization Guide from the portal header</li>
+                    </ul>
+                    <h4 style="margin-top: 1rem;">Factory Pipeline at a Glance</h4>
+                    <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.7;">
+                        <li>Submit BRD → <code>brd-to-architecture-diagram</code></li>
+                        <li>Diagram → <code>azure-architecture-implementer</code></li>
+                        <li>Infrastructure → <code>bicep-infrastructure-validator</code></li>
+                        <li>Readiness → <code>production-environment-advisor</code></li>
+                        <li>Deploy → <code>azure-project-deployer</code> (optional)</li>
+                    </ol>
+                </div>
+            </div>
         </section>
 
         <div class="docs-csa-row">
