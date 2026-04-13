@@ -216,6 +216,35 @@
             box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
         }
 
+        .docs-csa-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0;
+        }
+
+        .docs-csa-row .docs-quick-links {
+            flex: 0 0 auto;
+            width: 280px;
+            margin-bottom: 1.5rem;
+        }
+
+        .docs-csa-row .copilot-companion-panel {
+            flex: 1 1 0;
+            min-width: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .docs-csa-row {
+                flex-direction: column;
+            }
+            .docs-csa-row .docs-quick-links {
+                width: 100%;
+            }
+        }
+
         .docs-quick-links {
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 248, 255, 0.96) 100%);
             border: 1px solid var(--border);
@@ -224,6 +253,7 @@
             margin-top: -0.2rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+            flex: 0 0 auto;
         }
 
         .docs-quick-links h3 {
@@ -272,6 +302,8 @@
             padding: 1rem 1.1rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+            flex: 1 1 0;
+            min-width: 0;
         }
 
         .copilot-companion-panel h3 {
@@ -1523,6 +1555,35 @@
             margin-bottom: 0.75rem;
         }
 
+        .intake-analysis-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .intake-col {
+            flex: 0 0 420px;
+            width: 420px;
+            min-width: 0;
+        }
+
+        .analysis-col {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        @media (max-width: 900px) {
+            .intake-analysis-row {
+                flex-direction: column;
+            }
+            .intake-col {
+                width: 100%;
+                flex: none;
+            }
+        }
+
         .design-analysis-heading .section-subtitle {
             margin-bottom: 0;
         }
@@ -1787,6 +1848,7 @@
             </p>
         </section>
 
+        <div class="docs-csa-row">
         <section class="docs-quick-links" aria-labelledby="docs-quick-links-title">
             <h3 id="docs-quick-links-title">Portal Documentation</h3>
             <p>Start here if you need setup guidance, workflow instructions, or a high-level repo overview.</p>
@@ -1825,11 +1887,12 @@
                 </div>
             </div>
         </section>
+        </div>
 
         <!-- Design Analysis -->
         <section id="design-analysis">
-            <div class="intake-link-row">
-                <div class="intake-link-box">
+            <div class="intake-analysis-row">
+                <div class="intake-col">
                     <section id="intake" class="intake-section">
                         <div class="intake-toggle-row">
                             <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
@@ -1972,8 +2035,8 @@
                             </details>
                         </div>
                     </section>
-                </div>
-            </div>
+                </div><!-- /intake-col -->
+                <div class="analysis-col">
 
             <div class="design-analysis-header-row">
                 <div class="design-analysis-heading">
@@ -1993,6 +2056,8 @@
                 </div>
 
             </div>
+                </div><!-- /analysis-col -->
+            </div><!-- /intake-analysis-row -->
 
             <div class="projects-intake-wrapper">
                 <section id="projects">
