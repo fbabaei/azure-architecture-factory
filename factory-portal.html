@@ -1806,11 +1806,10 @@
             flex: 1 1 auto;
         }
 
-        .button-group .project-link-copilot {
-            font-size: 0.85rem;
-            padding: 0.45rem 1rem;
-            line-height: 1.4;
-            border-radius: 4px;
+        .brd-submit-hint {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
         }
 
         .design-analysis-header-row {
@@ -2326,9 +2325,9 @@
                                         </label>
                                     </div>
                                     <div class="button-group">
-                                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
-                                        <button type="button" id="run-latest-copilot-btn" class="project-link project-link-copilot" onclick="return runLatestProjectWithCopilot()" disabled>&#9655; Run in GitHub Copilot</button>
+                                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate Project</button>
                                     </div>
+                                    <p class="brd-submit-hint">After the project is generated, use <strong>&#9655; Open in GitHub Copilot</strong> on the project card to continue in VS Code.</p>
                                     <div class="status-message" id="brd-intake-status"></div>
                                 </form>
                             </div>
@@ -4063,7 +4062,7 @@
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
-                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">&#9655; Run in GitHub Copilot</a>
+                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;" title="Open this project in GitHub Copilot to run or extend it locally in VS Code">&#9655; Open in GitHub Copilot</a>
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
