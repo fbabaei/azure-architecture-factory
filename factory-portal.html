@@ -4257,8 +4257,15 @@
             body.innerHTML = `
                 <div class="helper-greeting">
                     <img src="assets/factory-icon.svg" width="28" height="28" alt="" style="border-radius:6px;flex-shrink:0;">
-                    <span>Describe what you want to do and I\'ll generate a Copilot agent prompt — or browse topics below.</span>
+                    <span>Describe what you want to do — or pick a quick action below to get a ready-to-paste Copilot prompt.</span>
                 </div>
+                <div class="helper-quick-actions">
+                    <button class="helper-quick-btn" onclick="renderHelperPrompt('Build a new project on Azure')">📐 Build a project</button>
+                    <button class="helper-quick-btn" onclick="renderHelperPrompt('Modernize a legacy application')">🔄 Modernize an app</button>
+                    <button class="helper-quick-btn" onclick="renderHelperPrompt('Deploy project to Azure')">☁️ Deploy to Azure</button>
+                    <button class="helper-quick-btn" onclick="renderHelperPrompt('Validate Bicep infrastructure')">🔧 Validate infra</button>
+                </div>
+                <div style="font-size:.77rem;color:#8a8a8a;margin:.6rem 0 .3rem;">Or browse help topics:</div>
                 <div class="helper-chips">
                     ${HELPER_FAQ.map((f, i) => `<button class="helper-chip" onclick="renderHelperFaq(${i})">${f.icon} ${f.q}</button>`).join('')}
                 </div>`;
@@ -4271,7 +4278,13 @@
                 <button class="helper-back" onclick="renderHelperHome()">← Back</button>
                 <div class="helper-faq-icon">${f.icon}</div>
                 <div class="helper-faq-q">${f.q}</div>
-                <div class="helper-faq-a">${f.a}</div>`;
+                <div class="helper-faq-a">${f.a}</div>
+                <div style="margin-top:.8rem;padding-top:.7rem;border-top:1px solid #e8e8e8;">
+                    <div style="font-size:.78rem;color:#5a5a5a;margin-bottom:.4rem;">Ready to act? Generate a prompt:</div>
+                    <button class="helper-action-btn" onclick="renderHelperPrompt(${JSON.stringify(f.q)})">
+                        ⚡ Generate Copilot Prompt
+                    </button>
+                </div>`;
         }
 
         async function renderHelperPrompt(input) {
@@ -4517,6 +4530,14 @@
         .helper-action-btn:hover { background:#005a9e; }
         .helper-action-btn--outline { background:#fff; color:#0078d4; border:1px solid #0078d4; }
         .helper-action-btn--outline:hover { background:#eef6ff; }
+        .helper-quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:.38rem; margin-bottom:.5rem; }
+        .helper-quick-btn {
+            background:linear-gradient(135deg,#eef6ff,#ddeeff); border:1px solid #b8d8f8;
+            border-radius:8px; padding:.5rem .6rem; font-size:.8rem; color:#0050a0;
+            cursor:pointer; text-align:left; font-family:inherit; line-height:1.3;
+            transition:background .15s,border-color .15s;
+        }
+        .helper-quick-btn:hover { background:linear-gradient(135deg,#ddeeff,#c5e2ff); border-color:#0078d4; }
     </style>
 
     <script>
