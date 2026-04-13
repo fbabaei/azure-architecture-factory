@@ -21,6 +21,9 @@
             --primary-dark: #005a9e;
             --secondary: #50e6ff;
             --accent: #ff8c00;
+            --glow-cyan: rgba(80, 230, 255, 0.46);
+            --glow-blue: rgba(0, 120, 212, 0.3);
+            --glow-amber: rgba(255, 140, 0, 0.2);
             --bg-dark: #deebf8;
             --bg-light: #ffffff;
             --bg-soft: #cfe4f7;
@@ -42,9 +45,12 @@
             isolation: isolate;
             overflow-x: hidden;
             background-image: 
-                linear-gradient(135deg, rgba(0, 120, 212, 0.12) 0%, transparent 55%),
-                linear-gradient(225deg, rgba(80, 230, 255, 0.13) 0%, transparent 45%),
-                linear-gradient(180deg, #eef7ff 0%, #deebf8 100%);
+                radial-gradient(circle at 9% 14%, var(--glow-cyan) 0%, transparent 33%),
+                radial-gradient(circle at 88% 10%, var(--glow-blue) 0%, transparent 35%),
+                radial-gradient(circle at 48% 68%, var(--glow-amber) 0%, transparent 32%),
+                radial-gradient(circle at 30% 88%, rgba(0, 90, 158, 0.18) 0%, transparent 28%),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(226, 241, 252, 0.86) 34%, rgba(204, 224, 241, 0.95) 100%),
+                linear-gradient(180deg, #fbfdff 0%, #eaf3fb 30%, #d3e4f4 100%);
         }
 
         body::before,
@@ -58,21 +64,28 @@
         }
 
         body::before {
-            opacity: 0.24;
+            opacity: 0.66;
             background-image:
+                radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 24%),
+                radial-gradient(circle at 78% 18%, rgba(80, 230, 255, 0.34) 0%, rgba(80, 230, 255, 0) 34%),
+                radial-gradient(circle at 62% 78%, rgba(0, 120, 212, 0.2) 0%, rgba(0, 120, 212, 0) 32%),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%230078d4' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' d='M73 164h96c19 0 34-14 34-31 0-16-13-29-29-31-6-26-29-44-58-44-28 0-52 18-58 44-18 1-32 15-32 31 0 17 15 31 34 31h13'/%3E%3Cpath stroke-opacity='.16' d='M103 125h49'/%3E%3Cpath stroke-opacity='.16' d='M118 105h19'/%3E%3Cellipse stroke-opacity='.18' cx='177' cy='174' rx='32' ry='13'/%3E%3Cpath stroke-opacity='.18' d='M145 174v24c0 7 14 13 32 13s32-6 32-13v-24'/%3E%3Cpath stroke-opacity='.18' d='M145 186c0 7 14 13 32 13s32-6 32-13'/%3E%3Cpath stroke-opacity='.18' d='M145 198c0 7 14 13 32 13s32-6 32-13'/%3E%3C/g%3E%3C/svg%3E"),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%2350e6ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect stroke-opacity='.2' x='63' y='63' width='134' height='134' rx='24'/%3E%3Cpath stroke-opacity='.17' d='M102 84v-19M130 84v-19M158 84v-19M102 195v-19M130 195v-19M158 195v-19M84 102H65M84 130H65M84 158H65M195 102h-19M195 130h-19M195 158h-19'/%3E%3Ccircle stroke-opacity='.22' cx='107' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='153' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='130' cy='153' r='10'/%3E%3Cpath stroke-opacity='.22' d='M116 112l28 36M144 112l-10 30M117 108h26'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: 240px 240px, 220px 220px;
-            background-position: left -24px top 150px, right 4% top 520px;
+            background-size: auto, auto, auto, 250px 250px, 220px 220px;
+            background-position: left top, right top, center bottom, left -18px top 155px, right 4% top 500px;
+            filter: saturate(1.08);
         }
 
         body::after {
-            opacity: 0.2;
+            opacity: 0.44;
             background-image:
+                linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.48) 1px, transparent 1px),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23005a9e' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' d='M130 49l53 21v39c0 37-21 72-53 90-32-18-53-53-53-90V70l53-21z'/%3E%3Cpath stroke-opacity='.2' d='M107 124l17 18 32-36'/%3E%3Ccircle stroke-opacity='.16' cx='72' cy='178' r='14'/%3E%3Ccircle stroke-opacity='.16' cx='130' cy='214' r='14'/%3E%3Ccircle stroke-opacity='.16' cx='188' cy='178' r='14'/%3E%3Cpath stroke-opacity='.16' d='M83 186l36 22M141 208l36-22'/%3E%3C/g%3E%3C/svg%3E"),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%230078d4' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect stroke-opacity='.18' x='47' y='61' width='166' height='118' rx='24'/%3E%3Cpath stroke-opacity='.16' d='M47 101h166'/%3E%3Cpath stroke-opacity='.22' d='M88 137h84M88 161h54'/%3E%3Ccircle stroke-opacity='.18' cx='82' cy='83' r='5'/%3E%3Ccircle stroke-opacity='.18' cx='102' cy='83' r='5'/%3E%3Ccircle stroke-opacity='.18' cx='122' cy='83' r='5'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: 230px 230px, 250px 250px;
-            background-position: right -28px bottom 160px, left 6% bottom 320px;
+            background-size: 44px 44px, 44px 44px, 240px 240px, 250px 250px;
+            background-position: left top, left top, right -18px bottom 160px, left 5% bottom 285px;
+            mix-blend-mode: soft-light;
         }
 
         header {
@@ -201,6 +214,310 @@
             margin-bottom: 1.5rem;
             max-width: 800px;
             box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
+        }
+
+        .docs-quick-links {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 248, 255, 0.96) 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            margin-top: -0.2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+        }
+
+        .docs-quick-links h3 {
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .docs-quick-links p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .docs-link-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+
+        .docs-link-list a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            text-decoration: none;
+            color: var(--primary-dark);
+            background: #eef6ff;
+            border: 1px solid #bfd8ee;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.84rem;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .docs-link-list a:hover {
+            background: #deefff;
+            border-color: #95c2e7;
+            color: var(--primary);
+        }
+
+        .copilot-companion-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 248, 255, 0.98) 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+        }
+
+        .copilot-companion-panel h3 {
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .copilot-companion-panel p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .copilot-companion-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .copilot-output {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fcfdff;
+            padding: 0.8rem 0.9rem;
+            min-height: 120px;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .copilot-meta {
+            margin-top: 0.55rem;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .doc-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 24, 36, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            z-index: 1260;
+        }
+
+        .doc-modal.open {
+            display: flex;
+        }
+
+        .doc-shell {
+            width: min(1040px, 96vw);
+            height: min(860px, 92vh);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(10, 24, 36, 0.2);
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        .doc-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            background: #f3f9ff;
+        }
+
+        .doc-browser {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 0;
+        }
+
+        .doc-browser.has-toc {
+            grid-template-columns: minmax(220px, 250px) 1fr;
+        }
+
+        .doc-toc {
+            display: none;
+            padding: 1rem 0.95rem;
+            overflow: auto;
+            background: #fafcff;
+            border-right: 1px solid var(--border);
+        }
+
+        .doc-browser.has-toc .doc-toc {
+            display: block;
+        }
+
+        .doc-toc-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--primary-dark);
+            margin-bottom: 0.7rem;
+        }
+
+        .doc-toc-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .doc-toc-link {
+            display: block;
+            text-decoration: none;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 0.35rem 0.45rem;
+            font-size: 0.83rem;
+            line-height: 1.35;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .doc-toc-link:hover,
+        .doc-toc-link.active {
+            background: #e8f2ff;
+            color: var(--primary-dark);
+        }
+
+        .doc-toc-link[data-level="2"] {
+            padding-left: 0.9rem;
+        }
+
+        .doc-toc-link[data-level="3"] {
+            padding-left: 1.35rem;
+        }
+
+        .doc-content {
+            padding: 1.2rem 1.35rem;
+            overflow: auto;
+            color: var(--text-primary);
+            line-height: 1.65;
+            background: #ffffff;
+        }
+
+        .doc-content h1,
+        .doc-content h2,
+        .doc-content h3,
+        .doc-content h4 {
+            color: var(--primary-dark);
+            margin-top: 1.25rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .doc-content h1:first-child,
+        .doc-content h2:first-child,
+        .doc-content h3:first-child,
+        .doc-content h4:first-child,
+        .doc-content p:first-child {
+            margin-top: 0;
+        }
+
+        .doc-content p,
+        .doc-content ul,
+        .doc-content ol,
+        .doc-content blockquote,
+        .doc-content pre,
+        .doc-content table {
+            margin-bottom: 0.95rem;
+        }
+
+        .doc-content ul,
+        .doc-content ol {
+            padding-left: 1.35rem;
+        }
+
+        .doc-content code {
+            font-family: "Cascadia Code", Consolas, monospace;
+            background: #f3f7fb;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-size: 0.92em;
+        }
+
+        .doc-content pre {
+            background: #0f1720;
+            color: #e6edf5;
+            border-radius: 6px;
+            padding: 0.9rem 1rem;
+            overflow: auto;
+        }
+
+        .doc-content pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        .doc-content blockquote {
+            border-left: 3px solid #95c2e7;
+            margin-left: 0;
+            padding-left: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .doc-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .doc-content th,
+        .doc-content td {
+            border: 1px solid var(--border);
+            padding: 0.55rem 0.65rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .doc-content th {
+            background: #f7fbff;
+            color: var(--primary-dark);
+        }
+
+        .doc-content a {
+            color: var(--primary);
+        }
+
+        .doc-content .hljs {
+            display: block;
+            overflow-x: auto;
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .doc-status {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .doc-error {
+            border: 1px solid #e2b4b4;
+            background: #fff5f5;
+            color: #8a2f2f;
+            border-radius: 6px;
+            padding: 0.9rem 1rem;
         }
 
         .brd-intake-panel h3 {
@@ -427,6 +744,14 @@
             color: white;
         }
 
+        .project-link:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            background: #f0f4f8;
+            border-color: #aebfd0;
+            color: #7a8da0;
+        }
+
         .project-link-copilot {
             border-color: #0f6cbd;
             background: #eaf4ff;
@@ -443,6 +768,14 @@
             align-items: center;
             justify-content: space-between;
             gap: 0.75rem;
+        }
+
+        .projects-header-actions {
+            display: flex;
+            gap: 0.45rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .projects-header .project-link {
@@ -826,15 +1159,15 @@
 
         @media (max-width: 768px) {
             body::before {
-                opacity: 0.14;
-                background-size: 160px 160px, 145px 145px;
-                background-position: left -32px top 130px, right -18px top 520px;
+                opacity: 0.42;
+                background-size: auto, auto, auto, 170px 170px, 150px 150px;
+                background-position: left top, right top, center bottom, left -32px top 130px, right -18px top 520px;
             }
 
             body::after {
-                opacity: 0.12;
-                background-size: 150px 150px, 165px 165px;
-                background-position: right -24px bottom 190px, left -24px bottom 300px;
+                opacity: 0.28;
+                background-size: 32px 32px, 32px 32px, 150px 150px, 165px 165px;
+                background-position: left top, left top, right -24px bottom 190px, left -24px bottom 300px;
             }
 
             h1 {
@@ -1114,6 +1447,32 @@
             word-break: break-word;
         }
 
+        @media (max-width: 720px) {
+            .doc-shell,
+            .code-shell {
+                width: 100%;
+                height: min(92vh, 100%);
+            }
+
+            .doc-browser.has-toc {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .doc-browser.has-toc .doc-toc {
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+                max-height: 180px;
+            }
+
+            .doc-toolbar,
+            .code-toolbar,
+            .diagram-toolbar {
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+        }
+
         .projects-intake-wrapper {
             display: block;
             margin-bottom: 2rem;
@@ -1127,6 +1486,8 @@
         .intake-link-row {
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            gap: 0.65rem;
             margin-bottom: 0.75rem;
         }
 
@@ -1137,6 +1498,25 @@
             border-radius: 12px;
             background: linear-gradient(180deg, #eef7ff 0%, #dceeff 100%);
             box-shadow: 0 10px 28px rgba(18, 50, 74, 0.12);
+        }
+
+        .intake-toggle-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.55rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .intake-toggle-row .intake-toggle-link {
+            margin-bottom: 0;
+            flex: 1 1 auto;
+        }
+
+        .intake-toggle-row .project-link {
+            flex: 0 0 auto;
+            min-width: 140px;
+            font-size: 0.76rem;
+            padding: 0.55rem 0.65rem;
         }
 
         .design-analysis-header-row {
@@ -1274,18 +1654,101 @@
             display: block;
         }
 
-        @media (max-width: 1024px) {
+        .csa-toggle-row {
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0.75rem;
+        }
+
+        .csa-toggle-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.9rem;
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(0, 120, 212, 0.2);
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            text-align: left;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        .csa-toggle-link:hover {
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(18, 50, 74, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .csa-toggle-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .csa-toggle-title {
+            font-size: 1rem;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .csa-toggle-description {
+            font-size: 0.85rem;
+            line-height: 1.3;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .csa-toggle-icon {
+            display: inline-flex;
+            align-items: center;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: transform 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .copilot-companion-panel.expanded .csa-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .copilot-panel-content {
+            display: none;
+        }
+
+        .copilot-companion-panel.expanded .copilot-panel-content {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
             .projects-intake-wrapper #projects {
                 max-width: 100%;
             }
 
             .intake-link-row {
                 justify-content: stretch;
+                flex-direction: column;
+                gap: 0.5rem;
             }
 
             .intake-link-row #intake {
                 width: 100%;
                 align-items: stretch;
+            }
+
+            .intake-toggle-row {
+                flex-direction: column;
+                gap: 0.45rem;
+            }
+
+            .intake-toggle-row .project-link {
+                min-width: 0;
+                width: 100%;
             }
 
             .intake-toggle-link {
@@ -1305,8 +1768,11 @@
             </div>
             <nav>
                 <a href="#projects" class="active">Projects</a>
+                <a href="#csa-companion">CSA Copilot</a>
                 <a href="#intake">BRD Intake</a>
                 <a href="#design-analysis">Design Analysis</a>
+                <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
+                <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
                 <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
             </nav>
         </div>
@@ -1321,18 +1787,60 @@
             </p>
         </section>
 
+        <section class="docs-quick-links" aria-labelledby="docs-quick-links-title">
+            <h3 id="docs-quick-links-title">Portal Documentation</h3>
+            <p>Start here if you need setup guidance, workflow instructions, or a high-level repo overview.</p>
+            <div class="docs-link-list">
+                <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
+                <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
+                <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
+            </div>
+        </section>
+
+        <section id="csa-companion" class="copilot-companion-panel" aria-labelledby="csa-companion-title">
+            <div class="csa-toggle-row">
+                <a href="#csa-companion" class="csa-toggle-link" onclick="toggleCsaPanel(event)">
+                    <span class="csa-toggle-copy">
+                        <span class="csa-toggle-title">CSA Support Copilot Companion</span>
+                        <span class="csa-toggle-description">Ask operational and technical CSA questions through the hosted MCP companion service.</span>
+                    </span>
+                    <span class="csa-toggle-icon" aria-hidden="true">▾</span>
+                </a>
+            </div>
+            <div class="copilot-panel-content">
+                <div class="copilot-companion-grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="csa-question">Question</label>
+                        <input type="text" id="csa-question" placeholder="e.g., How do I rotate a Key Vault secret safely?">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="csa-context">Context (optional)</label>
+                        <textarea id="csa-context" placeholder="Include environment, service, incident details, or constraints."></textarea>
+                    </div>
+                    <div class="button-group" style="margin-top: 0;">
+                        <button type="button" class="btn-primary" id="csa-ask-btn" onclick="askCsaCompanion()">Ask CSA Copilot</button>
+                    </div>
+                    <div id="csa-output" class="copilot-output">Submit a question to receive a response from the CSA companion.</div>
+                    <div id="csa-meta" class="copilot-meta"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Design Analysis -->
         <section id="design-analysis">
             <div class="intake-link-row">
                 <div class="intake-link-box">
                     <section id="intake" class="intake-section">
-                        <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
-                            <span class="intake-toggle-copy">
-                                <span class="intake-toggle-title">Submit Business Requirements</span>
-                                <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project.</span>
-                            </span>
-                            <span class="intake-toggle-icon" aria-hidden="true">▾</span>
-                        </a>
+                        <div class="intake-toggle-row">
+                            <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
+                                <span class="intake-toggle-copy">
+                                    <span class="intake-toggle-title">Submit Business Requirements</span>
+                                    <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project.</span>
+                                </span>
+                                <span class="intake-toggle-icon" aria-hidden="true">▾</span>
+                            </a>
+                            <button type="button" id="run-latest-copilot-btn" class="project-link project-link-copilot" onclick="return runLatestProjectWithCopilot()" disabled>Run with GHCP on VS Code</button>
+                        </div>
                         <div class="intake-panel-content">
                             <!-- User: Request Access Token -->
                             <details id="request-token-panel" style="margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
@@ -1481,7 +1989,9 @@
                 <section id="projects">
                     <div class="projects-header">
                         <h2>Generated Projects</h2>
-                        <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
+                        <div class="projects-header-actions">
+                            <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
+                        </div>
                     </div>
                     <p class="section-subtitle" style="margin-bottom: 0.5rem;">Use the hosted actions to inspect generated files or download a ZIP copy to your local machine.</p>
                     <div id="projects-container">
@@ -1849,6 +2359,27 @@
         </div>
     </div>
 
+    <div class="doc-modal" id="doc-modal" aria-hidden="true">
+        <div class="doc-shell">
+            <div class="doc-toolbar">
+                <span class="diagram-title" id="doc-modal-title">Documentation</span>
+                <div class="diagram-actions">
+                    <a id="doc-open-tab" class="diagram-action" href="#" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
+                    <button id="doc-close" class="diagram-action" type="button">Close</button>
+                </div>
+            </div>
+            <div class="doc-browser" id="doc-browser">
+                <aside class="doc-toc" id="doc-toc" aria-label="Document outline">
+                    <div class="doc-toc-title">On This Page</div>
+                    <nav class="doc-toc-links" id="doc-toc-links"></nav>
+                </aside>
+                <div class="doc-content" id="doc-content">
+                    <div class="doc-status">Choose a documentation link to preview it inside the portal.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Dynamic Analysis Modal -->
     <div id="analysis-modal" class="analysis-modal">
         <div class="analysis-modal-content">
@@ -1858,6 +2389,8 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
@@ -1868,9 +2401,12 @@
         const API_PROJECT_FILE = (projectSlug, relativePath) => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/file?path=${encodeURIComponent(relativePath)}`;
         const API_PROJECT_DOWNLOAD = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/download`;
         const API_RUN_STATUS = runId => `${API_BASE}/api/brd-runs/${encodeURIComponent(runId)}`;
+        const API_CSA_COPILOT_TOOLS = `${API_BASE}/api/csa-copilot/tools`;
+        const API_CSA_COPILOT_ASK = `${API_BASE}/api/csa-copilot/ask`;
         const PORTAL_API_KEY_STORAGE_KEY = 'factoryPortalApiKey';
         let allProjects = [];
         let showAllProjects = false;
+        let latestProjectForCopilot = null;
 
         const diagramModal = document.getElementById('diagram-modal');
         const diagramFrame = document.getElementById('diagram-frame');
@@ -1887,7 +2423,16 @@
         const codePreviewBody = document.getElementById('code-preview-body');
         const codeDownloadButton = document.getElementById('code-download-btn');
         const codeCloseButton = document.getElementById('code-close');
+        const docModal = document.getElementById('doc-modal');
+        const docBrowser = document.getElementById('doc-browser');
+        const docToc = document.getElementById('doc-toc');
+        const docTocLinks = document.getElementById('doc-toc-links');
+        const docModalTitle = document.getElementById('doc-modal-title');
+        const docContent = document.getElementById('doc-content');
+        const docOpenTab = document.getElementById('doc-open-tab');
+        const docCloseButton = document.getElementById('doc-close');
         let activeCodeProjectSlug = '';
+        let activeDocPath = '';
 
         function parseDiagramMessage(data) {
             if (!data) return null;
@@ -1963,6 +2508,88 @@
 
         function buildAuthenticatedHeaders(baseHeaders = {}) {
             return buildMutationHeaders(baseHeaders);
+        }
+
+        async function loadCsaCompanionTools() {
+            const meta = document.getElementById('csa-meta');
+            if (!meta) return;
+
+            try {
+                const response = await fetch(API_CSA_COPILOT_TOOLS, {
+                    headers: buildAuthenticatedHeaders(),
+                });
+                if (!response.ok) {
+                    meta.textContent = 'CSA companion tools unavailable (authenticate with a portal token if required).';
+                    return;
+                }
+                const payload = await response.json();
+                const names = (payload.tools || []).map(t => t.name).filter(Boolean);
+                meta.textContent = names.length
+                    ? `Connected tools: ${names.join(', ')}`
+                    : 'CSA companion connected.';
+            } catch (error) {
+                meta.textContent = `CSA companion connection failed: ${error.message}`;
+            }
+        }
+
+        async function askCsaCompanion() {
+            const questionInput = document.getElementById('csa-question');
+            const contextInput = document.getElementById('csa-context');
+            const output = document.getElementById('csa-output');
+            const meta = document.getElementById('csa-meta');
+            const askButton = document.getElementById('csa-ask-btn');
+
+            const question = (questionInput?.value || '').trim();
+            const context = (contextInput?.value || '').trim();
+
+            if (question.length < 3) {
+                if (output) {
+                    output.textContent = 'Please enter a question with at least 3 characters.';
+                }
+                return;
+            }
+
+            if (askButton) askButton.disabled = true;
+            if (output) output.textContent = 'Querying CSA companion...';
+            if (meta) meta.textContent = '';
+
+            try {
+                const response = await fetch(API_CSA_COPILOT_ASK, {
+                    method: 'POST',
+                    headers: buildAuthenticatedHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        question,
+                        context,
+                        user_id: 'portal-user',
+                        session_id: `portal-${Date.now()}`,
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    if (output) {
+                        output.textContent = payload.error || payload.detail || `Request failed with HTTP ${response.status}.`;
+                    }
+                    return;
+                }
+
+                if (output) {
+                    output.textContent = payload.answer || 'No answer returned from CSA companion.';
+                }
+                const toolLine = Array.isArray(payload.tools_used) && payload.tools_used.length
+                    ? `Tools: ${payload.tools_used.join(', ')}`
+                    : 'Tools: none reported';
+                const requestLine = payload.request_id ? `Request ID: ${payload.request_id}` : '';
+                if (meta) {
+                    meta.textContent = [toolLine, requestLine].filter(Boolean).join(' | ');
+                }
+            } catch (error) {
+                if (output) {
+                    output.textContent = `CSA companion request failed: ${error.message}`;
+                }
+            } finally {
+                if (askButton) askButton.disabled = false;
+            }
         }
 
         // ── Admin token functions ────────────────────────────────────────────
@@ -2189,6 +2816,139 @@
             if (codePreviewBody) codePreviewBody.textContent = 'Choose a project file from the left to inspect generated code from the hosted portal.';
         }
 
+        function closeDocModal() {
+            if (!docModal) return;
+            docModal.classList.remove('open');
+            docModal.setAttribute('aria-hidden', 'true');
+            activeDocPath = '';
+            if (docBrowser) {
+                docBrowser.classList.remove('has-toc');
+            }
+            if (docTocLinks) {
+                docTocLinks.innerHTML = '';
+            }
+        }
+
+        function renderMarkdownPreview(docPath, content) {
+            const isMarkdown = /\.md$/i.test(docPath || '');
+            if (isMarkdown && window.marked && typeof window.marked.parse === 'function') {
+                return window.marked.parse(content);
+            }
+            return `<pre>${escapeHtml(content)}</pre>`;
+        }
+
+        function slugifyHeading(text) {
+            return String(text || '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        function buildDocToc() {
+            if (!docContent || !docBrowser || !docTocLinks) return;
+
+            const headings = Array.from(docContent.querySelectorAll('h1, h2, h3'));
+            const usedIds = new Set();
+            const tocItems = headings.map((heading, index) => {
+                const baseId = slugifyHeading(heading.textContent) || `section-${index + 1}`;
+                let resolvedId = baseId;
+                let suffix = 2;
+                while (usedIds.has(resolvedId)) {
+                    resolvedId = `${baseId}-${suffix}`;
+                    suffix += 1;
+                }
+                usedIds.add(resolvedId);
+                heading.id = resolvedId;
+                return {
+                    id: resolvedId,
+                    text: heading.textContent.trim(),
+                    level: Number(heading.tagName.slice(1)),
+                };
+            });
+
+            const showToc = tocItems.length >= 3;
+            docBrowser.classList.toggle('has-toc', showToc);
+            docTocLinks.innerHTML = showToc
+                ? tocItems.map(item => `
+                    <a href="#${item.id}" class="doc-toc-link" data-level="${item.level}" data-target-id="${item.id}">
+                        ${escapeHtml(item.text)}
+                    </a>
+                `).join('')
+                : '';
+        }
+
+        function highlightDocCodeBlocks() {
+            if (!docContent || !window.hljs || typeof window.hljs.highlightElement !== 'function') return;
+            docContent.querySelectorAll('pre code').forEach(block => {
+                window.hljs.highlightElement(block);
+            });
+        }
+
+        function updateActiveDocTocLink() {
+            if (!docContent || !docTocLinks || !docBrowser?.classList.contains('has-toc')) return;
+
+            const tocLinks = Array.from(docTocLinks.querySelectorAll('.doc-toc-link'));
+            const headings = tocLinks
+                .map(link => docContent.querySelector(`#${CSS.escape(link.dataset.targetId || '')}`))
+                .filter(Boolean);
+
+            if (!headings.length) return;
+
+            const contentTop = docContent.getBoundingClientRect().top;
+            let activeId = headings[0].id;
+            headings.forEach(heading => {
+                const top = heading.getBoundingClientRect().top - contentTop;
+                if (top <= 80) {
+                    activeId = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.targetId === activeId);
+            });
+        }
+
+        async function openDocumentationPreview(docPath, docTitle) {
+            if (!docModal || !docContent || !docModalTitle || !docPath) return;
+
+            activeDocPath = docPath;
+            docModalTitle.textContent = docTitle || 'Documentation';
+            docContent.innerHTML = '<div class="doc-status">Loading documentation...</div>';
+            if (docBrowser) {
+                docBrowser.classList.remove('has-toc');
+            }
+            if (docTocLinks) {
+                docTocLinks.innerHTML = '';
+            }
+            if (docOpenTab) {
+                docOpenTab.href = toAbsolutePath(docPath);
+            }
+            docModal.classList.add('open');
+            docModal.setAttribute('aria-hidden', 'false');
+            docContent.scrollTop = 0;
+
+            try {
+                const response = await fetch(docPath, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const content = await response.text();
+                docContent.innerHTML = renderMarkdownPreview(docPath, content);
+                buildDocToc();
+                highlightDocCodeBlocks();
+                docContent.scrollTop = 0;
+                updateActiveDocTocLink();
+            } catch (error) {
+                docContent.innerHTML = `
+                    <div class="doc-error">
+                        Unable to load this document inside the portal. ${escapeHtml(error.message)}
+                    </div>
+                `;
+            }
+        }
+
         if (diagramClose) {
             diagramClose.addEventListener('click', closeDiagramModal);
         }
@@ -2205,6 +2965,10 @@
             codeCloseButton.addEventListener('click', closeCodeModal);
         }
 
+        if (docCloseButton) {
+            docCloseButton.addEventListener('click', closeDocModal);
+        }
+
         if (codeModal) {
             codeModal.addEventListener('click', event => {
                 if (event.target === codeModal) {
@@ -2213,10 +2977,56 @@
             });
         }
 
+        if (docModal) {
+            docModal.addEventListener('click', event => {
+                if (event.target === docModal) {
+                    closeDocModal();
+                }
+            });
+        }
+
+        if (docContent) {
+            docContent.addEventListener('scroll', updateActiveDocTocLink);
+
+            docContent.addEventListener('click', event => {
+                const internalLink = event.target.closest('a');
+                if (!internalLink) return;
+
+                const href = internalLink.getAttribute('href');
+                if (!href || href.startsWith('#')) return;
+
+                const resolvedUrl = new URL(href, new URL(activeDocPath || window.location.pathname, window.location.href));
+                if (resolvedUrl.origin !== window.location.origin || !/\.md$/i.test(resolvedUrl.pathname)) {
+                    internalLink.setAttribute('target', '_blank');
+                    internalLink.setAttribute('rel', 'noopener noreferrer');
+                    return;
+                }
+
+                event.preventDefault();
+                openDocumentationPreview(`${resolvedUrl.pathname}${resolvedUrl.search}`, internalLink.textContent.trim() || 'Documentation');
+            });
+        }
+
+        if (docTocLinks) {
+            docTocLinks.addEventListener('click', event => {
+                const tocLink = event.target.closest('.doc-toc-link');
+                if (!tocLink || !docContent) return;
+
+                event.preventDefault();
+                const targetId = tocLink.dataset.targetId || '';
+                const targetHeading = docContent.querySelector(`#${CSS.escape(targetId)}`);
+                if (!targetHeading) return;
+
+                targetHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                updateActiveDocTocLink();
+            });
+        }
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeDiagramModal();
                 closeCodeModal();
+                closeDocModal();
             }
         });
 
@@ -2347,6 +3157,13 @@
         });
 
         document.addEventListener('click', (event) => {
+            const docLink = event.target.closest('.doc-preview-link');
+            if (docLink) {
+                event.preventDefault();
+                openDocumentationPreview(docLink.getAttribute('href'), docLink.dataset.docTitle || docLink.textContent.trim());
+                return;
+            }
+
             const link = event.target.closest('.diagram-inline-link');
             if (!link) return;
             event.preventDefault();
@@ -2536,13 +3353,32 @@
             return false;
         }
 
+        function toggleCsaPanel(event, forceExpand = null) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            const csaSection = document.getElementById('csa-companion');
+            if (!csaSection) return false;
+
+            const shouldExpand = forceExpand === null
+                ? !csaSection.classList.contains('expanded')
+                : Boolean(forceExpand);
+
+            csaSection.classList.toggle('expanded', shouldExpand);
+
+            if (shouldExpand) {
+                csaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            return false;
+        }
+
         function syncIntakeFromHash() {
             if (window.location.hash === '#intake') {
                 toggleIntakePanel(null, true);
             }
         }
-
-        restorePortalApiKey();
 
         async function loadProjects() {
             try {
@@ -2553,8 +3389,10 @@
                 renderProjects(visibleProjects);
                 updateStats(visibleProjects);
                 updateProjectViewToggle(allProjects);
+                updateMainCopilotButton(allProjects);
             } catch (error) {
                 console.error('Error loading projects:', error);
+                updateMainCopilotButton([]);
                 document.getElementById('projects-container').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">⚠️</div>
@@ -2563,6 +3401,44 @@
                     </div>
                 `;
             }
+        }
+
+        function updateMainCopilotButton(projects) {
+            const button = document.getElementById('run-latest-copilot-btn');
+            if (!button) return;
+
+            latestProjectForCopilot = getLatestProjects(projects || [])[0] || null;
+
+            if (!latestProjectForCopilot) {
+                button.disabled = true;
+                button.title = 'No projects available yet';
+                return;
+            }
+
+            button.disabled = false;
+            const latestLabel = latestProjectForCopilot.title || latestProjectForCopilot.slug || 'project';
+            button.title = `Run with GHCP on VS Code for latest project: ${latestLabel}`;
+        }
+
+        function runLatestProjectWithCopilot() {
+            if (!latestProjectForCopilot) {
+                showNotification('No projects available yet. Submit a BRD first.', true);
+                return false;
+            }
+
+            const links = latestProjectForCopilot.links || {};
+            const diagramPath = links.diagram
+                ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
+                : (latestProjectForCopilot.slug ? `projects/${latestProjectForCopilot.slug}/diagrams/${latestProjectForCopilot.slug}.drawio` : '');
+
+            runWithCopilot(
+                latestProjectForCopilot.slug || '',
+                latestProjectForCopilot.title || latestProjectForCopilot.slug || 'Latest Project',
+                latestProjectForCopilot.generatedFrom || 'docs/intake/brd.md',
+                diagramPath || ''
+            );
+
+            return false;
         }
 
         function getVisibleProjects(projects) {
@@ -2671,7 +3547,7 @@
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
-                                ${IS_HOSTED_PORTAL ? `<a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">🤖 Run with Copilot</a>` : ''}
+                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;">Run with GHCP on VS Code</a>
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
@@ -2738,6 +3614,8 @@
             loadProjects();
             openAnalysisFromHash();
             syncIntakeFromHash();
+            restorePortalApiKey();
+            loadCsaCompanionTools();
         });
         window.addEventListener('hashchange', openAnalysisFromHash);
         window.addEventListener('hashchange', syncIntakeFromHash);

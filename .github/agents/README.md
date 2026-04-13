@@ -11,7 +11,15 @@ project-orchestrator          ← START HERE — drives all agents end-to-end
 │   └── drawio-architecture-reader      helper: reads diagram, returns inventory
 ├── bicep-infrastructure-validator Phase 3: validate & self-heal Bicep files
 ├── production-environment-advisor Phase 4: production readiness checklist
-└── azure-project-deployer        Phase 5: deploy to Azure (optional)
+├── azure-project-deployer        Phase 5: deploy to Azure (optional)
+└── factory-handoff               Phase 6: promote project to factory portal (optional)
+
+factory-handoff               ← standalone bridge to Azure Architecture Factory
+│
+├── reads  : projects/<slug>/docs/requirements.md
+├── submits: POST /api/brd-intake on the factory portal
+├── polls  : GET  /api/brd-runs/{runId} until completed
+└── writes : factoryHandoff block into project-manifest.json
 ```
 
 Each project the orchestrator creates is stored under `projects/<project-slug>/` with its own diagrams, source, infra, docs, and logs — fully isolated from other projects.
@@ -96,10 +104,22 @@ When called by `project-orchestrator`, this agent must follow the full MCP Draw.
 ### drawio-architecture-reader
 This is a helper subagent used by the implementation agent. It reads diagrams and companion notes and returns an implementation inventory.
 
+### factory-handoff
+Use this agent to promote a locally scaffolded `project-orchestrator` project to the shared **Azure Architecture Factory** portal.
+
+Typical uses:
+- Submit a completed project's requirements to the factory BRD intake API.
+- Poll the factory pipeline until it completes and retrieve the canonical project slug.
+- Record the factory run ID and project URL back into the local `project-manifest.json`.
+- Called optionally at the end of a `project-orchestrator` run when `factory: true` is specified.
+
+Prerequisites: factory portal running (`python scripts/start_factory_portal.py`), `FACTORY_PORTAL_API_KEY` set if auth is enabled.
+
 ---
 
 ## Notes
 - **Use `project-orchestrator` for new projects** — it calls all other agents in the correct order.
 - Individual agents can still be invoked standalone for targeted tasks.
 - Projects created by the orchestrator live under `projects/` with full isolation per project.
+- Use `factory-handoff` after `project-orchestrator` to promote the project to the shared factory portal.
 - The root `QUICKSTART.md` explains how to use the orchestrator and all individual agents.

@@ -24,10 +24,15 @@ python -m pytest tests -q
 ## Required Environment Variables
 
 - `APP_ENV=dev`
+- `APP_VERSION=1.0.0`
 - `APPINSIGHTS_CONNECTION_STRING=<value>`
 - `KEY_VAULT_URI=https://<vault-name>.vault.azure.net/`
 - `COPILOT_MODEL_ENDPOINT=<endpoint>`
 - `COPILOT_MODEL_DEPLOYMENT=<deployment-name>`
+- `REQUIRE_API_KEY=true`
+- `CSA_API_KEYS=<comma-separated-keys>`
+- `ALLOWED_ORIGINS=https://<external-portal-host>`
+- `RATE_LIMIT_PER_MINUTE=30`
 
 ## Local Run
 
@@ -39,6 +44,28 @@ Health check:
 
 ```bash
 curl http://127.0.0.1:8000/health
+```
+
+Readiness check:
+
+```bash
+curl http://127.0.0.1:8000/ready
+```
+
+Authenticated tool catalog check:
+
+```bash
+curl -H "x-api-key: <key>" http://127.0.0.1:8000/api/copilot/tools
+```
+
+Authenticated ask check:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/copilot/ask \
+	-H "Content-Type: application/json" \
+	-H "x-api-key: <key>" \
+	-H "x-request-id: local-smoke-001" \
+	-d "{\"question\":\"How do I rotate a secret?\",\"context\":\"Need approved steps\",\"user_id\":\"csa-user\"}"
 ```
 
 ## Azure Deployment Outline
@@ -55,3 +82,5 @@ curl http://127.0.0.1:8000/health
 - Keep secrets in Key Vault.
 - Apply least-privilege RBAC for app identity.
 - Enable request and dependency tracing in Application Insights.
+- Restrict CORS to the external portal domain only.
+- Keep `REQUIRE_API_KEY=true` in prod and rotate `CSA_API_KEYS` periodically.

@@ -40,3 +40,33 @@ Generated from BRD `csa-support-copilot.md` by local fallback orchestrator.
 - ✅ Promotes reuse and standardization
 - ✅ Supports AI-first CSA tooling strategy
 - ✅ Demonstrates hands-on innovation and delivery
+
+## Production Companion API (External Portal)
+
+This project now includes a production-ready API baseline so it can run as a companion service to Azure Architecture Factory and be safely called from the external portal.
+
+### Implemented Hardening
+
+- API credential enforcement via `x-api-key` or `Authorization: Bearer <token>`
+- Readiness probe (`/ready`) that validates production auth configuration
+- Liveness probe (`/health`) for runtime checks
+- Per-user sliding-window rate limiting for `/api/copilot/ask`
+- Request correlation with `x-request-id` propagation
+- CORS allow-list via environment configuration
+- Tool catalog endpoint for portal feature discovery (`/api/copilot/tools`)
+
+### Endpoints
+
+- `GET /health`
+- `GET /ready`
+- `GET /api/copilot/tools`
+- `POST /api/copilot/ask`
+
+### Required Production Configuration
+
+- `APP_ENV=prod`
+- `APP_VERSION=1.0.0`
+- `REQUIRE_API_KEY=true`
+- `CSA_API_KEYS=<comma-separated-keys>`
+- `ALLOWED_ORIGINS=https://<external-portal-host>`
+- `RATE_LIMIT_PER_MINUTE=30`

@@ -2,9 +2,9 @@
 name: project-orchestrator
 description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, and optional Azure deployment. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
-agents: [project-state-manager, brd-to-architecture-diagram, azure-architecture-implementer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer]
+agents: [project-state-manager, brd-to-architecture-diagram, azure-architecture-implementer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
-argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), and optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation."
+argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal."
 ---
 
 You are the master project orchestrator for Azure architecture-driven delivery.
@@ -167,7 +167,17 @@ After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
 - Log: `[PHASE 5] Deployed to Azure → resource group: <slug>-<environment>-rg`
 
-### Phase 6 — Project Finalization (Orchestrator owns this)
+### Phase 6 — Factory Handoff (Optional — only if factory: true)
+**Delegate to**: `factory-handoff`
+
+Instruct the agent:
+> "Promote the project at `projects/<slug>/` to the Azure Architecture Factory portal. Submit `projects/<slug>/docs/requirements.md` as the BRD. Poll until the factory run completes. Write the factory run ID, slug, and portal URL back into `projects/<slug>/project-manifest.json` under the `factoryHandoff` key."
+
+After completion:
+- Delegate phase logging and manifest update to `project-state-manager`.
+- Log: `[PHASE 6] Factory handoff complete → run: <runId>, slug: <factorySlug>`
+
+### Phase 7 — Project Finalization (Orchestrator owns this)
 1. Generate `projects/<slug>/README.md` summarizing:
    - Project purpose (from requirements)
    - Architecture overview (from phase 1)
@@ -223,6 +233,13 @@ After completion:
       "completed_at": "<ISO>",
       "resource_group": "<rg-name>",
       "endpoints": {}
+    },
+    "6_factory_handoff": {
+      "status": "complete|failed|skipped|not_requested",
+      "completed_at": "<ISO>",
+      "runId": "<factory-run-id>",
+      "factoryProjectSlug": "<factory-slug>",
+      "factoryPortalUrl": "http://127.0.0.1:5501/factory-portal.html"
     }
   }
 }
@@ -247,6 +264,7 @@ projects/<slug>/
 | 3 — Infra Validation | ✅ Complete | N errors fixed, 0 remaining |
 | 4 — Production Review | ✅ Complete | docs/production-checklist.md |
 | 5 — Deployment | ⏭ Skipped / ✅ Deployed to <rg-name> |
+| 6 — Factory Handoff | ⏭ Skipped / ✅ Factory run: <runId> |
 
 ### Generated Services
 - <service-1>: <purpose>

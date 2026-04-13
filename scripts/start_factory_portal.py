@@ -74,10 +74,14 @@ def _parse_multipart_form(content_type: str, body: bytes) -> dict:
 # Configuration
 FACTORY_REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
 PORT = int(os.environ.get("FACTORY_PORTAL_PORT", "5501"))
-BIND_ADDRESS = os.environ.get("FACTORY_PORTAL_BIND", "127.0.0.1")
+BIND_ADDRESS = os.environ.get("FACTORY_PORTAL_BIND", "0.0.0.0")
 MAX_REQUEST_BYTES = 1_000_000  # 1 MB intake payload limit
-ALLOWED_ORIGIN = os.environ.get("FACTORY_PORTAL_ALLOWED_ORIGIN", f"http://{BIND_ADDRESS}:{PORT}")
+ALLOWED_ORIGIN = os.environ.get("FACTORY_PORTAL_ALLOWED_ORIGIN", f"http://localhost:{PORT}")
 API_KEY_ENV = "FACTORY_PORTAL_API_KEY"
+PORTAL_PATH_ALIASES = {"/portal", "/p"}
+CSA_COPILOT_API_BASE = os.environ.get("CSA_COPILOT_API_BASE", "").strip().rstrip("/")
+CSA_COPILOT_API_KEY = os.environ.get("CSA_COPILOT_API_KEY", "").strip()
+CSA_COPILOT_TIMEOUT_SECONDS = int(os.environ.get("CSA_COPILOT_TIMEOUT_SECONDS", "20"))
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
@@ -442,8 +446,19 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             return
 
+        if request_path in PORTAL_PATH_ALIASES:
+            self.send_response(302)
+            self.send_header("Location", "/factory-portal.html")
+            self.end_headers()
+            return
+
         if request_path == "/api/brd-runs":
             return self._handle_runs_list()
+
+        if request_path == "/api/csa-copilot/tools":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_csa_copilot_tools()
 
         if request_path.startswith("/api/brd-runs/") and request_path.endswith("/project"):
             run_id = request_path.split("/")[-2]
@@ -508,6 +523,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return self._handle_issue_token()
         if path == "/api/token-request":
             return self._handle_submit_token_request()
+        if path == "/api/csa-copilot/ask":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_csa_copilot_ask()
 
         self._send_json({"error": "Not found"}, 404)
 
@@ -685,6 +704,65 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             ]
         tokens.sort(key=lambda t: t["exp"], reverse=True)
         self._send_json({"tokens": tokens})
+
+    def _call_csa_companion(self, method: str, path: str, payload: dict | None = None) -> tuple[int, dict]:
+        if not CSA_COPILOT_API_BASE:
+            return 503, {"error": "CSA companion service is not configured."}
+
+        url = f"{CSA_COPILOT_API_BASE}{path}"
+        headers = {"Content-Type": "application/json"}
+        if CSA_COPILOT_API_KEY:
+            headers["x-api-key"] = CSA_COPILOT_API_KEY
+        request_id = self.headers.get("x-request-id", str(uuid.uuid4()))
+        headers["x-request-id"] = request_id
+
+        data = None
+        if payload is not None:
+            data = json.dumps(payload).encode("utf-8")
+
+        try:
+            req = Request(url=url, data=data, method=method, headers=headers)
+            with urlopen(req, timeout=CSA_COPILOT_TIMEOUT_SECONDS) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8")
+                return resp.status, json.loads(body)
+        except URLError as exc:
+            logger.warning("CSA companion request failed: %s %s (%s)", method, url, exc)
+            return 502, {"error": "Failed to reach CSA companion service."}
+        except json.JSONDecodeError:
+            return 502, {"error": "CSA companion returned invalid JSON."}
+
+    def _handle_csa_copilot_tools(self):
+        status_code, payload = self._call_csa_companion("GET", "/api/copilot/tools")
+        self._send_json(payload, status_code)
+
+    def _handle_csa_copilot_ask(self):
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body)
+        except Exception as e:
+            self._send_json({"error": f"Invalid request: {e}"}, 400)
+            return
+
+        question = str(payload.get("question", "")).strip()
+        context = str(payload.get("context", "")).strip()
+        session_id = str(payload.get("session_id", "")).strip()
+        user_id = str(payload.get("user_id", "portal-user")).strip() or "portal-user"
+
+        if len(question) < 3:
+            self._send_json({"error": "question must be at least 3 characters"}, 400)
+            return
+
+        upstream_payload = {
+            "question": question,
+            "context": context,
+            "session_id": session_id,
+            "user_id": user_id,
+        }
+        status_code, response_payload = self._call_csa_companion("POST", "/api/copilot/ask", upstream_payload)
+        self._send_json(response_payload, status_code)
 
     def _safe_content_length(self) -> int | None:
         """Return validated content length or emit an error response."""
@@ -1113,19 +1191,24 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 def main():
     httpd = HTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
     httpd.allow_reuse_address = True
+    display_host = "localhost" if BIND_ADDRESS in {"0.0.0.0", "::"} else BIND_ADDRESS
 
     print("\n" + "=" * 80)
     print("AZURE ARCHITECTURE FACTORY - DEDICATED PORTAL")
     print("=" * 80)
-    print(f"\nFactory Portal:     http://{BIND_ADDRESS}:{PORT}/factory-portal.html")
-    print(f"BRD Intake API:     http://{BIND_ADDRESS}:{PORT}/api/brd-intake")
+    print(f"\nFactory Portal:     http://{display_host}:{PORT}/factory-portal.html")
+    print(f"Friendly Alias:     http://{display_host}:{PORT}/portal")
+    print(f"BRD Intake API:     http://{display_host}:{PORT}/api/brd-intake")
+    print(f"CSA Companion API:  {CSA_COPILOT_API_BASE or '(not configured)'}")
     print(f"Project Directory:  http://{BIND_ADDRESS}:{PORT}/projects/")
+    if display_host != BIND_ADDRESS:
+        print(f"Listening On:       http://{BIND_ADDRESS}:{PORT} (all interfaces)")
     if _jwks_cache:
         print(f"Auth:               Entra ID (tenant={ENTRA_TENANT_ID}, client={ENTRA_CLIENT_ID})")
     elif os.environ.get(API_KEY_ENV, "").strip():
         print("Auth:               Master API key + issued HMAC tokens (usage-counted)")
-        print(f"Token Admin:        POST http://{BIND_ADDRESS}:{PORT}/api/admin/issue-token")
-        print(f"Token Usage:        GET  http://{BIND_ADDRESS}:{PORT}/api/admin/tokens")
+        print(f"Token Admin:        POST http://{display_host}:{PORT}/api/admin/issue-token")
+        print(f"Token Usage:        GET  http://{display_host}:{PORT}/api/admin/tokens")
     else:
         print("Auth:               None (local dev mode)")
     print("\nYou can now:")
