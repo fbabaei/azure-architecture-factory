@@ -4159,6 +4159,66 @@
         }
         document.addEventListener('click', closeHelperIfOutside);
 
+        // ── Intent → Agent mapping ───────────────────────────────
+        const INTENT_RULES = [
+            {
+                patterns: [/build|create|new project|scaffold|brd|requirements|web app|api|service/i],
+                agent: 'project-orchestrator',
+                label: 'Generate a new project',
+                icon: '📐',
+                template: q => `@project-orchestrator\n\n${q}\n\nazure-region: eastus\ndeploy: false`
+            },
+            {
+                patterns: [/modern|legacy|migrat|refactor|upgrade|old app|assess/i],
+                agent: 'modernization-to-factory',
+                label: 'Modernize an application',
+                icon: '🔄',
+                template: q => `@modernization-to-factory\n\nlegacy-path: <paste your repo path here>\nrequirements: ${q}`
+            },
+            {
+                patterns: [/deploy|publish|push to azure|go live|ship|release/i],
+                agent: 'azure-project-deployer',
+                label: 'Deploy to Azure',
+                icon: '☁️',
+                template: q => `@azure-project-deployer\n\nproject-path: projects/<your-project-slug>\nenvironment: dev\nregion: eastus\n\n${q}`
+            },
+            {
+                patterns: [/diagram|architecture|draw|visuali|design/i],
+                agent: 'azure-architecture-implementer',
+                label: 'Design an architecture',
+                icon: '🏗️',
+                template: q => `@azure-architecture-implementer\n\n${q}`
+            },
+            {
+                patterns: [/bicep|terraform|infra|iac|validate|preflight/i],
+                agent: 'bicep-infrastructure-validator',
+                label: 'Validate infrastructure',
+                icon: '🔧',
+                template: q => `@bicep-infrastructure-validator\n\n${q}`
+            },
+            {
+                patterns: [/diagram|read.*draw.?io|draw.?io/i],
+                agent: 'drawio-architecture-reader',
+                label: 'Read a diagram',
+                icon: '📊',
+                template: q => `@drawio-architecture-reader\n\n${q}`
+            },
+        ];
+
+        function detectIntent(input) {
+            for (const rule of INTENT_RULES) {
+                if (rule.patterns.some(p => p.test(input))) return rule;
+            }
+            // Fallback: project-orchestrator
+            return {
+                agent: 'project-orchestrator',
+                label: 'General factory request',
+                icon: '🤖',
+                template: q => `@project-orchestrator\n\n${q}`
+            };
+        }
+
+        // ── Helper state ─────────────────────────────────────────
         const HELPER_FAQ = [
             {
                 q: 'How do I generate a new project?',
@@ -4192,15 +4252,12 @@
             },
         ];
 
-        let helperFaqIndex = null;
-
         function renderHelperHome() {
-            helperFaqIndex = null;
             const body = document.getElementById('helper-body');
             body.innerHTML = `
                 <div class="helper-greeting">
                     <img src="assets/factory-icon.svg" width="28" height="28" alt="" style="border-radius:6px;flex-shrink:0;">
-                    <span>Hi! I\'m the Factory Helper. Ask me anything or pick a topic below.</span>
+                    <span>Describe what you want to do and I\'ll generate a Copilot agent prompt — or browse topics below.</span>
                 </div>
                 <div class="helper-chips">
                     ${HELPER_FAQ.map((f, i) => `<button class="helper-chip" onclick="renderHelperFaq(${i})">${f.icon} ${f.q}</button>`).join('')}
@@ -4208,7 +4265,6 @@
         }
 
         function renderHelperFaq(index) {
-            helperFaqIndex = index;
             const f = HELPER_FAQ[index];
             const body = document.getElementById('helper-body');
             body.innerHTML = `
@@ -4218,26 +4274,79 @@
                 <div class="helper-faq-a">${f.a}</div>`;
         }
 
-        function helperSearch(q) {
-            if (!q.trim()) { renderHelperHome(); return; }
-            const lq = q.toLowerCase();
-            const hits = HELPER_FAQ.filter(f => f.q.toLowerCase().includes(lq) || f.a.toLowerCase().includes(lq));
+        async function renderHelperPrompt(input) {
+            const intent = detectIntent(input);
+            const promptText = intent.template(input);
             const body = document.getElementById('helper-body');
-            if (hits.length === 0) {
-                body.innerHTML = `<div class="helper-greeting" style="flex-direction:column;align-items:flex-start;gap:.4rem;">
-                    <strong>No results for "${q}"</strong>
-                    <span style="font-size:.82rem;color:var(--text-secondary)">Try: "deploy", "modernize", "agents", "BRD"</span>
-                    <button class="helper-back" onclick="renderHelperHome();document.getElementById('helper-input').value=''">← Show all topics</button>
-                </div>`;
+            body.innerHTML = `
+                <button class="helper-back" onclick="renderHelperHome();document.getElementById('helper-input').value=''">← Back</button>
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;">
+                    <span style="font-size:1.3rem;">${intent.icon}</span>
+                    <span style="font-weight:600;font-size:.9rem;">${intent.label}</span>
+                    <span style="margin-left:auto;background:#eef6ff;color:#0050a0;font-size:.74rem;padding:2px 8px;border-radius:20px;border:1px solid #cde0f7;">@${intent.agent}</span>
+                </div>
+                <div style="position:relative;">
+                    <pre id="helper-prompt-text" style="background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;padding:.65rem .75rem;font-size:.78rem;white-space:pre-wrap;word-break:break-word;margin:0;font-family:'Courier New',monospace;color:#1b1b1b;max-height:160px;overflow-y:auto;">${promptText}</pre>
+                </div>
+                <div style="display:flex;gap:.5rem;margin-top:.65rem;flex-wrap:wrap;">
+                    <button class="helper-action-btn" id="helper-copy-btn" onclick="helperCopyAndOpen()">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>
+                        Copy &amp; Open Copilot
+                    </button>
+                    <button class="helper-action-btn helper-action-btn--outline" onclick="helperCopyOnly()">
+                        Copy only
+                    </button>
+                </div>
+                <p id="helper-copy-status" style="font-size:.78rem;color:#107c10;margin-top:.4rem;min-height:1em;"></p>`;
+            // Store for copy helpers
+            window._helperCurrentPrompt = promptText;
+            window._helperCurrentAgent = intent.agent;
+        }
+
+        async function helperCopyAndOpen() {
+            const text = window._helperCurrentPrompt || '';
+            await copyTextToClipboard(text);
+            document.getElementById('helper-copy-status').textContent = '✓ Prompt copied!';
+            const webLink = `https://vscode.dev/redirect?url=${encodeURIComponent('vscode:extension/GitHub.copilot-chat')}`;
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(text)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+            setTimeout(() => window.open(webLink, '_blank', 'noopener,noreferrer'), 300);
+        }
+
+        async function helperCopyOnly() {
+            const text = window._helperCurrentPrompt || '';
+            await copyTextToClipboard(text);
+            const btn = document.querySelector('.helper-action-btn--outline');
+            if (btn) { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = 'Copy only'; }, 2000); }
+        }
+
+        function helperHandleInput(q) {
+            const trimmed = q.trim();
+            if (!trimmed) { renderHelperHome(); return; }
+            const lq = trimmed.toLowerCase();
+            // Check if it matches FAQ topics first
+            const faqHit = HELPER_FAQ.find(f => f.q.toLowerCase().includes(lq) || lq.split(' ').some(w => w.length > 3 && f.q.toLowerCase().includes(w)));
+            // If input looks like a free-form task (>= 4 words or has action keywords), generate a prompt
+            const wordCount = trimmed.split(/\s+/).length;
+            const isTask = wordCount >= 3 || /build|create|deploy|modern|migrate|generat|design|scaffold|validate|infra/i.test(trimmed);
+            if (isTask) {
+                renderHelperPrompt(trimmed);
+            } else if (faqHit) {
+                renderHelperFaq(HELPER_FAQ.indexOf(faqHit));
             } else {
-                body.innerHTML = `<div class="helper-chips">
-                    ${hits.map((f, i) => `<button class="helper-chip" onclick="renderHelperFaq(${HELPER_FAQ.indexOf(f)})">${f.icon} ${f.q}</button>`).join('')}
-                </div>`;
+                // Show matching chips
+                const hits = HELPER_FAQ.filter(f => f.q.toLowerCase().includes(lq) || f.a.toLowerCase().includes(lq));
+                const body = document.getElementById('helper-body');
+                if (hits.length > 0) {
+                    body.innerHTML = `<div class="helper-chips">${hits.map(f => `<button class="helper-chip" onclick="renderHelperFaq(${HELPER_FAQ.indexOf(f)})">${f.icon} ${f.q}</button>`).join('')}</div>`;
+                } else {
+                    renderHelperPrompt(trimmed);
+                }
             }
         }
 
         function helperInputKey(e) {
-            if (e.key === 'Enter') helperSearch(e.target.value);
+            if (e.key === 'Enter') helperHandleInput(e.target.value);
             if (e.key === 'Escape') toggleHelperWidget(e);
         }
         /* ────────────────────────────────────────────────────────── */
@@ -4350,11 +4459,13 @@
                     style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
             </div>
 
-            <!-- Search bar -->
-            <div style="padding:.65rem .9rem;border-bottom:1px solid #e8e8e8;">
-                <input id="helper-input" type="text" placeholder="Search topics…" onkeydown="helperInputKey(event)"
+            <!-- Search / prompt bar -->
+            <div style="padding:.65rem .9rem;border-bottom:1px solid #e8e8e8;display:flex;gap:.45rem;">
+                <input id="helper-input" type="text" placeholder="Ask me to build, deploy, modernize…" onkeydown="helperInputKey(event)"
                     oninput="if(!this.value)renderHelperHome()"
-                    style="width:100%;border:1px solid #d2d2d2;border-radius:8px;padding:.45rem .75rem;font-size:.85rem;outline:none;font-family:inherit;color:#1b1b1b;">
+                    style="flex:1;border:1px solid #d2d2d2;border-radius:8px;padding:.45rem .75rem;font-size:.85rem;outline:none;font-family:inherit;color:#1b1b1b;">
+                <button onclick="helperHandleInput(document.getElementById('helper-input').value)" title="Generate prompt"
+                    style="background:#0078d4;border:none;color:#fff;border-radius:8px;padding:.45rem .75rem;cursor:pointer;font-size:.85rem;white-space:nowrap;font-family:inherit;">→</button>
             </div>
 
             <!-- Body (FAQ chips / answer) -->
@@ -4397,6 +4508,15 @@
         .helper-faq-a { color:var(--text-secondary); line-height:1.55; }
         .helper-faq-a code { background:#f0f0f0; border-radius:3px; padding:1px 5px; font-size:.82rem; }
         .helper-faq-a strong { color:#1b1b1b; }
+        .helper-action-btn {
+            display:inline-flex; align-items:center; gap:.35rem;
+            background:#0078d4; color:#fff; border:none; border-radius:8px;
+            padding:.42rem .85rem; font-size:.82rem; cursor:pointer; font-family:inherit;
+            transition:background .15s;
+        }
+        .helper-action-btn:hover { background:#005a9e; }
+        .helper-action-btn--outline { background:#fff; color:#0078d4; border:1px solid #0078d4; }
+        .helper-action-btn--outline:hover { background:#eef6ff; }
     </style>
 
     <script>
