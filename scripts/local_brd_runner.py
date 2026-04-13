@@ -8,8 +8,15 @@ from pathlib import Path
 from typing import Any
 
 
-def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -> dict[str, Any]:
+def process_brd_document(
+    factory_repo_root: Path,
+    brd_path: Path,
+    run_id: str,
+    generation_options: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     brd_text = brd_path.read_text(encoding="utf-8")
+    generation_options = generation_options or {}
+    enable_observability = bool(generation_options.get("enableObservability", True))
     generated_at = datetime.now(timezone.utc)
     generated_at_iso = generated_at.isoformat().replace("+00:00", "Z")
     timestamp = generated_at.strftime("%Y%m%d%H%M%S")
@@ -56,19 +63,23 @@ def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -
             "No dependency on sibling repositories for portal BRD processing.",
             "Deterministic project scaffolding inside the Azure Architecture Factory repo.",
             "Project feed, manifests, logs, and starter assets are generated in one place.",
+            "Monitoring and observability starter guidance is included by request." if enable_observability else "Monitoring and observability wiring can be added during refinement.",
         ],
         "alternativeConsidered": "Shelling out to a sibling repository pipeline was rejected because it is not portable to the hosted Azure deployment.",
         "status": "Ready",
+        "generationOptions": {
+            "enableObservability": enable_observability,
+        },
     }
 
-    _write_text(project_root / "README.md", _build_readme(title, brd_path.name, slug, requirements))
-    _write_text(project_root / "DEPLOY.md", _build_deploy(slug))
-    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities))
-    _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities))
-    _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones())
+    _write_text(project_root / "README.md", _build_readme(title, brd_path.name, slug, requirements, enable_observability))
+    _write_text(project_root / "DEPLOY.md", _build_deploy(slug, enable_observability))
+    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability))
+    _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
+    _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones(enable_observability))
     _write_text(docs_dir / "success-criteria.md", _build_success_criteria(success_criteria))
     _write_text(docs_dir / "traceability-matrix.md", _build_traceability_matrix(requirements, success_criteria))
-    _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities))
+    _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability))
     _write_text(diagrams_dir / diagram_basename, _build_drawio(title))
     _write_text(src_dir / "__init__.py", "")
     _write_text(src_dir / "main.py", _build_api_main())
@@ -77,7 +88,7 @@ def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -
     _write_text(services_dir / "copilot_service.py", _build_api_service())
     _write_text(project_root / "requirements.txt", "fastapi==0.116.1\nuvicorn[standard]==0.32.1\npydantic==2.10.3\n")
     _write_text(project_root / "pyproject.toml", _build_pyproject(title))
-    _write_text(infra_dir / "main.bicep", _build_infra_bicep())
+    _write_text(infra_dir / "main.bicep", _build_infra_bicep(enable_observability))
     _write_text(tests_dir / "test_generated_project.py", _build_test())
     user_home_copy_path = _copy_project_to_user_home(project_root, slug)
 
@@ -91,6 +102,9 @@ def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -
         "requirements_detected": requirements,
         "success_criteria_detected": success_criteria,
         "capabilities": capabilities,
+        "generation_options": {
+            "enableObservability": enable_observability,
+        },
         "user_home_copy": str(user_home_copy_path),
     }
     _write_json(project_root / "project-manifest.json", manifest)
@@ -111,6 +125,7 @@ def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -
         f"generated_at={generated_at_iso}",
         f"project_slug={slug}",
         f"source_brd={brd_path.name}",
+        f"enable_observability={str(enable_observability).lower()}",
         f"user_home_copy={user_home_copy_path}",
         "status=complete",
         "runner=azure_native_factory_runner",
@@ -124,6 +139,9 @@ def process_brd_document(factory_repo_root: Path, brd_path: Path, run_id: str) -
         "status": "Ready",
         "generatedFrom": brd_path.name,
         "generatedAt": generated_at_iso,
+        "options": {
+            "enableObservability": enable_observability,
+        },
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
     }
@@ -232,16 +250,29 @@ def _update_project_feed(feed_path: Path, generated_at: str, project_record: dic
     _write_json(feed_path, payload)
 
 
-def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str]) -> str:
+def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str], enable_observability: bool) -> str:
     highlights = "\n".join(f"- {item}" for item in requirements[:10])
-    return f"# {title}\n\nGenerated from BRD `{source_brd}` by the Azure-native factory runner.\n\n## What Was Generated\n- `docs/architecture-overview.md`\n- `docs/governance-model.md`\n- `docs/delivery-milestones.md`\n- `docs/success-criteria.md`\n- `docs/traceability-matrix.md`\n- `diagrams/{slug}.md`\n- `diagrams/{slug}.drawio`\n- `src/copilot_api/main.py`\n- `src/copilot_api/models.py`\n- `src/copilot_api/services/copilot_service.py`\n- `requirements.txt`\n- `infra/main.bicep`\n- `tests/test_generated_project.py`\n\n## BRD Requirement Highlights\n{highlights}\n"
+    observability_line = "- Monitoring and observability wiring requested: Yes" if enable_observability else "- Monitoring and observability wiring requested: No"
+    return f"# {title}\n\nGenerated from BRD `{source_brd}` by the Azure-native factory runner.\n\n## What Was Generated\n- `docs/architecture-overview.md`\n- `docs/governance-model.md`\n- `docs/delivery-milestones.md`\n- `docs/success-criteria.md`\n- `docs/traceability-matrix.md`\n- `diagrams/{slug}.md`\n- `diagrams/{slug}.drawio`\n- `src/copilot_api/main.py`\n- `src/copilot_api/models.py`\n- `src/copilot_api/services/copilot_service.py`\n- `requirements.txt`\n- `infra/main.bicep`\n- `tests/test_generated_project.py`\n\n## Selected Generation Options\n{observability_line}\n\n## BRD Requirement Highlights\n{highlights}\n"
 
 
-def _build_deploy(slug: str) -> str:
-    return f"# Deploy\n\n## Prerequisites\n- Python 3.11+\n- Azure CLI authenticated\n- Target Azure subscription and resource group\n\n## Local Validation\n```bash\npython -m venv .venv\n.venv\\Scripts\\activate\npython -m pip install -r requirements.txt\npython -m pytest tests -q\n```\n\n## Local Run\n```bash\npython -m uvicorn src.copilot_api.main:app --host 127.0.0.1 --port 8000 --reload\n```\n\n## Azure Deployment Outline\n1. Review and customize `infra/main.bicep`.\n2. Provision hosting, identity, Key Vault access, and Application Insights.\n3. Configure application settings for the generated API.\n4. Deploy the project from `projects/{slug}`.\n5. Validate `/health` after deployment.\n"
+def _build_deploy(slug: str, enable_observability: bool) -> str:
+    deployment_steps = [
+        "1. Review and customize `infra/main.bicep`.",
+        "2. Provision hosting, identity, Key Vault access, and Application Insights.",
+        "3. Configure application settings for the generated API.",
+        f"4. Deploy the project from `projects/{slug}`.",
+        "5. Validate `/health` after deployment.",
+    ]
+    if enable_observability:
+        deployment_steps[1] = "2. Provision hosting, identity, Key Vault access, Application Insights, and Log Analytics."
+        deployment_steps.insert(3, "4. Configure health probes, alerts, dashboards, and operational ownership for the generated workload.")
+        deployment_steps[4] = f"5. Deploy the project from `projects/{slug}`."
+        deployment_steps[5] = "6. Validate `/health` after deployment and confirm telemetry reaches Azure Monitor."
+    return "# Deploy\n\n## Prerequisites\n- Python 3.11+\n- Azure CLI authenticated\n- Target Azure subscription and resource group\n\n## Local Validation\n```bash\npython -m venv .venv\n.venv\\Scripts\\activate\npython -m pip install -r requirements.txt\npython -m pytest tests -q\n```\n\n## Local Run\n```bash\npython -m uvicorn src.copilot_api.main:app --host 127.0.0.1 --port 8000 --reload\n```\n\n## Azure Deployment Outline\n" + "\n".join(deployment_steps) + "\n"
 
 
-def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool]) -> str:
+def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool) -> str:
     capability_lines = [
         f"- Azure OpenAI: {'Yes' if capabilities['openai'] else 'Not explicitly requested'}",
         f"- Microsoft Copilot: {'Yes' if capabilities['copilot'] else 'Not explicitly requested'}",
@@ -249,23 +280,51 @@ def _build_architecture_overview(title: str, requirements: list[str], capabiliti
         f"- Governance controls: {'Yes' if capabilities['governance'] else 'Baseline included'}",
     ]
     requirement_lines = "\n".join(f"- {item}" for item in requirements[:8])
-    return f"# {title} - Architecture Overview\n\n## Target Architecture\nThis starter architecture packages the submitted BRD into a generated project scaffold that can be refined for Azure deployment.\n\n## Requirement Signals\n{requirement_lines}\n\n## Recommended Building Blocks\n- Presentation or workflow entry point\n- Integration API layer\n- Data or document store\n- Observability with Application Insights and Log Analytics\n- Identity, secrets, and governance controls\n\n## Capability Coverage\n" + "\n".join(capability_lines) + "\n"
+    building_blocks = [
+        "- Presentation or workflow entry point",
+        "- Integration API layer",
+        "- Data or document store",
+        "- Observability with Application Insights and Log Analytics",
+        "- Identity, secrets, and governance controls",
+    ]
+    if enable_observability:
+        building_blocks.insert(4, "- Azure Monitor alerts, dashboards, and health probes")
+    return f"# {title} - Architecture Overview\n\n## Target Architecture\nThis starter architecture packages the submitted BRD into a generated project scaffold that can be refined for Azure deployment.\n\n## Requirement Signals\n{requirement_lines}\n\n## Recommended Building Blocks\n" + "\n".join(building_blocks) + "\n\n## Capability Coverage\n" + "\n".join(capability_lines) + "\n"
 
 
-def _build_governance_model(capabilities: dict[str, bool]) -> str:
+def _build_governance_model(capabilities: dict[str, bool], enable_observability: bool) -> str:
     controls = [
         "- Managed identity for service-to-service authentication",
         "- Key Vault-backed secret management",
         "- Least-privilege RBAC for runtime and deployment identities",
         "- Application Insights and structured run logs for traceability",
     ]
+    if enable_observability:
+        controls.append("- Log Analytics workspace, health probes, and alert routing are part of the starter operating model")
     if capabilities["governance"]:
         controls.append("- Governance review checkpoint based on BRD security and compliance requirements")
     return "# AI/ML Governance Model\n\n## Governance Controls\n" + "\n".join(controls) + "\n\n## Operating Cadence\n- Review generated starter assets before production use\n- Track deployment changes through version control and manifest updates\n- Re-run BRD generation when requirements materially change\n"
 
 
-def _build_delivery_milestones() -> str:
-    return "# Delivery Milestones\n\n## Phase 1 - Intake and Architecture\n- Capture BRD inputs\n- Generate baseline project artifacts and architecture notes\n\n## Phase 2 - Application Refinement\n- Replace starter API implementation with workload-specific logic\n- Expand tests, infrastructure, and deployment automation\n\n## Phase 3 - Production Readiness\n- Harden security, networking, and observability\n- Validate deployment readiness and operational ownership\n"
+def _build_delivery_milestones(enable_observability: bool) -> str:
+    lines = [
+        "# Delivery Milestones",
+        "",
+        "## Phase 1 - Intake and Architecture",
+        "- Capture BRD inputs",
+        "- Generate baseline project artifacts and architecture notes",
+        "",
+        "## Phase 2 - Application Refinement",
+        "- Replace starter API implementation with workload-specific logic",
+        "- Expand tests, infrastructure, and deployment automation",
+        "",
+        "## Phase 3 - Production Readiness",
+        "- Harden security, networking, and observability",
+        "- Validate deployment readiness and operational ownership",
+    ]
+    if enable_observability:
+        lines.insert(-1, "- Wire Application Insights, Log Analytics, alerts, and dashboard ownership")
+    return "\n".join(lines) + "\n"
 
 
 def _build_success_criteria(success_criteria: list[str]) -> str:
@@ -282,8 +341,10 @@ def _build_traceability_matrix(requirements: list[str], success_criteria: list[s
     return "# Traceability Matrix\n\n" + "\n".join(rows) + "\n"
 
 
-def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict[str, bool]) -> str:
-    return f"# {title} - Architecture Overview\n\n## Summary\nThis generated starter design maps the BRD into a simple Azure-oriented architecture shape.\n\n## Signals\n" + "\n".join(f"- {item}" for item in requirements[:8]) + "\n\n## Capability Flags\n" + "\n".join(f"- {name}: {'yes' if enabled else 'no'}" for name, enabled in capabilities.items()) + "\n"
+def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool) -> str:
+    capability_lines = [f"- {name}: {'yes' if enabled else 'no'}" for name, enabled in capabilities.items()]
+    capability_lines.append(f"- observability_wiring: {'yes' if enable_observability else 'no'}")
+    return f"# {title} - Architecture Overview\n\n## Summary\nThis generated starter design maps the BRD into a simple Azure-oriented architecture shape.\n\n## Signals\n" + "\n".join(f"- {item}" for item in requirements[:8]) + "\n\n## Capability Flags\n" + "\n".join(capability_lines) + "\n"
 
 
 def _build_drawio(title: str) -> str:
@@ -308,8 +369,9 @@ def _build_pyproject(title: str) -> str:
     return f"[project]\nname = \"{normalized}\"\nversion = \"0.1.0\"\ndescription = \"Generated starter project for {title}\"\nrequires-python = \">=3.11\"\ndependencies = [\n  \"fastapi==0.116.1\",\n  \"uvicorn[standard]==0.32.1\",\n  \"pydantic==2.10.3\",\n]\n"
 
 
-def _build_infra_bicep() -> str:
-    return "targetScope = 'resourceGroup'\n\n@description('Deployment location')\nparam location string = resourceGroup().location\n\n@description('Environment name')\nparam environment string = 'dev'\n\noutput deploymentHint string = 'Replace this starter Bicep file with workload-specific Azure resources.'\noutput locationUsed string = location\noutput environmentName string = environment\n"
+def _build_infra_bicep(enable_observability: bool) -> str:
+    enable_observability_default = "true" if enable_observability else "false"
+    return "targetScope = 'resourceGroup'\n\n@description('Deployment location')\nparam location string = resourceGroup().location\n\n@description('Environment name')\nparam environment string = 'dev'\n\n@description('Logical workload name used in generated resource names')\nparam workloadName string = 'starter-workload'\n\n@description('Whether the starter should include monitoring and observability resources')\nparam enableObservability bool = " + enable_observability_default + "\n\n@description('Optional operations email for alert notifications. Leave empty to skip email actions.')\nparam operationsEmail string = ''\n\nvar resourceBaseName = toLower(replace('${workloadName}-${environment}', '_', '-'))\n\nresource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableObservability) {\n  name: '${resourceBaseName}-law'\n  location: location\n  properties: {\n    retentionInDays: 30\n    features: {\n      enableLogAccessUsingOnlyResourcePermissions: true\n    }\n  }\n  sku: {\n    name: 'PerGB2018'\n  }\n}\n\nresource applicationInsights 'Microsoft.Insights/components@2020-02-02' = if (enableObservability) {\n  name: '${resourceBaseName}-appi'\n  location: location\n  kind: 'web'\n  properties: {\n    Application_Type: 'web'\n    WorkspaceResourceId: logAnalyticsWorkspace.id\n    IngestionMode: 'LogAnalytics'\n  }\n}\n\nresource operationsActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableObservability && !empty(operationsEmail)) {\n  name: '${resourceBaseName}-opsag'\n  location: 'global'\n  properties: {\n    enabled: true\n    groupShortName: 'opsalert'\n    emailReceivers: [\n      {\n        name: 'operations-team'\n        emailAddress: operationsEmail\n        useCommonAlertSchema: true\n      }\n    ]\n  }\n}\n\noutput deploymentHint string = 'Replace this starter Bicep file with workload-specific Azure resources.'\noutput locationUsed string = location\noutput environmentName string = environment\noutput observabilityEnabled bool = enableObservability\noutput logAnalyticsWorkspaceName string = enableObservability ? logAnalyticsWorkspace.name : 'not-enabled'\noutput appInsightsName string = enableObservability ? applicationInsights.name : 'not-enabled'\noutput appInsightsConnectionString string = enableObservability ? applicationInsights.properties.ConnectionString : ''\noutput actionGroupName string = (enableObservability && !empty(operationsEmail)) ? operationsActionGroup.name : 'not-configured'\n"
 
 
 def _build_test() -> str:

@@ -429,6 +429,19 @@ def _sanitize_brd_filename(raw_name: str) -> str:
     return name
 
 
+def _coerce_bool(value, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off", ""}:
+        return False
+    return default
+
+
 class FactoryPortalHandler(SimpleHTTPRequestHandler):
     """HTTP handler for factory portal with BRD intake API"""
 
@@ -471,6 +484,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path.startswith("/api/project-analysis/"):
             slug = request_path.split("/")[-1]
             return self._handle_project_analysis(slug)
+
+        if request_path.startswith("/api/project-operations/"):
+            slug = request_path.split("/")[-1]
+            return self._handle_project_operations(slug)
 
         if request_path.startswith("/api/projects/") and request_path.endswith("/files"):
             if not self._require_auth_for_mutation():
@@ -800,14 +817,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": str(exc)}, 400)
             return
         content = payload.get("content", "").strip()
+        generation_options = {
+            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True)
+        }
 
         if not file_name or not content:
             self._send_json({"error": "Missing fileName or content"}, 400)
             return
 
-        return self._save_and_start_run(file_name, content)
+        return self._save_and_start_run(file_name, content, generation_options)
 
-    def _save_and_start_run(self, file_name: str, content: str):
+    def _save_and_start_run(self, file_name: str, content: str, generation_options: dict | None = None):
         """Save BRD file and launch pipeline worker thread."""
         brds_dir = FACTORY_REPO_ROOT / "docs" / "intake"
         brds_dir.mkdir(parents=True, exist_ok=True)
@@ -839,12 +859,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "stderr": None,
                 "command": None,
                 "result": None,
+                "generationOptions": generation_options or {},
             }
 
         # Spawn pipeline worker thread
         thread = threading.Thread(
             target=self._run_pipeline,
-            args=(run_id, str(brd_path)),
+            args=(run_id, str(brd_path), generation_options or {}),
             daemon=True,
         )
         thread.start()
@@ -859,14 +880,19 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             202,
         )
 
-    def _run_pipeline(self, run_id, brd_path):
+    def _run_pipeline(self, run_id, brd_path, generation_options=None):
         """Execute the pipeline in background"""
         with RUNS_LOCK:
             RUNS[run_id]["status"] = "running"
             RUNS[run_id]["startedAt"] = datetime.utcnow().isoformat() + "Z"
 
         try:
-            output = process_brd_document(FACTORY_REPO_ROOT, pathlib.Path(brd_path), run_id)
+            output = process_brd_document(
+                FACTORY_REPO_ROOT,
+                pathlib.Path(brd_path),
+                run_id,
+                generation_options or {},
+            )
 
             with RUNS_LOCK:
                 RUNS[run_id].update(
@@ -914,6 +940,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         project_name_field = (fields.get("project_name") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        enable_observability_field = (fields.get("enable_observability") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         brd_field = fields.get("brd_file")
 
         if not brd_field:
@@ -940,7 +967,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": str(exc)}, 400)
             return
 
-        return self._save_and_start_run(file_name, content)
+        generation_options = {
+            "enableObservability": _coerce_bool(enable_observability_field, default=True)
+        }
+
+        return self._save_and_start_run(file_name, content, generation_options)
 
     def _handle_run_status(self, run_id):
         """Handle run status query"""
@@ -1164,6 +1195,57 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         }
         
         return analysis
+
+    def _handle_project_operations(self, slug):
+        """Generate and serve operations/monitoring view for a project by slug."""
+        feed_path = FACTORY_REPO_ROOT / "factory-projects.generated.json"
+
+        if not feed_path.exists():
+            return self._send_json({"error": "Project feed not found"}, 404)
+
+        try:
+            feed = json.loads(feed_path.read_text(encoding="utf-8"))
+            projects = feed.get("projects", [])
+            project = next((p for p in projects if p.get("slug") == slug), None)
+
+            if not project:
+                return self._send_json({"error": f"Project '{slug}' not found"}, 404)
+
+            operations = self._generate_project_operations(project)
+            return self._send_json(operations, 200)
+        except json.JSONDecodeError:
+            return self._send_json({"error": "Invalid project feed"}, 500)
+
+    def _generate_project_operations(self, project):
+        """Generate operations metadata for portal display."""
+        enable_observability = bool((project.get("options") or {}).get("enableObservability", False))
+        monitoring_resources = [
+            "Log Analytics Workspace",
+            "Application Insights (workspace-based)",
+            "Optional Azure Monitor Action Group",
+        ] if enable_observability else [
+            "No monitoring resources requested during intake",
+        ]
+
+        checklist = [
+            "Deploy infra/main.bicep and capture deployment outputs",
+            "Wire app telemetry to APPINSIGHTS_CONNECTION_STRING",
+            "Validate /health endpoint and request traces",
+            "Assign operations owner and alert routing",
+        ] if enable_observability else [
+            "Decide whether to enable observability for this project",
+            "Add Application Insights and Log Analytics before production",
+            "Define alert routing and operational ownership",
+        ]
+
+        return {
+            "projectSlug": project.get("slug", ""),
+            "title": project.get("title", project.get("slug", "Unknown")),
+            "enableObservability": enable_observability,
+            "monitoringResources": monitoring_resources,
+            "checklist": checklist,
+            "links": project.get("links", {}),
+        }
 
     def _send_json(self, payload, status=200):
         """Send JSON response"""

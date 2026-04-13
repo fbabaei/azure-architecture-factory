@@ -1907,6 +1907,15 @@
 ## Timeline
 [Expected delivery]"></textarea>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="brd-enable-observability" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                            <input type="checkbox" id="brd-enable-observability" checked style="margin-top:0.25rem;">
+                                            <span>
+                                                <strong>Wire the generated project for monitoring and observability</strong><br>
+                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Include starter guidance for Application Insights, Log Analytics, health checks, alerting, and operational ownership.</span>
+                                            </span>
+                                        </label>
+                                    </div>
                                     <div class="button-group">
                                         <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Run End-to-End</button>
                                     </div>
@@ -2389,6 +2398,15 @@
         </div>
     </div>
 
+    <!-- Project Operations Modal -->
+    <div id="operations-modal" class="analysis-modal">
+        <div class="analysis-modal-content">
+            <button class="analysis-modal-close" onclick="closeProjectOperations()">✕</button>
+            <h2 class="analysis-modal-title" id="operations-modal-project-title">Project Operations</h2>
+            <div id="operations-modal-content"></div>
+        </div>
+    </div>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -2400,6 +2418,7 @@
         const API_PROJECT_FILES = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/files`;
         const API_PROJECT_FILE = (projectSlug, relativePath) => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/file?path=${encodeURIComponent(relativePath)}`;
         const API_PROJECT_DOWNLOAD = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/download`;
+        const API_PROJECT_OPERATIONS = projectSlug => `${API_BASE}/api/project-operations/${encodeURIComponent(projectSlug)}`;
         const API_RUN_STATUS = runId => `${API_BASE}/api/brd-runs/${encodeURIComponent(runId)}`;
         const API_CSA_COPILOT_TOOLS = `${API_BASE}/api/csa-copilot/tools`;
         const API_CSA_COPILOT_ASK = `${API_BASE}/api/csa-copilot/ask`;
@@ -3175,6 +3194,7 @@
 
             const fileNameInput = document.getElementById('brd-file-name').value.trim();
             const contentInput = document.getElementById('brd-content').value.trim();
+            const enableObservability = document.getElementById('brd-enable-observability')?.checked ?? true;
             const uploadInput = document.getElementById('brd-upload');
             const uploadedFile = uploadInput?.files?.[0] || null;
             const button = document.getElementById('submit-brd-btn');
@@ -3199,6 +3219,7 @@
                     // Multipart upload — file sent directly to server without browser-side read
                     const form = new FormData();
                     form.append('project_name', normalizeBrdFileName(fileNameInput));
+                    form.append('enable_observability', enableObservability ? 'true' : 'false');
                     form.append('brd_file', uploadedFile, uploadedFile.name);
                     response = await fetch(API_BRD_UPLOAD, {
                         method: 'POST',
@@ -3210,7 +3231,11 @@
                     response = await fetch(API_BRD_INTAKE, {
                         method: 'POST',
                         headers: buildMutationHeaders({ 'Content-Type': 'application/json' }),
-                        body: JSON.stringify({ fileName: normalizeBrdFileName(fileNameInput), content: contentInput })
+                        body: JSON.stringify({
+                            fileName: normalizeBrdFileName(fileNameInput),
+                            content: contentInput,
+                            enableObservability
+                        })
                     });
                 }
 
@@ -3292,6 +3317,7 @@
                 setTimeout(() => {
                     document.getElementById('brd-file-name').value = '';
                     document.getElementById('brd-content').value = '';
+                    document.getElementById('brd-enable-observability').checked = true;
                     const upload = document.getElementById('brd-upload');
                     if (upload) upload.value = '';
                     loadProjects();
@@ -3528,6 +3554,7 @@
                 const safeTitle = escapeHtml(project.title || project.slug);
                 const generatedFrom = escapeHtml(project.generatedFrom || 'docs/intake/brd.md');
                 const safeDiagramPath = escapeHtml(diagram || '');
+                const observabilityEnabled = Boolean(project.options?.enableObservability);
 
                 return `
                 <div class="project-card">
@@ -3540,6 +3567,7 @@
                     </p>
                     <div class="project-meta">
                         <span class="meta-tag">📅 ${new Date(project.generatedAt).toLocaleDateString()}</span>
+                        <span class="meta-tag">${observabilityEnabled ? '📡 Observability Wired' : '⚪ Observability Not Requested'}</span>
                     </div>
                     <div class="project-links">
                         ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
@@ -3553,6 +3581,7 @@
                            data-project-slug="${project.slug || ''}"
                            ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
                            🧠 View Analysis</a>
+                        <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
                         ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
@@ -3679,6 +3708,70 @@
 
         function closeDynamicAnalysis() {
             const modal = document.getElementById('analysis-modal');
+            modal.classList.remove('show');
+        }
+
+        async function openProjectOperations(event, projectSlug) {
+            event.preventDefault();
+            if (!projectSlug) return;
+
+            try {
+                const response = await fetch(API_PROJECT_OPERATIONS(projectSlug));
+                if (!response.ok) {
+                    throw new Error(`Failed to load operations data (${response.status})`);
+                }
+                const operations = await response.json();
+                displayOperationsModal(operations);
+            } catch (error) {
+                console.error('Error loading operations data:', error);
+                showNotification(`Operations data unavailable: ${error.message}`, true);
+            }
+        }
+
+        function displayOperationsModal(operations) {
+            const modal = document.getElementById('operations-modal');
+            const title = document.getElementById('operations-modal-project-title');
+            const content = document.getElementById('operations-modal-content');
+
+            const links = operations.links || {};
+            title.textContent = `${operations.title || operations.projectSlug} - Operations`;
+
+            content.innerHTML = `
+                <div class="analysis-modal-label">Observability Requested</div>
+                <div class="analysis-modal-text">${operations.enableObservability ? 'Yes' : 'No'}</div>
+
+                <div class="analysis-modal-label">Monitoring Resources (Generated Bicep)</div>
+                <div class="analysis-modal-text">
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        ${(operations.monitoringResources || []).map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="analysis-modal-label">Operations Checklist</div>
+                <div class="analysis-modal-text">
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        ${(operations.checklist || []).map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="analysis-modal-label">Quick Links</div>
+                <div class="analysis-modal-text">
+                    ${links.deploy ? `<a href="${links.deploy}" class="project-link" target="_blank" rel="noopener noreferrer">🚀 Deploy Guide</a>` : ''}
+                    ${links.readme ? `<a href="${links.readme}" class="project-link" target="_blank" rel="noopener noreferrer">📖 README</a>` : ''}
+                    ${links.traceability ? `<a href="${links.traceability}" class="project-link" target="_blank" rel="noopener noreferrer">📊 Traceability</a>` : ''}
+                </div>
+            `;
+
+            modal.classList.add('show');
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeProjectOperations();
+                }
+            });
+        }
+
+        function closeProjectOperations() {
+            const modal = document.getElementById('operations-modal');
             modal.classList.remove('show');
         }
 
