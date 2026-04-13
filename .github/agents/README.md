@@ -3,7 +3,15 @@
 ## Agent Overview
 
 ```
-project-orchestrator          ← START HERE — drives all agents end-to-end
+modernization-to-factory      ← START HERE for legacy app modernization
+│
+├── [Phase 1] assess legacy codebase (technology, architecture, risk)
+├── [Phase 2] map components to Azure target services
+├── [Phase 3] write modernization-assessment.md
+├── [Phase 4] generate target-state BRD → requirements.md
+└── [Phase 5] → project-orchestrator (full factory pipeline)
+
+project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 │
 ├── project-state-manager         helper: project folders, logs, manifest state
 ├── brd-to-architecture-diagram   Phase 1: MCP Draw.io diagram from requirements
@@ -104,6 +112,21 @@ When called by `project-orchestrator`, this agent must follow the full MCP Draw.
 ### drawio-architecture-reader
 This is a helper subagent used by the implementation agent. It reads diagrams and companion notes and returns an implementation inventory.
 
+### modernization-to-factory ⭐ Entry Point for Legacy Modernization
+Use this agent when you have an existing application that needs to be re-platformed or re-architected onto Azure.
+
+Typical uses:
+- Assess a monolithic Java, .NET, Python, or Node.js application and generate an Azure target baseline.
+- Detect technology stack, architecture patterns, and modernization debt automatically.
+- Produce a structured Assessment + BRD describing the Azure target state.
+- Hand off to `project-orchestrator` to generate architecture diagrams, code scaffolding, and Bicep infra.
+
+Inputs accepted: path to legacy codebase, optional technology hint (java/dotnet/python/lambda), optional target constraints.
+
+Outputs written before factory handoff:
+- `projects/<slug>/docs/modernization-assessment.md` — full assessment evidence
+- `projects/<slug>/docs/requirements.md` — generated target-state BRD
+
 ### factory-handoff
 Use this agent to promote a locally scaffolded `project-orchestrator` project to the shared **Azure Architecture Factory** portal.
 
@@ -118,6 +141,7 @@ Prerequisites: factory portal running (`python scripts/start_factory_portal.py`)
 ---
 
 ## Notes
+- **Use `modernization-to-factory` for legacy apps** — it assesses the codebase, writes the BRD, then calls `project-orchestrator` automatically.
 - **Use `project-orchestrator` for new projects** — it calls all other agents in the correct order.
 - Individual agents can still be invoked standalone for targeted tasks.
 - Projects created by the orchestrator live under `projects/` with full isolation per project.

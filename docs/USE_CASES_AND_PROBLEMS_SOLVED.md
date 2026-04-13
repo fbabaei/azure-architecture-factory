@@ -46,6 +46,28 @@ This document summarizes the main internal scenarios the repository supports.
 - Deployment guide
 - Manifest-based readiness data
 
-## 7. Current Gap Pattern
+## 7. Legacy Application Modernization to Azure Baseline
+
+**Problem:** Teams have an existing application (monolith, legacy service, or AWS function) that needs to be re-platformed onto Azure. The pain is that modernization assessment tools produce findings but not an Azure project ready to build — there is a gap between "what is wrong" and "what to build."
+
+**Factory response:** Use `modernization-to-factory` to bridge that gap. The agent:
+1. Inspects the legacy codebase — technology stack, architecture pattern, modernization debt, and migration risks.
+2. Maps each legacy component to its Azure target service.
+3. Writes a `modernization-assessment.md` with full assessment evidence.
+4. Generates a structured target-state BRD (`requirements.md`) from the assessment.
+5. Hands the BRD to `project-orchestrator`, which runs the full factory pipeline: architecture diagram, implementation scaffolding, Bicep infrastructure, production readiness review, and optional deployment.
+
+**Seam with external assessment tools:** If a `modernize-java`, `modernize-dotnet`, or `azure-cloud-migrate` agent has already produced findings, those findings can be summarized into the BRD input before invoking `project-orchestrator` directly — skipping `modernization-to-factory` Phase 1 and Phase 2.
+
+Example invocation:
+```
+modernization-to-factory:
+  legacy-path: legacy-app/
+  technology: java
+  project-name: modernized-order-service
+  azure-region: eastus
+```
+
+## 8. Current Gap Pattern
 
 Not every sample project is equally complete. Some projects emphasize infrastructure or UX more than tests and deployment guidance. That is acceptable for internal evaluation as long as the portal reports those differences honestly.

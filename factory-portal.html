@@ -21,36 +21,39 @@
             --primary-dark: #005a9e;
             --secondary: #50e6ff;
             --accent: #ff8c00;
-            --glow-cyan: rgba(80, 230, 255, 0.46);
-            --glow-blue: rgba(0, 120, 212, 0.3);
-            --glow-amber: rgba(255, 140, 0, 0.2);
-            --bg-dark: #deebf8;
+            --ms-red: #f25022;
+            --ms-green: #7fba00;
+            --ms-blue: #00a4ef;
+            --ms-yellow: #ffb900;
+            --glow-cyan: rgba(0, 164, 239, 0.22);
+            --glow-blue: rgba(0, 120, 212, 0.18);
+            --glow-amber: rgba(255, 185, 0, 0.15);
+            --bg-dark: #f3f2f1;
             --bg-light: #ffffff;
-            --bg-soft: #cfe4f7;
-            --text-primary: #12324a;
-            --text-secondary: #5b7285;
-            --border: #c9dceb;
-            --success: #3fb950;
-            --error: #f85149;
-            --warning: #d29922;
+            --bg-soft: #e8e8e8;
+            --text-primary: #1b1b1b;
+            --text-secondary: #5a5a5a;
+            --border: #d2d2d2;
+            --success: #107c10;
+            --error: #d92323;
+            --warning: #d83b01;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-dark);
+            background: #ffffff;
             color: var(--text-primary);
             line-height: 1.45;
             min-height: 100vh;
             position: relative;
             isolation: isolate;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 9% 14%, var(--glow-cyan) 0%, transparent 33%),
-                radial-gradient(circle at 88% 10%, var(--glow-blue) 0%, transparent 35%),
-                radial-gradient(circle at 48% 68%, var(--glow-amber) 0%, transparent 32%),
-                radial-gradient(circle at 30% 88%, rgba(0, 90, 158, 0.18) 0%, transparent 28%),
-                linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(226, 241, 252, 0.86) 34%, rgba(204, 224, 241, 0.95) 100%),
-                linear-gradient(180deg, #fbfdff 0%, #eaf3fb 30%, #d3e4f4 100%);
+            background-image:
+                radial-gradient(ellipse at 5% 8%, rgba(242, 80, 34, 0.07) 0%, transparent 38%),
+                radial-gradient(ellipse at 95% 8%, rgba(127, 186, 0, 0.07) 0%, transparent 38%),
+                radial-gradient(ellipse at 5% 92%, rgba(255, 185, 0, 0.07) 0%, transparent 38%),
+                radial-gradient(ellipse at 95% 92%, rgba(0, 164, 239, 0.07) 0%, transparent 38%),
+                linear-gradient(180deg, #ffffff 0%, #faf9f8 60%, #f3f2f1 100%);
         }
 
         body::before,
@@ -64,11 +67,11 @@
         }
 
         body::before {
-            opacity: 0.66;
+            opacity: 0.35;
             background-image:
                 radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 24%),
-                radial-gradient(circle at 78% 18%, rgba(80, 230, 255, 0.34) 0%, rgba(80, 230, 255, 0) 34%),
-                radial-gradient(circle at 62% 78%, rgba(0, 120, 212, 0.2) 0%, rgba(0, 120, 212, 0) 32%),
+                radial-gradient(circle at 78% 18%, rgba(0, 164, 239, 0.18) 0%, rgba(0, 164, 239, 0) 34%),
+                radial-gradient(circle at 62% 78%, rgba(0, 120, 212, 0.12) 0%, rgba(0, 120, 212, 0) 32%),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%230078d4' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' d='M73 164h96c19 0 34-14 34-31 0-16-13-29-29-31-6-26-29-44-58-44-28 0-52 18-58 44-18 1-32 15-32 31 0 17 15 31 34 31h13'/%3E%3Cpath stroke-opacity='.16' d='M103 125h49'/%3E%3Cpath stroke-opacity='.16' d='M118 105h19'/%3E%3Cellipse stroke-opacity='.18' cx='177' cy='174' rx='32' ry='13'/%3E%3Cpath stroke-opacity='.18' d='M145 174v24c0 7 14 13 32 13s32-6 32-13v-24'/%3E%3Cpath stroke-opacity='.18' d='M145 186c0 7 14 13 32 13s32-6 32-13'/%3E%3Cpath stroke-opacity='.18' d='M145 198c0 7 14 13 32 13s32-6 32-13'/%3E%3C/g%3E%3C/svg%3E"),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%2350e6ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect stroke-opacity='.2' x='63' y='63' width='134' height='134' rx='24'/%3E%3Cpath stroke-opacity='.17' d='M102 84v-19M130 84v-19M158 84v-19M102 195v-19M130 195v-19M158 195v-19M84 102H65M84 130H65M84 158H65M195 102h-19M195 130h-19M195 158h-19'/%3E%3Ccircle stroke-opacity='.22' cx='107' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='153' cy='107' r='10'/%3E%3Ccircle stroke-opacity='.22' cx='130' cy='153' r='10'/%3E%3Cpath stroke-opacity='.22' d='M116 112l28 36M144 112l-10 30M117 108h26'/%3E%3C/g%3E%3C/svg%3E");
             background-size: auto, auto, auto, 250px 250px, 220px 220px;
@@ -89,8 +92,8 @@
         }
 
         header {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(222, 239, 251, 0.96) 100%);
-            border-bottom: 1px solid var(--border);
+            background: #0078d4;
+            border-bottom: none;
             padding: 0.9rem 0;
             position: sticky;
             top: 0;
@@ -117,9 +120,9 @@
             display: flex;
             align-items: center;
             gap: 0.65rem;
+            color: #ffffff;
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--primary);
         }
 
         .logo svg {
@@ -134,7 +137,7 @@
         }
 
         nav a {
-            color: var(--text-secondary);
+            color: rgba(255,255,255,0.85);
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
@@ -142,7 +145,7 @@
         }
 
         nav a:hover, nav a.active {
-            color: var(--primary);
+            color: #ffffff;
         }
 
         .container {
@@ -215,6 +218,61 @@
             max-width: 800px;
             box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
         }
+
+        .section-divider {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #90b8d8 20%, #90b8d8 80%, transparent);
+            margin: 1.75rem 0 1.5rem;
+            opacity: 0.85;
+        }
+
+        /* ── Modernization entry point ─────────────────────────────── */
+        .modernization-section {
+            border: 1px solid var(--border);
+            border-left: 4px solid #7fba00;
+            border-radius: 6px;
+            background: #f7fbf0;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        .modernization-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            gap: 1rem;
+        }
+        .modernization-toggle-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+            flex: 1;
+        }
+        .modernization-toggle-link:hover .modernization-toggle-title { color: var(--primary); }
+        .modernization-toggle-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: block;
+        }
+        .modernization-toggle-description {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            display: block;
+            margin-top: 0.1rem;
+        }
+        .modernization-toggle-icon { font-size: 1rem; color: var(--text-secondary); transition: transform 0.2s; }
+        .modernization-panel-content { display: none; padding: 0 1.25rem 1.25rem; }
+        .modernization-panel-content.open { display: block; }
+        .modernization-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 700px) { .modernization-fields { grid-template-columns: 1fr; } }
 
         .docs-csa-row {
             display: flex;
@@ -1842,6 +1900,7 @@
     <div class="container">
         <!-- Hero Section -->
         <section>
+            <hr class="section-divider">
             <h1>Architecture Factory</h1>
             <p class="section-subtitle">
                 End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment
@@ -1856,6 +1915,7 @@
                 <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
                 <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
                 <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
+                <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
             </div>
         </section>
 
@@ -2059,8 +2119,73 @@
                 </div><!-- /analysis-col -->
             </div><!-- /intake-analysis-row -->
 
+            <!-- Modernize Legacy App entry point -->
+            <section id="modernization" class="modernization-section" aria-labelledby="modernization-title">
+                <div class="modernization-toggle-row">
+                    <a href="#modernization" class="modernization-toggle-link" onclick="toggleModernizationPanel(event)" aria-expanded="false" aria-controls="modernization-panel-content">
+                        <span class="modernization-toggle-icon" aria-hidden="true">▸</span>
+                        <span class="modernization-toggle-copy">
+                            <span class="modernization-toggle-title" id="modernization-title">🔄 Modernize a Legacy Application</span>
+                            <span class="modernization-toggle-description">Point the agent at an existing codebase — it will assess, map to Azure services, generate a BRD, and run the full factory pipeline.</span>
+                        </span>
+                    </a>
+                </div>
+                <div id="modernization-panel-content" class="modernization-panel-content">
+                    <p style="margin: 0 0 1rem; color: var(--text-secondary); font-size: 0.88rem;">
+                        The <strong>modernization-to-factory</strong> agent inspects your legacy codebase, detects the technology stack and architecture pattern, maps each component to an Azure target service, writes a modernization assessment, generates a target-state BRD, and hands it to the factory pipeline — all automatically. The only required input is the path to the existing code.
+                    </p>
+                    <div class="modernization-fields">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="mod-legacy-path">Legacy Codebase Path <span style="color:#c00;">*</span></label>
+                            <input type="text" id="mod-legacy-path" placeholder="e.g., legacy-app/ or src/my-service">
+                            <small style="color: var(--text-secondary); font-size: 0.78rem; margin-top: 0.25rem; display: block;">Relative or absolute path to your codebase root, e.g. <code>src/legacy-api</code> or <code>C:\projects\my-app</code></small>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="mod-project-name">Project Name</label>
+                            <input type="text" id="mod-project-name" placeholder="e.g., modernized-order-service">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="mod-technology">Technology Hint <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
+                            <select id="mod-technology" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; background: white;">
+                                <option value="">Auto-detect</option>
+                                <option value="java">Java / Spring Boot</option>
+                                <option value="dotnet">.NET / ASP.NET</option>
+                                <option value="python">Python</option>
+                                <option value="nodejs">Node.js</option>
+                                <option value="lambda">AWS Lambda</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="mod-region">Azure Region</label>
+                            <input type="text" id="mod-region" placeholder="eastus" value="eastus">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+                            <label for="mod-constraints">Target Constraints <span style="color: var(--text-secondary); font-weight: 400;">(optional)</span></label>
+                            <input type="text" id="mod-constraints" placeholder="e.g., must use Azure Container Apps, no AKS, keep existing auth">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 400;">
+                                <input type="checkbox" id="mod-assessment-only" style="width: auto; margin: 0;">
+                                <span>Assessment only <span style="color: var(--text-secondary); font-size: 0.85em;">— skip factory pipeline, deliver assessment + BRD only</span></span>
+                            </label>
+                        </div>
+                    </div>
+                    <p style="margin: 0.9rem 0 0.6rem; font-size: 0.82rem;">
+                        <a href="docs/APP_MODERNIZATION_GUIDE.md" target="_blank" rel="noopener noreferrer" style="color: var(--accent);">📄 What can the factory do? Read the App Modernization Guide →</a>
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <button type="button" class="btn-primary" onclick="runModernizationWithCopilot()">🚀 Run with GHCP on VS Code</button>
+                        <span id="mod-status" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+                    </div>
+                    <p style="margin: 1rem 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                        This copies a ready-to-paste <code>@modernization-to-factory</code> prompt to your clipboard and opens VS Code. Paste it into GitHub Copilot Chat to start the agent.
+                    </p>
+                </div>
+            </section>
+
             <div class="projects-intake-wrapper">
                 <section id="projects">
+                    <hr class="section-divider">
                     <div class="projects-header">
                         <h2>Generated Projects</h2>
                         <div class="projects-header-actions">
@@ -3873,6 +3998,57 @@
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
+        }
+
+        function toggleModernizationPanel(e) {
+            if (e) e.preventDefault();
+            const content = document.getElementById('modernization-panel-content');
+            const link = document.querySelector('.modernization-toggle-link');
+            const icon = document.querySelector('.modernization-section .modernization-toggle-icon');
+            const isOpen = content.classList.toggle('open');
+            link.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            icon.textContent = isOpen ? '▾' : '▸';
+        }
+
+        function buildModernizationPrompt() {
+            const legacyPath = (document.getElementById('mod-legacy-path').value || '').trim();
+            const projectName = (document.getElementById('mod-project-name').value || '').trim();
+            const technology = (document.getElementById('mod-technology').value || '').trim();
+            const region = (document.getElementById('mod-region').value || 'eastus').trim();
+            const constraints = (document.getElementById('mod-constraints').value || '').trim();
+            const assessmentOnly = document.getElementById('mod-assessment-only').checked;
+
+            if (!legacyPath) return null;
+
+            const lines = ['@modernization-to-factory', `legacy-path: ${legacyPath}`];
+            if (projectName) lines.push(`project-name: ${projectName}`);
+            if (technology) lines.push(`technology: ${technology}`);
+            if (region && region !== 'eastus') lines.push(`azure-region: ${region}`);
+            if (constraints) lines.push(`target-constraints: ${constraints}`);
+            if (assessmentOnly) lines.push('assessment-only: true');
+            else lines.push('deploy: false');
+            return lines.join('\n');
+        }
+
+        async function runModernizationWithCopilot() {
+            const statusEl = document.getElementById('mod-status');
+            const prompt = buildModernizationPrompt();
+            if (!prompt) {
+                statusEl.textContent = 'Please enter the legacy codebase path first.';
+                statusEl.style.color = 'var(--error)';
+                return;
+            }
+            try {
+                await copyTextToClipboard(prompt);
+            } catch (err) {
+                console.error('Clipboard copy failed:', err);
+            }
+            const desktopLink = `vscode://vscode.git/clone?url=${encodeURIComponent('https://github.com/fbabaei_microsoft/azure-architecture-factory')}`;
+            const webLink = 'https://vscode.dev/github/fbabaei_microsoft/azure-architecture-factory';
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+            window.open(webLink, '_blank', 'noopener,noreferrer');
+            statusEl.style.color = 'var(--text-secondary)';
+            statusEl.textContent = 'Prompt copied — paste into Copilot Chat in VS Code.';
         }
 
         async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
