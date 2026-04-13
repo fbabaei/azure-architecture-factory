@@ -4400,7 +4400,7 @@
         ];
 
         function renderHelperHome() {
-            const body = document.getElementById('helper-body');
+            const body = _helperBody();
             body.innerHTML = `
                 <div class="helper-greeting">
                     <img src="assets/factory-icon.svg" width="28" height="28" alt="" style="border-radius:6px;flex-shrink:0;">
@@ -4420,7 +4420,7 @@
 
         function renderHelperFaq(index) {
             const f = HELPER_FAQ[index];
-            const body = document.getElementById('helper-body');
+            const body = _helperBody();
             body.innerHTML = `
                 <button class="helper-back" onclick="renderHelperHome()">← Back</button>
                 <div class="helper-faq-icon">${f.icon}</div>
@@ -4437,9 +4437,9 @@
         async function renderHelperPrompt(input) {
             const intent = detectIntent(input);
             const promptText = intent.template(input);
-            const body = document.getElementById('helper-body');
+            const body = _helperBody();
             body.innerHTML = `
-                <button class="helper-back" onclick="renderHelperHome();document.getElementById('helper-input').value=''">← Back</button>
+                <button class="helper-back" onclick="renderHelperHome();_helperInput().value=''">← Back</button>
                 <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;">
                     <span style="font-size:1.3rem;">${intent.icon}</span>
                     <span style="font-weight:600;font-size:.9rem;">${intent.label}</span>
@@ -4496,7 +4496,7 @@
             } else {
                 // Show matching chips
                 const hits = HELPER_FAQ.filter(f => f.q.toLowerCase().includes(lq) || f.a.toLowerCase().includes(lq));
-                const body = document.getElementById('helper-body');
+                const body = _helperBody();
                 if (hits.length > 0) {
                     body.innerHTML = `<div class="helper-chips">${hits.map(f => `<button class="helper-chip" onclick="renderHelperFaq(${HELPER_FAQ.indexOf(f)})">${f.icon} ${f.q}</button>`).join('')}</div>`;
                 } else {
@@ -4509,6 +4509,33 @@
             if (e.key === 'Enter') helperHandleInput(e.target.value);
         }
         /* ────────────────────────────────────────────────────────── */
+
+        /* ── Scope helpers: route body/input to inline vs FAB widget ── */
+        let _helperScope = 'inline';
+        function _helperBody()  { return document.getElementById(_helperScope === 'fab' ? 'fab-helper-body'  : 'helper-body');  }
+        function _helperInput() { return document.getElementById(_helperScope === 'fab' ? 'fab-helper-input' : 'helper-input'); }
+
+        function fabHelperHandleInput(q) { _helperScope = 'fab'; helperHandleInput(q); }
+        function fabHelperInputKey(e)    { if (e.key === 'Enter') fabHelperHandleInput(e.target.value); }
+
+        function toggleFabHelper() {
+            _helperScope = 'fab';
+            const panel = document.getElementById('fab-helper-panel');
+            const btn   = document.getElementById('fab-helper-fab');
+            const isOpen = panel.style.maxHeight && panel.style.maxHeight !== '0px';
+            if (!isOpen) {
+                panel.style.visibility = 'visible';
+                panel.style.maxHeight  = '520px';
+                panel.style.opacity    = '1';
+                btn.querySelector('.fab-icon').style.transform = 'rotate(45deg)';
+                renderHelperHome();
+            } else {
+                panel.style.maxHeight = '0px';
+                panel.style.opacity   = '0';
+                setTimeout(() => { panel.style.visibility = 'hidden'; }, 300);
+                btn.querySelector('.fab-icon').style.transform = 'rotate(0deg)';
+            }
+        }
 
         function toggleExecutiveSummary(e) {
             if (e) e.preventDefault();
@@ -4648,5 +4675,45 @@
             renderHelperHome();
         });
     </script>
+
+    <!-- ── Floating Factory Helper (bottom-right FAB) ── -->
+    <div id="fab-helper-container" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+        <!-- Popover panel -->
+        <div id="fab-helper-panel" style="width:340px;max-width:calc(100vw - 3rem);background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.20);overflow:hidden;max-height:0px;opacity:0;visibility:hidden;transition:max-height .3s ease,opacity .25s ease;">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#0078d4,#005a9e);padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;">
+                <img src="assets/factory-icon.svg" width="22" height="22" alt="" style="border-radius:4px;flex-shrink:0;">
+                <span style="color:#fff;font-weight:600;font-size:.9rem;flex:1;">Factory Helper</span>
+                <button onclick="toggleFabHelper()" style="background:none;border:none;color:rgba(255,255,255,.85);cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;" title="Close">✕</button>
+            </div>
+            <!-- Search bar -->
+            <div style="padding:.6rem .85rem;border-bottom:1px solid #e8e8e8;display:flex;gap:.4rem;">
+                <input id="fab-helper-input" type="text"
+                    placeholder="Ask me to build, deploy, modernize…"
+                    onkeydown="fabHelperInputKey(event)"
+                    oninput="if(!this.value){_helperScope='fab';renderHelperHome();}"
+                    style="flex:1;border:1px solid #d2d2d2;border-radius:8px;padding:.4rem .7rem;font-size:.83rem;outline:none;font-family:inherit;color:#1b1b1b;">
+                <button onclick="_helperScope='fab';helperHandleInput(document.getElementById('fab-helper-input').value)"
+                    style="background:#0078d4;border:none;color:#fff;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.83rem;font-family:inherit;">→</button>
+            </div>
+            <!-- Body -->
+            <div id="fab-helper-body" style="padding:.75rem .85rem;min-height:140px;max-height:360px;overflow-y:auto;font-size:.86rem;line-height:1.5;color:#1b1b1b;"></div>
+            <!-- Footer -->
+            <div style="padding:.5rem .85rem;border-top:1px solid #e8e8e8;display:flex;align-items:center;gap:.5rem;flex-shrink:0;">
+                <span style="font-size:.75rem;color:#8a8a8a;flex:1;">Azure Architecture Factory</span>
+                <a href="docs/APP_MODERNIZATION_GUIDE.md"
+                    onclick="event.preventDefault();openDocumentationPreview('docs/APP_MODERNIZATION_GUIDE.md','App Modernization Guide')"
+                    style="font-size:.75rem;color:#0078d4;text-decoration:none;cursor:pointer;">📄 Docs →</a>
+            </div>
+        </div>
+        <!-- FAB button -->
+        <button id="fab-helper-fab" onclick="toggleFabHelper()" title="Factory Helper"
+            style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0078d4,#005a9e);border:none;cursor:pointer;box-shadow:0 4px 18px rgba(0,120,212,.40);display:flex;align-items:center;justify-content:center;"
+            onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">
+            <img src="assets/factory-icon.svg" width="26" height="26" alt="Factory Helper" class="fab-icon" style="border-radius:4px;transition:transform .2s;">
+        </button>
+    </div>
+    <!-- /Floating Factory Helper -->
+
 </body>
 </html>
