@@ -1812,6 +1812,125 @@
             margin-top: 0.5rem;
         }
 
+        /* ---- Cost Estimation Modal ---- */
+        .cost-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.52);
+            z-index: 10500;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+        .cost-modal-overlay.open { display: flex; }
+        .cost-modal-dialog {
+            background: var(--surface, #fff);
+            border-radius: 10px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+            width: min(880px, 95vw);
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .cost-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--border, #dde4ea);
+            background: #f8fafc;
+            flex-shrink: 0;
+        }
+        .cost-modal-header h2 { margin: 0; font-size: 1rem; color: var(--primary-dark, #003f7a); }
+        .cost-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        .cost-modal-close:hover { background: #e8ecf0; color: var(--text-primary); }
+        .cost-tab-bar {
+            display: flex;
+            border-bottom: 2px solid var(--border, #dde4ea);
+            background: #f8fafc;
+            flex-shrink: 0;
+        }
+        .cost-tab {
+            padding: 0.55rem 1.1rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: -2px;
+            transition: all 0.15s;
+        }
+        .cost-tab.active { color: var(--primary-dark, #003f7a); border-bottom-color: var(--primary, #0078d4); background: #fff; }
+        .cost-tab:hover:not(.active) { background: #eef4fb; }
+        .cost-tab-panel { display: none; padding: 1.1rem 1.25rem; overflow-y: auto; flex: 1; flex-direction: column; gap: 0.75rem; }
+        .cost-tab-panel.active { display: flex; }
+        .cost-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+        .cost-table th {
+            background: #eef4fb;
+            color: var(--primary-dark, #003f7a);
+            font-weight: 600;
+            padding: 0.4rem 0.65rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border, #dde4ea);
+        }
+        .cost-table td { padding: 0.35rem 0.65rem; border-bottom: 1px solid #e8ecf0; }
+        .cost-table tr:hover td { background: #f8fafc; }
+        .cost-note { font-size: 0.75rem; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+        .cost-calc-services { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .cost-service-tag {
+            background: #eef4fb;
+            border: 1px solid var(--primary, #0078d4);
+            color: var(--primary-dark, #003f7a);
+            border-radius: 4px;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.77rem;
+        }
+        .whatif-form { display: flex; flex-direction: column; gap: 0.65rem; }
+        .whatif-form label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.2rem; }
+        .whatif-form input {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border, #dde4ea);
+            border-radius: 4px;
+            font-size: 0.83rem;
+            box-sizing: border-box;
+        }
+        .whatif-cmd-block {
+            font-family: monospace;
+            font-size: 0.78rem;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .whatif-cmd-block .cmd-comment { color: #6a9955; }
+        .whatif-cmd-copy {
+            align-self: flex-start;
+            font-size: 0.78rem;
+            padding: 0.3rem 0.75rem;
+            background: #0078d4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .whatif-cmd-copy:hover { background: #005a9e; }
+
         .design-analysis-header-row {
             margin-bottom: 0.75rem;
         }
@@ -2880,6 +2999,46 @@
             <button class="analysis-modal-close" onclick="closeProjectOperations()">✕</button>
             <h2 class="analysis-modal-title" id="operations-modal-project-title">Project Operations</h2>
             <div id="operations-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Cost Estimation Modal -->
+    <div id="cost-modal-overlay" class="cost-modal-overlay" onclick="if(event.target===this)closeCostModal()" role="dialog" aria-modal="true" aria-labelledby="cost-modal-heading">
+        <div class="cost-modal-dialog">
+            <div class="cost-modal-header">
+                <h2 id="cost-modal-heading">💰 Cost Estimation &mdash; <span id="cost-modal-project-title"></span></h2>
+                <button class="cost-modal-close" onclick="closeCostModal()" title="Close">✕</button>
+            </div>
+            <div class="cost-tab-bar">
+                <button class="cost-tab active" id="cost-tab-btn-estimate" onclick="switchCostTab('estimate',this)">📊 Retail Pricing</button>
+                <button class="cost-tab" id="cost-tab-btn-calculator" onclick="switchCostTab('calculator',this)">🧮 Pricing Calculator</button>
+                <button class="cost-tab" id="cost-tab-btn-whatif" onclick="switchCostTab('whatif',this)">🔍 What-If CLI</button>
+            </div>
+            <div id="cost-tab-estimate" class="cost-tab-panel active">
+                <div id="cost-estimate-body"><p style="color:var(--text-secondary)">Loading&hellip;</p></div>
+            </div>
+            <div id="cost-tab-calculator" class="cost-tab-panel">
+                <div id="cost-calculator-body"><p style="color:var(--text-secondary)">Loading&hellip;</p></div>
+            </div>
+            <div id="cost-tab-whatif" class="cost-tab-panel">
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin:0">The ARM What-If API requires server-side auth and a compiled ARM template. Use the commands below to run What-If locally using the Azure CLI after downloading the project.</p>
+                <div class="whatif-form">
+                    <div>
+                        <label for="whatif-subscription-id">Subscription ID</label>
+                        <input type="text" id="whatif-subscription-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="updateWhatifCommands()">
+                    </div>
+                    <div>
+                        <label for="whatif-resource-group">Resource Group Name</label>
+                        <input type="text" id="whatif-resource-group" placeholder="my-resource-group" oninput="updateWhatifCommands()">
+                    </div>
+                    <div>
+                        <label for="whatif-region">Azure Region</label>
+                        <input type="text" id="whatif-region" placeholder="eastus" value="eastus" oninput="updateWhatifCommands()">
+                    </div>
+                </div>
+                <div id="whatif-commands-block"></div>
+                <a id="whatif-portal-link" href="https://portal.azure.com/#create/Microsoft.Template" target="_blank" rel="noopener noreferrer" class="btn-primary" style="align-self:flex-start;text-decoration:none;font-size:0.82rem">Open in Azure Portal Deploy ↗</a>
+            </div>
         </div>
     </div>
 
@@ -4063,6 +4222,7 @@
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
                                 <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;" title="Open this project in GitHub Copilot to run or extend it locally in VS Code">&#9655; Open in GitHub Copilot</a>
+                        <a href="#" class="project-link" onclick="openCostModal('${project.slug}', '${safeTitle}'); return false;" title="Estimate cost using Azure Retail Prices API, Pricing Calculator deep-link, and What-If CLI guide">💰 Cost Tools</a>
                         <a href="${analysisId ? `#${analysisId}` : '#'}" 
                            class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
                            data-project-slug="${project.slug || ''}"
@@ -4589,6 +4749,203 @@
             window.open(webLink, '_blank', 'noopener,noreferrer');
             statusEl.style.color = 'var(--text-secondary)';
             statusEl.textContent = 'Prompt copied — paste into Copilot Chat in VS Code.';
+        }
+
+        // ════════════════════════════════════════════════════════════
+        //  COST ESTIMATION TOOLS
+        // ════════════════════════════════════════════════════════════
+
+        // Map Bicep resource types → Azure Retail Prices API service names
+        const BICEP_TO_PRICE_SERVICE = {
+            'Microsoft.Web/sites':                      'Azure App Service',
+            'Microsoft.Web/serverfarms':                'Azure App Service',
+            'Microsoft.App/containerApps':              'Azure Container Apps',
+            'Microsoft.ContainerService/managedClusters': 'Azure Kubernetes Service',
+            'Microsoft.Storage/storageAccounts':        'Storage',
+            'Microsoft.Sql/servers/databases':          'SQL Database',
+            'Microsoft.Sql/servers':                    'SQL Database',
+            'Microsoft.Cache/Redis':                    'Azure Cache for Redis',
+            'Microsoft.ServiceBus/namespaces':          'Service Bus',
+            'Microsoft.EventHub/namespaces':            'Event Hubs',
+            'Microsoft.KeyVault/vaults':                'Key Vault',
+            'Microsoft.CognitiveServices/accounts':     'Cognitive Services',
+            'Microsoft.DocumentDB/databaseAccounts':    'Azure Cosmos DB',
+            'Microsoft.Insights/components':            'Application Insights',
+            'Microsoft.OperationalInsights/workspaces': 'Log Analytics',
+            'Microsoft.ContainerRegistry/registries':   'Container Registry',
+            'Microsoft.ApiManagement/service':          'API Management',
+        };
+
+        // Map resource types → Azure Pricing Calculator product slugs
+        const BICEP_TO_CALC_PRODUCT = {
+            'Microsoft.Web/sites':                      'app-service',
+            'Microsoft.Web/serverfarms':                'app-service',
+            'Microsoft.App/containerApps':              'container-apps',
+            'Microsoft.ContainerService/managedClusters': 'azure-kubernetes-service',
+            'Microsoft.Storage/storageAccounts':        'storage',
+            'Microsoft.Sql/servers/databases':          'sql-database',
+            'Microsoft.Sql/servers':                    'sql-database',
+            'Microsoft.Cache/Redis':                    'azure-cache-redis',
+            'Microsoft.ServiceBus/namespaces':          'service-bus',
+            'Microsoft.EventHub/namespaces':            'event-hubs',
+            'Microsoft.KeyVault/vaults':                'key-vault',
+            'Microsoft.CognitiveServices/accounts':     'cognitive-services',
+            'Microsoft.DocumentDB/databaseAccounts':    'cosmos-db',
+            'Microsoft.Insights/components':            'application-insights',
+            'Microsoft.OperationalInsights/workspaces': 'log-analytics',
+            'Microsoft.ContainerRegistry/registries':   'container-registry',
+            'Microsoft.ApiManagement/service':          'api-management',
+        };
+
+        let _costModalSlug = null;
+        let _costModalResourceTypes = [];
+
+        async function detectBicepResources(slug) {
+            const filesResp = await fetch(API_PROJECT_FILES(slug), { headers: buildAuthenticatedHeaders() });
+            if (!filesResp.ok) throw new Error(`Could not load project files (HTTP ${filesResp.status})`);
+            const { files } = await filesResp.json();
+            const bicepFiles = (files || []).filter(f => f.path && f.path.endsWith('.bicep') && f.previewable !== false);
+            const resourceTypes = new Set();
+            for (const file of bicepFiles.slice(0, 20)) {
+                try {
+                    const cr = await fetch(API_PROJECT_FILE(slug, file.path), { headers: buildAuthenticatedHeaders() });
+                    if (!cr.ok) continue;
+                    const { content } = await cr.json();
+                    const matches = (content || '').matchAll(/resource\s+\w+\s+'([A-Za-z.]+\/[A-Za-z]+(?:\/[A-Za-z]+)?)@[^']+'/g);
+                    for (const m of matches) resourceTypes.add(m[1]);
+                } catch { /* skip */ }
+            }
+            return [...resourceTypes];
+        }
+
+        async function openCostModal(slug, title) {
+            _costModalSlug = slug;
+            document.getElementById('cost-modal-project-title').textContent = title || slug;
+            document.getElementById('cost-modal-overlay').classList.add('open');
+            switchCostTab('estimate', document.getElementById('cost-tab-btn-estimate'));
+            document.getElementById('cost-estimate-body').innerHTML = '<p style="color:var(--text-secondary);font-size:0.83rem">Scanning Bicep files\u2026</p>';
+            document.getElementById('cost-calculator-body').innerHTML = '<p style="color:var(--text-secondary);font-size:0.83rem">Scanning Bicep files\u2026</p>';
+            updateWhatifCommands();
+            try {
+                _costModalResourceTypes = await detectBicepResources(slug);
+                await renderCostEstimateTab(_costModalResourceTypes);
+                renderCalcTab(_costModalResourceTypes);
+            } catch (err) {
+                const msg = `<p class="cost-note" style="color:#c0392b">Error: ${escapeHtml(err.message)}</p>`;
+                document.getElementById('cost-estimate-body').innerHTML = msg;
+                document.getElementById('cost-calculator-body').innerHTML = msg;
+            }
+        }
+
+        function closeCostModal() {
+            document.getElementById('cost-modal-overlay').classList.remove('open');
+        }
+
+        function switchCostTab(name, btn) {
+            document.querySelectorAll('.cost-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.cost-tab-panel').forEach(p => p.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const panel = document.getElementById(`cost-tab-${name}`);
+            if (panel) panel.classList.add('active');
+        }
+
+        async function renderCostEstimateTab(resourceTypes) {
+            const body = document.getElementById('cost-estimate-body');
+            const known = resourceTypes.filter(rt => BICEP_TO_PRICE_SERVICE[rt]);
+            if (!known.length) {
+                body.innerHTML = `<p class="cost-note">No recognized Azure resource types found in Bicep files.</p>
+                    <p class="cost-note" style="margin-top:0.3rem">Detected types: <code>${escapeHtml(resourceTypes.join(', ') || 'none')}</code></p>`;
+                return;
+            }
+            body.innerHTML = '<p style="color:var(--text-secondary);font-size:0.83rem">Fetching live pricing from Azure Retail Prices API\u2026</p>';
+            const rows = [];
+            const seenServices = new Set();
+            for (const rt of known) {
+                const svcName = BICEP_TO_PRICE_SERVICE[rt];
+                if (seenServices.has(svcName)) continue;
+                seenServices.add(svcName);
+                try {
+                    const filter = encodeURIComponent(`serviceName eq '${svcName}' and priceType eq 'Consumption' and currencyCode eq 'USD'`);
+                    const resp = await fetch(`https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview&$filter=${filter}&$top=3`);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    const items = (data.Items || []).slice(0, 2);
+                    if (!items.length) {
+                        rows.push({ rt, svcName, skuName: '—', unitPrice: null, unit: '' });
+                    } else {
+                        for (const item of items) {
+                            rows.push({ rt, svcName, skuName: item.skuName || '', unitPrice: item.retailPrice ?? item.unitPrice ?? null, unit: item.unitOfMeasure || '' });
+                        }
+                    }
+                } catch (err) {
+                    rows.push({ rt, svcName, skuName: 'Error', unitPrice: null, unit: escapeHtml(err.message) });
+                }
+            }
+            const tableRows = rows.map(r =>
+                `<tr><td>${escapeHtml(r.rt)}</td><td>${escapeHtml(r.svcName)}</td><td>${escapeHtml(r.skuName)}</td><td>${r.unitPrice != null ? '$' + r.unitPrice.toFixed(4) : '—'}</td><td>${escapeHtml(r.unit)}</td></tr>`
+            ).join('');
+            body.innerHTML = `
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin:0">Live pay-as-you-go USD prices from the <strong>Azure Retail Prices API</strong>. Actual costs depend on usage volume, region, and reserved capacity.</p>
+                <table class="cost-table">
+                    <thead><tr><th>Resource Type</th><th>Service</th><th>SKU / Plan</th><th>Unit Price (USD)</th><th>Unit</th></tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <p class="cost-note">Use the <strong>Pricing Calculator</strong> tab to build an interactive estimate with volume assumptions.</p>`;
+        }
+
+        function renderCalcTab(resourceTypes) {
+            const body = document.getElementById('cost-calculator-body');
+            const products = [...new Set(resourceTypes.map(rt => BICEP_TO_CALC_PRODUCT[rt]).filter(Boolean))];
+            const calcUrl = products.length
+                ? `https://azure.microsoft.com/pricing/calculator/?products=${products.join(',')}`
+                : 'https://azure.microsoft.com/pricing/calculator/';
+            const serviceTags = resourceTypes
+                .filter(rt => BICEP_TO_PRICE_SERVICE[rt])
+                .map((rt, i) => i < 1 ? '' : '') // reset
+                .join('');
+            const uniqueServices = [...new Set(resourceTypes.filter(rt => BICEP_TO_PRICE_SERVICE[rt]).map(rt => BICEP_TO_PRICE_SERVICE[rt]))];
+            const tags = uniqueServices.map(s => `<span class="cost-service-tag">${escapeHtml(s)}</span>`).join('');
+            body.innerHTML = `
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin:0">The following Azure services were detected in this project's Bicep files. The Pricing Calculator opens pre-populated with these services — adjust quantities, tiers, and regions to build your estimate.</p>
+                <div class="cost-calc-services">${tags || '<span class="cost-note">No recognized services detected.</span>'}</div>
+                <a href="${escapeHtml(calcUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="align-self:flex-start;text-decoration:none;font-size:0.84rem">\ud83e\uddee Open Azure Pricing Calculator \u2197</a>
+                <p class="cost-note">${products.length} service(s) pre-selected: <code>${escapeHtml(products.join(', ') || 'none')}</code></p>`;
+        }
+
+        function updateWhatifCommands() {
+            const block = document.getElementById('whatif-commands-block');
+            if (!block) return;
+            const sub  = (document.getElementById('whatif-subscription-id')?.value || '').trim() || '<subscription-id>';
+            const rg   = (document.getElementById('whatif-resource-group')?.value || '').trim() || '<resource-group>';
+            const region = (document.getElementById('whatif-region')?.value || '').trim() || 'eastus';
+            const slug = _costModalSlug || '<project-slug>';
+            const cmds = `<span class="cmd-comment"># Step 1 — Download and extract the project ZIP</span>
+<span class="cmd-comment"># (Use the ⬇️ Download ZIP button on the project card)</span>
+
+<span class="cmd-comment"># Step 2 — Log in and set subscription</span>
+az login
+az account set --subscription ${sub}
+
+<span class="cmd-comment"># Step 3 — Create resource group (if needed)</span>
+az group create --name ${rg} --location ${region}
+
+<span class="cmd-comment"># Step 4 — Compile Bicep to ARM JSON</span>
+az bicep build --file infra/main.bicep --outfile main.json
+
+<span class="cmd-comment"># Step 5 — Run What-If analysis (preview changes before deploying)</span>
+az deployment group what-if \\
+  --resource-group ${rg} \\
+  --template-file main.json \\
+  --name ${slug}-whatif`;
+            block.innerHTML = `<div class="whatif-cmd-block">${cmds}</div>
+                <button class="whatif-cmd-copy" onclick="copyWhatifCommands(this)">📋 Copy commands</button>`;
+        }
+
+        function copyWhatifCommands(btn) {
+            const block = document.querySelector('.whatif-cmd-block');
+            if (!block) return;
+            const text = block.innerText || block.textContent;
+            copyTextToClipboard(text).then(() => { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy commands'; }, 2000); });
         }
 
         async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
