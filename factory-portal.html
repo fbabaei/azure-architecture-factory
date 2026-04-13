@@ -4138,6 +4138,110 @@
             document.body.removeChild(temp);
         }
 
+        /* ── Copilot Helper Widget ─────────────────────────────── */
+        function toggleHelperWidget(e) {
+            if (e) e.stopPropagation();
+            const panel = document.getElementById('helper-panel');
+            const bubble = document.getElementById('helper-bubble');
+            const isOpen = panel.classList.toggle('open');
+            bubble.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) {
+                document.getElementById('helper-input').focus();
+            }
+        }
+
+        function closeHelperIfOutside(e) {
+            const widget = document.getElementById('helper-widget');
+            if (!widget.contains(e.target)) {
+                document.getElementById('helper-panel').classList.remove('open');
+                document.getElementById('helper-bubble').setAttribute('aria-expanded', 'false');
+            }
+        }
+        document.addEventListener('click', closeHelperIfOutside);
+
+        const HELPER_FAQ = [
+            {
+                q: 'How do I generate a new project?',
+                a: 'Fill in "What do you want to build?" under <strong>Submit BRD</strong> and click <em>Generate Prompt → Open VS Code</em>. Paste the copied prompt into GitHub Copilot Chat.',
+                icon: '📐'
+            },
+            {
+                q: 'What is the project-orchestrator agent?',
+                a: 'It\'s a multi-step agent that takes your BRD, generates an architecture diagram, scaffolds code, creates Bicep infra, and optionally deploys to Azure — end to end.',
+                icon: '🤖'
+            },
+            {
+                q: 'How do I modernize a legacy app?',
+                a: 'Use the <strong>App Modernization</strong> panel. Paste your repo path, check <em>Assessment only</em> if you want a report first, then follow the generated prompt in Copilot Chat.',
+                icon: '🔄'
+            },
+            {
+                q: 'What agents are available?',
+                a: 'Key agents: <code>project-orchestrator</code>, <code>azure-architecture-implementer</code>, <code>modernization-to-factory</code>, <code>azure-project-deployer</code>, <code>bicep-infrastructure-validator</code>.',
+                icon: '🧩'
+            },
+            {
+                q: 'How do I deploy to Azure?',
+                a: 'After the factory generates a project folder, run the <code>azure-project-deployer</code> agent and point it at your <code>projects/&lt;your-project&gt;</code> folder.',
+                icon: '☁️'
+            },
+            {
+                q: 'Where are generated projects saved?',
+                a: 'Under <code>projects/&lt;slug&gt;/</code> in the repo root. Each folder has <code>README.md</code>, <code>project-manifest.json</code>, code, and <code>infra/</code>.',
+                icon: '📁'
+            },
+        ];
+
+        let helperFaqIndex = null;
+
+        function renderHelperHome() {
+            helperFaqIndex = null;
+            const body = document.getElementById('helper-body');
+            body.innerHTML = `
+                <div class="helper-greeting">
+                    <img src="assets/factory-icon.svg" width="28" height="28" alt="" style="border-radius:6px;flex-shrink:0;">
+                    <span>Hi! I\'m the Factory Helper. Ask me anything or pick a topic below.</span>
+                </div>
+                <div class="helper-chips">
+                    ${HELPER_FAQ.map((f, i) => `<button class="helper-chip" onclick="renderHelperFaq(${i})">${f.icon} ${f.q}</button>`).join('')}
+                </div>`;
+        }
+
+        function renderHelperFaq(index) {
+            helperFaqIndex = index;
+            const f = HELPER_FAQ[index];
+            const body = document.getElementById('helper-body');
+            body.innerHTML = `
+                <button class="helper-back" onclick="renderHelperHome()">← Back</button>
+                <div class="helper-faq-icon">${f.icon}</div>
+                <div class="helper-faq-q">${f.q}</div>
+                <div class="helper-faq-a">${f.a}</div>`;
+        }
+
+        function helperSearch(q) {
+            if (!q.trim()) { renderHelperHome(); return; }
+            const lq = q.toLowerCase();
+            const hits = HELPER_FAQ.filter(f => f.q.toLowerCase().includes(lq) || f.a.toLowerCase().includes(lq));
+            const body = document.getElementById('helper-body');
+            if (hits.length === 0) {
+                body.innerHTML = `<div class="helper-greeting" style="flex-direction:column;align-items:flex-start;gap:.4rem;">
+                    <strong>No results for "${q}"</strong>
+                    <span style="font-size:.82rem;color:var(--text-secondary)">Try: "deploy", "modernize", "agents", "BRD"</span>
+                    <button class="helper-back" onclick="renderHelperHome();document.getElementById('helper-input').value=''">← Show all topics</button>
+                </div>`;
+            } else {
+                body.innerHTML = `<div class="helper-chips">
+                    ${hits.map((f, i) => `<button class="helper-chip" onclick="renderHelperFaq(${HELPER_FAQ.indexOf(f)})">${f.icon} ${f.q}</button>`).join('')}
+                </div>`;
+            }
+        }
+
+        function helperInputKey(e) {
+            if (e.key === 'Enter') helperSearch(e.target.value);
+            if (e.key === 'Escape') toggleHelperWidget(e);
+        }
+        /* ────────────────────────────────────────────────────────── */
+
         function toggleExecutiveSummary(e) {
             if (e) e.preventDefault();
             const body = document.getElementById('executive-summary-body');
@@ -4224,6 +4328,80 @@
                 false
             );
         }
+    </script>
+
+    <!-- ── Copilot Helper Widget ─────────────────────────────── -->
+    <div id="helper-widget" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:.75rem;">
+
+        <!-- Slide-up panel -->
+        <div id="helper-panel" role="dialog" aria-modal="true" aria-label="Factory Helper" style="
+            width:340px;max-width:calc(100vw - 2rem);
+            background:#fff;border-radius:14px;
+            box-shadow:0 8px 40px rgba(0,0,0,.18),0 2px 8px rgba(0,120,212,.12);
+            border:1px solid rgba(0,120,212,.18);
+            overflow:hidden;opacity:0;transform:translateY(12px) scale(.97);
+            transition:opacity .22s ease,transform .22s ease;pointer-events:none;">
+
+            <!-- Panel header -->
+            <div style="background:linear-gradient(135deg,#0078d4,#005a9e);padding:.9rem 1rem;display:flex;align-items:center;gap:.6rem;">
+                <img src="assets/factory-icon.svg" width="24" height="24" alt="" style="border-radius:5px;flex-shrink:0;">
+                <span style="color:#fff;font-weight:600;font-size:.95rem;flex:1;">Factory Helper</span>
+                <button onclick="toggleHelperWidget(event)" aria-label="Close helper"
+                    style="background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+            </div>
+
+            <!-- Search bar -->
+            <div style="padding:.65rem .9rem;border-bottom:1px solid #e8e8e8;">
+                <input id="helper-input" type="text" placeholder="Search topics…" onkeydown="helperInputKey(event)"
+                    oninput="if(!this.value)renderHelperHome()"
+                    style="width:100%;border:1px solid #d2d2d2;border-radius:8px;padding:.45rem .75rem;font-size:.85rem;outline:none;font-family:inherit;color:#1b1b1b;">
+            </div>
+
+            <!-- Body (FAQ chips / answer) -->
+            <div id="helper-body" style="padding:.8rem .9rem;min-height:160px;max-height:340px;overflow-y:auto;font-size:.87rem;line-height:1.5;color:#1b1b1b;"></div>
+
+            <!-- Footer -->
+            <div style="padding:.55rem .9rem;border-top:1px solid #e8e8e8;display:flex;align-items:center;gap:.5rem;">
+                <span style="font-size:.77rem;color:#8a8a8a;flex:1;">Powered by Azure Architecture Factory</span>
+                <a href="docs/APP_MODERNIZATION_GUIDE.md" target="_blank" rel="noopener noreferrer"
+                    style="font-size:.77rem;color:#0078d4;text-decoration:none;white-space:nowrap;">📄 Docs →</a>
+            </div>
+        </div>
+
+        <!-- Floating bubble button -->
+        <button id="helper-bubble" onclick="toggleHelperWidget(event)" aria-label="Open Factory Helper" aria-expanded="false"
+            style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0078d4,#005a9e);
+            border:none;cursor:pointer;box-shadow:0 4px 18px rgba(0,120,212,.45);
+            display:flex;align-items:center;justify-content:center;transition:transform .18s,box-shadow .18s;"
+            onmouseenter="this.style.transform='scale(1.08)';this.style.boxShadow='0 6px 24px rgba(0,120,212,.55)'"
+            onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='0 4px 18px rgba(0,120,212,.45)'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </button>
+    </div>
+
+    <style>
+        #helper-panel.open { opacity:1 !important; transform:translateY(0) scale(1) !important; pointer-events:auto !important; }
+        .helper-greeting { display:flex; align-items:flex-start; gap:.6rem; margin-bottom:.75rem; color:var(--text-secondary); font-size:.87rem; }
+        .helper-chips { display:flex; flex-direction:column; gap:.42rem; }
+        .helper-chip {
+            background:#f3f8fe; border:1px solid #cde0f7; border-radius:8px;
+            padding:.45rem .7rem; font-size:.83rem; color:#0050a0; text-align:left;
+            cursor:pointer; transition:background .15s,border-color .15s; line-height:1.35;
+        }
+        .helper-chip:hover { background:#ddeeff; border-color:#0078d4; }
+        .helper-back { background:none; border:none; color:#0078d4; cursor:pointer; font-size:.82rem; padding:0 0 .5rem; display:block; }
+        .helper-faq-icon { font-size:2rem; margin-bottom:.4rem; }
+        .helper-faq-q { font-weight:600; margin-bottom:.5rem; }
+        .helper-faq-a { color:var(--text-secondary); line-height:1.55; }
+        .helper-faq-a code { background:#f0f0f0; border-radius:3px; padding:1px 5px; font-size:.82rem; }
+        .helper-faq-a strong { color:#1b1b1b; }
+    </style>
+
+    <script>
+        // Initialise helper on load
+        document.addEventListener('DOMContentLoaded', renderHelperHome);
     </script>
 </body>
 </html>
