@@ -448,6 +448,76 @@
             margin-bottom: 0.8rem;
         }
 
+        .docs-toggle-row {
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0;
+        }
+
+        .docs-toggle-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.9rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(0,120,212,0.2);
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .docs-toggle-link:hover {
+            text-decoration: none;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 4px 12px rgba(18,50,74,0.1);
+        }
+
+        .docs-toggle-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .docs-toggle-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .docs-toggle-description {
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        .docs-toggle-icon {
+            display: inline-flex;
+            align-items: center;
+            font-size: 1.1rem;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: transform 0.15s ease;
+        }
+
+        .docs-quick-links.expanded .docs-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .docs-panel-content {
+            display: none;
+            padding-top: 0.75rem;
+        }
+
+        .docs-quick-links.expanded .docs-panel-content {
+            display: block;
+        }
+
         .docs-link-list {
             display: flex;
             flex-wrap: wrap;
@@ -2108,14 +2178,24 @@
         </div>
 
         <div class="docs-csa-row">
-        <section class="docs-quick-links" aria-labelledby="docs-quick-links-title">
-            <h3 id="docs-quick-links-title">Portal Documentation</h3>
-            <p>Start here if you need setup guidance, workflow instructions, or a high-level repo overview.</p>
-            <div class="docs-link-list">
-                <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
-                <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
-                <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
-                <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
+        <section class="docs-quick-links" id="docs-quick-links" aria-labelledby="docs-quick-links-title">
+            <div class="docs-toggle-row">
+                <a href="#docs-quick-links" class="docs-toggle-link" onclick="toggleDocsPanel(event)">
+                    <span class="docs-toggle-copy">
+                        <span class="docs-toggle-title" id="docs-quick-links-title">Portal Documentation</span>
+                        <span class="docs-toggle-description">Setup guides, workflow instructions, and modernization reference.</span>
+                    </span>
+                    <span class="docs-toggle-icon" aria-hidden="true">▾</span>
+                </a>
+            </div>
+            <div class="docs-panel-content">
+                <p>Start here if you need setup guidance, workflow instructions, or a high-level repo overview.</p>
+                <div class="docs-link-list">
+                    <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
+                    <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
+                    <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
+                    <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
+                </div>
             </div>
         </section>
 
@@ -3766,6 +3846,17 @@
                 intakeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
+            return false;
+        }
+
+        function toggleDocsPanel(event, forceExpand = null) {
+            if (event) event.preventDefault();
+            const docsSection = document.getElementById('docs-quick-links');
+            if (!docsSection) return false;
+            const shouldExpand = forceExpand === null
+                ? !docsSection.classList.contains('expanded')
+                : Boolean(forceExpand);
+            docsSection.classList.toggle('expanded', shouldExpand);
             return false;
         }
 
