@@ -4388,6 +4388,7 @@
                         <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
+                        <a href="#" class="project-link" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
                     </div>
                 </div>
             `;
@@ -4726,6 +4727,11 @@
                 q: 'How do I estimate Azure OpenAI token costs?',
                 a: 'Click <strong>💰 Cost Tools</strong> on any project card, then switch to the <strong>🤖 AI Model Costs</strong> tab.<br><br>Select your model (GPT-4o, GPT-4o mini, o1, etc.), then enter:<ul style="margin:0.4rem 0 0.4rem 1.2rem;padding:0"><li><strong>Monthly API Calls</strong> — total requests your app will make</li><li><strong>Avg Input Tokens / Call</strong> — tokens sent to the model per request (prompt + context)</li><li><strong>Avg Output Tokens / Call</strong> — tokens returned per request (completion)</li></ul>The cost summary updates live. A rule of thumb: a chat message with context is 300–800 input tokens; a paragraph answer is 100–300 output tokens.<br><br>The <strong>Reference Prices</strong> table below the calculator lets you compare all models side by side — switching from GPT-4o to GPT-4o mini can cut costs by over 90%.<br><br>See the <a href="docs/AI_MODEL_COST_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/AI_MODEL_COST_GUIDE.md\',\'AI Model Cost Calculator Guide\')" style="color:#0078d4">AI Model Cost Guide →</a>',
                 icon: '🤖'
+            },
+            {
+                q: 'I\'m stuck — how do I know what to do next?',
+                a: 'Click <strong>🧭 Guide Me</strong> on any project card. This copies a prompt for the <code>factory-workflow-guide</code> agent — paste it into Copilot Chat and it will:<br><br><ol style="margin:0.4rem 0 0.4rem 1.2rem;padding:0"><li>Read your project\'s current state (manifest, logs, files on disk)</li><li>Detect any mistakes, skipped steps, or missing artifacts</li><li>Explain what went wrong and why, in plain language</li><li>Give you the exact corrective action or next step — including which agent to run</li></ol>You can also run it proactively after every phase to confirm everything looks right before moving on.<br><br>If you haven\'t started a project yet, the guide will walk you through a pre-flight checklist so you\'re set up correctly before running <code>project-orchestrator</code>.',
+                icon: '🧭'
             },
         ];
 
@@ -5410,6 +5416,24 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         async function openTraceabilityInCopilot(slug, evt) {
             const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const prompt = buildTraceabilityPrompt(slug || '');
+            await copyTextToClipboard(prompt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+        }
+
+        function buildWorkflowGuidePrompt(slug) {
+            const normalizedSlug = String(slug || 'my-project').trim();
+            return [
+                'Use factory-workflow-guide.',
+                `Project path: projects/${normalizedSlug}`,
+                'Check my current project state, identify any mistakes or missing steps, and tell me exactly what to do next.',
+            ].join('\n');
+        }
+
+        async function openWorkflowGuideInCopilot(slug, evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
+            const prompt = buildWorkflowGuidePrompt(slug || '');
             await copyTextToClipboard(prompt);
             showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;

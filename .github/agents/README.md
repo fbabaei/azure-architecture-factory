@@ -24,6 +24,13 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 ├── project-traceability-advisor  Phase 6b: requirement → code → test → infra coverage (optional)
 └── factory-handoff               Phase 7: promote project to factory portal (optional)
 
+factory-workflow-guide        ← USE ANY TIME you are stuck, unsure, or something looks wrong
+│
+├── reads  : project-manifest.json, logs/, folder structure on disk
+├── detects: missing steps, failed phases, misconfigured artifacts, wrong sequences
+├── reports: 🔴 Critical / 🟠 Warning / 🟡 Advisory findings with exact fixes
+└── outputs: clear "next step" instruction + which agent to run next
+
 factory-handoff               ← standalone bridge to Azure Architecture Factory
 │
 ├── reads  : projects/<slug>/docs/requirements.md
@@ -37,6 +44,21 @@ Each project the orchestrator creates is stored under `projects/<project-slug>/`
 ---
 
 ## Available Agents
+
+### factory-workflow-guide 🧭 Use When Stuck or Unsure
+Use this agent any time you are confused, stuck, or want to verify your project is on track.
+
+Typical uses:
+- "I just ran the orchestrator — did it work? What should I do next?"
+- "Something looks wrong with my project — what is it and how do I fix it?"
+- "I'm new to the factory — walk me through what I need before I start."
+- Check project manifest, logs, and on-disk structure for missing or failed phases.
+- Surface 🔴 Critical / 🟠 Warning / 🟡 Advisory issues with exact fix instructions.
+- Recommend the precise next agent to run, with the exact argument to pass.
+
+Can be run proactively after every phase as a health check, or reactively when something seems wrong. Available from any project card via the **🧭 Guide Me** link.
+
+---
 
 ### project-orchestrator ⭐ Recommended Entry Point
 Use this agent to drive an entire project from requirements to production in one command.
