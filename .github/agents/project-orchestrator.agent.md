@@ -1,6 +1,6 @@
 ---
 name: project-orchestrator
-description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, and optional Azure deployment. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
+description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, optional Azure deployment, and post-deployment observability, while maintaining requirement traceability across all stages. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
 agents: [project-state-manager, brd-to-architecture-diagram, azure-architecture-implementer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
