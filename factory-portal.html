@@ -3042,7 +3042,7 @@
             </div>
             <div style="border-top:1px solid var(--border,#dde4ea);padding:0.75rem 1.25rem;background:#f8fafc;display:flex;align-items:center;gap:0.75rem;flex-shrink:0;">
                 <span style="font-size:0.78rem;color:var(--text-secondary);flex:1">Get post-deployment actual cost analysis and optimization recommendations in VS Code.</span>
-                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openCostAnalyzerInCopilot()">&#9655; Analyze Costs with GitHub Copilot</button>
+                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openCostAnalyzerInCopilot(event)">&#9655; Analyze Costs with GitHub Copilot</button>
             </div>
         </div>
     </div>
@@ -3089,8 +3089,8 @@
             </div>
             <div style="border-top:1px solid var(--border,#dde4ea);padding:0.75rem 1.25rem;background:#f8fafc;display:flex;align-items:center;gap:0.75rem;flex-shrink:0;flex-wrap:wrap;">
                 <span style="font-size:0.78rem;color:var(--text-secondary);flex:1;min-width:12rem;">Let GitHub Copilot run the full deployment — then audit observability — in VS Code.</span>
-                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openDeployInCopilot()">&#9655; Deploy with GitHub Copilot</button>
-                <button class="btn-secondary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openObservabilityFromDeployModal()">&#128225; Observability</button>
+                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openDeployInCopilot(event)">&#9655; Deploy with GitHub Copilot</button>
+                <button class="btn-secondary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openObservabilityFromDeployModal(event)">&#128225; Observability</button>
             </div>
         </div>
     </div>
@@ -4046,16 +4046,17 @@
             div.className = `status-message visible ${isError ? 'error' : 'info'}`;
         }
 
-        function showNotification(message, isError = false) {
+        function showNotification(message, isError = false, evt = null) {
             let toast = document.getElementById('_portal-toast');
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = '_portal-toast';
                 toast.style.cssText = [
-                    'position:fixed', 'bottom:1.5rem', 'right:1.5rem', 'z-index:9999',
-                    'padding:0.6rem 1.1rem', 'border-radius:6px', 'font-size:0.85rem',
-                    'font-family:inherit', 'box-shadow:0 4px 12px rgba(0,0,0,0.18)',
-                    'max-width:360px', 'line-height:1.4', 'transition:opacity 0.3s',
+                    'position:fixed', 'z-index:9999',
+                    'padding:0.45rem 0.9rem', 'border-radius:6px', 'font-size:0.8rem',
+                    'font-family:inherit', 'box-shadow:0 3px 10px rgba(0,0,0,0.22)',
+                    'max-width:280px', 'line-height:1.4', 'transition:opacity 0.3s',
+                    'pointer-events:none', 'white-space:nowrap',
                 ].join(';');
                 document.body.appendChild(toast);
             }
@@ -4063,8 +4064,26 @@
             toast.style.background = isError ? '#c0392b' : '#1a5f9e';
             toast.style.color = '#fff';
             toast.style.opacity = '1';
+            // Position near the clicked element if an event was provided
+            const anchor = evt && (evt.currentTarget || evt.target);
+            if (anchor) {
+                const r = anchor.getBoundingClientRect();
+                const popW = 260;
+                let left = Math.round(r.left + r.width / 2 - popW / 2);
+                left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
+                const top = Math.round(r.top - 8); // just above the button
+                toast.style.left = left + 'px';
+                toast.style.top = (top - 36) + 'px'; // 36px above the button
+                toast.style.bottom = 'auto';
+                toast.style.right = 'auto';
+            } else {
+                toast.style.bottom = '1.5rem';
+                toast.style.right  = '1.5rem';
+                toast.style.left   = 'auto';
+                toast.style.top    = 'auto';
+            }
             clearTimeout(toast._hideTimer);
-            toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+            toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
         }
 
         function toggleIntakePanel(event, forceExpand = null) {
@@ -5188,24 +5207,24 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             ].join('\n');
         }
 
-        async function openDeployInCopilot() {
+        async function openDeployInCopilot(evt) {
             const slug   = _deployModalSlug || '';
             const rg     = (document.getElementById('deploy-resource-group')?.value  || '').trim() || `${slug}-dev-rg`;
             const region = (document.getElementById('deploy-region')?.value           || '').trim() || 'eastus';
             const env    = (document.getElementById('deploy-environment')?.value      || '').trim() || 'dev';
             const prompt = buildDeployerPrompt(slug, rg, region, env);
             await copyTextToClipboard(prompt);
-            showNotification('Deployer prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
 
-        async function openCostAnalyzerInCopilot() {
+        async function openCostAnalyzerInCopilot(evt) {
             const slug = _costModalSlug || '';
             const rg   = (document.getElementById('whatif-resource-group')?.value || '').trim() || `${slug}-dev-rg`;
             const prompt = buildCostAnalyzerPrompt(slug, rg);
             await copyTextToClipboard(prompt);
-            showNotification('Cost analyzer prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
@@ -5220,22 +5239,21 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             ].join('\n');
         }
 
-        async function openObservabilityFromDeployModal() {
+        async function openObservabilityFromDeployModal(evt) {
             const slug = _deployModalSlug || '';
             const rg   = (document.getElementById('deploy-resource-group')?.value || '').trim() || `${slug}-dev-rg`;
             const prompt = buildObservabilityPrompt(slug);
-            // Override the RG with the actual value from the deploy modal
             const fullPrompt = prompt.replace(/Resource group: .+/, `Resource group: ${rg}`);
             await copyTextToClipboard(fullPrompt);
-            showNotification('Observability prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(fullPrompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
 
-        async function openObservabilityInCopilot(slug) {
+        async function openObservabilityInCopilot(slug, evt) {
             const prompt = buildObservabilityPrompt(slug || '');
             await copyTextToClipboard(prompt);
-            showNotification('Observability prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
