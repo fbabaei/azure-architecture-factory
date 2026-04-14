@@ -3040,6 +3040,10 @@
                 <div id="whatif-commands-block"></div>
                 <a id="whatif-portal-link" href="https://portal.azure.com/#create/Microsoft.Template" target="_blank" rel="noopener noreferrer" class="btn-primary" style="align-self:flex-start;text-decoration:none;font-size:0.82rem">Open in Azure Portal Deploy ↗</a>
             </div>
+            <div style="border-top:1px solid var(--border,#dde4ea);padding:0.75rem 1.25rem;background:#f8fafc;display:flex;align-items:center;gap:0.75rem;flex-shrink:0;">
+                <span style="font-size:0.78rem;color:var(--text-secondary);flex:1">Get post-deployment actual cost analysis and optimization recommendations in VS Code.</span>
+                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openCostAnalyzerInCopilot()">&#9655; Analyze Costs with GitHub Copilot</button>
+            </div>
         </div>
     </div>
 
@@ -3082,6 +3086,10 @@
             <div id="deploy-tab-teardown" class="cost-tab-panel">
                 <p style="font-size:0.83rem;color:var(--text-secondary);margin:0"><strong style="color:#c0392b">⚠️ Destructive:</strong> Deletes the resource group and ALL resources within it. This cannot be undone.</p>
                 <div id="teardown-commands-block" style="margin-top:0.75rem"></div>
+            </div>
+            <div style="border-top:1px solid var(--border,#dde4ea);padding:0.75rem 1.25rem;background:#f8fafc;display:flex;align-items:center;gap:0.75rem;flex-shrink:0;">
+                <span style="font-size:0.78rem;color:var(--text-secondary);flex:1">Let GitHub Copilot run the full deployment for you in VS Code.</span>
+                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openDeployInCopilot()">&#9655; Deploy with GitHub Copilot</button>
             </div>
         </div>
     </div>
@@ -5131,6 +5139,53 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."\`;
             });
         }
         // ── End Deploy Modal ─────────────────────────────────────────────────────
+
+        function buildDeployerPrompt(slug, rg, region, env) {
+            const normalizedSlug = String(slug || 'my-project').trim();
+            const normalizedRg   = String(rg     || `${normalizedSlug}-${env || 'dev'}-rg`).trim();
+            const normalizedReg  = String(region || 'eastus').trim();
+            const normalizedEnv  = String(env    || 'dev').trim();
+            return [
+                'Use azure-project-deployer.',
+                `Project path: projects/${normalizedSlug}`,
+                `Environment: ${normalizedEnv}`,
+                `Azure region: ${normalizedReg}`,
+                `Resource group: ${normalizedRg}`,
+            ].join('\n');
+        }
+
+        function buildCostAnalyzerPrompt(slug, rg) {
+            const normalizedSlug = String(slug || 'my-project').trim();
+            const normalizedRg   = String(rg   || `${normalizedSlug}-dev-rg`).trim();
+            return [
+                'Use project-cost-analyzer.',
+                `Project path: projects/${normalizedSlug}`,
+                `Resource group: ${normalizedRg}`,
+                'Date range: last-30-days',
+            ].join('\n');
+        }
+
+        async function openDeployInCopilot() {
+            const slug   = _deployModalSlug || '';
+            const rg     = (document.getElementById('deploy-resource-group')?.value  || '').trim() || `${slug}-dev-rg`;
+            const region = (document.getElementById('deploy-region')?.value           || '').trim() || 'eastus';
+            const env    = (document.getElementById('deploy-environment')?.value      || '').trim() || 'dev';
+            const prompt = buildDeployerPrompt(slug, rg, region, env);
+            await copyTextToClipboard(prompt);
+            showNotification('Deployer prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+        }
+
+        async function openCostAnalyzerInCopilot() {
+            const slug = _costModalSlug || '';
+            const rg   = (document.getElementById('whatif-resource-group')?.value || '').trim() || `${slug}-dev-rg`;
+            const prompt = buildCostAnalyzerPrompt(slug, rg);
+            await copyTextToClipboard(prompt);
+            showNotification('Cost analyzer prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+        }
 
         async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
             const prompt = buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath);

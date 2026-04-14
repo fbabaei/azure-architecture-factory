@@ -59,6 +59,17 @@ Typical uses:
 
 Available standalone for re-deployments or environment promotions.
 
+### project-cost-analyzer
+Use this agent to analyze actual and projected Azure costs for a generated project.
+
+Typical uses:
+- Query Azure Cost Management for actual post-deployment spend by service and resource.
+- Scan Bicep files to build a pre-deployment estimate for comparison.
+- Identify top cost drivers and optimization opportunities (scale-to-zero, SKU right-sizing, tier changes).
+- Save a dated cost report to `projects/<name>/docs/cost-report-<date>.md`.
+
+Can be launched directly from the portal's Cost Tools modal via the **▷ Analyze Costs with GitHub Copilot** button.
+
 ### project-state-manager
 This is a helper subagent used by the orchestrator. It manages per-project folder structure, logs, and `project-manifest.json` state.
 
