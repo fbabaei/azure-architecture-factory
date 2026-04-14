@@ -25,10 +25,23 @@ Before running any factory agent for the first time, confirm all five items belo
 | 1 | **Requirements written down** | You have a BRD, PRD, or at least a paragraph describing what the system should do |
 | 2 | **Target Azure region chosen** | Default is `eastus`. Others: `westeurope`, `australiaeast` |
 | 3 | **Know if you want to deploy** | "Just generate artifacts" needs nothing. "Deploy to Azure" needs Azure CLI + subscription |
-| 4 | **Azure CLI installed** (only for deploy) | Run `az --version` in a terminal |
-| 5 | **Copilot agent mode active** | Open Copilot Chat → click the model picker → select **Agent** |
+| 4 | **Network isolation selected** | Choose `public`, `vnet-integrated`, or `private` in BRD intake |
+| 5 | **Azure CLI installed** (only for deploy) | Run `az --version` in a terminal |
+| 6 | **Copilot agent mode active** | Open Copilot Chat → click the model picker → select **Agent** |
 
-Once all five are confirmed, you're ready to run `project-orchestrator`.
+Once all six are confirmed, you're ready to run `project-orchestrator`.
+
+### Network Isolation Option (New)
+
+When submitting a BRD through the portal, set **Network Isolation** to one of:
+
+| Option | What gets generated |
+|---|---|
+| `public` | Internet-facing baseline (no VNet resources in starter Bicep) |
+| `vnet-integrated` | VNet + delegated app subnet + NSG starter resources |
+| `private` | VNet + app subnet + private endpoint subnet + NSG starter resources |
+
+The selected value is carried into generated project metadata and starter infrastructure.
 
 ---
 
@@ -143,6 +156,7 @@ After that:
 | Missing `.drawio` file after Phase 1 | Phase 1 failed silently — re-run `brd-to-architecture-diagram` |
 | Empty `infra/` folder | Phase 2 stopped before generating Bicep — re-run `azure-architecture-implementer` |
 | Bicep validation log has errors | Phase 3 found failures — re-run `bicep-infrastructure-validator` to auto-fix |
+| BRD selected `vnet-integrated` or `private` but `infra/main.bicep` has no VNet/NSG resources | Intake option and generated infrastructure are out of sync — re-run BRD intake or regenerate implementation assets |
 | Phase 5 complete but no `docs/production-checklist.md` | Phase 4 was skipped — run `production-environment-advisor` now |
 | Services have no `requirements.txt` | Dependencies not declared — deployment will fail without them |
 | Architecture diagram lists a service not in `src/` | A designed service was not scaffolded — re-run the implementer |

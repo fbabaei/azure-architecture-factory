@@ -77,6 +77,12 @@ Portal endpoints:
 - `http://localhost:5000/order-monitoring-dashboard` order-management monitoring view
 - `http://localhost:5000/presentation` leadership brief
 
+When submitting a BRD from the portal intake form, set **Network Isolation**:
+
+- `Public` for internet-facing baseline generation
+- `VNet-integrated` to include starter VNet + NSG + delegated app subnet resources
+- `Private` to include starter VNet + NSG + private endpoint subnet resources
+
 ## 5. Use The Sample Portfolio
 
 Current sample outputs under `projects/` are intentionally mixed:

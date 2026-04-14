@@ -89,6 +89,14 @@ Use the form to paste or upload requirements. The portal:
 - Runs the pipeline in the background
 - Shows status: `queued → running → completed`
 
+Set **Network Isolation** before submitting:
+
+| Option | Starter infrastructure behavior |
+|---|---|
+| `Public` | No VNet resources generated |
+| `VNet-integrated` | Generates VNet, delegated app subnet, and NSG |
+| `Private` | Generates VNet, app subnet, private-endpoint subnet, and NSG |
+
 #### Step 4: View Generated Projects
 
 Once `completed`, the portal displays the project result. It also appears in the `projects/` folder and the `factory-projects.generated.json` feed.

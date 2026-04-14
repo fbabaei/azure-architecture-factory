@@ -36,7 +36,7 @@ Phase 0 — Requirements intake
   Input : BRD.md, PRD.md, or inline text describing the system
   Output: A clear written requirements document
   Agent : (inline, no sub-agent) — write or paste requirements before calling project-orchestrator
-  Gate  : Requirements must describe at least one named service or component
+  Gate  : Requirements must describe at least one named service or component, and a network isolation choice (`public`, `vnet-integrated`, or `private`) should be defined before deployment planning
 
 Phase 1 — Architecture diagram
   Input : Requirements document
@@ -141,6 +141,8 @@ Check for these common problems:
 |---|---|---|
 | `src/` services have no `requirements.txt` | Dependencies not declared — will fail at deploy | Add `requirements.txt` to each service with at least `fastapi` and `uvicorn` |
 | `infra/` has `main.bicep` but no `params/` folder | Missing environment parameter files | Run `azure-architecture-implementer` again or create `params/dev.bicepparam` manually |
+| `project-manifest.json` or project options indicate `networkTier: vnet-integrated` but `infra/main.bicep` has no `Microsoft.Network/virtualNetworks` | Network tier selection and generated infra are out of sync | Re-run BRD intake with the intended tier, then regenerate implementation artifacts |
+| `project-manifest.json` or project options indicate `networkTier: private` but `infra/main.bicep` has no private-endpoint subnet configuration | Private isolation intent is missing from starter infra | Re-run generation with `networkTier: private` and re-validate Bicep |
 | `docs/production-checklist.md` does not exist but Phase 5 is complete | Phase 4 was skipped, production risks unknown | Run `production-environment-advisor` now |
 | `project-manifest.json` is missing `resourceGroup` but deployment was attempted | Deployment was not tracked — DEPLOY.md may be out of date | Confirm resources in Azure portal and update DEPLOY.md manually |
 | Architecture `.md` companion notes list a service not in `src/` | An architect-designed service was not scaffolded | Re-run `azure-architecture-implementer` — it uses the diagram notes to decide what to scaffold |
@@ -220,18 +222,21 @@ Ask the user to confirm (or help them gather):
 2. **Do you know your target Azure region?**
    - Default: `eastus`. Others: `westeurope`, `australiaeast`, etc.
 
-3. **Do you want to deploy to Azure, or just generate the artifacts?**
+3. **Have you chosen a network isolation tier for generated infrastructure?**
+  - `public` (internet-facing), `vnet-integrated` (private networking baseline), or `private` (internal-only baseline).
+
+4. **Do you want to deploy to Azure, or just generate the artifacts?**
    - Deploy: will need Azure CLI login + subscription ID. Just generate: no Azure access needed.
 
-4. **Do you have the Azure CLI installed?** (needed for any deploy or What-If steps)
+5. **Do you have the Azure CLI installed?** (needed for any deploy or What-If steps)
    ```powershell
    az --version
    ```
 
-5. **Is your VS Code GitHub Copilot agent mode active?** (needed to run agents)
+6. **Is your VS Code GitHub Copilot agent mode active?** (needed to run agents)
    - If not: open Copilot Chat → click the model picker → select **Agent** mode.
 
-Once all 5 are confirmed:
+Once all 6 are confirmed:
 ```
 ✅ You're ready to start!
 
