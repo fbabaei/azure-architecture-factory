@@ -2067,24 +2067,42 @@
             justify-content: space-between;
             gap: 0.9rem;
             width: 100%;
-            padding: 0.45rem 1rem;
+            padding: 0.6rem 1rem;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.72);
-            border: 1px solid rgba(0, 120, 212, 0.2);
-            color: var(--primary);
+            background: linear-gradient(140deg, #fff8ef 0%, #fff1de 100%);
+            border: 2px solid #ff8c00;
+            color: #7a3e00;
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
             margin-bottom: 0.75rem;
             text-align: left;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            box-shadow: 0 8px 20px rgba(255, 140, 0, 0.22);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
 
         .intake-toggle-link:hover {
             text-decoration: none;
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(18, 50, 74, 0.12);
-            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 10px 24px rgba(255, 140, 0, 0.3);
+            background: linear-gradient(140deg, #fff5e8 0%, #ffe8c7 100%);
+            border-color: #d96f00;
+        }
+
+        .intake-start-badge {
+            display: inline-flex;
+            align-items: center;
+            align-self: flex-start;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            margin-bottom: 0.1rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #fff;
+            background: #ff8c00;
+            box-shadow: 0 2px 8px rgba(255, 140, 0, 0.32);
         }
 
         .intake-toggle-copy {
@@ -2094,14 +2112,14 @@
         }
 
         .intake-toggle-title {
-            font-size: 1rem;
+            font-size: 1.06rem;
             line-height: 1.2;
         }
 
         .intake-toggle-description {
             font-size: 0.8rem;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: #7a4f20;
             line-height: 1.35;
         }
 
@@ -2113,7 +2131,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            background: var(--primary);
+            background: #ff8c00;
             color: #fff;
             font-size: 1rem;
             line-height: 1;
@@ -2421,6 +2439,7 @@
                         <div class="intake-toggle-row">
                             <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
                                 <span class="intake-toggle-copy">
+                                    <span class="intake-start-badge">Start Here</span>
                                     <span class="intake-toggle-title">Submit Business Requirements</span>
                                     <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project.</span>
                                 </span>
