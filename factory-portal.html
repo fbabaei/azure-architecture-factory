@@ -2335,6 +2335,7 @@
                     <a href="docs/COST_ESTIMATION_GUIDE.md" class="doc-preview-link" data-doc-title="Cost Estimation Guide" rel="noopener noreferrer">💰 Cost Estimation</a>
                     <a href="docs/OBSERVABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Observability Guide" rel="noopener noreferrer">📡 Observability</a>
                     <a href="docs/TRACEABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Traceability Guide" rel="noopener noreferrer">🔗 Traceability</a>
+                    <a href="docs/AI_MODEL_COST_GUIDE.md" class="doc-preview-link" data-doc-title="AI Model Cost Calculator Guide" rel="noopener noreferrer">🤖 AI Model Costs</a>
                 </div>
             </div>
         </section>
@@ -4720,6 +4721,11 @@
                 q: 'How do I check which requirements are implemented?',
                 a: 'Click <strong>🔗 Traceability</strong> on any project card to copy a prompt for the <code>project-traceability-advisor</code> agent, then paste it into Copilot Chat.<br><br>Every project auto-generates a <code>docs/traceability-matrix.md</code> with REQ-NNN IDs and requirement → artifact mappings. The full advisor scans source files, tests, and Bicep to map each requirement to the exact code that implements it, flags gaps, and saves a dated coverage report to <code>projects/&lt;name&gt;/docs/traceability-report-&lt;date&gt;.md</code>.<br><br>See the <a href="docs/TRACEABILITY_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/TRACEABILITY_GUIDE.md\',\'Traceability Guide\')" style="color:#0078d4">Traceability Guide →</a>',
                 icon: '🔗'
+            },
+            {
+                q: 'How do I estimate Azure OpenAI token costs?',
+                a: 'Click <strong>💰 Cost Tools</strong> on any project card, then switch to the <strong>🤖 AI Model Costs</strong> tab.<br><br>Select your model (GPT-4o, GPT-4o mini, o1, etc.), then enter:<ul style="margin:0.4rem 0 0.4rem 1.2rem;padding:0"><li><strong>Monthly API Calls</strong> — total requests your app will make</li><li><strong>Avg Input Tokens / Call</strong> — tokens sent to the model per request (prompt + context)</li><li><strong>Avg Output Tokens / Call</strong> — tokens returned per request (completion)</li></ul>The cost summary updates live. A rule of thumb: a chat message with context is 300–800 input tokens; a paragraph answer is 100–300 output tokens.<br><br>The <strong>Reference Prices</strong> table below the calculator lets you compare all models side by side — switching from GPT-4o to GPT-4o mini can cut costs by over 90%.<br><br>See the <a href="docs/AI_MODEL_COST_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/AI_MODEL_COST_GUIDE.md\',\'AI Model Cost Calculator Guide\')" style="color:#0078d4">AI Model Cost Guide →</a>',
+                icon: '🤖'
             },
         ];
 

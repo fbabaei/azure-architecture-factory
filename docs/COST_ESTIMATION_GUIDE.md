@@ -11,6 +11,7 @@ The Azure Architecture Factory includes built-in cost estimation tools available
 | **Azure Retail Prices API** | 📊 Retail Pricing | None (public) | Quick per-unit pricing at the start of a project |
 | **Azure Pricing Calculator** | 🧮 Pricing Calculator | None (public) | Interactive estimate with volume, tier, and region assumptions |
 | **ARM What-If CLI** | 🔍 What-If CLI | Azure CLI login | Pre-deploy validation of resource changes on a real subscription |
+| **AI Model Cost Calculator** | 🤖 AI Model Costs | None (browser) | Estimate monthly Azure OpenAI token consumption costs |
 
 ---
 
