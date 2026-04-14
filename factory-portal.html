@@ -2512,8 +2512,8 @@
             </div>
 
             <div class="philosophy-intake-row">
-                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px;">
-                    <h3 style="color: var(--primary); margin-top: 0;">Factory Design Philosophy</h3>
+                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
                     <p>
                         The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity. 
                         Each project uses cloud-native patterns that align with real enterprise workloads, including 
@@ -4282,6 +4282,7 @@
                            🧠 View Analysis</a>
                         <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
                         <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
+                        <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}'); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
                 </div>
@@ -5183,6 +5184,24 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             const prompt = buildCostAnalyzerPrompt(slug, rg);
             await copyTextToClipboard(prompt);
             showNotification('Cost analyzer prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+        }
+
+        function buildObservabilityPrompt(slug) {
+            const normalizedSlug = String(slug || 'my-project').trim();
+            const rg = `${normalizedSlug}-dev-rg`;
+            return [
+                'Use project-observability-advisor.',
+                `Project path: projects/${normalizedSlug}`,
+                `Resource group: ${rg}`,
+            ].join('\n');
+        }
+
+        async function openObservabilityInCopilot(slug) {
+            const prompt = buildObservabilityPrompt(slug || '');
+            await copyTextToClipboard(prompt);
+            showNotification('Observability prompt copied \u2014 paste into GitHub Copilot Chat in VS Code', false);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
