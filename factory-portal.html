@@ -2356,7 +2356,7 @@
                     <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
                     <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
                     <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
-                    <a href="docs/WORKFLOW_GUIDE.md" class="doc-preview-link" data-doc-title="Network Isolation Guide (Public vs VNet-integrated vs Private)" rel="noopener noreferrer">🔐 Network Isolation</a>
+                    <a href="docs/WORKFLOW_GUIDE.md#network-isolation-option-new" class="doc-preview-link" data-doc-title="Network Isolation Guide (Public vs VNet-integrated vs Private)" rel="noopener noreferrer">🔐 Network Isolation</a>
                     <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
                     <a href="docs/COST_ESTIMATION_GUIDE.md" class="doc-preview-link" data-doc-title="Cost Estimation Guide" rel="noopener noreferrer">💰 Cost Estimation</a>
                     <a href="docs/OBSERVABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Observability Guide" rel="noopener noreferrer">📡 Observability</a>
@@ -3634,8 +3634,26 @@
             }
         }
 
+        function splitDocPath(docPath) {
+            const raw = String(docPath || '').trim();
+            const hashIndex = raw.indexOf('#');
+            const pathPart = hashIndex >= 0 ? raw.slice(0, hashIndex) : raw;
+            const hashPart = hashIndex >= 0 ? raw.slice(hashIndex + 1) : '';
+            let decodedHash = '';
+            try {
+                decodedHash = decodeURIComponent(hashPart || '').trim();
+            } catch (_) {
+                decodedHash = (hashPart || '').trim();
+            }
+            return {
+                requestPath: pathPart || raw,
+                anchorId: decodedHash,
+            };
+        }
+
         function renderMarkdownPreview(docPath, content) {
-            const isMarkdown = /\.md$/i.test(docPath || '');
+            const { requestPath } = splitDocPath(docPath);
+            const isMarkdown = /\.md$/i.test(requestPath || '');
             if (isMarkdown && window.marked && typeof window.marked.parse === 'function') {
                 return window.marked.parse(content);
             }
@@ -3718,7 +3736,10 @@
         async function openDocumentationPreview(docPath, docTitle) {
             if (!docModal || !docContent || !docModalTitle || !docPath) return;
 
-            activeDocPath = docPath;
+            const { requestPath, anchorId } = splitDocPath(docPath);
+            const docPathWithAnchor = anchorId ? `${requestPath}#${anchorId}` : requestPath;
+
+            activeDocPath = docPathWithAnchor;
             docModalTitle.textContent = docTitle || 'Documentation';
             docContent.innerHTML = '<div class="doc-status">Loading documentation...</div>';
             if (docBrowser) {
@@ -3728,22 +3749,31 @@
                 docTocLinks.innerHTML = '';
             }
             if (docOpenTab) {
-                docOpenTab.href = toAbsolutePath(docPath);
+                docOpenTab.href = toAbsolutePath(docPathWithAnchor);
             }
             docModal.classList.add('open');
             docModal.setAttribute('aria-hidden', 'false');
             docContent.scrollTop = 0;
 
             try {
-                const response = await fetch(docPath, { cache: 'no-store' });
+                const response = await fetch(requestPath, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 const content = await response.text();
-                docContent.innerHTML = renderMarkdownPreview(docPath, content);
+                docContent.innerHTML = renderMarkdownPreview(requestPath, content);
                 buildDocToc();
                 highlightDocCodeBlocks();
-                docContent.scrollTop = 0;
+                if (anchorId) {
+                    const targetHeading = docContent.querySelector(`#${CSS.escape(anchorId)}`);
+                    if (targetHeading) {
+                        targetHeading.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    } else {
+                        docContent.scrollTop = 0;
+                    }
+                } else {
+                    docContent.scrollTop = 0;
+                }
                 updateActiveDocTocLink();
             } catch (error) {
                 docContent.innerHTML = `
