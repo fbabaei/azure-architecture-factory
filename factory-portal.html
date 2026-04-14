@@ -5124,7 +5124,7 @@ az deployment group show \\
 az group delete --name ${rg} --yes
 
 <span class="cmd-comment"># Verify deletion</span>
-az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."\`;
+az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             block.innerHTML = `<div class="whatif-cmd-block">${cmds}</div>
                 <button class="whatif-cmd-copy" onclick="copyTeardownCommands(this)">📋 Copy commands</button>`;
         }
