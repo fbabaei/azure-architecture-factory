@@ -20,7 +20,8 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 ├── bicep-infrastructure-validator Phase 3: validate & self-heal Bicep files
 ├── production-environment-advisor Phase 4: production readiness checklist
 ├── azure-project-deployer        Phase 5: deploy to Azure (optional)
-└── factory-handoff               Phase 6: promote project to factory portal (optional)
+├── project-observability-advisor Phase 6: audit and report on observability (optional)
+└── factory-handoff               Phase 7: promote project to factory portal (optional)
 
 factory-handoff               ← standalone bridge to Azure Architecture Factory
 │
@@ -58,6 +59,18 @@ Typical uses:
 - Called automatically by `project-orchestrator` at Phase 5.
 
 Available standalone for re-deployments or environment promotions.
+
+### project-observability-advisor
+Use this agent to audit, configure, and report on observability and monitoring for a deployed project.
+
+Typical uses:
+- Audit the four observability pillars (Metrics, Logs, Traces, Alerts) for a deployed Azure project.
+- Identify gaps: missing Application Insights wiring, absent alert rules, orphaned Log Analytics workspaces.
+- Generate ready-to-run KQL queries for exceptions, 5xx spikes, slow dependencies, and container restarts.
+- Optionally produce Bicep modules to provision missing alert rules, action groups, and App Insights components.
+- Save a dated observability report to `projects/<name>/docs/observability-report-<date>.md`.
+
+Can be invoked before deployment (static Bicep audit) or after (live Azure query + gap assessment).
 
 ### project-cost-analyzer
 Use this agent to analyze actual and projected Azure costs for a generated project.
