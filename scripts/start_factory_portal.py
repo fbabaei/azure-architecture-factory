@@ -82,6 +82,7 @@ PORTAL_PATH_ALIASES = {"/portal", "/p"}
 CSA_COPILOT_API_BASE = os.environ.get("CSA_COPILOT_API_BASE", "").strip().rstrip("/")
 CSA_COPILOT_API_KEY = os.environ.get("CSA_COPILOT_API_KEY", "").strip()
 CSA_COPILOT_TIMEOUT_SECONDS = int(os.environ.get("CSA_COPILOT_TIMEOUT_SECONDS", "20"))
+SERVICE_START_EPOCH = time.time()
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
@@ -464,6 +465,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self.send_header("Location", "/factory-portal.html")
             self.end_headers()
             return
+
+        if request_path == "/health":
+            return self._handle_health()
+
+        if request_path == "/ready":
+            return self._handle_ready()
 
         if request_path == "/api/brd-runs":
             return self._handle_runs_list()
@@ -1255,6 +1262,41 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(response)))
         self.end_headers()
         self.wfile.write(response)
+
+    def _handle_health(self):
+        """Lightweight liveness probe with no external dependency checks."""
+        uptime_seconds = int(max(0, time.time() - SERVICE_START_EPOCH))
+        return self._send_json(
+            {
+                "status": "ok",
+                "service": "azure-architecture-factory-portal",
+                "probe": "liveness",
+                "timeUtc": datetime.utcnow().isoformat() + "Z",
+                "uptimeSeconds": uptime_seconds,
+            },
+            200,
+        )
+
+    def _handle_ready(self):
+        """Readiness probe that verifies local portal assets are available."""
+        portal_file = FACTORY_REPO_ROOT / "factory-portal.html"
+        projects_dir = FACTORY_REPO_ROOT / "projects"
+        checks = {
+            "portalHtml": portal_file.is_file(),
+            "projectsDir": projects_dir.is_dir(),
+        }
+        ready = all(checks.values())
+        status = 200 if ready else 503
+        return self._send_json(
+            {
+                "status": "ready" if ready else "not_ready",
+                "service": "azure-architecture-factory-portal",
+                "probe": "readiness",
+                "timeUtc": datetime.utcnow().isoformat() + "Z",
+                "checks": checks,
+            },
+            status,
+        )
 
     def end_headers(self):
         """Add CORS headers to all responses"""
