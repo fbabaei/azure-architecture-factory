@@ -4046,7 +4046,7 @@
             div.className = `status-message visible ${isError ? 'error' : 'info'}`;
         }
 
-        function showNotification(message, isError = false, evt = null) {
+        function showNotification(message, isError = false, anchorRect = null) {
             let toast = document.getElementById('_portal-toast');
             if (!toast) {
                 toast = document.createElement('div');
@@ -4064,18 +4064,15 @@
             toast.style.background = isError ? '#c0392b' : '#1a5f9e';
             toast.style.color = '#fff';
             toast.style.opacity = '1';
-            // Position near the clicked element if an event was provided
-            const anchor = evt && (evt.currentTarget || evt.target);
-            if (anchor) {
-                const r = anchor.getBoundingClientRect();
+            if (anchorRect) {
                 const popW = 260;
-                let left = Math.round(r.left + r.width / 2 - popW / 2);
+                let left = Math.round(anchorRect.left + anchorRect.width / 2 - popW / 2);
                 left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
-                const top = Math.round(r.top - 8); // just above the button
-                toast.style.left = left + 'px';
-                toast.style.top = (top - 36) + 'px'; // 36px above the button
+                const top = Math.round(anchorRect.top - 40);
+                toast.style.left   = left + 'px';
+                toast.style.top    = top + 'px';
                 toast.style.bottom = 'auto';
-                toast.style.right = 'auto';
+                toast.style.right  = 'auto';
             } else {
                 toast.style.bottom = '1.5rem';
                 toast.style.right  = '1.5rem';
@@ -4083,7 +4080,7 @@
                 toast.style.top    = 'auto';
             }
             clearTimeout(toast._hideTimer);
-            toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+            toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 5000);
         }
 
         function toggleIntakePanel(event, forceExpand = null) {
@@ -5208,23 +5205,25 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         }
 
         async function openDeployInCopilot(evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const slug   = _deployModalSlug || '';
             const rg     = (document.getElementById('deploy-resource-group')?.value  || '').trim() || `${slug}-dev-rg`;
             const region = (document.getElementById('deploy-region')?.value           || '').trim() || 'eastus';
             const env    = (document.getElementById('deploy-environment')?.value      || '').trim() || 'dev';
             const prompt = buildDeployerPrompt(slug, rg, region, env);
             await copyTextToClipboard(prompt);
-            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
 
         async function openCostAnalyzerInCopilot(evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const slug = _costModalSlug || '';
             const rg   = (document.getElementById('whatif-resource-group')?.value || '').trim() || `${slug}-dev-rg`;
             const prompt = buildCostAnalyzerPrompt(slug, rg);
             await copyTextToClipboard(prompt);
-            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
@@ -5240,20 +5239,22 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         }
 
         async function openObservabilityFromDeployModal(evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const slug = _deployModalSlug || '';
             const rg   = (document.getElementById('deploy-resource-group')?.value || '').trim() || `${slug}-dev-rg`;
             const prompt = buildObservabilityPrompt(slug);
             const fullPrompt = prompt.replace(/Resource group: .+/, `Resource group: ${rg}`);
             await copyTextToClipboard(fullPrompt);
-            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(fullPrompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
 
         async function openObservabilityInCopilot(slug, evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const prompt = buildObservabilityPrompt(slug || '');
             await copyTextToClipboard(prompt);
-            showNotification('Prompt copied \u2014 paste into Copilot Chat', false, evt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
             try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
         }
