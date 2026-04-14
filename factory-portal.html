@@ -326,9 +326,8 @@
             border-left: 4px solid #7fba00;
             border-radius: 6px;
             background: #f7fbf0;
-            margin: 1rem 0;
+            margin: 0;
             overflow: hidden;
-            max-width: 50%;
         }
         .modernization-toggle-row {
             display: flex;
@@ -1984,6 +1983,11 @@
             min-width: 0;
         }
 
+        .modernize-col {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
         @media (max-width: 900px) {
             .intake-analysis-row {
                 flex-direction: column;
@@ -1991,6 +1995,9 @@
             .intake-col {
                 width: 100%;
                 flex: none;
+            }
+            .modernize-col {
+                width: 100%;
             }
         }
 
@@ -2391,6 +2398,22 @@
 
         <!-- Design Analysis -->
         <section id="design-analysis">
+            <div class="design-analysis-header-row">
+                <div class="design-analysis-heading">
+                    <h2>Design Analysis &amp; Rationale</h2>
+                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
+                </div>
+            </div>
+            <div class="philosophy-intake-row">
+                <div class="factory-philosophy-panel" style="margin-bottom: 1.5rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
+                    <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
+                    <p>
+                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
+                        Each project uses cloud-native patterns that align with real enterprise workloads, including
+                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                    </p>
+                </div>
+            </div>
             <div class="intake-analysis-row">
                 <div class="intake-col">
                     <section id="intake" class="intake-section">
@@ -2536,31 +2559,8 @@
                         </div>
                     </section>
                 </div><!-- /intake-col -->
-                <div class="analysis-col">
-
-            <div class="design-analysis-header-row">
-                <div class="design-analysis-heading">
-                    <h2>Design Analysis & Rationale</h2>
-                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
-                </div>
-            </div>
-
-            <div class="philosophy-intake-row">
-                <div class="factory-philosophy-panel" style="margin-bottom: 2rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
-                    <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
-                    <p>
-                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity. 
-                        Each project uses cloud-native patterns that align with real enterprise workloads, including 
-                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
-                    </p>
-                </div>
-
-            </div>
-                </div><!-- /analysis-col -->
-            </div><!-- /intake-analysis-row -->
-
-            <!-- Modernize Legacy App entry point -->
-            <section id="modernization" class="modernization-section" aria-labelledby="modernization-title">
+                <div class="modernize-col">
+                    <section id="modernization" class="modernization-section" aria-labelledby="modernization-title">
                 <div class="modernization-toggle-row">
                     <a href="#modernization" class="modernization-toggle-link" onclick="toggleModernizationPanel(event)" aria-expanded="false" aria-controls="modernization-panel-content">
                         <span class="modernization-toggle-icon" aria-hidden="true">▸</span>
@@ -2621,7 +2621,9 @@
                         This copies a ready-to-paste <code>@modernization-to-factory</code> prompt to your clipboard and opens VS Code. Paste it into GitHub Copilot Chat to start the agent.
                     </p>
                 </div>
-            </section>
+                    </section>
+                </div><!-- /modernize-col -->
+            </div><!-- /intake-analysis-row -->
 
             <div class="projects-intake-wrapper">
                 <section id="projects">
