@@ -1888,6 +1888,18 @@
         .cost-table td { padding: 0.35rem 0.65rem; border-bottom: 1px solid #e8ecf0; }
         .cost-table tr:hover td { background: #f8fafc; }
         .cost-note { font-size: 0.75rem; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+        /* AI Model Cost Calculator */
+        .ai-cost-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; }
+        .ai-cost-form label { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.2rem; }
+        .ai-cost-form select, .ai-cost-form input[type=number] { width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--border, #dde4ea); border-radius: 4px; font-size: 0.82rem; background: #fff; }
+        .ai-cost-form select:focus, .ai-cost-form input[type=number]:focus { outline: 2px solid var(--primary, #0078d4); border-color: var(--primary, #0078d4); }
+        .ai-cost-result { background: #eef4fb; border: 1px solid #c2d9f0; border-radius: 6px; padding: 0.75rem 1rem; margin-top: 0.5rem; }
+        .ai-cost-result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.6rem; }
+        .ai-cost-result-item { text-align: center; }
+        .ai-cost-result-item .label { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.1rem; }
+        .ai-cost-result-item .value { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark, #003f7a); }
+        .ai-model-price-table { margin-top: 0.75rem; }
+        .ai-cost-section-title { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin: 0.75rem 0 0.3rem; }
         .cost-calc-services { display: flex; flex-wrap: wrap; gap: 0.4rem; }
         .cost-service-tag {
             background: #eef4fb;
@@ -3016,6 +3028,7 @@
                 <button class="cost-tab active" id="cost-tab-btn-estimate" onclick="switchCostTab('estimate',this)">📊 Retail Pricing</button>
                 <button class="cost-tab" id="cost-tab-btn-calculator" onclick="switchCostTab('calculator',this)">🧮 Pricing Calculator</button>
                 <button class="cost-tab" id="cost-tab-btn-whatif" onclick="switchCostTab('whatif',this)">🔍 What-If CLI</button>
+                <button class="cost-tab" id="cost-tab-btn-aimodel" onclick="switchCostTab('aimodel',this)">🤖 AI Model Costs</button>
             </div>
             <div id="cost-tab-estimate" class="cost-tab-panel active">
                 <div id="cost-estimate-body"><p style="color:var(--text-secondary)">Loading&hellip;</p></div>
@@ -3041,6 +3054,55 @@
                 </div>
                 <div id="whatif-commands-block"></div>
                 <a id="whatif-portal-link" href="https://portal.azure.com/#create/Microsoft.Template" target="_blank" rel="noopener noreferrer" class="btn-primary" style="align-self:flex-start;text-decoration:none;font-size:0.82rem">Open in Azure Portal Deploy ↗</a>
+            </div>
+            <div id="cost-tab-aimodel" class="cost-tab-panel">
+                <p class="cost-note" style="margin-bottom:0.6rem">Estimate monthly Azure OpenAI token consumption costs. Prices are approximate — see the <a href="https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">official Azure OpenAI pricing page</a> for current rates.</p>
+                <div class="ai-cost-form">
+                    <div style="grid-column:1/-1">
+                        <label for="aimodel-select">Model</label>
+                        <select id="aimodel-select" onchange="recalcAiModelCost()">
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o mini</option>
+                            <option value="gpt-4.1">GPT-4.1</option>
+                            <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+                            <option value="gpt-4.1-nano">GPT-4.1 nano</option>
+                            <option value="o1">o1</option>
+                            <option value="o1-mini">o1-mini</option>
+                            <option value="o3-mini">o3-mini</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="aimodel-calls">Monthly API Calls</label>
+                        <input type="number" id="aimodel-calls" min="0" value="10000" oninput="recalcAiModelCost()">
+                    </div>
+                    <div>
+                        <label for="aimodel-input-tokens">Avg Input Tokens / Call</label>
+                        <input type="number" id="aimodel-input-tokens" min="0" value="500" oninput="recalcAiModelCost()">
+                    </div>
+                    <div>
+                        <label for="aimodel-output-tokens">Avg Output Tokens / Call</label>
+                        <input type="number" id="aimodel-output-tokens" min="0" value="200" oninput="recalcAiModelCost()">
+                    </div>
+                    <div style="display:flex;align-items:flex-end">
+                        <span id="aimodel-selected-price" style="font-size:0.78rem;color:var(--text-secondary);line-height:1.4"></span>
+                    </div>
+                </div>
+                <div class="ai-cost-result" id="aimodel-result">
+                    <div class="ai-cost-result-grid">
+                        <div class="ai-cost-result-item"><div class="label">Input Cost / mo</div><div class="value" id="aimodel-input-cost">—</div></div>
+                        <div class="ai-cost-result-item"><div class="label">Output Cost / mo</div><div class="value" id="aimodel-output-cost">—</div></div>
+                        <div class="ai-cost-result-item"><div class="label">Total Cost / mo</div><div class="value" id="aimodel-total-cost">—</div></div>
+                    </div>
+                    <p id="aimodel-disclaimer" class="cost-note"></p>
+                </div>
+                <div class="ai-model-price-table">
+                    <p class="ai-cost-section-title">Reference Prices (per 1M tokens)</p>
+                    <table class="cost-table" style="margin-top:0">
+                        <thead><tr><th>Model</th><th>Input</th><th>Output</th></tr></thead>
+                        <tbody id="aimodel-price-tbody"></tbody>
+                    </table>
+                    <p class="cost-note" style="margin-top:0.4rem">Prices shown in USD. Last updated June 2025. Always verify with the <a href="https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">Azure OpenAI pricing page</a>.</p>
+                </div>
             </div>
             <div style="border-top:1px solid var(--border,#dde4ea);padding:0.75rem 1.25rem;background:#f8fafc;display:flex;align-items:center;gap:0.75rem;flex-shrink:0;">
                 <span style="font-size:0.78rem;color:var(--text-secondary);flex:1">Get post-deployment actual cost analysis and optimization recommendations in VS Code.</span>
@@ -4956,9 +5018,65 @@
             if (btn) btn.classList.add('active');
             const panel = document.getElementById(`cost-tab-${name}`);
             if (panel) panel.classList.add('active');
+            if (name === 'aimodel') initAiModelCostTab();
         }
 
-        async function renderCostEstimateTab(resourceTypes) {
+        // ── AI Model Cost Calculator ──────────────────────────────────────────
+        const AI_MODEL_PRICES = {
+            'gpt-4o':        { label: 'GPT-4o',        input: 2.50,  output: 10.00 },
+            'gpt-4o-mini':   { label: 'GPT-4o mini',   input: 0.15,  output: 0.60  },
+            'gpt-4.1':       { label: 'GPT-4.1',       input: 2.00,  output: 8.00  },
+            'gpt-4.1-mini':  { label: 'GPT-4.1 mini',  input: 0.40,  output: 1.60  },
+            'gpt-4.1-nano':  { label: 'GPT-4.1 nano',  input: 0.10,  output: 0.40  },
+            'o1':            { label: 'o1',             input: 15.00, output: 60.00 },
+            'o1-mini':       { label: 'o1-mini',        input: 1.10,  output: 4.40  },
+            'o3-mini':       { label: 'o3-mini',        input: 1.10,  output: 4.40  },
+        };
+
+        let _aiModelTabInitialized = false;
+
+        function initAiModelCostTab() {
+            if (_aiModelTabInitialized) return;
+            _aiModelTabInitialized = true;
+            // Render reference price table
+            const tbody = document.getElementById('aimodel-price-tbody');
+            if (tbody) {
+                tbody.innerHTML = Object.entries(AI_MODEL_PRICES).map(([, p]) =>
+                    `<tr><td>${escapeHtml(p.label)}</td><td>$${p.input.toFixed(2)}</td><td>$${p.output.toFixed(2)}</td></tr>`
+                ).join('');
+            }
+            recalcAiModelCost();
+        }
+
+        function recalcAiModelCost() {
+            const modelKey  = (document.getElementById('aimodel-select')?.value  || 'gpt-4o');
+            const calls     = Math.max(0, parseFloat(document.getElementById('aimodel-calls')?.value)        || 0);
+            const inTok     = Math.max(0, parseFloat(document.getElementById('aimodel-input-tokens')?.value) || 0);
+            const outTok    = Math.max(0, parseFloat(document.getElementById('aimodel-output-tokens')?.value)|| 0);
+            const prices    = AI_MODEL_PRICES[modelKey] || AI_MODEL_PRICES['gpt-4o'];
+
+            const totalInputTokens  = calls * inTok;
+            const totalOutputTokens = calls * outTok;
+            const inputCost  = (totalInputTokens  / 1_000_000) * prices.input;
+            const outputCost = (totalOutputTokens / 1_000_000) * prices.output;
+            const totalCost  = inputCost + outputCost;
+
+            const fmt = v => v < 0.01 && v > 0 ? '<$0.01' : `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            const inEl  = document.getElementById('aimodel-input-cost');
+            const outEl = document.getElementById('aimodel-output-cost');
+            const totEl = document.getElementById('aimodel-total-cost');
+            const priceEl = document.getElementById('aimodel-selected-price');
+            const notEl = document.getElementById('aimodel-disclaimer');
+
+            if (inEl)  inEl.textContent  = fmt(inputCost);
+            if (outEl) outEl.textContent = fmt(outputCost);
+            if (totEl) totEl.textContent = fmt(totalCost);
+            if (priceEl) priceEl.innerHTML = `<strong>${escapeHtml(prices.label)}</strong>: $${prices.input.toFixed(2)} / 1M input tokens &nbsp;·&nbsp; $${prices.output.toFixed(2)} / 1M output tokens`;
+            if (notEl) notEl.textContent = calls > 0
+                ? `${calls.toLocaleString()} calls × ${inTok.toLocaleString()} input tokens + ${outTok.toLocaleString()} output tokens = ${(totalInputTokens + totalOutputTokens).toLocaleString()} tokens/month`
+                : 'Enter your expected usage above to see estimated monthly costs.';
+        }
             const body = document.getElementById('cost-estimate-body');
             const known = resourceTypes.filter(rt => BICEP_TO_PRICE_SERVICE[rt]);
             if (!known.length) {
