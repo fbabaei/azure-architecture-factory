@@ -2321,6 +2321,8 @@
                     <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
                     <a href="docs/APP_MODERNIZATION_GUIDE.md" class="doc-preview-link" data-doc-title="App Modernization Guide" rel="noopener noreferrer">🔄 App Modernization</a>
                     <a href="docs/COST_ESTIMATION_GUIDE.md" class="doc-preview-link" data-doc-title="Cost Estimation Guide" rel="noopener noreferrer">💰 Cost Estimation</a>
+                    <a href="docs/OBSERVABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Observability Guide" rel="noopener noreferrer">📡 Observability</a>
+                    <a href="docs/TRACEABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Traceability Guide" rel="noopener noreferrer">🔗 Traceability</a>
                 </div>
             </div>
         </section>
@@ -4646,6 +4648,16 @@
                 q: 'How do I estimate costs for a generated project?',
                 a: 'Click <strong>💰 Cost Tools</strong> on any project card. It has three tabs:<br><br><strong>📊 Retail Pricing</strong> — scans the project\'s Bicep files, detects Azure resource types, and fetches live pay-as-you-go USD prices from the Azure Retail Prices API (no login needed).<br><br><strong>🧮 Pricing Calculator</strong> — opens the Azure Pricing Calculator pre-populated with this project\'s detected services so you can adjust volumes, tiers, and regions.<br><br><strong>🔍 What-If CLI</strong> — generates the exact <code>az bicep build</code> + <code>az deployment group what-if</code> commands to run locally against your subscription to preview resource changes before deploying.<br><br>For full guidance see the <a href="docs/COST_ESTIMATION_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/COST_ESTIMATION_GUIDE.md\',\'Cost Estimation Guide\')" style="color:#0078d4">Cost Estimation Guide →</a>',
                 icon: '💰'
+            },
+            {
+                q: 'How do I audit observability for a deployed project?',
+                a: 'Click <strong>📡 Observability</strong> on any project card (or in the Deploy modal footer). The prompt is copied — paste it into Copilot Chat to run the <code>project-observability-advisor</code> agent.<br><br>The agent audits four pillars: <strong>Metrics, Logs, Traces, Alerts</strong>. It identifies gaps, generates ready-to-run KQL queries, and optionally produces Bicep modules to close missing alert rules or App Insights wiring. The report is saved to <code>projects/&lt;name&gt;/docs/observability-report-&lt;date&gt;.md</code>.<br><br>See the <a href="docs/OBSERVABILITY_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/OBSERVABILITY_GUIDE.md\',\'Observability Guide\')" style="color:#0078d4">Observability Guide →</a>',
+                icon: '📡'
+            },
+            {
+                q: 'How do I check which requirements are implemented?',
+                a: 'Click <strong>🔗 Traceability</strong> on any project card to copy a prompt for the <code>project-traceability-advisor</code> agent, then paste it into Copilot Chat.<br><br>Every project auto-generates a <code>docs/traceability-matrix.md</code> with REQ-NNN IDs and requirement → artifact mappings. The full advisor scans source files, tests, and Bicep to map each requirement to the exact code that implements it, flags gaps, and saves a dated coverage report to <code>projects/&lt;name&gt;/docs/traceability-report-&lt;date&gt;.md</code>.<br><br>See the <a href="docs/TRACEABILITY_GUIDE.md" onclick="event.preventDefault();_helperScope=_helperScope||\'fab\';openDocumentationPreview(\'docs/TRACEABILITY_GUIDE.md\',\'Traceability Guide\')" style="color:#0078d4">Traceability Guide →</a>',
+                icon: '🔗'
             },
         ];
 
