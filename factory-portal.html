@@ -1057,6 +1057,23 @@
             transform: none;
         }
 
+        .project-link-guide {
+            border-color: #107c41;
+            background: linear-gradient(135deg, #107c41, #0a5c30);
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            box-shadow: 0 2px 8px rgba(16,124,65,0.25);
+            position: relative;
+        }
+
+        .project-link-guide:hover {
+            background: linear-gradient(135deg, #0a5c30, #073d20);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(16,124,65,0.38);
+            transform: translateY(-1px);
+        }
+
         .projects-header {
             display: flex;
             align-items: center;
@@ -2609,12 +2626,12 @@
                 <section id="projects">
                     <hr class="section-divider">
                     <div class="projects-header">
-                        <h2>Generated Projects</h2>
+                        <h2>Azure Architecture Projects</h2>
                         <div class="projects-header-actions">
                             <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
                         </div>
                     </div>
-                    <p class="section-subtitle" style="margin-bottom: 0.5rem;">Use the hosted actions to inspect generated files or download a ZIP copy to your local machine.</p>
+                    <p class="section-subtitle" style="margin-bottom: 0.5rem;">Each project contains a full architecture diagram, scaffolded code, Bicep infrastructure, and deployment guides. Use the actions below to explore, deploy, analyze, and optimize your projects.</p>
                     <div id="projects-container">
                         <div class="empty-state">
                             <div class="empty-state-icon">📦</div>
@@ -4362,7 +4379,7 @@
                 <div class="project-card">
                     <div class="project-header">
                         <div class="project-title">${safeTitle}</div>
-                        <span class="project-status ${getStatusClass(project.status)}">${escapeHtml(project.status)}</span>
+                        <span class="project-status ${getStatusClass(project.status)}" title="${project.status?.includes('Ready') ? 'Factory pipeline completed — all artifacts generated successfully' : project.status?.includes('Processing') ? 'Factory pipeline is still running' : 'Pipeline encountered an error'}">${escapeHtml(project.status)}</span>
                     </div>
                     <p class="project-description">
                         Generated from: <strong>${escapeHtml(project.generatedFrom)}</strong>
@@ -4389,7 +4406,7 @@
                         <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
-                        <a href="#" class="project-link" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
+                        <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
                     </div>
                 </div>
             `;
