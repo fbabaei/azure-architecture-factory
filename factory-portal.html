@@ -2118,11 +2118,11 @@
         }
 
         .intake-panel-content {
-            display: none;
+            display: none !important;
         }
 
         .intake-section.expanded .intake-panel-content {
-            display: block;
+            display: block !important;
         }
 
         .csa-toggle-row {
@@ -4456,13 +4456,12 @@
 
         // Load projects on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Ensure intake starts collapsed regardless of any previous state
+            // Ensure intake starts collapsed on every page load
             const intakeSection = document.getElementById('intake');
             if (intakeSection) intakeSection.classList.remove('expanded');
 
             loadProjects();
             openAnalysisFromHash();
-            syncIntakeFromHash();
             restorePortalApiKey();
             loadCsaCompanionTools();
         });
