@@ -4046,6 +4046,27 @@
             div.className = `status-message visible ${isError ? 'error' : 'info'}`;
         }
 
+        function showNotification(message, isError = false) {
+            let toast = document.getElementById('_portal-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = '_portal-toast';
+                toast.style.cssText = [
+                    'position:fixed', 'bottom:1.5rem', 'right:1.5rem', 'z-index:9999',
+                    'padding:0.6rem 1.1rem', 'border-radius:6px', 'font-size:0.85rem',
+                    'font-family:inherit', 'box-shadow:0 4px 12px rgba(0,0,0,0.18)',
+                    'max-width:360px', 'line-height:1.4', 'transition:opacity 0.3s',
+                ].join(';');
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.background = isError ? '#c0392b' : '#1a5f9e';
+            toast.style.color = '#fff';
+            toast.style.opacity = '1';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+        }
+
         function toggleIntakePanel(event, forceExpand = null) {
             if (event) {
                 event.preventDefault();
