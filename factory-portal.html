@@ -2626,12 +2626,12 @@
                 <section id="projects">
                     <hr class="section-divider">
                     <div class="projects-header">
-                        <h2>Azure Architecture Projects</h2>
+                        <h2>Azure Factory Projects</h2>
                         <div class="projects-header-actions">
                             <button type="button" id="project-view-toggle" class="project-link" onclick="toggleProjectView()" hidden>Show all projects</button>
                         </div>
                     </div>
-                    <p class="section-subtitle" style="margin-bottom: 0.5rem;">Each project contains a full architecture diagram, scaffolded code, Bicep infrastructure, and deployment guides. Use the actions below to explore, deploy, analyze, and optimize your projects.</p>
+                    <p class="section-subtitle" style="margin-bottom: 0.5rem; font-size: 0.78rem;">Each project contains a full architecture diagram, scaffolded code, Bicep infrastructure, and deployment guides. Use the actions below to explore, deploy, analyze, and optimize your projects.</p>
                     <div id="projects-container">
                         <div class="empty-state">
                             <div class="empty-state-icon">📦</div>
@@ -4287,9 +4287,6 @@
         }
 
         function getVisibleProjects(projects) {
-            if (IS_HOSTED_PORTAL) {
-                return getLatestProjects(projects);
-            }
             return showAllProjects ? projects : getLatestProjects(projects);
         }
 
@@ -4304,11 +4301,6 @@
         function updateProjectViewToggle(projects) {
             const toggle = document.getElementById('project-view-toggle');
             if (!toggle) return;
-
-            if (IS_HOSTED_PORTAL) {
-                toggle.hidden = true;
-                return;
-            }
 
             const projectCount = projects.length;
             toggle.hidden = projectCount <= 1;
