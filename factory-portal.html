@@ -4456,6 +4456,10 @@
 
         // Load projects on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Ensure intake starts collapsed regardless of any previous state
+            const intakeSection = document.getElementById('intake');
+            if (intakeSection) intakeSection.classList.remove('expanded');
+
             loadProjects();
             openAnalysisFromHash();
             syncIntakeFromHash();
