@@ -333,12 +333,83 @@ def _build_success_criteria(success_criteria: list[str]) -> str:
 
 
 def _build_traceability_matrix(requirements: list[str], success_criteria: list[str]) -> str:
-    rows = ["| BRD Requirement | Generated Artifact | Validation Approach |", "|---|---|---|"]
-    for requirement in requirements[:12]:
-        rows.append(f"| {requirement.replace('|', '/')} | Architecture Overview, Deployment Guide, Starter API | Review generated artifacts and extend tests |")
-    for criterion in success_criteria[:6]:
-        rows.append(f"| Success: {criterion.replace('|', '/')} | Success Criteria document | Verify acceptance owner and validation evidence |")
-    return "# Traceability Matrix\n\n" + "\n".join(rows) + "\n"
+    _ARTIFACT_MAP: list[tuple[set[str], str]] = [
+        ({"api", "endpoint", "rest", "integration", "connect", "webhook", "http"},
+         "Starter API — `src/copilot_api/main.py`"),
+        ({"auth", "identity", "rbac", "managed", "secret", "key vault", "security", "access", "permission"},
+         "Bicep infra — `infra/main.bicep` (Identity & RBAC)"),
+        ({"observ", "monitor", "log", "metric", "alert", "insight", "telemetry", "trace", "dashboard"},
+         "Architecture overview — `docs/architecture-overview.md`"),
+        ({"deploy", "pipeline", "ci", "cd", "release", "container", "docker", "image"},
+         "Deployment guide — `docs/deploy.md`"),
+        ({"govern", "policy", "compliance", "audit", "review", "soc", "iso", "regulation"},
+         "Governance model — `docs/governance-model.md`"),
+        ({"test", "validat", "verif", "quality", "acceptance", "criteria"},
+         "Test scaffold — `tests/test_generated_project.py`"),
+        ({"data", "store", "database", "persist", "storage", "blob", "queue", "cosmos"},
+         "Architecture overview + extend Bicep for data resources"),
+        ({"architect", "design", "service", "component", "module", "layer", "diagram"},
+         "Architecture diagram — `diagrams/<slug>.md`"),
+    ]
+
+    def _infer_artifacts(req_text: str) -> str:
+        lower = req_text.lower()
+        matched = [artifact for keywords, artifact in _ARTIFACT_MAP if any(kw in lower for kw in keywords)]
+        if not matched:
+            matched = ["Architecture overview — `docs/architecture-overview.md`",
+                       "Starter API — `src/copilot_api/main.py`"]
+        return "; ".join(matched[:2])
+
+    def _infer_status(req_text: str) -> str:
+        lower = req_text.lower()
+        if any(kw in lower for kw in {"data", "database", "persist", "workflow", "approval",
+                                       "external", "machine learning", "ml", "train", "stream"}):
+            return "Pending Extension"
+        if any(kw in lower for kw in {"govern", "policy", "compliance", "audit", "soc", "iso",
+                                       "regulation", "certif"}):
+            return "Review Required"
+        return "Scaffolded"
+
+    rows = [
+        "| ID | BRD Requirement | Generated Artifact(s) | Status | Validation Approach |",
+        "|---|---|---|---|---|",
+    ]
+    req_statuses: list[str] = []
+    for i, req in enumerate(requirements[:15], start=1):
+        req_id = f"REQ-{i:03d}"
+        status = _infer_status(req)
+        req_statuses.append(status)
+        validation = (
+            "Extend generated tests; link test case to this requirement"
+            if status == "Pending Extension"
+            else "Assign acceptance owner; verify generated artifact covers intent"
+        )
+        rows.append(
+            f"| {req_id} | {req.replace('|', '/')} | {_infer_artifacts(req)} | {status} | {validation} |"
+        )
+    for i, criterion in enumerate(success_criteria[:6], start=1):
+        rows.append(
+            f"| SC-{i:03d} | **Success:** {criterion.replace('|', '/')} "
+            f"| Success criteria — `docs/success-criteria.md` | Review Required "
+            f"| Assign owner; establish baseline metric before go-live |"
+        )
+
+    total = len(req_statuses)
+    scaffolded = req_statuses.count("Scaffolded")
+    pending = req_statuses.count("Pending Extension")
+    review = req_statuses.count("Review Required")
+    pct = lambda n: f"{round(n / total * 100)}%" if total else "0%"
+
+    summary = (
+        "\n\n## Coverage Summary\n\n"
+        "| Status | Count | Share |\n|---|---|---|\n"
+        f"| ✅ Scaffolded | {scaffolded} | {pct(scaffolded)} |\n"
+        f"| 🔧 Pending Extension | {pending} | {pct(pending)} |\n"
+        f"| 🔍 Review Required | {review} | {pct(review)} |\n\n"
+        "> **Next step**: Invoke the `project-traceability-advisor` agent to produce a full\n"
+        "> requirement → code → test → infrastructure coverage report and update `project-manifest.json`.\n"
+    )
+    return "# Traceability Matrix\n\n" + "\n".join(rows) + summary
 
 
 def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool) -> str:

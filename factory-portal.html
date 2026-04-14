@@ -4320,8 +4320,9 @@
                            🧠 View Analysis</a>
                         <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
                         <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
-                        <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}'); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
-                        ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
+                        <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
+                        <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
+                        ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
                     </div>
                 </div>
             `;
@@ -5253,6 +5254,24 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         async function openObservabilityInCopilot(slug, evt) {
             const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
             const prompt = buildObservabilityPrompt(slug || '');
+            await copyTextToClipboard(prompt);
+            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
+            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+        }
+
+        function buildTraceabilityPrompt(slug) {
+            const normalizedSlug = String(slug || 'my-project').trim();
+            return [
+                'Use project-traceability-advisor.',
+                `Project path: projects/${normalizedSlug}`,
+                'Update manifest: true',
+            ].join('\n');
+        }
+
+        async function openTraceabilityInCopilot(slug, evt) {
+            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
+            const prompt = buildTraceabilityPrompt(slug || '');
             await copyTextToClipboard(prompt);
             showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
             const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;

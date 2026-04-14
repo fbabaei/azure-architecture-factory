@@ -21,6 +21,7 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 ├── production-environment-advisor Phase 4: production readiness checklist
 ├── azure-project-deployer        Phase 5: deploy to Azure (optional)
 ├── project-observability-advisor Phase 6: audit and report on observability (optional)
+├── project-traceability-advisor  Phase 6b: requirement → code → test → infra coverage (optional)
 └── factory-handoff               Phase 7: promote project to factory portal (optional)
 
 factory-handoff               ← standalone bridge to Azure Architecture Factory
@@ -59,6 +60,19 @@ Typical uses:
 - Called automatically by `project-orchestrator` at Phase 5.
 
 Available standalone for re-deployments or environment promotions.
+
+### project-traceability-advisor
+Use this agent to produce a full requirements traceability report for any factory-generated project.
+
+Typical uses:
+- Extract and normalize all BRD requirements, assign stable `REQ-NNN` IDs.
+- Map each requirement to the source files, Bicep modules, and test cases that implement it.
+- Compute coverage metrics: % Implemented / Partial / Gap; test coverage %; infrastructure coverage %.
+- Identify priority gaps: security requirements with no Bicep resource, functional requirements with no code, untested implementations.
+- Save a dated traceability report to `projects/<name>/docs/traceability-report-<date>.md`.
+- Optionally update `project-manifest.json` with a structured `traceability` block.
+
+Can be run immediately after orchestrator generation or at any point during refinement to measure progress.
 
 ### project-observability-advisor
 Use this agent to audit, configure, and report on observability and monitoring for a deployed project.
