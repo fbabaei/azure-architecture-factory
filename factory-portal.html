@@ -5083,6 +5083,8 @@
                 ? `${calls.toLocaleString()} calls × ${inTok.toLocaleString()} input tokens + ${outTok.toLocaleString()} output tokens = ${(totalInputTokens + totalOutputTokens).toLocaleString()} tokens/month`
                 : 'Enter your expected usage above to see estimated monthly costs.';
         }
+
+        async function renderCostEstimateTab(resourceTypes) {
             const body = document.getElementById('cost-estimate-body');
             const known = resourceTypes.filter(rt => BICEP_TO_PRICE_SERVICE[rt]);
             if (!known.length) {
