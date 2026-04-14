@@ -4360,6 +4360,10 @@
         }
 
         function toggleProjectView() {
+            if (IS_HOSTED_PORTAL) {
+                return;
+            }
+
             showAllProjects = !showAllProjects;
             const visibleProjects = getVisibleProjects(allProjects);
             renderProjects(visibleProjects);
@@ -4370,6 +4374,11 @@
         function updateProjectViewToggle(projects) {
             const toggle = document.getElementById('project-view-toggle');
             if (!toggle) return;
+
+            if (IS_HOSTED_PORTAL) {
+                toggle.hidden = true;
+                return;
+            }
 
             const projectCount = projects.length;
             toggle.hidden = projectCount <= 1;
