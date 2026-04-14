@@ -3043,6 +3043,49 @@
         </div>
     </div>
 
+    <div id="deploy-modal-overlay" class="cost-modal-overlay" onclick="if(event.target===this)closeDeployModal()" role="dialog" aria-modal="true" aria-labelledby="deploy-modal-heading">
+        <div class="cost-modal-dialog">
+            <div class="cost-modal-header">
+                <h2 id="deploy-modal-heading">🚀 Deploy to Azure &mdash; <span id="deploy-modal-project-title"></span></h2>
+                <button class="cost-modal-close" onclick="closeDeployModal()" title="Close">✕</button>
+            </div>
+            <div class="cost-tab-bar">
+                <button class="cost-tab active" id="deploy-tab-btn-preflight" onclick="switchDeployTab('preflight',this)">✅ Pre-flight</button>
+                <button class="cost-tab" id="deploy-tab-btn-deploy" onclick="switchDeployTab('deploy',this)">⚡ Deploy Commands</button>
+                <button class="cost-tab" id="deploy-tab-btn-teardown" onclick="switchDeployTab('teardown',this)">🗑️ Teardown</button>
+            </div>
+            <div id="deploy-tab-preflight" class="cost-tab-panel active">
+                <div id="deploy-preflight-body"></div>
+            </div>
+            <div id="deploy-tab-deploy" class="cost-tab-panel">
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin:0">Fill in your Azure details to generate ready-to-run CLI deployment commands.</p>
+                <div class="whatif-form">
+                    <div>
+                        <label for="deploy-subscription-id">Subscription ID</label>
+                        <input type="text" id="deploy-subscription-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="updateDeployCommands()">
+                    </div>
+                    <div>
+                        <label for="deploy-resource-group">Resource Group Name</label>
+                        <input type="text" id="deploy-resource-group" placeholder="my-project-dev-rg" oninput="updateDeployCommands()">
+                    </div>
+                    <div>
+                        <label for="deploy-region">Azure Region</label>
+                        <input type="text" id="deploy-region" placeholder="eastus" value="eastus" oninput="updateDeployCommands()">
+                    </div>
+                    <div>
+                        <label for="deploy-environment">Environment</label>
+                        <input type="text" id="deploy-environment" placeholder="dev" value="dev" oninput="updateDeployCommands()">
+                    </div>
+                </div>
+                <div id="deploy-commands-block"></div>
+            </div>
+            <div id="deploy-tab-teardown" class="cost-tab-panel">
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin:0"><strong style="color:#c0392b">⚠️ Destructive:</strong> Deletes the resource group and ALL resources within it. This cannot be undone.</p>
+                <div id="teardown-commands-block" style="margin-top:0.75rem"></div>
+            </div>
+        </div>
+    </div>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -4230,7 +4273,7 @@
                            ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
                            🧠 View Analysis</a>
                         <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
-                        ${links.deploy ? `<a href="${links.deploy}" class="project-link">🚀 Deploy</a>` : ''}
+                        <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link">📊 Traceability</a>` : ''}
                     </div>
                 </div>
@@ -4953,6 +4996,141 @@ az deployment group what-if \\
             const text = block.innerText || block.textContent;
             copyTextToClipboard(text).then(() => { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy commands'; }, 2000); });
         }
+
+        // ── Deploy Modal ─────────────────────────────────────────────────────────
+        let _deployModalSlug = null;
+
+        function openDeployModal(slug, title) {
+            _deployModalSlug = slug;
+            document.getElementById('deploy-modal-project-title').textContent = title || slug;
+            const rgInput = document.getElementById('deploy-resource-group');
+            if (rgInput && !rgInput.value) rgInput.value = `${slug}-dev-rg`;
+            document.getElementById('deploy-modal-overlay').classList.add('open');
+            switchDeployTab('preflight', document.getElementById('deploy-tab-btn-preflight'));
+            renderDeployPreflight(slug);
+            updateDeployCommands();
+        }
+
+        function closeDeployModal() {
+            document.getElementById('deploy-modal-overlay').classList.remove('open');
+        }
+
+        function switchDeployTab(name, btn) {
+            document.querySelectorAll('#deploy-modal-overlay .cost-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#deploy-modal-overlay .cost-tab-panel').forEach(p => p.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const panel = document.getElementById(`deploy-tab-${name}`);
+            if (panel) panel.classList.add('active');
+        }
+
+        function renderDeployPreflight(slug) {
+            const body = document.getElementById('deploy-preflight-body');
+            if (!body) return;
+            const safeSlug = escapeHtml(slug || '');
+            const deployGuideUrl = slug ? API_PROJECT_FILE(slug, 'DEPLOY.md') : null;
+            const cmds = `<span class="cmd-comment"># 1. Verify Az CLI is installed</span>
+az --version
+
+<span class="cmd-comment"># 2. Confirm you are authenticated</span>
+az account show --query '{name:name, id:id, state:state}' -o table
+
+<span class="cmd-comment"># 3. Set active subscription (run if subscription differs)</span>
+az account set --subscription &lt;subscription-id&gt;
+
+<span class="cmd-comment"># 4. Verify Bicep infrastructure exists</span>
+ls projects/${safeSlug}/infra/`;
+            body.innerHTML = `
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin:0 0 0.75rem">Run these commands before deploying to confirm your Azure CLI is set up correctly.</p>
+                <div class="whatif-cmd-block">${cmds}</div>
+                <div style="font-size:0.83rem;margin-top:0.85rem">
+                    <strong>Pre-deployment checklist:</strong>
+                    <ul style="margin:0.4rem 0 0.75rem 1.4rem;line-height:1.9;">
+                        <li>Az CLI installed and up to date</li>
+                        <li>Authenticated to Azure (<code>az account show</code>)</li>
+                        <li>Correct subscription is active</li>
+                        <li><code>projects/${safeSlug}/infra/main.bicep</code> exists</li>
+                        <li><code>projects/${safeSlug}/infra/params/dev.bicepparam</code> exists</li>
+                        <li>No unresolved Bicep errors (run <code>az bicep build --file infra/main.bicep</code>)</li>
+                    </ul>
+                    ${deployGuideUrl ? `<a href="${deployGuideUrl}" class="project-link" target="_blank" rel="noopener noreferrer">📄 Open DEPLOY.md Guide ↗</a>` : ''}
+                </div>`;
+        }
+
+        function updateDeployCommands() {
+            const block = document.getElementById('deploy-commands-block');
+            if (!block) return;
+            const sub    = escapeHtml((document.getElementById('deploy-subscription-id')?.value || '').trim() || '&lt;subscription-id&gt;');
+            const rg     = escapeHtml((document.getElementById('deploy-resource-group')?.value  || '').trim() || '&lt;resource-group&gt;');
+            const region = escapeHtml((document.getElementById('deploy-region')?.value           || '').trim() || 'eastus');
+            const env    = escapeHtml((document.getElementById('deploy-environment')?.value      || '').trim() || 'dev');
+            const slug   = escapeHtml(_deployModalSlug || '&lt;project-slug&gt;');
+            const cmds = `<span class="cmd-comment"># Step 1 — Log in and set subscription</span>
+az login
+az account set --subscription ${sub}
+
+<span class="cmd-comment"># Step 2 — Create resource group (idempotent)</span>
+az group create --name ${rg} --location ${region} --output table
+
+<span class="cmd-comment"># Step 3 — Validate deployment (preflight check)</span>
+az deployment group validate \\
+  --name ${slug}-${env}-validate \\
+  --resource-group ${rg} \\
+  --template-file projects/${slug}/infra/main.bicep \\
+  --parameters projects/${slug}/infra/params/${env}.bicepparam \\
+  --output table
+
+<span class="cmd-comment"># Step 4 — Deploy to Azure</span>
+az deployment group create \\
+  --name ${slug}-${env}-deploy \\
+  --resource-group ${rg} \\
+  --template-file projects/${slug}/infra/main.bicep \\
+  --parameters projects/${slug}/infra/params/${env}.bicepparam \\
+  --output json
+
+<span class="cmd-comment"># Step 5 — Show deployment outputs</span>
+az deployment group show \\
+  --name ${slug}-${env}-deploy \\
+  --resource-group ${rg} \\
+  --query 'properties.outputs' -o json`;
+            block.innerHTML = `<div class="whatif-cmd-block">${cmds}</div>
+                <button class="whatif-cmd-copy" onclick="copyDeployCommands(this)">📋 Copy commands</button>`;
+            updateTeardownCommands();
+        }
+
+        function copyDeployCommands(btn) {
+            const panel = document.getElementById('deploy-tab-deploy');
+            const block = panel ? panel.querySelector('.whatif-cmd-block') : null;
+            if (!block) return;
+            copyTextToClipboard(block.innerText || block.textContent).then(() => {
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => { btn.textContent = '📋 Copy commands'; }, 2000);
+            });
+        }
+
+        function updateTeardownCommands() {
+            const block = document.getElementById('teardown-commands-block');
+            if (!block) return;
+            const rg = escapeHtml((document.getElementById('deploy-resource-group')?.value || '').trim() || '&lt;resource-group&gt;');
+            const cmds = `<span class="cmd-comment"># ⚠️  WARNING: Deletes ALL resources in the resource group!</span>
+<span class="cmd-comment"># Confirm you have backed up anything important before running.</span>
+az group delete --name ${rg} --yes
+
+<span class="cmd-comment"># Verify deletion</span>
+az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."\`;
+            block.innerHTML = `<div class="whatif-cmd-block">${cmds}</div>
+                <button class="whatif-cmd-copy" onclick="copyTeardownCommands(this)">📋 Copy commands</button>`;
+        }
+
+        function copyTeardownCommands(btn) {
+            const panel = document.getElementById('deploy-tab-teardown');
+            const block = panel ? panel.querySelector('.whatif-cmd-block') : null;
+            if (!block) return;
+            copyTextToClipboard(block.innerText || block.textContent).then(() => {
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => { btn.textContent = '📋 Copy commands'; }, 2000);
+            });
+        }
+        // ── End Deploy Modal ─────────────────────────────────────────────────────
 
         async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
             const prompt = buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath);
