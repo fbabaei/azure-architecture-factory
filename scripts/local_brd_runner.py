@@ -17,6 +17,10 @@ def process_brd_document(
     brd_text = brd_path.read_text(encoding="utf-8")
     generation_options = generation_options or {}
     enable_observability = bool(generation_options.get("enableObservability", True))
+    _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
+    network_tier = str(generation_options.get("networkTier", "public")).strip().lower()
+    if network_tier not in _VALID_NETWORK_TIERS:
+        network_tier = "public"
     generated_at = datetime.now(timezone.utc)
     generated_at_iso = generated_at.isoformat().replace("+00:00", "Z")
     timestamp = generated_at.strftime("%Y%m%d%H%M%S")
@@ -69,18 +73,19 @@ def process_brd_document(
         "status": "Ready",
         "generationOptions": {
             "enableObservability": enable_observability,
+            "networkTier": network_tier,
         },
     }
 
     _write_text(project_root / "README.md", _build_readme(title, brd_path.name, slug, requirements, enable_observability))
     _write_text(project_root / "DEPLOY.md", _build_deploy(slug, enable_observability))
-    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability))
+    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier))
     _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
     _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones(enable_observability))
     _write_text(docs_dir / "success-criteria.md", _build_success_criteria(success_criteria))
     _write_text(docs_dir / "traceability-matrix.md", _build_traceability_matrix(requirements, success_criteria))
-    _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability))
-    _write_text(diagrams_dir / diagram_basename, _build_drawio(title))
+    _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability, network_tier))
+    _write_text(diagrams_dir / diagram_basename, _build_drawio(title, network_tier))
     _write_text(src_dir / "__init__.py", "")
     _write_text(src_dir / "main.py", _build_api_main())
     _write_text(src_dir / "models.py", _build_api_models())
@@ -88,7 +93,7 @@ def process_brd_document(
     _write_text(services_dir / "copilot_service.py", _build_api_service())
     _write_text(project_root / "requirements.txt", "fastapi==0.116.1\nuvicorn[standard]==0.32.1\npydantic==2.10.3\n")
     _write_text(project_root / "pyproject.toml", _build_pyproject(title))
-    _write_text(infra_dir / "main.bicep", _build_infra_bicep(enable_observability))
+    _write_text(infra_dir / "main.bicep", _build_infra_bicep(enable_observability, network_tier))
     _write_text(tests_dir / "test_generated_project.py", _build_test())
     user_home_copy_path = _copy_project_to_user_home(project_root, slug)
 
@@ -104,6 +109,7 @@ def process_brd_document(
         "capabilities": capabilities,
         "generation_options": {
             "enableObservability": enable_observability,
+            "networkTier": network_tier,
         },
         "user_home_copy": str(user_home_copy_path),
     }
@@ -141,6 +147,7 @@ def process_brd_document(
         "generatedAt": generated_at_iso,
         "options": {
             "enableObservability": enable_observability,
+            "networkTier": network_tier,
         },
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
@@ -272,7 +279,7 @@ def _build_deploy(slug: str, enable_observability: bool) -> str:
     return "# Deploy\n\n## Prerequisites\n- Python 3.11+\n- Azure CLI authenticated\n- Target Azure subscription and resource group\n\n## Local Validation\n```bash\npython -m venv .venv\n.venv\\Scripts\\activate\npython -m pip install -r requirements.txt\npython -m pytest tests -q\n```\n\n## Local Run\n```bash\npython -m uvicorn src.copilot_api.main:app --host 127.0.0.1 --port 8000 --reload\n```\n\n## Azure Deployment Outline\n" + "\n".join(deployment_steps) + "\n"
 
 
-def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool) -> str:
+def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool, network_tier: str = "public") -> str:
     capability_lines = [
         f"- Azure OpenAI: {'Yes' if capabilities['openai'] else 'Not explicitly requested'}",
         f"- Microsoft Copilot: {'Yes' if capabilities['copilot'] else 'Not explicitly requested'}",
@@ -289,7 +296,32 @@ def _build_architecture_overview(title: str, requirements: list[str], capabiliti
     ]
     if enable_observability:
         building_blocks.insert(4, "- Azure Monitor alerts, dashboards, and health probes")
-    return f"# {title} - Architecture Overview\n\n## Target Architecture\nThis starter architecture packages the submitted BRD into a generated project scaffold that can be refined for Azure deployment.\n\n## Requirement Signals\n{requirement_lines}\n\n## Recommended Building Blocks\n" + "\n".join(building_blocks) + "\n\n## Capability Coverage\n" + "\n".join(capability_lines) + "\n"
+    network_section = {
+        "public": "- **Network Tier**: Public (internet-facing, no VNet isolation)",
+        "vnet-integrated": (
+            "- **Network Tier**: VNet-integrated\n"
+            "  - Azure Virtual Network with dedicated application subnet\n"
+            "  - Network Security Group with default-deny inbound rule\n"
+            "  - Subnet delegation for Azure Container Apps environment\n"
+            "  - Extend with private endpoints for Key Vault, Storage, and databases"
+        ),
+        "private": (
+            "- **Network Tier**: Private (no public ingress)\n"
+            "  - Azure Virtual Network with application and private endpoint subnets\n"
+            "  - NSG with default-deny inbound; internal load balancer only\n"
+            "  - Private endpoints for downstream Azure services\n"
+            "  - Requires VPN Gateway or ExpressRoute for developer access"
+        ),
+    }.get(network_tier, f"- **Network Tier**: {network_tier}")
+    return (
+        f"# {title} - Architecture Overview\n\n"
+        "## Target Architecture\n"
+        "This starter architecture packages the submitted BRD into a generated project scaffold that can be refined for Azure deployment.\n\n"
+        f"## Requirement Signals\n{requirement_lines}\n\n"
+        "## Recommended Building Blocks\n" + "\n".join(building_blocks) + "\n\n"
+        f"## Network Topology\n{network_section}\n\n"
+        "## Capability Coverage\n" + "\n".join(capability_lines) + "\n"
+    )
 
 
 def _build_governance_model(capabilities: dict[str, bool], enable_observability: bool) -> str:
@@ -412,15 +444,50 @@ def _build_traceability_matrix(requirements: list[str], success_criteria: list[s
     return "# Traceability Matrix\n\n" + "\n".join(rows) + summary
 
 
-def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool) -> str:
+def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool, network_tier: str = "public") -> str:
     capability_lines = [f"- {name}: {'yes' if enabled else 'no'}" for name, enabled in capabilities.items()]
     capability_lines.append(f"- observability_wiring: {'yes' if enable_observability else 'no'}")
+    capability_lines.append(f"- network_tier: {network_tier}")
     return f"# {title} - Architecture Overview\n\n## Summary\nThis generated starter design maps the BRD into a simple Azure-oriented architecture shape.\n\n## Signals\n" + "\n".join(f"- {item}" for item in requirements[:8]) + "\n\n## Capability Flags\n" + "\n".join(capability_lines) + "\n"
 
 
-def _build_drawio(title: str) -> str:
+def _build_drawio(title: str, network_tier: str = "public") -> str:
     safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    return f"<mxfile host=\"app.diagrams.net\" version=\"24.7.3\"><diagram id=\"arch1\" name=\"Architecture\"><mxGraphModel dx=\"1600\" dy=\"900\" grid=\"1\" gridSize=\"10\" guides=\"1\" tooltips=\"1\" connect=\"1\" arrows=\"1\" fold=\"1\" page=\"1\" pageScale=\"1\" pageWidth=\"1600\" pageHeight=\"1000\" math=\"0\" shadow=\"0\"><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/><mxCell id=\"title\" value=\"{safe_title}\" style=\"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"80\" y=\"70\" width=\"1200\" height=\"40\" as=\"geometry\"/></mxCell><mxCell id=\"node1\" value=\"User Workflow\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"80\" y=\"220\" width=\"220\" height=\"100\" as=\"geometry\"/></mxCell><mxCell id=\"node2\" value=\"API Layer\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"380\" y=\"220\" width=\"220\" height=\"100\" as=\"geometry\"/></mxCell><mxCell id=\"node3\" value=\"Azure Data / Knowledge\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"680\" y=\"220\" width=\"220\" height=\"100\" as=\"geometry\"/></mxCell><mxCell id=\"node4\" value=\"Observability / Governance\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;\" vertex=\"1\" parent=\"1\"><mxGeometry x=\"980\" y=\"220\" width=\"260\" height=\"100\" as=\"geometry\"/></mxCell><mxCell id=\"edge1\" value=\"\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;\" edge=\"1\" parent=\"1\" source=\"node1\" target=\"node2\"><mxGeometry relative=\"1\" as=\"geometry\"/></mxCell><mxCell id=\"edge2\" value=\"\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;\" edge=\"1\" parent=\"1\" source=\"node2\" target=\"node3\"><mxGeometry relative=\"1\" as=\"geometry\"/></mxCell><mxCell id=\"edge3\" value=\"\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;\" edge=\"1\" parent=\"1\" source=\"node3\" target=\"node4\"><mxGeometry relative=\"1\" as=\"geometry\"/></mxCell></root></mxGraphModel></diagram></mxfile>"
+    vnet_node = ""
+    vnet_edge = ""
+    if network_tier in ("vnet-integrated", "private"):
+        vnet_label = "VNet + NSG" if network_tier == "vnet-integrated" else "VNet + Private Endpoints"
+        vnet_node = (
+            f'<mxCell id="node5" value="{vnet_label}" '
+            'style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f2e6;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=12;spacing=6;" '
+            'vertex="1" parent="1">'
+            '<mxGeometry x="80" y="400" width="220" height="100" as="geometry"/>'
+            '</mxCell>'
+        )
+        vnet_edge = (
+            '<mxCell id="edge4" value="" '
+            'style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2e7d32;endArrow=block;endFill=1;" '
+            'edge="1" parent="1" source="node2" target="node5">'
+            '<mxGeometry relative="1" as="geometry"/>'
+            '</mxCell>'
+        )
+    return (
+        f'<mxfile host="app.diagrams.net" version="24.7.3">'
+        f'<diagram id="arch1" name="Architecture">'
+        f'<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">'
+        f'<root><mxCell id="0"/><mxCell id="1" parent="0"/>'
+        f'<mxCell id="title" value="{safe_title}" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="80" y="70" width="1200" height="40" as="geometry"/></mxCell>'
+        f'<mxCell id="node1" value="User Workflow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="80" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node2" value="API Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="380" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node3" value="Azure Data / Knowledge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="680" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node4" value="Observability / Governance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="980" y="220" width="260" height="100" as="geometry"/></mxCell>'
+        f'{vnet_node}'
+        f'<mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node1" target="node2"><mxGeometry relative="1" as="geometry"/></mxCell>'
+        f'<mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node2" target="node3"><mxGeometry relative="1" as="geometry"/></mxCell>'
+        f'<mxCell id="edge3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node3" target="node4"><mxGeometry relative="1" as="geometry"/></mxCell>'
+        f'{vnet_edge}'
+        f'</root></mxGraphModel></diagram></mxfile>'
+    )
 
 
 def _build_api_main() -> str:
@@ -440,9 +507,159 @@ def _build_pyproject(title: str) -> str:
     return f"[project]\nname = \"{normalized}\"\nversion = \"0.1.0\"\ndescription = \"Generated starter project for {title}\"\nrequires-python = \">=3.11\"\ndependencies = [\n  \"fastapi==0.116.1\",\n  \"uvicorn[standard]==0.32.1\",\n  \"pydantic==2.10.3\",\n]\n"
 
 
-def _build_infra_bicep(enable_observability: bool) -> str:
-    enable_observability_default = "true" if enable_observability else "false"
-    return "targetScope = 'resourceGroup'\n\n@description('Deployment location')\nparam location string = resourceGroup().location\n\n@description('Environment name')\nparam environment string = 'dev'\n\n@description('Logical workload name used in generated resource names')\nparam workloadName string = 'starter-workload'\n\n@description('Whether the starter should include monitoring and observability resources')\nparam enableObservability bool = " + enable_observability_default + "\n\n@description('Optional operations email for alert notifications. Leave empty to skip email actions.')\nparam operationsEmail string = ''\n\nvar resourceBaseName = toLower(replace('${workloadName}-${environment}', '_', '-'))\n\nresource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableObservability) {\n  name: '${resourceBaseName}-law'\n  location: location\n  properties: {\n    retentionInDays: 30\n    features: {\n      enableLogAccessUsingOnlyResourcePermissions: true\n    }\n  }\n  sku: {\n    name: 'PerGB2018'\n  }\n}\n\nresource applicationInsights 'Microsoft.Insights/components@2020-02-02' = if (enableObservability) {\n  name: '${resourceBaseName}-appi'\n  location: location\n  kind: 'web'\n  properties: {\n    Application_Type: 'web'\n    WorkspaceResourceId: logAnalyticsWorkspace.id\n    IngestionMode: 'LogAnalytics'\n  }\n}\n\nresource operationsActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableObservability && !empty(operationsEmail)) {\n  name: '${resourceBaseName}-opsag'\n  location: 'global'\n  properties: {\n    enabled: true\n    groupShortName: 'opsalert'\n    emailReceivers: [\n      {\n        name: 'operations-team'\n        emailAddress: operationsEmail\n        useCommonAlertSchema: true\n      }\n    ]\n  }\n}\n\noutput deploymentHint string = 'Replace this starter Bicep file with workload-specific Azure resources.'\noutput locationUsed string = location\noutput environmentName string = environment\noutput observabilityEnabled bool = enableObservability\noutput logAnalyticsWorkspaceName string = enableObservability ? logAnalyticsWorkspace.name : 'not-enabled'\noutput appInsightsName string = enableObservability ? applicationInsights.name : 'not-enabled'\noutput appInsightsConnectionString string = enableObservability ? applicationInsights.properties.ConnectionString : ''\noutput actionGroupName string = (enableObservability && !empty(operationsEmail)) ? operationsActionGroup.name : 'not-configured'\n"
+def _build_infra_bicep(enable_observability: bool, network_tier: str = "public") -> str:
+    enable_obs_default = "true" if enable_observability else "false"
+
+    params = (
+        "targetScope = 'resourceGroup'\n\n"
+        "@description('Deployment location')\n"
+        "param location string = resourceGroup().location\n\n"
+        "@description('Environment name')\n"
+        "param environment string = 'dev'\n\n"
+        "@description('Logical workload name used in generated resource names')\n"
+        "param workloadName string = 'starter-workload'\n\n"
+        "@description('Whether the starter should include monitoring and observability resources')\n"
+        f"param enableObservability bool = {enable_obs_default}\n\n"
+        "@description('Optional operations email for alert notifications. Leave empty to skip email actions.')\n"
+        "param operationsEmail string = ''\n"
+    )
+
+    if network_tier == "vnet-integrated":
+        params += (
+            "\n@description('Address prefix for the virtual network')\n"
+            "param vnetAddressPrefix string = '10.0.0.0/16'\n\n"
+            "@description('Address prefix for the application subnet')\n"
+            "param appSubnetPrefix string = '10.0.0.0/24'\n"
+        )
+    elif network_tier == "private":
+        params += (
+            "\n@description('Address prefix for the virtual network')\n"
+            "param vnetAddressPrefix string = '10.0.0.0/16'\n\n"
+            "@description('Address prefix for the application subnet')\n"
+            "param appSubnetPrefix string = '10.0.0.0/24'\n\n"
+            "@description('Address prefix for the private endpoint subnet')\n"
+            "param peSubnetPrefix string = '10.0.1.0/24'\n"
+        )
+
+    base = params + "\n\nvar resourceBaseName = toLower(replace('${workloadName}-${environment}', '_', '-'))\n"
+
+    if network_tier in ("vnet-integrated", "private"):
+        subnets = (
+            "      {\n"
+            "        name: 'app-subnet'\n"
+            "        properties: {\n"
+            "          addressPrefix: appSubnetPrefix\n"
+            "          networkSecurityGroup: { id: nsg.id }\n"
+            "          delegations: [\n"
+            "            {\n"
+            "              name: 'app-env-delegation'\n"
+            "              properties: { serviceName: 'Microsoft.App/environments' }\n"
+            "            }\n"
+            "          ]\n"
+            "        }\n"
+            "      }\n"
+        )
+        if network_tier == "private":
+            subnets += (
+                "      {\n"
+                "        name: 'pe-subnet'\n"
+                "        properties: {\n"
+                "          addressPrefix: peSubnetPrefix\n"
+                "          privateEndpointNetworkPolicies: 'Disabled'\n"
+                "        }\n"
+                "      }\n"
+            )
+
+        base += (
+            "\nresource nsg 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {\n"
+            "  name: '${resourceBaseName}-nsg'\n"
+            "  location: location\n"
+            "  properties: {\n"
+            "    securityRules: [\n"
+            "      {\n"
+            "        name: 'deny-inbound-default'\n"
+            "        properties: {\n"
+            "          priority: 4000\n"
+            "          direction: 'Inbound'\n"
+            "          access: 'Deny'\n"
+            "          protocol: '*'\n"
+            "          sourcePortRange: '*'\n"
+            "          destinationPortRange: '*'\n"
+            "          sourceAddressPrefix: '*'\n"
+            "          destinationAddressPrefix: '*'\n"
+            "        }\n"
+            "      }\n"
+            "    ]\n"
+            "  }\n"
+            "}\n"
+            "\nresource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {\n"
+            "  name: '${resourceBaseName}-vnet'\n"
+            "  location: location\n"
+            "  properties: {\n"
+            "    addressSpace: { addressPrefixes: [ vnetAddressPrefix ] }\n"
+            f"    subnets: [\n{subnets}"
+            "    ]\n"
+            "  }\n"
+            "  dependsOn: [ nsg ]\n"
+            "}\n"
+        )
+
+    base += (
+        "\nresource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableObservability) {\n"
+        "  name: '${resourceBaseName}-law'\n"
+        "  location: location\n"
+        "  properties: {\n"
+        "    retentionInDays: 30\n"
+        "    features: {\n"
+        "      enableLogAccessUsingOnlyResourcePermissions: true\n"
+        "    }\n"
+        "  }\n"
+        "  sku: {\n"
+        "    name: 'PerGB2018'\n"
+        "  }\n"
+        "}\n\n"
+        "resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = if (enableObservability) {\n"
+        "  name: '${resourceBaseName}-appi'\n"
+        "  location: location\n"
+        "  kind: 'web'\n"
+        "  properties: {\n"
+        "    Application_Type: 'web'\n"
+        "    WorkspaceResourceId: logAnalyticsWorkspace.id\n"
+        "    IngestionMode: 'LogAnalytics'\n"
+        "  }\n"
+        "}\n\n"
+        "resource operationsActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableObservability && !empty(operationsEmail)) {\n"
+        "  name: '${resourceBaseName}-opsag'\n"
+        "  location: 'global'\n"
+        "  properties: {\n"
+        "    enabled: true\n"
+        "    groupShortName: 'opsalert'\n"
+        "    emailReceivers: [\n"
+        "      {\n"
+        "        name: 'operations-team'\n"
+        "        emailAddress: operationsEmail\n"
+        "        useCommonAlertSchema: true\n"
+        "      }\n"
+        "    ]\n"
+        "  }\n"
+        "}\n"
+        "\noutput deploymentHint string = 'Replace this starter Bicep file with workload-specific Azure resources.'\n"
+        "output locationUsed string = location\n"
+        "output environmentName string = environment\n"
+        "output observabilityEnabled bool = enableObservability\n"
+        "output logAnalyticsWorkspaceName string = enableObservability ? logAnalyticsWorkspace.name : 'not-enabled'\n"
+        "output appInsightsName string = enableObservability ? applicationInsights.name : 'not-enabled'\n"
+        "output appInsightsConnectionString string = enableObservability ? applicationInsights.properties.ConnectionString : ''\n"
+        "output actionGroupName string = (enableObservability && !empty(operationsEmail)) ? operationsActionGroup.name : 'not-configured'\n"
+    )
+
+    if network_tier in ("vnet-integrated", "private"):
+        base += "output vnetName string = vnet.name\n"
+        base += "output appSubnetId string = vnet.properties.subnets[0].id\n"
+    if network_tier == "private":
+        base += "output peSubnetId string = vnet.properties.subnets[1].id\n"
+
+    return base
 
 
 def _build_test() -> str:

@@ -443,6 +443,15 @@ def _coerce_bool(value, default: bool = False) -> bool:
     return default
 
 
+_VALID_NETWORK_TIERS = frozenset({"public", "vnet-integrated", "private"})
+
+
+def _sanitize_network_tier(value) -> str:
+    """Return a validated network tier string, defaulting to 'public'."""
+    candidate = str(value or "").strip().lower()
+    return candidate if candidate in _VALID_NETWORK_TIERS else "public"
+
+
 class FactoryPortalHandler(SimpleHTTPRequestHandler):
     """HTTP handler for factory portal with BRD intake API"""
 
@@ -825,7 +834,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
         content = payload.get("content", "").strip()
         generation_options = {
-            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True)
+            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
+            "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
         }
 
         if not file_name or not content:
@@ -948,6 +958,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         project_name_field = (fields.get("project_name") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         enable_observability_field = (fields.get("enable_observability") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        network_tier_field = (fields.get("network_tier") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         brd_field = fields.get("brd_file")
 
         if not brd_field:
@@ -975,7 +986,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         generation_options = {
-            "enableObservability": _coerce_bool(enable_observability_field, default=True)
+            "enableObservability": _coerce_bool(enable_observability_field, default=True),
+            "networkTier": _sanitize_network_tier(network_tier_field),
         }
 
         return self._save_and_start_run(file_name, content, generation_options)
@@ -1226,6 +1238,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _generate_project_operations(self, project):
         """Generate operations metadata for portal display."""
         enable_observability = bool((project.get("options") or {}).get("enableObservability", False))
+        network_tier = _sanitize_network_tier((project.get("options") or {}).get("networkTier", "public"))
+        network_tier_label = {
+            "public": "Public (internet-facing)",
+            "vnet-integrated": "VNet-integrated (NSG + subnet delegation)",
+            "private": "Private (internal LB + private endpoints)",
+        }.get(network_tier, network_tier)
         monitoring_resources = [
             "Log Analytics Workspace",
             "Application Insights (workspace-based)",
@@ -1249,6 +1267,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "projectSlug": project.get("slug", ""),
             "title": project.get("title", project.get("slug", "Unknown")),
             "enableObservability": enable_observability,
+            "networkTier": network_tier,
+            "networkTierLabel": network_tier_label,
             "monitoringResources": monitoring_resources,
             "checklist": checklist,
             "links": project.get("links", {}),

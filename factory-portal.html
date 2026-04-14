@@ -2501,6 +2501,17 @@
                                             </span>
                                         </label>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="brd-network-tier">Network Isolation</label>
+                                        <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <option value="public" selected>Public — internet-facing, no VNet (default)</option>
+                                            <option value="vnet-integrated">VNet-integrated — subnet delegation, NSG, private ingress</option>
+                                            <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
+                                        </select>
+                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                            Sets the generated Bicep network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code>.
+                                        </p>
+                                    </div>
                                     <div class="button-group">
                                         <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate Project</button>
                                     </div>
@@ -3969,6 +3980,7 @@
             const fileNameInput = document.getElementById('brd-file-name').value.trim();
             const contentInput = document.getElementById('brd-content').value.trim();
             const enableObservability = document.getElementById('brd-enable-observability')?.checked ?? true;
+            const networkTier = document.getElementById('brd-network-tier')?.value || 'public';
             const uploadInput = document.getElementById('brd-upload');
             const uploadedFile = uploadInput?.files?.[0] || null;
             const button = document.getElementById('submit-brd-btn');
@@ -3994,6 +4006,7 @@
                     const form = new FormData();
                     form.append('project_name', normalizeBrdFileName(fileNameInput));
                     form.append('enable_observability', enableObservability ? 'true' : 'false');
+                    form.append('network_tier', networkTier);
                     form.append('brd_file', uploadedFile, uploadedFile.name);
                     response = await fetch(API_BRD_UPLOAD, {
                         method: 'POST',
@@ -4008,7 +4021,8 @@
                         body: JSON.stringify({
                             fileName: normalizeBrdFileName(fileNameInput),
                             content: contentInput,
-                            enableObservability
+                            enableObservability,
+                            networkTier
                         })
                     });
                 }
@@ -4092,6 +4106,8 @@
                     document.getElementById('brd-file-name').value = '';
                     document.getElementById('brd-content').value = '';
                     document.getElementById('brd-enable-observability').checked = true;
+                    const networkTierEl = document.getElementById('brd-network-tier');
+                    if (networkTierEl) networkTierEl.value = 'public';
                     const upload = document.getElementById('brd-upload');
                     if (upload) upload.value = '';
                     loadProjects();
