@@ -1,6 +1,25 @@
 {
-  "generatedAt": "2026-04-15T05:39:13.033805Z",
+  "generatedAt": "2026-04-15T21:24:50.733266Z",
   "projects": [
+    {
+      "slug": "field-service-intelligence-platform-20260415212450",
+      "title": "Field Service Intelligence Platform",
+      "status": "Ready",
+      "generatedFrom": "fb-app-1.md",
+      "generatedAt": "2026-04-15T21:24:50.733266Z",
+      "options": {
+        "enableObservability": false,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/field-service-intelligence-platform-20260415212450/README.md",
+        "deploy": "projects/field-service-intelligence-platform-20260415212450/DEPLOY.md",
+        "diagram": "projects/field-service-intelligence-platform-20260415212450/diagrams/field-service-intelligence-platform-20260415212450.drawio",
+        "architectureOverview": "projects/field-service-intelligence-platform-20260415212450/docs/architecture-overview.md",
+        "traceability": "projects/field-service-intelligence-platform-20260415212450/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-212450-field-service-intelligence-platform.log"
+    },
     {
       "slug": "brd-real-time-inventory-sync-service-20260415053913",
       "title": "BRD: Real-Time Inventory Sync Service",

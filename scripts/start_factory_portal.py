@@ -1075,18 +1075,65 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self._send_json(response, 200)
 
     def _serve_json_feed(self):
-        """Serve the generated project feed from the factory repo."""
+        """Serve the generated project feed.
+
+        Merges two sources so the feed is always live:
+        1. factory-projects.generated.json — baked-in snapshot or persisted feed
+        2. Live scan of the projects/ directory — picks up any project whose
+           project-manifest.json exists but isn't yet recorded in the JSON file.
+
+        This means newly generated projects appear immediately without requiring
+        a container rebuild or volume mount on remote deployments.
+        """
         feed_path = FACTORY_REPO_ROOT / "factory-projects.generated.json"
 
-        if not feed_path.exists():
-            return self._send_json({"generatedAt": None, "projects": []}, 200)
+        # Load the persisted feed (may be the baked-in image snapshot or empty).
+        baked_projects: list[dict] = []
+        generated_at: str | None = None
+        if feed_path.exists() and feed_path.is_file():
+            try:
+                persisted = json.loads(feed_path.read_text(encoding="utf-8"))
+                baked_projects = persisted.get("projects") or []
+                generated_at = persisted.get("generatedAt")
+            except json.JSONDecodeError as exc:
+                logger.warning("Failed to read project feed: %s", exc)
 
-        try:
-            payload = json.loads(feed_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            logger.warning("Failed to read project feed: %s", exc)
-            return self._send_json({"error": "Invalid project feed"}, 500)
+        # Build a slug→record index from the baked feed.
+        index: dict[str, dict] = {p["slug"]: p for p in baked_projects if p.get("slug")}
 
+        # Live scan: visit every subdirectory of projects/ that has a manifest.
+        projects_dir = FACTORY_REPO_ROOT / "projects"
+        if projects_dir.is_dir():
+            for manifest_path in sorted(projects_dir.glob("*/project-manifest.json")):
+                slug = manifest_path.parent.name
+                if slug in index:
+                    continue  # already present from persisted feed
+                try:
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+                # Reconstruct a minimal project record from the manifest.
+                index[slug] = {
+                    "slug": slug,
+                    "title": manifest.get("title", slug),
+                    "status": manifest.get("status", "Ready"),
+                    "generatedFrom": manifest.get("source_brd", ""),
+                    "generatedAt": manifest.get("created_at", ""),
+                    "options": manifest.get("generation_options", {}),
+                    "links": {},
+                }
+
+        # Sort newest-first by generatedAt.
+        merged = sorted(
+            index.values(),
+            key=lambda p: p.get("generatedAt") or "",
+            reverse=True,
+        )
+
+        payload = {
+            "generatedAt": generated_at,
+            "projects": merged,
+        }
         return self._send_json(payload, 200)
 
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:

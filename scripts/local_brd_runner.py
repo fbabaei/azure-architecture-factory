@@ -86,7 +86,7 @@ def process_brd_document(
     _write_text(docs_dir / "success-criteria.md", _build_success_criteria(success_criteria))
     _write_text(docs_dir / "traceability-matrix.md", _build_traceability_matrix(requirements, success_criteria))
     _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability, network_tier))
-    _write_text(diagrams_dir / diagram_basename, _build_drawio(title, network_tier))
+    _write_text(diagrams_dir / diagram_basename, _build_drawio(title, network_tier, capabilities))
     _write_text(src_dir / "__init__.py", "")
     _write_text(src_dir / "main.py", _build_api_main())
     _write_text(src_dir / "models.py", _build_api_models())
@@ -458,53 +458,196 @@ def _svg_data_uri(icon_path: Path) -> str:
     return f"data:image/svg+xml;base64,{encoded}"
 
 
-def _build_drawio(title: str, network_tier: str = "public") -> str:
-    safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    icon_style_base = (
-        "shape=image;whiteSpace=wrap;html=1;imageAspect=0;aspect=fixed;"
-        "verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;"
-        "fontSize=12;spacingTop=6;imageWidth=72;imageHeight=72;"
-    )
-    icon_root = Path(__file__).resolve().parents[1] / "assets" / "azure-icons"
-    user_entry_icon = _svg_data_uri(icon_root / "managed-identities.svg")
-    api_layer_icon = _svg_data_uri(icon_root / "api-management.svg")
-    data_layer_icon = _svg_data_uri(icon_root / "storage-accounts.svg")
-    observability_icon = _svg_data_uri(icon_root / "monitor.svg")
-    vnet_icon = _svg_data_uri(icon_root / "virtual-networks.svg")
+# Azure service color palette: fill_color → used for node backgrounds
+_SVC_PALETTE: dict[str, str] = {
+    "identity": "#0078D4",  # Azure Blue       — Managed Identity / Entra ID
+    "api":      "#E66A00",  # Orange            — API Management
+    "compute":  "#7719AA",  # Purple            — Functions / Container Apps
+    "logic":    "#0066CC",  # Blue              — Logic Apps
+    "ai":       "#00689D",  # Teal              — OpenAI / AI / ML
+    "observa":  "#682D63",  # Plum              — App Insights / Monitor
+    "security": "#A80000",  # Dark Red          — Key Vault / Governance
+    "network":  "#107C10",  # Green             — Virtual Network
+    "data":     "#004B87",  # Dark Blue         — Cosmos DB / Data Store
+}
 
-    vnet_node = ""
-    vnet_edge = ""
+
+# Capability → label + color-key mapping for _build_drawio
+_CAP_ICONS: dict[str, dict[str, str]] = {
+    # node1: user / identity entry point — always Managed Identities
+    "entry": {
+        "default_label": "Managed Identity\n/ Users",
+        "default_color": "identity",
+    },
+    # node2: API gateway — prefer API Management when api capability is set
+    "api": {
+        "yes_label":     "API Management",
+        "yes_color":     "api",
+        "default_label": "API Service\n(Container Apps)",
+        "default_color": "compute",
+    },
+    # node3: business logic / processing
+    "logic": {
+        "workflow_label": "Workflow\n/ Logic Apps",
+        "workflow_color": "logic",
+        "copilot_label":  "Copilot Service\n(Container Apps)",
+        "copilot_color":  "compute",
+        "default_label":  "Processing\n/ Azure Functions",
+        "default_color":  "compute",
+    },
+    # node4: AI / data intelligence
+    "ai_data": {
+        "openai_label":  "Azure OpenAI\n/ AI Foundry",
+        "openai_color":  "ai",
+        "copilot_label": "AI / Cognitive\nServices",
+        "copilot_color": "ai",
+        "ml_label":      "Azure Machine\nLearning",
+        "ml_color":      "ai",
+        "default_label": "Data Store\n/ Cosmos DB",
+        "default_color": "data",
+    },
+    # node5: observability — App Insights if wired, else Monitor
+    "observability": {
+        "yes_label":     "Application\nInsights",
+        "yes_color":     "observa",
+        "default_label": "Azure Monitor",
+        "default_color": "observa",
+    },
+    # node6 (optional): governance / security
+    "governance": {
+        "yes_label": "Key Vault\n/ Governance",
+        "yes_color": "security",
+    },
+    # node7 (optional): network isolation
+    "network": {
+        "private_label": "VNet\n+ Private Endpoints",
+        "vnet_label":    "VNet + NSG",
+        "color":         "network",
+    },
+}
+
+
+def _build_drawio(title: str, network_tier: str = "public", capabilities: dict[str, bool] | None = None) -> str:
+    """Generate a capability-aware architecture diagram using Azure-colored styled nodes."""
+    caps = capabilities or {}
+    safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def _cell(cid: str, label: str, color_key: str, x: int, y: int, w: int = 220, h: int = 100) -> str:
+        safe_label = (
+            label
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\n", "&#xa;")
+        )
+        bg = _SVC_PALETTE.get(color_key, "#0078D4")
+        style = (
+            f"rounded=1;whiteSpace=wrap;html=1;arcSize=15;"
+            f"fillColor={bg};strokeColor=#FFFFFF40;fontColor=#FFFFFF;"
+            f"fontSize=13;fontStyle=1;"
+            f"verticalAlign=middle;align=center;"
+        )
+        return (
+            f'<mxCell id="{cid}" value="{safe_label}" '
+            f'style="{style}" vertex="1" parent="1">'
+            f'<mxGeometry x="{x}" y="{y}" width="{w}" height="{h}" as="geometry"/>'
+            f'</mxCell>'
+        )
+
+    def _edge(eid: str, src: str, tgt: str, color: str = "#2a6ea8") -> str:
+        return (
+            f'<mxCell id="{eid}" value="" '
+            f'style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor={color};endArrow=block;endFill=1;" '
+            f'edge="1" parent="1" source="{src}" target="{tgt}">'
+            f'<mxGeometry relative="1" as="geometry"/>'
+            f'</mxCell>'
+        )
+
+    # ── Row 1: main flow (y=220) ──────────────────────────────────────────────
+    # node1: entry / identity
+    n1_color = _CAP_ICONS["entry"]["default_color"]
+    n1_label = _CAP_ICONS["entry"]["default_label"]
+
+    # node2: API layer
+    if caps.get("api"):
+        n2_color, n2_label = _CAP_ICONS["api"]["yes_color"], _CAP_ICONS["api"]["yes_label"]
+    else:
+        n2_color, n2_label = _CAP_ICONS["api"]["default_color"], _CAP_ICONS["api"]["default_label"]
+
+    # node3: business logic
+    if caps.get("workflow"):
+        n3_color, n3_label = _CAP_ICONS["logic"]["workflow_color"], _CAP_ICONS["logic"]["workflow_label"]
+    elif caps.get("copilot"):
+        n3_color, n3_label = _CAP_ICONS["logic"]["copilot_color"], _CAP_ICONS["logic"]["copilot_label"]
+    else:
+        n3_color, n3_label = _CAP_ICONS["logic"]["default_color"], _CAP_ICONS["logic"]["default_label"]
+
+    # node4: AI / data
+    if caps.get("openai"):
+        n4_color, n4_label = _CAP_ICONS["ai_data"]["openai_color"], _CAP_ICONS["ai_data"]["openai_label"]
+    elif caps.get("copilot"):
+        n4_color, n4_label = _CAP_ICONS["ai_data"]["copilot_color"], _CAP_ICONS["ai_data"]["copilot_label"]
+    elif caps.get("ml"):
+        n4_color, n4_label = _CAP_ICONS["ai_data"]["ml_color"], _CAP_ICONS["ai_data"]["ml_label"]
+    else:
+        n4_color, n4_label = _CAP_ICONS["ai_data"]["default_color"], _CAP_ICONS["ai_data"]["default_label"]
+
+    # node5: observability
+    if caps.get("observability_wiring"):
+        n5_color, n5_label = _CAP_ICONS["observability"]["yes_color"], _CAP_ICONS["observability"]["yes_label"]
+    else:
+        n5_color, n5_label = _CAP_ICONS["observability"]["default_color"], _CAP_ICONS["observability"]["default_label"]
+
+    cells = [
+        _cell("node1", n1_label, n1_color,  80,  220),
+        _cell("node2", n2_label, n2_color,  380, 220),
+        _cell("node3", n3_label, n3_color,  680, 220),
+        _cell("node4", n4_label, n4_color,  980, 220),
+        _cell("node5", n5_label, n5_color, 1280, 220, w=240),
+    ]
+    edges = [
+        _edge("edge1", "node1", "node2"),
+        _edge("edge2", "node2", "node3"),
+        _edge("edge3", "node3", "node4"),
+        _edge("edge4", "node4", "node5"),
+    ]
+
+    # ── Row 2: optional supporting services (y=420) ──────────────────────────
+    row2_x = 380
+    row2_node_id = 6
+
+    if caps.get("governance"):
+        g_color = _CAP_ICONS["governance"]["yes_color"]
+        g_label = _CAP_ICONS["governance"]["yes_label"]
+        cells.append(_cell(f"node{row2_node_id}", g_label, g_color, row2_x, 420))
+        edges.append(_edge(f"edge{row2_node_id}", "node2", f"node{row2_node_id}", "#7b1fa2"))
+        row2_x += 300
+        row2_node_id += 1
+
     if network_tier in ("vnet-integrated", "private"):
-        vnet_label = "VNet + NSG" if network_tier == "vnet-integrated" else "VNet + Private Endpoints"
-        vnet_node = (
-            f'<mxCell id="node5" value="{vnet_label}" '
-            f'style="{icon_style_base}image={vnet_icon};" '
-            'vertex="1" parent="1">'
-            '<mxGeometry x="80" y="400" width="220" height="100" as="geometry"/>'
-            '</mxCell>'
+        vnet_label = (
+            _CAP_ICONS["network"]["private_label"]
+            if network_tier == "private"
+            else _CAP_ICONS["network"]["vnet_label"]
         )
-        vnet_edge = (
-            '<mxCell id="edge4" value="" '
-            'style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2e7d32;endArrow=block;endFill=1;" '
-            'edge="1" parent="1" source="node2" target="node5">'
-            '<mxGeometry relative="1" as="geometry"/>'
-            '</mxCell>'
-        )
+        vnet_color = _CAP_ICONS["network"]["color"]
+        cells.append(_cell(f"node{row2_node_id}", vnet_label, vnet_color, row2_x, 420))
+        edges.append(_edge(f"edge{row2_node_id}", "node2", f"node{row2_node_id}", "#2e7d32"))
+
+    nodes_xml = "".join(cells)
+    edges_xml = "".join(edges)
     return (
         f'<mxfile host="app.diagrams.net" version="24.7.3">'
         f'<diagram id="arch1" name="Architecture">'
-        f'<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">'
+        f'<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1"'
+        f' connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680"'
+        f' pageHeight="1100" math="0" shadow="0">'
         f'<root><mxCell id="0"/><mxCell id="1" parent="0"/>'
-        f'<mxCell id="title" value="{safe_title}" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="80" y="70" width="1200" height="40" as="geometry"/></mxCell>'
-        f'<mxCell id="node1" value="User Workflow" style="{icon_style_base}image={user_entry_icon};" vertex="1" parent="1"><mxGeometry x="80" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node2" value="API Layer" style="{icon_style_base}image={api_layer_icon};" vertex="1" parent="1"><mxGeometry x="380" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node3" value="Azure Data / Knowledge" style="{icon_style_base}image={data_layer_icon};" vertex="1" parent="1"><mxGeometry x="680" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node4" value="Observability / Governance" style="{icon_style_base}image={observability_icon};" vertex="1" parent="1"><mxGeometry x="980" y="220" width="260" height="100" as="geometry"/></mxCell>'
-        f'{vnet_node}'
-        f'<mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node1" target="node2"><mxGeometry relative="1" as="geometry"/></mxCell>'
-        f'<mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node2" target="node3"><mxGeometry relative="1" as="geometry"/></mxCell>'
-        f'<mxCell id="edge3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node3" target="node4"><mxGeometry relative="1" as="geometry"/></mxCell>'
-        f'{vnet_edge}'
+        f'<mxCell id="title" value="{safe_title}" style="text;html=1;strokeColor=none;fillColor=none;'
+        f'align=left;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">'
+        f'<mxGeometry x="80" y="60" width="1500" height="40" as="geometry"/></mxCell>'
+        f'{nodes_xml}'
+        f'{edges_xml}'
         f'</root></mxGraphModel></diagram></mxfile>'
     )
 

@@ -3299,9 +3299,9 @@
 
         function ensureDiagramFrameInitialized() {
             if (!diagramFrame) return;
-            if (!diagramFrame.src) {
-                diagramFrame.src = diagramEmbedUrl;
-            }
+            // Always reload embed URL so the frame is pointing at embed.diagrams.net,
+            // not the portal page (which happens after closeDiagramModal sets src='').
+            diagramFrame.src = diagramEmbedUrl;
         }
 
         function sendDiagramXml(xml) {
@@ -3649,7 +3649,9 @@
 
         function closeDiagramModal() {
             if (!diagramModal || !diagramFrame) return;
-            diagramFrame.src = '';
+            diagramFrame.removeAttribute('src');
+            diagramEmbedReady = false;
+            pendingDiagramXml = null;
             diagramModal.classList.remove('open');
             diagramModal.setAttribute('aria-hidden', 'true');
         }
