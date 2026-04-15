@@ -18,7 +18,8 @@ Your job is to:
 - DO NOT guess Azure services; derive every component from stated requirements.
 - DO NOT create overly complex diagrams; include only what the requirements justify.
 - ALWAYS use the transactional workflow for diagrams with more than 3 components.
-- ALWAYS call `search-shapes` before adding Azure icons — never hard-code shape names.
+- ALWAYS call `search-shapes` BEFORE calling `add-cells` — use returned `shape_name` values for all Azure service vertices.
+- **REQUIRE Azure icons**: Every vertex representing an Azure service MUST use a `shape_name` from `search-shapes` (e.g., `Container Apps`, `Cosmos DB`, `Key Vault`). DO NOT use generic rectangles (`rounded=1;whiteSpace=wrap`).
 - ALWAYS save the exported XML to `diagrams/<name>.drawio` and notes to `diagrams/<name>.md`.
 - ALWAYS follow left-to-right primary flow and place cross-cutting services at the bottom.
 - DO NOT draw edges between cross-cutting services or from main-flow to cross-cutting services.
@@ -117,8 +118,9 @@ Pass `text: ""` for all groups. Create a separate text vertex label above each g
 ```
 mcp_draw_io_mcp_add-cells({ cells: [...all vertices and edges...], transactional: true })
 ```
-- Vertices first, edges after.
-- Shaped vertices: only `x`, `y`, `shape_name`, `text`, `temp_id` — no `width`, `height`, or `style`.
+- Vertices first (all using shape_name from search-shapes), edges after.
+- **CRITICAL: Use `shape_name` for ALL Azure service vertices** — e.g., `shape_name: "Container Apps"`, `shape_name: "Cosmos DB"`, `shape_name: "Azure Key Vault"`. 
+- Each shaped vertex: `{ x, y, shape_name, text, temp_id }` — NO generic `rounded=1;whiteSpace=wrap` rectangles.
 - Edges: only `source_id`, `target_id`, `text` — no anchor points.
 
 **3e. Assign cells to groups**

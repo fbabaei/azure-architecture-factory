@@ -86,16 +86,17 @@ For Phase 1 Mode A the orchestrator must require `brd-to-architecture-diagram` t
 
 1. Parse requirements into a component inventory and primary data flow.
 2. Plan all components, groups, labels, edges, and cross-cutting services before any MCP call.
-3. Use the Draw.io MCP server sequence in this order:
+3. **REQUIRE Azure icons**: Call `search-shapes` to identify exact shape names, then pass `shape_name` for every Azure service vertex. No generic rectangles (`rounded=1;whiteSpace=wrap`).
+4. Use the Draw.io MCP server sequence in this order:
   - `get-style-presets`
-  - `search-shapes` once with all required Azure and basic shapes
+  - `search-shapes` once with all required Azure service names (e.g., "Container Apps", "Cosmos DB", "Key Vault")
   - `create-groups` once if containers are needed
-  - `add-cells` once with all vertices first and edges after
+  - `add-cells` once with all vertices first (using shape_name for Azure services) and edges after
   - `add-cells-to-group` once if groups are used
   - `finish-diagram` to resolve placeholders
   - `export-diagram` to produce final XML
-4. Prefer transactional mode for any multi-step architecture diagram.
-5. Save outputs only inside `projects/<slug>/diagrams/`.
+5. Prefer transactional mode for any multi-step architecture diagram.
+6. Save outputs only inside `projects/<slug>/diagrams/`.
 6. Return the component inventory, main data flow summary, and produced artifact paths.
 
 ## Orchestration Phases

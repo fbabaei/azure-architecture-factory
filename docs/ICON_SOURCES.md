@@ -87,7 +87,31 @@ Use the following sources:
 
 ---
 
-## 2. Diagrams Missing Icons
+## 0. ⚠️ REQUIREMENT: Azure Icons in All New Diagrams
+
+**All architecture diagrams generated in this project MUST use Azure icons, not generic rectangles.**
+
+When generating new diagrams with the `brd-to-architecture-diagram` agent or `project-orchestrator`:
+
+1. **Call `search-shapes`** with all Azure service names (e.g., `"Container Apps"`, `"Cosmos DB"`, `"Key Vault"`).
+2. **Use returned `shape_name` values** in `add-cells` for every Azure service vertex.
+3. **Reject generic rectangles**: Do NOT pass vertices with `style: "rounded=1;whiteSpace=wrap;"` for Azure services.
+4. **Result**: Every Azure component appears with its official icon, not a colored box.
+
+**Examples of correct usage:**
+- `{ "shape_name": "Container Apps", "text": "API Layer", "x": 200, "y": 100 }`
+- `{ "shape_name": "Cosmos DB", "text": "Document Store", "x": 500, "y": 100 }`
+- `{ "shape_name": "Key Vault", "text": "Secrets", "x": 800, "y": 100 }`
+
+**Examples of INCORRECT usage (do not do this):**
+- `{ "text": "API Layer", "style": "rounded=1;fillColor=...", "x": 200, "y": 100 }` ❌
+- Values containing `rounded=1;whiteSpace=wrap` ❌
+
+See sections [1.1 (Draw.io MCP) and 1.2 (CDN)](#11-drawio-mcp-server--built-in-azure-shape-library) for shape name references.
+
+---
+
+
 
 ### 2.1 `azure-ai-foundry-architecture.drawio` — All shapes use plain rectangles
 
