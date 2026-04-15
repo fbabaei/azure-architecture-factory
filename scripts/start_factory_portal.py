@@ -526,6 +526,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path == "/factory-projects.generated.json":
             return self._serve_json_feed()
 
+        # Block direct browsing of the scripts directory (internal tooling only)
+        if request_path.startswith("/scripts/") or request_path == "/scripts":
+            self.send_error(403, "Forbidden")
+            return
+
         if request_path == "/api/admin/tokens":
             if not self._require_admin_key():
                 return

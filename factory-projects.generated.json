@@ -1,6 +1,44 @@
 {
-  "generatedAt": "2026-04-15T05:34:13.074706Z",
+  "generatedAt": "2026-04-15T05:39:13.033805Z",
   "projects": [
+    {
+      "slug": "brd-real-time-inventory-sync-service-20260415053913",
+      "title": "BRD: Real-Time Inventory Sync Service",
+      "status": "Ready",
+      "generatedFrom": "brd-icon-test-20260414.md",
+      "generatedAt": "2026-04-15T05:39:13.033805Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-real-time-inventory-sync-service-20260415053913/README.md",
+        "deploy": "projects/brd-real-time-inventory-sync-service-20260415053913/DEPLOY.md",
+        "diagram": "projects/brd-real-time-inventory-sync-service-20260415053913/diagrams/brd-real-time-inventory-sync-service-20260415053913.drawio",
+        "architectureOverview": "projects/brd-real-time-inventory-sync-service-20260415053913/docs/architecture-overview.md",
+        "traceability": "projects/brd-real-time-inventory-sync-service-20260415053913/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-053913-brd-real-time-inventory-sync-service.log"
+    },
+    {
+      "slug": "brd-real-time-inventory-sync-service-20260415053901",
+      "title": "BRD: Real-Time Inventory Sync Service",
+      "status": "Ready",
+      "generatedFrom": "brd-icon-test-20260414.md",
+      "generatedAt": "2026-04-15T05:39:01.700994Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-real-time-inventory-sync-service-20260415053901/README.md",
+        "deploy": "projects/brd-real-time-inventory-sync-service-20260415053901/DEPLOY.md",
+        "diagram": "projects/brd-real-time-inventory-sync-service-20260415053901/diagrams/brd-real-time-inventory-sync-service-20260415053901.drawio",
+        "architectureOverview": "projects/brd-real-time-inventory-sync-service-20260415053901/docs/architecture-overview.md",
+        "traceability": "projects/brd-real-time-inventory-sync-service-20260415053901/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-053901-brd-real-time-inventory-sync-service.log"
+    },
     {
       "slug": "azure-icons-validation-claims-processing-assistant-20260415053413",
       "title": "Azure Icons Validation - Claims Processing Assistant",

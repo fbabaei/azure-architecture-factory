@@ -1,0 +1,10 @@
+[project]
+name = "azure_icons_validation_claims_processing_assistant"
+version = "0.1.0"
+description = "Generated starter project for Azure Icons Validation - Claims Processing Assistant"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.116.1",
+  "uvicorn[standard]==0.32.1",
+  "pydantic==2.10.3",
+]

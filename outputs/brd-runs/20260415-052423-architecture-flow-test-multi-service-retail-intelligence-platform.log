@@ -1,0 +1,8 @@
+run_id=manual-20260415052423
+generated_at=2026-04-15T05:24:23.474641Z
+project_slug=architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423
+source_brd=brd-architecture-flow-test-20260414.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423
+status=complete
+runner=azure_native_factory_runner
