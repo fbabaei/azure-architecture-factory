@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 import shutil
@@ -451,6 +452,12 @@ def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict
     return f"# {title} - Architecture Overview\n\n## Summary\nThis generated starter design maps the BRD into a simple Azure-oriented architecture shape.\n\n## Signals\n" + "\n".join(f"- {item}" for item in requirements[:8]) + "\n\n## Capability Flags\n" + "\n".join(capability_lines) + "\n"
 
 
+def _svg_data_uri(icon_path: Path) -> str:
+    svg_bytes = icon_path.read_bytes()
+    encoded = base64.b64encode(svg_bytes).decode("ascii")
+    return f"data:image/svg+xml;base64,{encoded}"
+
+
 def _build_drawio(title: str, network_tier: str = "public") -> str:
     safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     icon_style_base = (
@@ -458,11 +465,12 @@ def _build_drawio(title: str, network_tier: str = "public") -> str:
         "verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;"
         "fontSize=12;spacingTop=6;imageWidth=72;imageHeight=72;"
     )
-    user_entry_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/General/usericon.svg"
-    api_layer_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/api-management.svg"
-    data_layer_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-storage.svg"
-    observability_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/azure-monitor.svg"
-    vnet_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Networking/virtual-networks.svg"
+    icon_root = Path(__file__).resolve().parents[1] / "assets" / "azure-icons"
+    user_entry_icon = _svg_data_uri(icon_root / "managed-identities.svg")
+    api_layer_icon = _svg_data_uri(icon_root / "api-management.svg")
+    data_layer_icon = _svg_data_uri(icon_root / "storage-accounts.svg")
+    observability_icon = _svg_data_uri(icon_root / "monitor.svg")
+    vnet_icon = _svg_data_uri(icon_root / "virtual-networks.svg")
 
     vnet_node = ""
     vnet_edge = ""

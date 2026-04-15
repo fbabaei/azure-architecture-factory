@@ -1,6 +1,82 @@
 {
-  "generatedAt": "2026-04-10T23:18:10.178998Z",
+  "generatedAt": "2026-04-15T05:34:13.074706Z",
   "projects": [
+    {
+      "slug": "azure-icons-validation-claims-processing-assistant-20260415053413",
+      "title": "Azure Icons Validation - Claims Processing Assistant",
+      "status": "Ready",
+      "generatedFrom": "brd-azure-icons-validation-20260414.md",
+      "generatedAt": "2026-04-15T05:34:13.074706Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "private"
+      },
+      "links": {
+        "readme": "projects/azure-icons-validation-claims-processing-assistant-20260415053413/README.md",
+        "deploy": "projects/azure-icons-validation-claims-processing-assistant-20260415053413/DEPLOY.md",
+        "diagram": "projects/azure-icons-validation-claims-processing-assistant-20260415053413/diagrams/azure-icons-validation-claims-processing-assistant-20260415053413.drawio",
+        "architectureOverview": "projects/azure-icons-validation-claims-processing-assistant-20260415053413/docs/architecture-overview.md",
+        "traceability": "projects/azure-icons-validation-claims-processing-assistant-20260415053413/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-053413-azure-icons-validation-claims-processing-assistant.log"
+    },
+    {
+      "slug": "azure-icons-validation-claims-processing-assistant-20260415052934",
+      "title": "Azure Icons Validation - Claims Processing Assistant",
+      "status": "Ready",
+      "generatedFrom": "brd-azure-icons-validation-20260414.md",
+      "generatedAt": "2026-04-15T05:29:34.474865Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "private"
+      },
+      "links": {
+        "readme": "projects/azure-icons-validation-claims-processing-assistant-20260415052934/README.md",
+        "deploy": "projects/azure-icons-validation-claims-processing-assistant-20260415052934/DEPLOY.md",
+        "diagram": "projects/azure-icons-validation-claims-processing-assistant-20260415052934/diagrams/azure-icons-validation-claims-processing-assistant-20260415052934.drawio",
+        "architectureOverview": "projects/azure-icons-validation-claims-processing-assistant-20260415052934/docs/architecture-overview.md",
+        "traceability": "projects/azure-icons-validation-claims-processing-assistant-20260415052934/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-052934-azure-icons-validation-claims-processing-assistant.log"
+    },
+    {
+      "slug": "architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731",
+      "title": "Architecture Flow Test - Multi-Service Retail Intelligence Platform",
+      "status": "Ready",
+      "generatedFrom": "brd-architecture-flow-test-20260414.md",
+      "generatedAt": "2026-04-15T05:27:31.732359Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "vnet-integrated"
+      },
+      "links": {
+        "readme": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731/README.md",
+        "deploy": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731/DEPLOY.md",
+        "diagram": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731/diagrams/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731.drawio",
+        "architectureOverview": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731/docs/architecture-overview.md",
+        "traceability": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052731/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-052731-architecture-flow-test-multi-service-retail-intelligence-platform.log"
+    },
+    {
+      "slug": "architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423",
+      "title": "Architecture Flow Test - Multi-Service Retail Intelligence Platform",
+      "status": "Ready",
+      "generatedFrom": "brd-architecture-flow-test-20260414.md",
+      "generatedAt": "2026-04-15T05:24:23.474641Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423/README.md",
+        "deploy": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423/DEPLOY.md",
+        "diagram": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423/diagrams/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423.drawio",
+        "architectureOverview": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423/docs/architecture-overview.md",
+        "traceability": "projects/architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260415-052423-architecture-flow-test-multi-service-retail-intelligence-platform.log"
+    },
     {
       "slug": "test-app-20260410231810",
       "title": "Test App",
