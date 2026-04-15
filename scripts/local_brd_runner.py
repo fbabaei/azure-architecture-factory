@@ -453,13 +453,24 @@ def _build_diagram_notes(title: str, requirements: list[str], capabilities: dict
 
 def _build_drawio(title: str, network_tier: str = "public") -> str:
     safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    icon_style_base = (
+        "shape=image;whiteSpace=wrap;html=1;imageAspect=0;aspect=fixed;"
+        "verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;"
+        "fontSize=12;spacingTop=6;imageWidth=72;imageHeight=72;"
+    )
+    user_entry_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/General/usericon.svg"
+    api_layer_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/api-management.svg"
+    data_layer_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-storage.svg"
+    observability_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/azure-monitor.svg"
+    vnet_icon = "https://learn.microsoft.com/en-us/azure/architecture/media/icons/Networking/virtual-networks.svg"
+
     vnet_node = ""
     vnet_edge = ""
     if network_tier in ("vnet-integrated", "private"):
         vnet_label = "VNet + NSG" if network_tier == "vnet-integrated" else "VNet + Private Endpoints"
         vnet_node = (
             f'<mxCell id="node5" value="{vnet_label}" '
-            'style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f2e6;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=12;spacing=6;" '
+            f'style="{icon_style_base}image={vnet_icon};" '
             'vertex="1" parent="1">'
             '<mxGeometry x="80" y="400" width="220" height="100" as="geometry"/>'
             '</mxCell>'
@@ -477,10 +488,10 @@ def _build_drawio(title: str, network_tier: str = "public") -> str:
         f'<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">'
         f'<root><mxCell id="0"/><mxCell id="1" parent="0"/>'
         f'<mxCell id="title" value="{safe_title}" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="80" y="70" width="1200" height="40" as="geometry"/></mxCell>'
-        f'<mxCell id="node1" value="User Workflow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="80" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node2" value="API Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="380" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node3" value="Azure Data / Knowledge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="680" y="220" width="220" height="100" as="geometry"/></mxCell>'
-        f'<mxCell id="node4" value="Observability / Governance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;fontColor=#0b2f4f;fontSize=12;spacing=6;" vertex="1" parent="1"><mxGeometry x="980" y="220" width="260" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node1" value="User Workflow" style="{icon_style_base}image={user_entry_icon};" vertex="1" parent="1"><mxGeometry x="80" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node2" value="API Layer" style="{icon_style_base}image={api_layer_icon};" vertex="1" parent="1"><mxGeometry x="380" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node3" value="Azure Data / Knowledge" style="{icon_style_base}image={data_layer_icon};" vertex="1" parent="1"><mxGeometry x="680" y="220" width="220" height="100" as="geometry"/></mxCell>'
+        f'<mxCell id="node4" value="Observability / Governance" style="{icon_style_base}image={observability_icon};" vertex="1" parent="1"><mxGeometry x="980" y="220" width="260" height="100" as="geometry"/></mxCell>'
         f'{vnet_node}'
         f'<mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node1" target="node2"><mxGeometry relative="1" as="geometry"/></mxCell>'
         f'<mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a6ea8;endArrow=block;endFill=1;" edge="1" parent="1" source="node2" target="node3"><mxGeometry relative="1" as="geometry"/></mxCell>'
