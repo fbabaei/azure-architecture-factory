@@ -1646,6 +1646,10 @@
             gap: 0.5rem;
         }
 
+        .diagram-page-select {
+            min-width: 200px;
+        }
+
         .diagram-action {
             border: 1px solid var(--border);
             background: #ffffff;
@@ -3028,6 +3032,8 @@
             <div class="diagram-toolbar">
                 <span class="diagram-title" id="diagram-title">Architecture Diagram</span>
                 <div class="diagram-actions">
+                    <select id="diagram-page-select" class="diagram-action diagram-page-select" title="Select architecture detail page"></select>
+                    <button id="diagram-toggle-detail" class="diagram-action" type="button">Show Lower-Detail Layers</button>
                     <a id="diagram-open-tab" class="diagram-action" href="#" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
                     <button id="diagram-close" class="diagram-action" type="button">Close</button>
                 </div>
@@ -3260,10 +3266,19 @@
         const diagramFrame = document.getElementById('diagram-frame');
         const diagramTitle = document.getElementById('diagram-title');
         const diagramOpenTab = document.getElementById('diagram-open-tab');
+        const diagramPageSelect = document.getElementById('diagram-page-select');
+        const diagramToggleDetail = document.getElementById('diagram-toggle-detail');
         const diagramClose = document.getElementById('diagram-close');
-        const diagramEmbedUrl = 'https://embed.diagrams.net/?embed=1&ui=min&spin=1&proto=json';
+        const diagramEmbedUrlMin = 'https://embed.diagrams.net/?embed=1&ui=min&spin=1&proto=json';
+        const diagramEmbedUrlDetail = 'https://embed.diagrams.net/?embed=1&ui=atlas&layers=1&pages=1&nav=1&spin=1&proto=json';
         let diagramEmbedReady = false;
         let pendingDiagramXml = null;
+        let currentDiagramXml = null;
+        let currentDiagramPages = [];
+        let currentDiagramPageIndex = 0;
+        let currentDiagramPath = '';
+        let currentDiagramAbsoluteUrl = '';
+        let diagramViewerMode = 'min';
         const codeModal = document.getElementById('code-modal');
         const codeModalTitle = document.getElementById('code-modal-title');
         const codeFileList = document.getElementById('code-file-list');
@@ -3297,11 +3312,21 @@
             return null;
         }
 
+        function updateDiagramModeButton() {
+            if (!diagramToggleDetail) return;
+            if (diagramViewerMode === 'detail') {
+                diagramToggleDetail.textContent = 'Hide Lower-Detail Layers';
+            } else {
+                diagramToggleDetail.textContent = 'Show Lower-Detail Layers';
+            }
+        }
+
         function ensureDiagramFrameInitialized() {
             if (!diagramFrame) return;
+            diagramEmbedReady = false;
             // Always reload embed URL so the frame is pointing at embed.diagrams.net,
             // not the portal page (which happens after closeDiagramModal sets src='').
-            diagramFrame.src = diagramEmbedUrl;
+            diagramFrame.src = diagramViewerMode === 'detail' ? diagramEmbedUrlDetail : diagramEmbedUrlMin;
         }
 
         function sendDiagramXml(xml) {
@@ -3313,6 +3338,100 @@
                 modified: 'unsavedChanges'
             };
             diagramFrame.contentWindow.postMessage(JSON.stringify(payload), '*');
+        }
+
+        function parseDiagramPages(xml) {
+            if (!xml) return [];
+            try {
+                const parser = new DOMParser();
+                const parsed = parser.parseFromString(xml, 'application/xml');
+                if (parsed.getElementsByTagName('parsererror').length > 0) {
+                    return [];
+                }
+
+                const mxfile = parsed.documentElement;
+                if (!mxfile || String(mxfile.tagName || '').toLowerCase() !== 'mxfile') {
+                    return [];
+                }
+
+                const serializer = new XMLSerializer();
+                const diagrams = Array.from(mxfile.getElementsByTagName('diagram'));
+                return diagrams.map((diagramNode, index) => {
+                    const rootClone = mxfile.cloneNode(false);
+                    rootClone.appendChild(diagramNode.cloneNode(true));
+                    return {
+                        index,
+                        id: diagramNode.getAttribute('id') || `page-${index + 1}`,
+                        name: diagramNode.getAttribute('name') || `Page ${index + 1}`,
+                        xml: serializer.serializeToString(rootClone)
+                    };
+                });
+            } catch {
+                return [];
+            }
+        }
+
+        function resolveActiveDiagramXml() {
+            if (!currentDiagramPages.length) {
+                return currentDiagramXml;
+            }
+            const page = currentDiagramPages[currentDiagramPageIndex] || currentDiagramPages[0];
+            return page ? page.xml : currentDiagramXml;
+        }
+
+        function renderDiagramPageSelector() {
+            if (!diagramPageSelect) return;
+
+            if (!currentDiagramPages.length) {
+                diagramPageSelect.innerHTML = '<option value="0">Page 1</option>';
+                diagramPageSelect.disabled = true;
+                diagramPageSelect.value = '0';
+                return;
+            }
+
+            const options = currentDiagramPages
+                .map(page => `<option value="${page.index}">${page.name}</option>`)
+                .join('');
+            diagramPageSelect.innerHTML = options;
+            diagramPageSelect.disabled = currentDiagramPages.length <= 1;
+            diagramPageSelect.value = String(currentDiagramPageIndex);
+        }
+
+        async function loadDiagramSource(diagramPath) {
+            const absoluteDiagramUrl = toAbsolutePath(diagramPath);
+            const response = await fetch(absoluteDiagramUrl, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Unable to load diagram (${response.status})`);
+            }
+
+            const xml = await response.text();
+            currentDiagramPath = diagramPath;
+            currentDiagramAbsoluteUrl = absoluteDiagramUrl;
+            currentDiagramXml = xml;
+            currentDiagramPages = parseDiagramPages(xml);
+            currentDiagramPageIndex = 0;
+            renderDiagramPageSelector();
+
+            if (diagramTitle) {
+                diagramTitle.textContent = `Architecture Diagram: ${diagramPath.split('/').pop()}`;
+            }
+            if (diagramOpenTab) {
+                diagramOpenTab.href = absoluteDiagramUrl;
+            }
+        }
+
+        async function tryLoadSiblingDetailedDiagram() {
+            const sourcePath = String(currentDiagramPath || '').trim();
+            if (!sourcePath || !sourcePath.endsWith('.drawio')) return false;
+            if (sourcePath.endsWith('-detailed-architecture.drawio')) return false;
+
+            const detailedPath = sourcePath.replace(/\.drawio$/i, '-detailed-architecture.drawio');
+            try {
+                await loadDiagramSource(detailedPath);
+                return true;
+            } catch {
+                return false;
+            }
         }
 
         function toAbsolutePath(path) {
@@ -3619,28 +3738,20 @@
 
         async function openDiagramInPortal(diagramPath) {
             if (!diagramPath || !diagramModal || !diagramFrame) return;
-            const absoluteDiagramUrl = toAbsolutePath(diagramPath);
 
             try {
-                const response = await fetch(absoluteDiagramUrl, { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error(`Unable to load diagram (${response.status})`);
-                }
-                const xml = await response.text();
-
-                diagramTitle.textContent = `Architecture Diagram: ${diagramPath.split('/').pop()}`;
-                if (diagramOpenTab) {
-                    diagramOpenTab.href = absoluteDiagramUrl;
-                }
+                await loadDiagramSource(diagramPath);
+                updateDiagramModeButton();
 
                 ensureDiagramFrameInitialized();
                 diagramModal.classList.add('open');
                 diagramModal.setAttribute('aria-hidden', 'false');
 
+                const activeXml = resolveActiveDiagramXml();
                 if (diagramEmbedReady) {
-                    sendDiagramXml(xml);
+                    sendDiagramXml(activeXml);
                 } else {
-                    pendingDiagramXml = xml;
+                    pendingDiagramXml = activeXml;
                 }
             } catch (error) {
                 alert(`Diagram load failed: ${error.message}`);
@@ -3652,6 +3763,11 @@
             diagramFrame.removeAttribute('src');
             diagramEmbedReady = false;
             pendingDiagramXml = null;
+            currentDiagramXml = null;
+            currentDiagramPages = [];
+            currentDiagramPageIndex = 0;
+            currentDiagramPath = '';
+            currentDiagramAbsoluteUrl = '';
             diagramModal.classList.remove('open');
             diagramModal.setAttribute('aria-hidden', 'true');
         }
@@ -3831,6 +3947,53 @@
 
         if (diagramClose) {
             diagramClose.addEventListener('click', closeDiagramModal);
+        }
+
+        if (diagramToggleDetail) {
+            diagramToggleDetail.addEventListener('click', async () => {
+                diagramViewerMode = diagramViewerMode === 'detail' ? 'min' : 'detail';
+
+                if (diagramViewerMode === 'detail' && currentDiagramPages.length <= 1) {
+                    const loadedDetailedSibling = await tryLoadSiblingDetailedDiagram();
+                    if (loadedDetailedSibling) {
+                        // Keep detail mode and jump to a deeper page if available.
+                        if (currentDiagramPages.length > 1) {
+                            currentDiagramPageIndex = 1;
+                        }
+                    }
+                }
+
+                if (diagramViewerMode === 'detail' && currentDiagramPages.length > 1 && currentDiagramPageIndex === 0) {
+                    currentDiagramPageIndex = 1;
+                }
+                if (diagramViewerMode === 'min' && currentDiagramPageIndex !== 0) {
+                    currentDiagramPageIndex = 0;
+                }
+
+                renderDiagramPageSelector();
+                updateDiagramModeButton();
+                if (!diagramModal || !diagramModal.classList.contains('open') || !currentDiagramXml) {
+                    return;
+                }
+                pendingDiagramXml = resolveActiveDiagramXml();
+                ensureDiagramFrameInitialized();
+            });
+        }
+
+        if (diagramPageSelect) {
+            diagramPageSelect.addEventListener('change', () => {
+                const nextIndex = Number.parseInt(diagramPageSelect.value, 10);
+                if (!Number.isFinite(nextIndex) || nextIndex < 0) return;
+                if (!currentDiagramPages[nextIndex]) return;
+
+                currentDiagramPageIndex = nextIndex;
+                if (!diagramModal || !diagramModal.classList.contains('open') || !currentDiagramXml) {
+                    return;
+                }
+
+                pendingDiagramXml = resolveActiveDiagramXml();
+                ensureDiagramFrameInitialized();
+            });
         }
 
         if (diagramModal) {
@@ -4485,7 +4648,7 @@
                         <span class="meta-tag">${observabilityEnabled ? '📡 Observability Wired' : '⚪ Observability Not Requested'}</span>
                     </div>
                     <div class="project-links">
-                        ${links.readme ? `<a href="${links.readme}" class="project-link">📖 README</a>` : ''}
+                        ${links.readme ? `<a href="${links.readme}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview(\'${links.readme}\', \'${safeTitle} — README\'); return false;">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
                         ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
@@ -4679,7 +4842,7 @@
                 <div class="analysis-modal-label">Quick Links</div>
                 <div class="analysis-modal-text">
                     ${links.deploy ? `<a href="${links.deploy}" class="project-link" target="_blank" rel="noopener noreferrer">🚀 Deploy Guide</a>` : ''}
-                    ${links.readme ? `<a href="${links.readme}" class="project-link" target="_blank" rel="noopener noreferrer">📖 README</a>` : ''}
+                    ${links.readme ? `<a href="${links.readme}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview(\'${links.readme}\', \'README\'); return false;">📖 README</a>` : ''}
                     ${links.traceability ? `<a href="${links.traceability}" class="project-link" target="_blank" rel="noopener noreferrer">📊 Traceability</a>` : ''}
                 </div>
             `;
@@ -5548,14 +5711,22 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             ].join('\n');
         }
 
-        async function openWorkflowGuideInCopilot(slug, evt) {
-            const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
-            const prompt = buildWorkflowGuidePrompt(slug || '');
-            await copyTextToClipboard(prompt);
-            showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
-            const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
-            try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
-        }
+        // ...existing code...
+                async function openWorkflowGuideInCopilot(slug, evt) {
+                    // Delegate to the tiered Guide Me menu (precomputed report, vscode.dev,
+                    // VS Code Desktop). Falls back to the legacy clipboard-copy behaviour
+                    // if the menu script failed to load.
+                    if (typeof window.openGuideMeMenu === 'function') {
+                        return window.openGuideMeMenu(slug, evt);
+                    }
+                    const anchorRect = (evt && (evt.currentTarget || evt.target)) ? (evt.currentTarget || evt.target).getBoundingClientRect() : null;
+                    const prompt = buildWorkflowGuidePrompt(slug || '');
+                    await copyTextToClipboard(prompt);
+                    showNotification('Prompt copied — paste into Copilot Chat', false, anchorRect);
+                    const desktopLink = `vscode://GitHub.copilot-chat/chat?query=${encodeURIComponent(prompt)}`;
+                    try { window.open(desktopLink, '_blank', 'noopener,noreferrer'); } catch {}
+                }
+        // ...existing code...
 
         async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
             const prompt = buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath);
@@ -5673,6 +5844,8 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         </button>
     </div>
     <!-- /Floating Factory Helper -->
+
+    <script src="assets/portal/guide_me_menu.js"></script>
 
 </body>
 </html>
