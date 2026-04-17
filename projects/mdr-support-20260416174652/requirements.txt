@@ -1,3 +1,14 @@
 fastapi==0.116.1
 uvicorn[standard]==0.32.1
 pydantic==2.10.3
+python-multipart==0.0.12
+
+# Azure SDKs (optional at runtime - service auto-falls back to local stubs)
+azure-identity==1.19.0
+azure-storage-blob==12.24.0
+azure-ai-documentintelligence==1.0.0
+azure-cosmos==4.9.0
+openai==1.54.4
+
+# Observability
+azure-monitor-opentelemetry==1.6.4

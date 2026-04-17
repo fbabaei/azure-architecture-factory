@@ -1,10 +1,20 @@
 [project]
 name = "mdr_support"
 version = "0.1.0"
-description = "Generated starter project for Mdr Support"
+description = "EY Tax MDR arrangement extraction agent (Phase 1)"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi==0.116.1",
   "uvicorn[standard]==0.32.1",
   "pydantic==2.10.3",
+  "python-multipart==0.0.12",
+  "azure-identity==1.19.0",
+  "azure-storage-blob==12.24.0",
+  "azure-ai-documentintelligence==1.0.0",
+  "azure-cosmos==4.9.0",
+  "openai==1.54.4",
+  "azure-monitor-opentelemetry==1.6.4",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

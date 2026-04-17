@@ -1,32 +1,65 @@
-# Mdr Support
+# MDR Arrangement Extraction Agent
 
-Generated from BRD `mdr-support.md` by the Azure-native factory runner.
+EY Tax — Mandatory Disclosure Rules (MDR) compliance agent, Phase 1.
 
-## What Was Generated
-- `docs/architecture-overview.md`
-- `docs/detailed-architecture.md`
-- `docs/governance-model.md`
-- `docs/delivery-milestones.md`
-- `docs/success-criteria.md`
-- `docs/traceability-matrix.md`
-- `diagrams/mdr-support-20260416174652.md`
-- `diagrams/mdr-support-20260416174652.drawio`
-- `diagrams/mdr-support-20260416174652-detailed-architecture.md`
-- `diagrams/mdr-support-20260416174652-detailed-architecture.drawio`
-- `src/copilot_api/main.py`
-- `src/copilot_api/models.py`
-- `src/copilot_api/services/copilot_service.py`
-- `requirements.txt`
-- `infra/main.bicep`
-- `tests/test_generated_project.py`
+Built from BRD [`docs/intake/mdr-support.md`](../../docs/intake/mdr-support.md)
+by the Azure-native factory runner and then hand-refined to match the BRD
+intent: a data-extraction agent that ingests PDFs/text, produces a
+structured JSON arrangement, and drives a human-in-the-loop clarification
+chat until every mandatory field is captured.
 
-## Selected Generation Options
-- Monitoring and observability wiring requested: No
+The implementation now aligns to the Compliance Intelligence Agent technical
+design with:
+- Two-agent behavior split (Chat orchestration + Extraction specialist).
+- Three feature routes: Q&A chat, document upload to draft, and text prompt
+  to draft.
+- Session lifecycle APIs under `/api/session/*` and case APIs under
+  `/api/case/*`.
+- Off-topic guardrail in `/api/chat` for non-compliance prompts.
 
-## BRD Requirement Highlights
-- The EY Tax team is looking to build a compliance agent to support Mandatory Disclosure Rules (MDR) arrangement creation. The goal is to deliver an agent that enables MDR‑specific Q&A and supports two arrangement‑creation flows:
-- File upload–based extraction
-- An interactive, human‑in‑the‑loop chat experience that guides users through creating an arrangement.
-- This CodeWith will focus on Phase 1, building a data extraction agent capable of ingesting unstructured documents (PDFs and text inputs), extracting structured MDR arrangement data into a consistent JSON format, and enabling an intelligent clarification loop. The agent will identify missing mandatory fields and prompt the user for additional inputs before generating an arrangement draft.
-- The outcome will be a more reliable, scalable, and user‑friendly arrangement creation workflow, with batch and multi‑arrangement processing explicitly deferred to a later phase.
-- This engagement will also produce a clear technical blueprint, reusable extraction patterns, and testable end‑to‑end flows that EY can extend into their MDR modernization roadmap and also while significantly reducing the manual time and effort required per document for arrangement creation and review.
+## What is generated
+- `src/mdr_agent/main.py` — FastAPI app (upload, extract, chat, draft).
+- `src/mdr_agent/models.py` — Pydantic schema for MDR arrangements.
+- `src/mdr_agent/services/document_ingestion.py` — Blob Storage + Document Intelligence.
+- `src/mdr_agent/services/extraction_agent.py` — Azure OpenAI structured extraction.
+- `src/mdr_agent/services/clarification_service.py` — Missing-field detection + prompts.
+- `src/mdr_agent/services/chat_session.py` — Human-in-the-loop state machine.
+- `src/mdr_agent/services/repository.py` — Cosmos DB persistence (with in-memory fallback).
+- `infra/main.bicep` — Container Apps, APIM, OpenAI, Document Intelligence,
+  AI Search, Blob, Cosmos, Key Vault, Managed Identity, App Insights,
+  Log Analytics.
+- `diagrams/mdr-support-20260416174652.drawio` — Overview diagram.
+- `diagrams/mdr-support-20260416174652-detailed-architecture.drawio` — Detailed
+  architecture, flows, and network view.
+- `docs/` — architecture, traceability, governance, milestones, success criteria.
+- `tests/test_generated_project.py` — smoke tests for the extraction and chat loop.
+
+## Run locally
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000 --reload
+```
+
+The agent auto-falls back to an in-memory repository and a heuristic
+extractor when Azure OpenAI / Blob / Cosmos endpoints are not configured,
+so the end-to-end upload + chat + draft flow works offline for tests.
+
+## API surface (design-aligned)
+- `POST /api/session` — create session.
+- `GET /api/session/{id}` — retrieve session history and current draft state.
+- `DELETE /api/session/{id}` — clear session and draft.
+- `POST /api/chat` — intent-routed chat endpoint (Q&A, clarification, off-topic guardrail).
+- `POST /api/upload` — upload file and extract first draft.
+- `POST /api/case/from-text` — create first draft from free text.
+- `GET /api/case/{id}` — get current draft.
+- `PUT /api/case/{id}` — user edits draft.
+- `POST /api/case/{id}/confirm` — finalize draft when mandatory fields are complete.
+
+## BRD requirement highlights
+- Compliance agent supporting **MDR-specific Q&A and arrangement creation**.
+- **File upload-based extraction** of unstructured PDFs / text into JSON.
+- **Interactive, human-in-the-loop chat** to resolve missing mandatory fields.
+- **Clarification loop** that identifies missing fields and prompts the user.
+- Batch / multi-arrangement processing is **explicitly deferred** to a later phase.
