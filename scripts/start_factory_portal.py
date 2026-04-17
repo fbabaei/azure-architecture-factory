@@ -565,6 +565,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_csa_copilot_ask()
+        if path == "/api/guide/refresh":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_guide_refresh()
 
         self._send_json({"error": "Not found"}, 404)
 
@@ -1146,6 +1150,79 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if not project_root.exists() or not project_root.is_dir():
             return None
         return project_root
+
+    def _handle_guide_refresh(self):
+        """Regenerate docs/guide-report.md for a project and patch the feed."""
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            return self._send_json({"error": f"Invalid request: {exc}"}, 400)
+
+        slug = str(payload.get("slug", "")).strip()
+        project_root = self._resolve_project_root(slug)
+        if not project_root:
+            return self._send_json({"error": "Project not found"}, 404)
+
+        try:
+            from generate_guide_report import generate_guide_report  # type: ignore
+        except ModuleNotFoundError:
+            from scripts.generate_guide_report import generate_guide_report  # type: ignore
+
+        try:
+            info = generate_guide_report(project_root)
+        except Exception as exc:  # pragma: no cover - defensive
+            return self._send_json({"error": f"Guide generation failed: {exc}"}, 500)
+
+        # Convert report path to a repo-relative forward-slash URL for the portal.
+        try:
+            rel_path = str(
+                pathlib.Path(info["report_path"]).resolve().relative_to(FACTORY_REPO_ROOT)
+            ).replace("\\", "/")
+        except ValueError:
+            rel_path = info["report_path"]
+
+        guide_block = {
+            "path": rel_path,
+            "generated_at": info.get("generated_at"),
+            "severity_counts": info.get("severity_counts", {}),
+        }
+
+        # Patch project-manifest.json.
+        manifest_path = project_root / "project-manifest.json"
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                manifest = {}
+            manifest["guide_report"] = guide_block
+            manifest_path.write_text(
+                json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+            )
+
+        # Patch factory-projects.generated.json if the project has a feed entry.
+        feed_path = FACTORY_REPO_ROOT / "factory-projects.generated.json"
+        if feed_path.is_file():
+            try:
+                feed = json.loads(feed_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                feed = {}
+            changed = False
+            for record in feed.get("projects") or []:
+                if isinstance(record, dict) and record.get("slug") == slug:
+                    record["guideReport"] = guide_block
+                    record.setdefault("links", {})["guideReport"] = rel_path
+                    changed = True
+                    break
+            if changed:
+                feed_path.write_text(
+                    json.dumps(feed, indent=2) + "\n", encoding="utf-8"
+                )
+
+        return self._send_json({"status": "ok", "slug": slug, "guideReport": guide_block}, 200)
 
     def _handle_project_files(self, slug: str):
         """Return a recursive file listing for a generated project."""

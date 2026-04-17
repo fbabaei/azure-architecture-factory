@@ -8,6 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    # Local sibling module.
+    from .generate_guide_report import generate_guide_report  # type: ignore
+except ImportError:  # pragma: no cover - executed as a script
+    from generate_guide_report import generate_guide_report  # type: ignore
+
 
 def process_brd_document(
     factory_repo_root: Path,
@@ -116,6 +122,24 @@ def process_brd_document(
     }
     _write_json(project_root / "project-manifest.json", manifest)
 
+    # Generate the deterministic guide report (heuristic, no LLM) so portal-only
+    # users can view workflow-guide output without running Copilot locally.
+    guide_report_info: dict[str, Any] = {}
+    try:
+        guide_report_info = generate_guide_report(project_root, brd_path)
+    except Exception as exc:  # pragma: no cover - defensive: never fail the run
+        guide_report_info = {"error": str(exc)}
+    if guide_report_info.get("report_path"):
+        manifest["guide_report"] = {
+            "path": _repo_relative(
+                factory_repo_root, Path(guide_report_info["report_path"])
+            ),
+            "generated_at": guide_report_info.get("generated_at"),
+            "severity_counts": guide_report_info.get("severity_counts", {}),
+        }
+        project_links["guideReport"] = manifest["guide_report"]["path"]
+        _write_json(project_root / "project-manifest.json", manifest)
+
     orchestration_log = "\n".join([
         f"[{generated_at_iso}] [PHASE 0] project-manifest.json initialized",
         f"[{generated_at_iso}] [PHASE 1] BRD parsed from {brd_path.name}",
@@ -153,6 +177,8 @@ def process_brd_document(
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
     }
+    if manifest.get("guide_report"):
+        project_record["guideReport"] = manifest["guide_report"]
     _update_project_feed(factory_repo_root / "factory-projects.generated.json", generated_at_iso, project_record)
 
     return {

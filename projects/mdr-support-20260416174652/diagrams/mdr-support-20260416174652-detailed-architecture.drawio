@@ -1,0 +1,215 @@
+<mxfile host="65bd71144e">
+  <diagram id="mdr-logical" name="MDR Support - Logical Architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="MDR Support - Detailed Logical Architecture (Phase 1)" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="980" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="laneClient" value="User and UX" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="260" height="900" as="geometry"/>
+        </mxCell>
+        <mxCell id="laneApp" value="Application and Orchestration" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="80" width="520" height="900" as="geometry"/>
+        </mxCell>
+        <mxCell id="laneAI" value="AI and Rules" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="80" width="320" height="900" as="geometry"/>
+        </mxCell>
+        <mxCell id="laneData" value="State and Storage" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="80" width="330" height="900" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="u1" value="MDR Analyst" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="laneClient">
+          <mxGeometry x="25" y="70" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="u2" value="Reviewer / Approver" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="laneClient">
+          <mxGeometry x="25" y="160" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="u3" value="Web UI / Internal Portal" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="laneClient">
+          <mxGeometry x="25" y="260" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="MDR API Service\n(Health + Ask + Extraction APIs)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="laneApp">
+          <mxGeometry x="30" y="70" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="Orchestration Layer\n(workflow state machine)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="laneApp">
+          <mxGeometry x="280" y="70" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="Document Ingestion Adapter\n(PDF/text normalization)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="laneApp">
+          <mxGeometry x="30" y="220" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="Clarification Manager\n(question loop + merge)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="laneApp">
+          <mxGeometry x="280" y="220" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="Arrangement Draft Builder\n(canonical JSON output)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="laneApp">
+          <mxGeometry x="155" y="360" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a6" value="Observability Hooks\n(trace, metrics, logs)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="laneApp">
+          <mxGeometry x="155" y="510" width="210" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="i1" value="Document Intelligence\nOCR + structure extraction" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneAI">
+          <mxGeometry x="45" y="120" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="i2" value="LLM Extraction and\nNormalization" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneAI">
+          <mxGeometry x="45" y="250" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="i3" value="MDR Rules Validator\n(required fields + constraints)" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneAI">
+          <mxGeometry x="45" y="380" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="i4" value="Policy and Compliance\nchecks" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneAI">
+          <mxGeometry x="45" y="510" width="230" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d1" value="Raw Document Store\n(Blob)" style="shape=cylinder3;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="45" y="120" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="Session and Clarification State\n(Cosmos/SQL)" style="shape=cylinder3;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="45" y="250" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3" value="Arrangement Draft JSON Store" style="shape=cylinder3;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="45" y="380" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d4" value="Audit and Trace Records" style="shape=cylinder3;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="45" y="510" width="230" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="submit files / questions" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="u3" target="a1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="route" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="ingest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="a2" target="a3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="persist raw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a3" target="d1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="extract" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="a2" target="i1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="normalize" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="i1" target="i2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="i2" target="i3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="missing fields" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="i3" target="a4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="state" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a4" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" value="build draft" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="a4" target="a5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e11" value="save" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a5" target="d3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" value="audit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a5" target="d4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" value="telemetry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="a1" target="a6"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="mdr-seq" name="MDR Support - Sequence Flows">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="stitle" value="MDR Support - Sequence Flows (Upload and Clarification)" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="980" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="l1" value="User" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="90" width="220" height="1020" as="geometry"/></mxCell>
+        <mxCell id="l2" value="Portal UI" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="300" y="90" width="320" height="1020" as="geometry"/></mxCell>
+        <mxCell id="l3" value="MDR API and Orchestrator" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="660" y="90" width="420" height="1020" as="geometry"/></mxCell>
+        <mxCell id="l4" value="AI and Storage" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1120" y="90" width="430" height="1020" as="geometry"/></mxCell>
+
+        <mxCell id="h1" value="Flow 1 - File Upload Extraction" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="90" width="1510" height="30" as="geometry"/></mxCell>
+        <mxCell id="s1" value="1 Upload PDF/Text" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l1"><mxGeometry x="20" y="60" width="170" height="46" as="geometry"/></mxCell>
+        <mxCell id="s2" value="2 POST /api/mdr/extractions" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l2"><mxGeometry x="25" y="60" width="260" height="46" as="geometry"/></mxCell>
+        <mxCell id="s3" value="3 Start extraction session" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="60" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="s4" value="4 OCR + field extraction" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l4"><mxGeometry x="45" y="60" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="s5" value="5 Validate mandatory fields" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="130" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="s6" value="6 Persist state + missing fields" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l4"><mxGeometry x="45" y="130" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="s7" value="7 Return extraction result" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="200" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="s8" value="8 Show extracted fields + prompts" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l2"><mxGeometry x="25" y="200" width="260" height="46" as="geometry"/></mxCell>
+
+        <mxCell id="h2" value="Flow 2 - Clarification Loop" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="430" width="1510" height="30" as="geometry"/></mxCell>
+        <mxCell id="c1" value="1 Answer clarification questions" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l1"><mxGeometry x="20" y="400" width="170" height="46" as="geometry"/></mxCell>
+        <mxCell id="c2" value="2 POST /clarifications" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l2"><mxGeometry x="25" y="400" width="260" height="46" as="geometry"/></mxCell>
+        <mxCell id="c3" value="3 Merge answers into session" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="400" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="c4" value="4 Re-validate MDR completeness" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l4"><mxGeometry x="45" y="400" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="c5" value="5 Build/refresh arrangement draft" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="470" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="c6" value="6 Persist draft + audit" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l4"><mxGeometry x="45" y="470" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="c7" value="7 Return status (ready/pending)" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="540" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="c8" value="8 Show updated draft / next prompts" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l2"><mxGeometry x="25" y="540" width="260" height="46" as="geometry"/></mxCell>
+
+        <mxCell id="h3" value="Flow 3 - Readiness and Review" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="760" width="1510" height="30" as="geometry"/></mxCell>
+        <mxCell id="r1" value="1 Open draft for review" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l1"><mxGeometry x="20" y="730" width="170" height="46" as="geometry"/></mxCell>
+        <mxCell id="r2" value="2 GET /draft" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l2"><mxGeometry x="25" y="730" width="260" height="46" as="geometry"/></mxCell>
+        <mxCell id="r3" value="3 Retrieve canonical JSON + audit" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l3"><mxGeometry x="40" y="730" width="320" height="46" as="geometry"/></mxCell>
+        <mxCell id="r4" value="4 Return final draft snapshot" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="l4"><mxGeometry x="45" y="730" width="320" height="46" as="geometry"/></mxCell>
+
+        <mxCell id="se1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s1" target="s2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s2" target="s3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s3" target="s4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s4" target="s5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s5" target="s6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s6" target="s7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="s7" target="s8"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="ce1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c1" target="c2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c2" target="c3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c3" target="c4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c4" target="c5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c5" target="c6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c6" target="c7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="c7" target="c8"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="re1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="r1" target="r2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="re2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="r2" target="r3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="re3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="r3" target="r4"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="mdr-fail" name="MDR Support - Failure Paths">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="ft" value="MDR Support - Failure Paths and Recovery" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="330" y="20" width="940" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fl1" value="User and UI" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="80" width="360" height="930" as="geometry"/></mxCell>
+        <mxCell id="fl2" value="API and Orchestrator" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="430" y="80" width="470" height="930" as="geometry"/></mxCell>
+        <mxCell id="fl3" value="AI and Data Dependencies" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="930" y="80" width="620" height="930" as="geometry"/></mxCell>
+
+        <mxCell id="f0" value="Start extraction" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fl1"><mxGeometry x="30" y="60" width="280" height="48" as="geometry"/></mxCell>
+        <mxCell id="f1" value="Validate payload and content type" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="30" y="60" width="380" height="48" as="geometry"/></mxCell>
+        <mxCell id="f2" value="Input valid?" style="rhombus;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="145" y="130" width="150" height="100" as="geometry"/></mxCell>
+        <mxCell id="f3" value="400 bad request\nShow field-level validation errors" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl1"><mxGeometry x="30" y="240" width="280" height="64" as="geometry"/></mxCell>
+
+        <mxCell id="f4" value="Call extraction dependencies" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="30" y="260" width="380" height="48" as="geometry"/></mxCell>
+        <mxCell id="f5" value="Document Intelligence unavailable" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl3"><mxGeometry x="30" y="250" width="270" height="60" as="geometry"/></mxCell>
+        <mxCell id="f6" value="LLM timeout / throttling" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl3"><mxGeometry x="330" y="250" width="250" height="60" as="geometry"/></mxCell>
+        <mxCell id="f7" value="Retry policy exceeded?" style="rhombus;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="145" y="340" width="150" height="100" as="geometry"/></mxCell>
+        <mxCell id="f8" value="503 dependency unavailable\nPrompt user to retry" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl1"><mxGeometry x="30" y="450" width="280" height="64" as="geometry"/></mxCell>
+
+        <mxCell id="f9" value="Persist extraction/session state" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="30" y="520" width="380" height="48" as="geometry"/></mxCell>
+        <mxCell id="f10" value="State store write failed" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl3"><mxGeometry x="30" y="515" width="270" height="60" as="geometry"/></mxCell>
+        <mxCell id="f11" value="500 internal error\nReturn correlation id" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fl1"><mxGeometry x="30" y="590" width="280" height="64" as="geometry"/></mxCell>
+
+        <mxCell id="f12" value="Clarification answer merge" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="30" y="680" width="380" height="48" as="geometry"/></mxCell>
+        <mxCell id="f13" value="Conflict with existing values?" style="rhombus;whiteSpace=wrap;" vertex="1" parent="fl2"><mxGeometry x="145" y="750" width="150" height="100" as="geometry"/></mxCell>
+        <mxCell id="f14" value="409 conflict\nRequest explicit user override" style="rounded=1;whiteSpace=wrap;fillColor=#fff4e5;strokeColor=#d79b00;" vertex="1" parent="fl1"><mxGeometry x="30" y="860" width="280" height="64" as="geometry"/></mxCell>
+        <mxCell id="f15" value="200 success\nDraft updated" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="fl1"><mxGeometry x="30" y="930" width="280" height="56" as="geometry"/></mxCell>
+
+        <mxCell id="fe1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f0" target="f1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f1" target="f2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe3" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f2" target="f3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe4" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="f2" target="f4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe5" value="failure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f4" target="f5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe6" value="failure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f4" target="f6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f5" target="f7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f6" target="f7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe9" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f7" target="f8"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe10" value="no, retry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="f7" target="f4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f4" target="f9"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe12" value="write fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f9" target="f10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="f10" target="f11"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="f9" target="f12"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="f12" target="f13"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe16" value="conflict" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#d79b00;" edge="1" parent="1" source="f13" target="f14"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe17" value="no conflict" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="f13" target="f15"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
