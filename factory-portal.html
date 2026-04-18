@@ -4700,8 +4700,8 @@
                            ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
                            🧠 View Analysis</a>
                         <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
+                        <a href="#" class="project-link" onclick="openModelSelectorModal('${project.slug}', '${safeTitle}'); return false;" title="Pick an Azure OpenAI chat model with price and trade-off info. Recommended before deploying.">🤖 Select Model</a>
                         <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
-                        <a href="#" class="project-link" onclick="openModelSelectorModal('${project.slug}', '${safeTitle}'); return false;" title="Pick an Azure OpenAI chat model with price and trade-off info, then generate the commands to apply it">🤖 Select Model</a>
                         <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
@@ -5377,6 +5377,12 @@
                     `<tr><td>${escapeHtml(p.label)}</td><td>$${p.input.toFixed(2)}</td><td>$${p.output.toFixed(2)}</td></tr>`
                 ).join('');
             }
+            // Honor the project-level selection made via 🤖 Select Model, if present.
+            const selectEl = document.getElementById('aimodel-select');
+            const preselected = getSelectedModel(_costModalSlug);
+            if (selectEl && preselected && Array.from(selectEl.options).some(o => o.value === preselected)) {
+                selectEl.value = preselected;
+            }
             recalcAiModelCost();
         }
 
@@ -5545,12 +5551,28 @@ az deployment group what-if \\
               strengths: 'Strong step-by-step reasoning. Good for agentic workflows.',
               tradeoffs: 'Slower latency. No vision.' },
         ];
+        const MODEL_SELECTION_STORAGE_KEY = 'factoryPortalModelSelection';
         let _modelSelectorSlug = null;
         let _modelSelectorChoice = 'gpt-5.2';
 
+        function loadModelSelections() {
+            try { return JSON.parse(localStorage.getItem(MODEL_SELECTION_STORAGE_KEY) || '{}') || {}; }
+            catch { return {}; }
+        }
+        function getSelectedModel(slug) {
+            if (!slug) return 'gpt-5.2';
+            return loadModelSelections()[slug] || 'gpt-5.2';
+        }
+        function setSelectedModel(slug, model) {
+            if (!slug) return;
+            const all = loadModelSelections();
+            all[slug] = model;
+            try { localStorage.setItem(MODEL_SELECTION_STORAGE_KEY, JSON.stringify(all)); } catch {}
+        }
+
         function openModelSelectorModal(slug, title) {
             _modelSelectorSlug = slug;
-            _modelSelectorChoice = 'gpt-5.2';
+            _modelSelectorChoice = getSelectedModel(slug);
             document.getElementById('model-selector-project-title').textContent = title || slug;
             const rg = document.getElementById('model-resource-group');
             if (rg && !rg.value) rg.value = `${slug}-dev-rg`;
@@ -5577,7 +5599,7 @@ az deployment group what-if \\
                 return `
                 <label style="display:block;border:${border};background:${bg};border-radius:6px;padding:0.65rem 0.85rem;margin-bottom:0.45rem;cursor:pointer">
                     <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.25rem">
-                        <input type="radio" name="modelSelectorChoice" value="${m.key}" ${selected?'checked':''} onchange="_modelSelectorChoice='${m.key}';renderModelSelectorCards();renderModelApplyCommands()">
+                        <input type="radio" name="modelSelectorChoice" value="${m.key}" ${selected?'checked':''} onchange="_modelSelectorChoice='${m.key}';setSelectedModel(_modelSelectorSlug,'${m.key}');renderModelSelectorCards();renderModelApplyCommands();if(typeof updateDeployCommands==='function')updateDeployCommands();">
                         <strong style="font-size:0.92rem;font-family:monospace">${m.key}</strong>
                         <span style="font-size:0.7rem;background:${tierColor};color:#fff;padding:0.1rem 0.5rem;border-radius:10px">${m.tier}</span>
                         <span style="margin-left:auto;font-size:0.78rem;color:var(--text-secondary)">
@@ -5669,19 +5691,24 @@ ls projects/${safeSlug}/infra/`;
             const region = escapeHtml((document.getElementById('deploy-region')?.value           || '').trim() || 'eastus');
             const env    = escapeHtml((document.getElementById('deploy-environment')?.value      || '').trim() || 'dev');
             const slug   = escapeHtml(_deployModalSlug || '&lt;project-slug&gt;');
+            const selectedModel = getSelectedModel(_deployModalSlug);
+            const modelNote = selectedModel && selectedModel !== 'gpt-5.2'
+                ? `\n<span class="cmd-comment"># Note: overriding chat model to '${escapeHtml(selectedModel)}' (set via 🤖 Select Model).</span>`
+                : '';
+            const modelParam = selectedModel ? ` openAiChatDeployment=${escapeHtml(selectedModel)}` : '';
             const cmds = `<span class="cmd-comment"># Step 1 — Log in and set subscription</span>
 az login
 az account set --subscription ${sub}
 
 <span class="cmd-comment"># Step 2 — Create resource group (idempotent)</span>
 az group create --name ${rg} --location ${region} --output table
-
+${modelNote}
 <span class="cmd-comment"># Step 3 — Validate deployment (preflight check)</span>
 az deployment group validate \\
   --name ${slug}-${env}-validate \\
   --resource-group ${rg} \\
   --template-file projects/${slug}/infra/main.bicep \\
-  --parameters projects/${slug}/infra/params/${env}.bicepparam \\
+  --parameters projects/${slug}/infra/params/${env}.bicepparam${modelParam} \\
   --output table
 
 <span class="cmd-comment"># Step 4 — Deploy to Azure</span>
@@ -5689,7 +5716,7 @@ az deployment group create \\
   --name ${slug}-${env}-deploy \\
   --resource-group ${rg} \\
   --template-file projects/${slug}/infra/main.bicep \\
-  --parameters projects/${slug}/infra/params/${env}.bicepparam \\
+  --parameters projects/${slug}/infra/params/${env}.bicepparam${modelParam} \\
   --output json
 
 <span class="cmd-comment"># Step 5 — Show deployment outputs</span>
@@ -5697,7 +5724,13 @@ az deployment group show \\
   --name ${slug}-${env}-deploy \\
   --resource-group ${rg} \\
   --query 'properties.outputs' -o json`;
-            block.innerHTML = `<div class="whatif-cmd-block">${cmds}</div>
+            const banner = selectedModel
+                ? `<div style="background:#eff6fc;border-left:3px solid #0078d4;padding:0.5rem 0.75rem;margin-bottom:0.5rem;font-size:0.78rem">
+                       <strong>Selected chat model:</strong> <code>${escapeHtml(selectedModel)}</code>
+                       <a href="#" onclick="event.preventDefault();closeDeployModal();openModelSelectorModal(_deployModalSlug, document.getElementById('deploy-modal-project-title').textContent);" style="margin-left:0.5rem">Change →</a>
+                   </div>`
+                : '';
+            block.innerHTML = `${banner}<div class="whatif-cmd-block">${cmds}</div>
                 <button class="whatif-cmd-copy" onclick="copyDeployCommands(this)">📋 Copy commands</button>`;
             updateTeardownCommands();
         }
