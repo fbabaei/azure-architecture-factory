@@ -110,8 +110,9 @@ class AzureOpenAIQAService:
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
         from openai import AzureOpenAI
 
+        self._credential = DefaultAzureCredential()
         token_provider = get_bearer_token_provider(
-            DefaultAzureCredential(),
+            self._credential,
             "https://cognitiveservices.azure.com/.default",
         )
         self._client = AzureOpenAI(
@@ -120,34 +121,71 @@ class AzureOpenAIQAService:
             azure_ad_token_provider=token_provider,
         )
         self._deployment = settings.openai_deployment
+        self._embeddings_deployment = settings.openai_embeddings_deployment
         self._search_endpoint = settings.ai_search_endpoint.rstrip("/")
         self._search_index = settings.ai_search_index_name
+        self._search_vector_field = settings.ai_search_vector_field
+        self._search_semantic_configuration = settings.ai_search_semantic_configuration
         self._search_key = settings.ai_search_api_key
 
+    def _build_vector_query(self, question: str) -> list[float] | None:
+        try:
+            response = self._client.embeddings.create(
+                model=self._embeddings_deployment,
+                input=question[:4000],
+            )
+        except Exception as exc:  # pragma: no cover - depends on Azure services
+            logger.warning(
+                "Embedding generation failed, continuing with semantic search: %s",
+                exc,
+            )
+            return None
+
+        if not response.data:
+            return None
+        return list(response.data[0].embedding)
+
     def _retrieve_context(self, question: str) -> str:
-        if not (self._search_endpoint and self._search_key and self._search_index):
+        if not (self._search_endpoint and self._search_index):
             return ""
+
+        vector = self._build_vector_query(question)
+        payload: dict[str, object] = {
+            "search": question,
+            "top": 3,
+            "queryType": "semantic",
+            "semanticConfiguration": self._search_semantic_configuration,
+            "select": "title,content,source,category",
+        }
+        if vector:
+            payload["vectorQueries"] = [
+                {
+                    "kind": "vector",
+                    "vector": vector,
+                    "fields": self._search_vector_field,
+                    "k": 5,
+                }
+            ]
 
         url = (
             f"{self._search_endpoint}/indexes/{self._search_index}/docs/search"
             "?api-version=2024-07-01"
         )
-        body = json.dumps(
-            {
-                "search": question,
-                "top": 3,
-                "queryType": "semantic",
-                "semanticConfiguration": "default",
-            }
-        ).encode("utf-8")
+        body = json.dumps(payload).encode("utf-8")
+
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if self._search_key:
+            headers["api-key"] = self._search_key
+        else:
+            token = self._credential.get_token("https://search.azure.com/.default")
+            headers["Authorization"] = f"Bearer {token.token}"
 
         req = urllib_request.Request(
             url=url,
             data=body,
-            headers={
-                "Content-Type": "application/json",
-                "api-key": self._search_key,
-            },
+            headers=headers,
             method="POST",
         )
 

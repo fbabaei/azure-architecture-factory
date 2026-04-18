@@ -10,9 +10,9 @@ Data, Security / Observability**.
 - **Identity**: Entra ID for user JWTs and user-assigned Managed Identity for the app.
 - **API Gateway**: API Management (JWT validation + rate limits).
 - **MDR Agent Service**: Container Apps-hosted FastAPI app.
-  Internal capabilities: upload ingestion, extraction agent, clarification engine,
-  session/case repository, chat router with `qa` / `clarification` / `off_topic` modes.
-- **AI Services**: Azure OpenAI (`gpt-4o`), Document Intelligence, and optional Azure AI Search retrieval.
+  Internal capabilities: Chat Orchestrator Agent, Extraction Specialist Agent,
+  upload ingestion, clarification engine, session/case repository, and chat routing.
+- **AI Services**: Azure OpenAI (`gpt-5.2` + `text-embedding-3-small`), Document Intelligence, and hybrid Azure AI Search retrieval.
 - **Data**: Blob Storage plus Cosmos DB containers for session/case data
   (`arrangements`, `sessions`, `case-drafts`, `audit-log`).
 - **Security / Observability**: Key Vault, App Insights, Log Analytics, Azure Monitor.
@@ -20,8 +20,8 @@ Data, Security / Observability**.
 Edge highlights:
 - APIM -> API route and policy enforcement.
 - API -> Document Intelligence (PDF layout extraction).
-- API -> OpenAI (structured extraction + Q&A generation).
-- API -> AI Search (optional retrieval context for Q&A).
+- API -> OpenAI (structured extraction, Q&A generation, embeddings).
+- API -> AI Search (hybrid vector + semantic retrieval context for Q&A).
 - API -> Blob Storage (raw source and knowledge-base documents).
 - API <-> Cosmos (session/case state, draft updates, turn history, audit trail).
 - API -> App Insights (telemetry, traces, and metrics).
@@ -34,6 +34,10 @@ Three horizontal flow lanes:
    (`POST /api/session`, `POST /api/chat`, retrieval of missing fields, iterative updates).
 3. **Flow C: Case Lifecycle and Finalisation**
    (`POST /api/case/from-text`, `GET/PUT /api/case/{id}`, `POST /api/case/{id}/confirm`).
+
+## Hybrid RAG Bootstrap
+- Run `scripts/bootstrap_search_index.py` after deployment to create the `contentVector`
+  field, semantic configuration, and seed MDR reference content.
 
 ## Tab 3 - Security and Governance
 - Azure Policy intent: enforce managed identity and disable key-based/local auth where supported.

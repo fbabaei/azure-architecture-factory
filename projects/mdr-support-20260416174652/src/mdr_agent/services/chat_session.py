@@ -92,7 +92,7 @@ def handle_chat_turn(
             arrangement, answered_field, user_message
         )
         arrangement.arrangement_id = arrangement_id
-        repository.save(arrangement)
+        repository.save(arrangement, reason="clarification_applied")
 
     post_bundle = build_clarifications(arrangement)
     post_bundle = ClarificationBundle.model_validate(

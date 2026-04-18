@@ -1,7 +1,7 @@
 # Deploy - MDR Arrangement Extraction Agent
 
 ## Prerequisites
-- Azure subscription with quota for Azure OpenAI (e.g. gpt-4o) and
+- Azure subscription with quota for Azure OpenAI (e.g. gpt-5.2) and
   Document Intelligence in your target region.
 - Azure AI Search capacity (Basic or Standard) for compliance knowledge
   retrieval.
@@ -44,6 +44,18 @@ user-assigned managed identity (`<baseName>-mi`):
 ```powershell
 $mi = az identity show -g rg-mdr-support-dev -n mdr-support-dev-mi --query principalId -o tsv
 # assign roles via az role assignment create ...
+```
+
+## Bootstrap the hybrid AI Search index
+The application now issues semantic + vector queries. After infrastructure
+deployment, create the vector-capable index and optionally seed it with MDR source
+content:
+
+```powershell
+$env:AZURE_OPENAI_ENDPOINT = "https://<openai>.openai.azure.com/"
+$env:AZURE_AI_SEARCH_ENDPOINT = "https://<search>.search.windows.net"
+$env:AZURE_AI_SEARCH_INDEX_NAME = "compliance-knowledge-base"
+python .\scripts\bootstrap_search_index.py --source-dir ..\..\docs\intake
 ```
 
 ## Build & push the container

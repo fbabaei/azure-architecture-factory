@@ -21,11 +21,20 @@ param openAiSku string = 'S0'
 @description('Azure AI Search SKU (basic or standard)')
 param aiSearchSku string = 'basic'
 
-@description('Azure OpenAI chat deployment name (e.g. gpt-4o)')
-param openAiChatDeployment string = 'gpt-4o'
+@description('Azure OpenAI chat deployment name (e.g. gpt-5.2)')
+param openAiChatDeployment string = 'gpt-5.2'
 
 @description('Azure OpenAI chat model name')
-param openAiChatModel string = 'gpt-4o'
+param openAiChatModel string = 'gpt-5.2'
+
+@description('Azure OpenAI embeddings deployment name')
+param openAiEmbeddingsDeployment string = 'text-embedding-3-small'
+
+@description('Azure OpenAI embeddings model name')
+param openAiEmbeddingsModel string = 'text-embedding-3-small'
+
+@description('Optional audience for APIM JWT validation. Leave empty to skip validate-jwt.')
+param apiAudience string = ''
 
 @description('Container image for the MDR agent API')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
@@ -33,6 +42,18 @@ param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-hellowo
 
 var baseName = toLower(replace('${workloadName}-${environment}', '_', '-'))
 var storageName = take('stg${uniqueString(resourceGroup().id, baseName)}', 24)
+var openIdConfigUrl = '${az.environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0/.well-known/openid-configuration'
+var apimPolicyXml = empty(apiAudience)
+  ? '<policies><inbound><base /><rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Key ?? context.Request.IpAddress)" /><set-backend-service backend-id="mdr-agent-backend" /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+  : '<policies><inbound><base /><validate-jwt header-name="Authorization" require-scheme="Bearer" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized"><openid-config url="${openIdConfigUrl}" /><audiences><audience>${apiAudience}</audience></audiences></validate-jwt><rate-limit-by-key calls="60" renewal-period="60" counter-key="@(context.Subscription?.Key ?? context.Request.IpAddress)" /><set-backend-service backend-id="mdr-agent-backend" /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+var roleDefinitionIds = {
+  openAiUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+  cognitiveServicesUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
+  blobContributor: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  cosmosContributor: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00000000-0000-0000-0000-000000000002')
+  keyVaultSecretsUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+  searchIndexReader: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')
+}
 var tags = {
   workload: workloadName
   environment: environment
@@ -233,6 +254,15 @@ resource openAiDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024
   }
 }
 
+resource openAiEmbeddings 'Microsoft.CognitiveServices/accounts/deployments@2024-06-01-preview' = {
+  parent: openAi
+  name: openAiEmbeddingsDeployment
+  sku: { name: 'Standard', capacity: 20 }
+  properties: {
+    model: { format: 'OpenAI', name: openAiEmbeddingsModel, version: '1' }
+  }
+}
+
 resource documentIntelligence 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: '${baseName}-docintel'
   location: location
@@ -289,6 +319,7 @@ resource mdrAgent 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             { name: 'AZURE_OPENAI_ENDPOINT', value: openAi.properties.endpoint }
             { name: 'AZURE_OPENAI_DEPLOYMENT', value: openAiChatDeployment }
+            { name: 'AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT', value: openAiEmbeddingsDeployment }
             { name: 'AZURE_DOC_INTEL_ENDPOINT', value: documentIntelligence.properties.endpoint }
             { name: 'AZURE_BLOB_ACCOUNT_URL', value: storage.properties.primaryEndpoints.blob }
             { name: 'AZURE_BLOB_CONTAINER', value: documentsContainer.name }
@@ -296,9 +327,12 @@ resource mdrAgent 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'AZURE_COSMOS_DATABASE', value: cosmosDb.name }
             { name: 'AZURE_COSMOS_ARRANGEMENTS_CONTAINER', value: arrangementsContainer.name }
             { name: 'AZURE_COSMOS_SESSIONS_CONTAINER', value: sessionsContainer.name }
+            { name: 'AZURE_COSMOS_CASE_DRAFTS_CONTAINER', value: caseDraftsContainer.name }
+            { name: 'AZURE_COSMOS_AUDIT_CONTAINER', value: auditLogContainer.name }
             { name: 'AZURE_AI_SEARCH_ENDPOINT', value: 'https://${aiSearch.name}.search.windows.net' }
             { name: 'AZURE_AI_SEARCH_INDEX_NAME', value: 'compliance-knowledge-base' }
-            { name: 'AZURE_AI_SEARCH_API_KEY', value: aiSearch.listAdminKeys().primaryKey }
+            { name: 'AZURE_AI_SEARCH_VECTOR_FIELD', value: 'contentVector' }
+            { name: 'AZURE_AI_SEARCH_SEMANTIC_CONFIGURATION', value: 'default' }
             { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: enableObservability ? appInsights!.properties.ConnectionString : '' }
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId }
           ]
@@ -320,6 +354,232 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
     publisherEmail: empty(operationsEmail) ? 'opsteam@example.com' : operationsEmail
   }
   identity: { type: 'SystemAssigned' }
+}
+
+resource apimBackend 'Microsoft.ApiManagement/service/backends@2023-05-01-preview' = {
+  parent: apim
+  name: 'mdr-agent-backend'
+  properties: {
+    protocol: 'http'
+    url: 'https://${mdrAgent.properties.configuration.ingress.fqdn}'
+    title: 'MDR Agent Container App'
+    description: 'Container Apps backend for the MDR support API'
+    tls: {
+      validateCertificateChain: true
+      validateCertificateName: true
+    }
+  }
+}
+
+resource apimApi 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+  parent: apim
+  name: 'mdr-support-api'
+  properties: {
+    displayName: 'MDR Support API'
+    description: 'Gateway facade for the MDR support two-agent runtime.'
+    path: 'mdr'
+    protocols: [
+      'https'
+    ]
+    apiType: 'http'
+    serviceUrl: 'https://${mdrAgent.properties.configuration.ingress.fqdn}'
+    subscriptionRequired: false
+  }
+}
+
+resource apimHealthOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'get-health'
+  properties: {
+    displayName: 'Health probe'
+    method: 'GET'
+    urlTemplate: '/health'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Healthy'
+      }
+    ]
+  }
+}
+
+resource apimChatOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'post-api-chat'
+  properties: {
+    displayName: 'Chat route'
+    method: 'POST'
+    urlTemplate: '/api/chat'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Chat response'
+      }
+    ]
+  }
+}
+
+resource apimUploadOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'post-api-upload'
+  properties: {
+    displayName: 'Upload and extract'
+    method: 'POST'
+    urlTemplate: '/api/upload'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Extraction result'
+      }
+    ]
+  }
+}
+
+resource apimCaseFromTextOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'post-api-case-from-text'
+  properties: {
+    displayName: 'Create case from text'
+    method: 'POST'
+    urlTemplate: '/api/case/from-text'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Text extraction result'
+      }
+    ]
+  }
+}
+
+resource apimSessionOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'post-api-session'
+  properties: {
+    displayName: 'Create session'
+    method: 'POST'
+    urlTemplate: '/api/session'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Session created'
+      }
+    ]
+  }
+}
+
+resource apimCaseOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'get-api-case'
+  properties: {
+    displayName: 'Get case'
+    method: 'GET'
+    urlTemplate: '/api/case/{arrangementId}'
+    templateParameters: [
+      {
+        name: 'arrangementId'
+        type: 'string'
+        required: true
+      }
+    ]
+    responses: [
+      {
+        statusCode: 200
+        description: 'Case returned'
+      }
+    ]
+  }
+}
+
+resource apimConfirmCaseOperation 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'post-api-case-confirm'
+  properties: {
+    displayName: 'Confirm case'
+    method: 'POST'
+    urlTemplate: '/api/case/{arrangementId}/confirm'
+    templateParameters: [
+      {
+        name: 'arrangementId'
+        type: 'string'
+        required: true
+      }
+    ]
+    responses: [
+      {
+        statusCode: 200
+        description: 'Case confirmed'
+      }
+    ]
+  }
+}
+
+resource apimApiPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-05-01-preview' = {
+  parent: apimApi
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: apimPolicyXml
+  }
+}
+
+resource openAiRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(openAi.id, managedIdentity.id, 'openAiUser')
+  scope: openAi
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.openAiUser
+  }
+}
+
+resource docIntelRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(documentIntelligence.id, managedIdentity.id, 'cognitiveServicesUser')
+  scope: documentIntelligence
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.cognitiveServicesUser
+  }
+}
+
+resource blobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storage.id, managedIdentity.id, 'blobContributor')
+  scope: storage
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.blobContributor
+  }
+}
+
+resource cosmosRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(cosmos.id, managedIdentity.id, 'cosmosContributor')
+  scope: cosmos
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.cosmosContributor
+  }
+}
+
+resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, managedIdentity.id, 'keyVaultSecretsUser')
+  scope: keyVault
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.keyVaultSecretsUser
+  }
+}
+
+resource aiSearchRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(aiSearch.id, managedIdentity.id, 'searchIndexReader')
+  scope: aiSearch
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.searchIndexReader
+  }
 }
 
 output managedIdentityClientId string = managedIdentity.properties.clientId

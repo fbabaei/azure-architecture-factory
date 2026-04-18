@@ -10,9 +10,11 @@ chat until every mandatory field is captured.
 
 The implementation now aligns to the Compliance Intelligence Agent technical
 design with:
-- Two-agent behavior split (Chat orchestration + Extraction specialist).
+- Two-agent runtime split (Chat Orchestrator Agent + Extraction Specialist Agent).
 - Three feature routes: Q&A chat, document upload to draft, and text prompt
   to draft.
+- Hybrid RAG support in the Q&A path using semantic + vector retrieval when
+  a vector-capable Azure AI Search index is provisioned.
 - Session lifecycle APIs under `/api/session/*` and case APIs under
   `/api/case/*`.
 - Off-topic guardrail in `/api/chat` for non-compliance prompts.
@@ -20,6 +22,7 @@ design with:
 ## What is generated
 - `src/mdr_agent/main.py` — FastAPI app (upload, extract, chat, draft).
 - `src/mdr_agent/models.py` — Pydantic schema for MDR arrangements.
+- `src/mdr_agent/services/agent_runtime.py` — logical Chat + Extraction agent runtime.
 - `src/mdr_agent/services/document_ingestion.py` — Blob Storage + Document Intelligence.
 - `src/mdr_agent/services/extraction_agent.py` — Azure OpenAI structured extraction.
 - `src/mdr_agent/services/clarification_service.py` — Missing-field detection + prompts.
@@ -33,6 +36,7 @@ design with:
   architecture, flows, and network view.
 - `docs/` — architecture, traceability, governance, milestones, success criteria.
 - `tests/test_generated_project.py` — smoke tests for the extraction and chat loop.
+- `scripts/bootstrap_search_index.py` — creates and seeds the vector-capable search index.
 
 ## Run locally
 ```powershell

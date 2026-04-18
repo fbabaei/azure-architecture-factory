@@ -85,6 +85,7 @@ class ExtractionResult(BaseModel):
     arrangement_id: str
     arrangement: MDRArrangement
     confidence: float = Field(ge=0.0, le=1.0)
+    confidence_label: Literal["low", "medium", "high"] = "low"
     source_pages: int
     extraction_model: str
 

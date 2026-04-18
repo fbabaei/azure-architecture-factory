@@ -16,7 +16,10 @@ class Settings:
 
     # Azure OpenAI
     openai_endpoint: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-    openai_deployment: str = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+    openai_deployment: str = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.2")
+    openai_embeddings_deployment: str = os.getenv(
+        "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT", "text-embedding-3-small"
+    )
     openai_api_version: str = os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
 
     # Azure AI Document Intelligence
@@ -35,11 +38,23 @@ class Settings:
     cosmos_sessions_container: str = os.getenv(
         "AZURE_COSMOS_SESSIONS_CONTAINER", "sessions"
     )
+    cosmos_case_drafts_container: str = os.getenv(
+        "AZURE_COSMOS_CASE_DRAFTS_CONTAINER", "case-drafts"
+    )
+    cosmos_audit_container: str = os.getenv(
+        "AZURE_COSMOS_AUDIT_CONTAINER", "audit-log"
+    )
 
     # Azure AI Search (optional for compliance knowledge grounding)
     ai_search_endpoint: str = os.getenv("AZURE_AI_SEARCH_ENDPOINT", "")
     ai_search_index_name: str = os.getenv(
         "AZURE_AI_SEARCH_INDEX_NAME", "compliance-knowledge-base"
+    )
+    ai_search_vector_field: str = os.getenv(
+        "AZURE_AI_SEARCH_VECTOR_FIELD", "contentVector"
+    )
+    ai_search_semantic_configuration: str = os.getenv(
+        "AZURE_AI_SEARCH_SEMANTIC_CONFIGURATION", "default"
     )
     ai_search_api_key: str = os.getenv("AZURE_AI_SEARCH_API_KEY", "")
 

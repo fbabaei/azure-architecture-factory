@@ -21,6 +21,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
@@ -42,18 +43,31 @@ from .models import (
     TextDraftRequest,
     UploadResponse,
 )
-from .services.chat_session import handle_chat_turn
+from .services.agent_runtime import AgentRuntime, build_agent_runtime
 from .services.clarification_service import build_clarifications
 from .services.document_ingestion import (
     DocumentIngestionService,
     build_ingestion_service,
 )
-from .services.extraction_agent import ExtractionAgent, build_extraction_agent
-from .services.guardrails import is_off_topic, off_topic_reply
+from .services.extraction_agent import (
+    ExtractionAgent,
+    ExtractionError,
+    build_extraction_agent,
+)
 from .services.qa_service import QAService, build_qa_service
 from .services.repository import ArrangementRepository, build_repository
 
 logger = logging.getLogger("mdr_agent")
+
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+ALLOWED_UPLOAD_EXTENSIONS = {".txt", ".pdf", ".doc", ".docx"}
+ALLOWED_UPLOAD_TYPES = {
+    "application/msword",
+    "application/octet-stream",
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+}
 
 
 @asynccontextmanager
@@ -106,8 +120,34 @@ def _qa() -> QAService:
     return build_qa_service(_settings())
 
 
+@lru_cache(maxsize=1)
+def _runtime() -> AgentRuntime:
+    return build_agent_runtime(
+        ingestion=_ingestion(),
+        extractor=_extractor(),
+        repository=_repo(),
+        qa_service=_qa(),
+    )
+
+
 def _new_session_id() -> str:
     return str(uuid.uuid4())
+
+
+def _validate_upload(file: UploadFile, data: bytes) -> None:
+    if not data:
+        raise HTTPException(status_code=400, detail="empty upload")
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="upload exceeds 10 MB limit")
+
+    filename = (file.filename or "upload.bin").strip()
+    extension = Path(filename).suffix.lower()
+    content_type = (file.content_type or "application/octet-stream").lower()
+
+    if extension and extension not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(status_code=415, detail="unsupported file extension")
+    if content_type not in ALLOWED_UPLOAD_TYPES and extension not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(status_code=415, detail="unsupported content type")
 
 
 @app.get("/health")
@@ -127,31 +167,19 @@ async def upload_document(
     arrangement_id: str | None = Form(default=None),
 ) -> ExtractionResult:
     data = await file.read()
-    if not data:
-        raise HTTPException(status_code=400, detail="empty upload")
+    _validate_upload(file, data)
 
     arrangement_id = arrangement_id or str(uuid.uuid4())
-    ingested = _ingestion().ingest(
-        arrangement_id=arrangement_id,
-        filename=file.filename or "upload.bin",
-        content_type=file.content_type or "application/octet-stream",
-        data=data,
-    )
-
-    outcome = _extractor().extract(ingested.text)
-    arrangement = outcome.arrangement
-    arrangement.arrangement_id = arrangement_id
-    if reference and not arrangement.reference:
-        arrangement.reference = reference
-    _repo().save(arrangement)
-
-    return ExtractionResult(
-        arrangement_id=arrangement_id,
-        arrangement=arrangement,
-        confidence=outcome.confidence,
-        source_pages=ingested.page_count,
-        extraction_model=outcome.model,
-    )
+    try:
+        return _runtime().extraction_agent.extract_document(
+            arrangement_id=arrangement_id,
+            filename=file.filename or "upload.bin",
+            content_type=file.content_type or "application/octet-stream",
+            data=data,
+            reference=reference,
+        )
+    except ExtractionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @app.post("/api/session", response_model=SessionCreateResponse)
@@ -189,56 +217,20 @@ async def api_upload_document(
 @app.post("/api/case/from-text", response_model=ExtractionResult)
 def create_case_from_text(payload: TextDraftRequest) -> ExtractionResult:
     arrangement_id = payload.session_id or _new_session_id()
-    outcome = _extractor().extract(payload.text)
-    arrangement = outcome.arrangement
-    arrangement.arrangement_id = arrangement_id
-    if payload.reference and not arrangement.reference:
-        arrangement.reference = payload.reference
-    _repo().save(arrangement)
-    return ExtractionResult(
-        arrangement_id=arrangement_id,
-        arrangement=arrangement,
-        confidence=outcome.confidence,
-        source_pages=1,
-        extraction_model=outcome.model,
-    )
+    try:
+        return _runtime().extraction_agent.extract_text(
+            arrangement_id=arrangement_id,
+            text=payload.text,
+            reference=payload.reference,
+        )
+    except ExtractionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @app.post("/api/chat", response_model=ApiChatResponse)
 def api_chat(payload: ApiChatRequest) -> ApiChatResponse:
     session_id = payload.session_id or _new_session_id()
-    message = payload.message.strip()
-
-    if is_off_topic(message):
-        return ApiChatResponse(
-            session_id=session_id,
-            mode="off_topic",
-            reply=off_topic_reply(),
-            arrangement=_repo().get(session_id),
-        )
-
-    arrangement = _repo().get(session_id)
-    if arrangement is None:
-        answer = _qa().answer(message)
-        return ApiChatResponse(
-            session_id=session_id,
-            mode="qa",
-            reply=answer.answer,
-            arrangement=None,
-        )
-
-    response = handle_chat_turn(
-        arrangement_id=session_id,
-        user_message=message,
-        repository=_repo(),
-    )
-    return ApiChatResponse(
-        session_id=session_id,
-        mode="clarification",
-        reply=response.reply,
-        arrangement=response.arrangement,
-        clarifications=response.clarifications,
-    )
+    return _runtime().chat_agent.respond(session_id=session_id, message=payload.message)
 
 
 @app.get("/arrangements/{arrangement_id}", response_model=MDRArrangement)
@@ -270,10 +262,9 @@ def post_chat(arrangement_id: str, payload: ChatRequest) -> ChatResponse:
             status_code=400, detail="arrangement_id mismatch between URL and body"
         )
     try:
-        return handle_chat_turn(
+        return _runtime().extraction_agent.continue_clarification(
             arrangement_id=arrangement_id,
             user_message=payload.message,
-            repository=_repo(),
         )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -309,13 +300,19 @@ def api_get_case(arrangement_id: str) -> MDRArrangement:
 @app.put("/api/case/{arrangement_id}", response_model=MDRArrangement)
 def api_update_case(arrangement_id: str, payload: MDRArrangement) -> MDRArrangement:
     updated = payload.model_copy(update={"arrangement_id": arrangement_id})
-    _repo().save(updated)
+    _repo().save(updated, reason="case_updated")
     return updated
 
 
 @app.post("/api/case/{arrangement_id}/confirm", response_model=DraftResponse)
 def api_confirm_case(arrangement_id: str) -> DraftResponse:
-    return finalize_draft(arrangement_id)
+    draft = finalize_draft(arrangement_id)
+    _repo().record_event(
+        arrangement_id,
+        "case_confirmed",
+        details={"is_complete": True},
+    )
+    return draft
 
 
 @app.post("/qa", response_model=QAResponse)

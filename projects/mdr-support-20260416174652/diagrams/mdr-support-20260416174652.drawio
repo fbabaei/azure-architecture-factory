@@ -1,60 +1,116 @@
-<mxfile host="app.diagrams.net" version="24.7.3">
-  <diagram id="mdr-overview" name="MDR Agent - Overview">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
-      <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-        <mxCell id="title" value="MDR Arrangement Extraction Agent - Overview" style="text;fontSize=18;fontStyle=1;align=center;" parent="1" vertex="1">
-          <mxGeometry x="400" y="20" width="800" height="30" as="geometry"/>
-        </mxCell>
-        <mxCell id="user" value="Tax Analyst" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.browser;" parent="1" vertex="1">
-          <mxGeometry x="100" y="200" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="entra" value="Entra ID" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_active_directory;" parent="1" vertex="1">
-          <mxGeometry x="100" y="420" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="apim" value="API Management&#xa;(JWT + Rate Limit)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.api_management;" parent="1" vertex="1">
-          <mxGeometry x="360" y="200" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="api" value="MDR Agent API&#xa;(Container Apps)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;shape=mxgraph.azure.container_services;" parent="1" vertex="1">
-          <mxGeometry x="620" y="200" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="openai" value="Azure OpenAI&#xa;(gpt-4o)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cognitive_services;" parent="1" vertex="1">
-          <mxGeometry x="900" y="100" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="docintel" value="Document&#xa;Intelligence" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cognitive_services;" parent="1" vertex="1">
-          <mxGeometry x="900" y="220" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="aisearch" value="Azure AI Search&#xa;(optional RAG)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_search;" parent="1" vertex="1">
-          <mxGeometry x="900" y="580" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="blob" value="Blob Storage&#xa;(uploaded docs)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.storage;" parent="1" vertex="1">
-          <mxGeometry x="900" y="340" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="cosmos" value="Cosmos DB&#xa;(drafts + sessions)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cosmos_db;" parent="1" vertex="1">
-          <mxGeometry x="900" y="460" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="mi" value="Managed Identity" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_active_directory;" parent="1" vertex="1">
-          <mxGeometry x="1200" y="120" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="kv" value="Key Vault" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.key_vault;" parent="1" vertex="1">
-          <mxGeometry x="1200" y="260" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="appi" value="App Insights&#xa;+ Log Analytics" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.application_insights;" parent="1" vertex="1">
-          <mxGeometry x="1200" y="420" width="60" height="60" as="geometry"/>
-        </mxCell>
-        <mxCell id="e1" value="HTTPS" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="user" target="apim" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e2" value="JWT validate" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.3;entryX=0;entryY=0.8;fontSize=10;" parent="1" source="entra" target="apim" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e3" value="REST" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="apim" target="api" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e4" value="extract" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.3;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="openai" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e5" value="layout analyze" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="docintel" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e6" value="put blob" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.7;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="blob" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e7" value="upsert draft / append chat turn" style="endArrow=classic;html=1;startArrow=classic;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="cosmos" edge="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="780" y="520"/></Array></mxGeometry></mxCell>
-        <mxCell id="e11" value="retrieve context (optional)" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.95;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="aisearch" edge="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="780" y="620"/></Array></mxGeometry></mxCell>
-        <mxCell id="e8" value="uses MI for all downstream calls" style="endArrow=none;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="mi" edge="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="650" y="150"/><mxPoint x="1150" y="150"/></Array></mxGeometry></mxCell>
-        <mxCell id="e9" value="secrets" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="kv" edge="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1150" y="290"/></Array></mxGeometry></mxCell>
-        <mxCell id="e10" value="telemetry" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.8;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="appi" edge="1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="450"/><mxPoint x="1150" y="450"/></Array></mxGeometry></mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
+<mxfile host="65bd71144e">
+    <diagram id="mdr-overview" name="MDR Agent - Overview">
+        <mxGraphModel dx="1104" dy="556" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="MDR Arrangement Extraction Agent - Overview" style="text;fontSize=18;fontStyle=1;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="20" width="800" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="Tax Analyst" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.browser;" parent="1" vertex="1">
+                    <mxGeometry x="248" y="200" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="entra" value="Entra ID" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_active_directory;" parent="1" vertex="1">
+                    <mxGeometry x="246" y="318" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="apim" value="API Management&#xa;(JWT + Rate Limit Policy)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.api_management;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="200" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" value="Chat Agent + Extraction Agent&#xa;(Container Apps)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;shape=mxgraph.azure.container_services;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="200" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="openai" value="Azure OpenAI&#xa;(gpt-5.2 + text-embedding-3-small)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cognitive_services;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="81" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="docintel" value="Document&#xa;Intelligence" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cognitive_services;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="180" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="aisearch" value="Azure AI Search&#xa;(hybrid RAG)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_search;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="580" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="blob" value="Blob Storage&#xa;(uploaded docs)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.storage;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="281" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos" value="Cosmos DB&#xa;(arrangements + sessions + drafts + audit)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.cosmos_db;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="471" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="mi" value="Managed Identity" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.azure_active_directory;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="70" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="kv" value="Key Vault" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.key_vault;" parent="1" vertex="1">
+                    <mxGeometry x="1073" y="360" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="appi" value="App Insights&#xa;+ Log Analytics" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;aspect=fixed;shape=mxgraph.azure.application_insights;" parent="1" vertex="1">
+                    <mxGeometry x="1074" y="427" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="HTTPS" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="user" target="apim" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="JWT validate" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.3;entryX=0;entryY=0.8;fontSize=10;" parent="1" source="entra" target="apim" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" value="REST" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="apim" target="api" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" value="extract + embed" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.3;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="openai" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" value="layout analyze" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="docintel" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="850" y="230"/>
+                            <mxPoint x="850" y="210"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" value="put blob" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.7;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="blob" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" value="upsert draft / append chat turn" style="endArrow=classic;html=1;startArrow=classic;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="cosmos" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="260"/>
+                            <mxPoint x="700" y="501"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" value="hybrid retrieve context" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.95;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="aisearch" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="730" y="257"/>
+                            <mxPoint x="730" y="610"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e8" value="uses MI for all downstream calls" style="endArrow=none;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;entryX=1;entryY=0.58;fontSize=10;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="api" target="mi" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="650" y="160"/>
+                            <mxPoint x="420" y="160"/>
+                            <mxPoint x="420" y="100"/>
+                            <mxPoint x="360" y="100"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" value="secrets" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" parent="1" target="kv" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="391"/>
+                            <mxPoint x="720" y="391"/>
+                            <mxPoint x="720" y="390"/>
+                        </Array>
+                        <mxPoint x="680" y="241" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e10" value="telemetry" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.8;entryX=0;entryY=0.5;fontSize=10;" parent="1" source="api" target="appi" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="750" y="248"/>
+                            <mxPoint x="750" y="457"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>

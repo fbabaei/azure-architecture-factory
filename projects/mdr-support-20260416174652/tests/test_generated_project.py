@@ -37,9 +37,11 @@ def test_generated_project_layout_exists() -> None:
     required = [
         ROOT / "README.md",
         ROOT / "DEPLOY.md",
+        ROOT / "Dockerfile",
         ROOT / "requirements.txt",
         ROOT / "src" / "mdr_agent" / "main.py",
         ROOT / "src" / "mdr_agent" / "models.py",
+        ROOT / "src" / "mdr_agent" / "services" / "agent_runtime.py",
         ROOT / "src" / "mdr_agent" / "services" / "extraction_agent.py",
         ROOT / "src" / "mdr_agent" / "services" / "clarification_service.py",
         ROOT / "src" / "mdr_agent" / "services" / "document_ingestion.py",
@@ -58,6 +60,7 @@ def test_generated_project_layout_exists() -> None:
         ROOT / "diagrams" / "mdr-support-20260416174652-detailed-architecture.drawio",
         ROOT / "project-manifest.json",
         ROOT / "infra" / "main.bicep",
+        ROOT / "scripts" / "bootstrap_search_index.py",
     ]
     missing = [str(p) for p in required if not p.exists()]
     assert not missing, f"Missing generated files: {missing}"
@@ -80,6 +83,7 @@ def test_upload_returns_arrangement_id_and_clarifications(client: TestClient) ->
     r = client.post("/arrangements/upload", files=files)
     assert r.status_code == 200, r.text
     arrangement_id = r.json()["arrangement_id"]
+    assert r.json()["confidence_label"] in {"low", "medium", "high"}
 
     bundle = client.get(f"/arrangements/{arrangement_id}/clarifications").json()
     assert bundle["arrangement_id"] == arrangement_id
@@ -229,6 +233,7 @@ def test_api_case_from_text_and_confirm_flow(client: TestClient) -> None:
     )
     assert created.status_code == 200, created.text
     assert created.json()["arrangement_id"] == session_id
+    assert created.json()["confidence_label"] in {"low", "medium", "high"}
 
     fetched = client.get(f"/api/case/{session_id}")
     assert fetched.status_code == 200, fetched.text
@@ -265,3 +270,9 @@ def test_api_case_from_text_and_confirm_flow(client: TestClient) -> None:
     confirmed = client.post(f"/api/case/{complete_case_id}/confirm")
     assert confirmed.status_code == 200, confirmed.text
     assert confirmed.json()["is_complete"] is True
+
+
+def test_upload_rejects_unsupported_extension(client: TestClient) -> None:
+    files = {"file": ("arrangement.exe", io.BytesIO(b"not allowed"), "application/octet-stream")}
+    r = client.post("/arrangements/upload", files=files)
+    assert r.status_code == 415, r.text
