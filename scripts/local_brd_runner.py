@@ -589,8 +589,27 @@ _CAP_ICONS: dict[str, dict[str, str]] = {
 }
 
 
+# Render all generated architecture nodes with Azure icon images only.
+_AZURE_ICON_BY_COLOR_KEY: dict[str, str] = {
+    "identity": "managed-identities.svg",
+    "api": "api-management.svg",
+    "compute": "managed-identities.svg",
+    "logic": "api-management.svg",
+    "ai": "monitor.svg",
+    "observa": "monitor.svg",
+    "security": "managed-identities.svg",
+    "network": "virtual-networks.svg",
+    "data": "storage-accounts.svg",
+}
+
+
+def _azure_icon_data_uri(icon_file: str) -> str:
+    icon_path = Path(__file__).resolve().parent.parent / "assets" / "azure-icons" / icon_file
+    return _svg_data_uri(icon_path)
+
+
 def _build_drawio(title: str, network_tier: str = "public", capabilities: dict[str, bool] | None = None) -> str:
-    """Generate a capability-aware architecture diagram using Azure-colored styled nodes."""
+    """Generate a capability-aware architecture diagram using Azure icon nodes only."""
     caps = capabilities or {}
     safe_title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -603,11 +622,15 @@ def _build_drawio(title: str, network_tier: str = "public", capabilities: dict[s
             .replace("\n", "&#xa;")
         )
         bg = _SVC_PALETTE.get(color_key, "#0078D4")
+        icon_file = _AZURE_ICON_BY_COLOR_KEY.get(color_key, "managed-identities.svg")
+        icon_data_uri = _azure_icon_data_uri(icon_file)
         style = (
-            f"rounded=1;whiteSpace=wrap;html=1;arcSize=15;"
-            f"fillColor={bg};strokeColor=#FFFFFF40;fontColor=#FFFFFF;"
-            f"fontSize=13;fontStyle=1;"
-            f"verticalAlign=middle;align=center;"
+            "shape=image;imageAspect=0;aspect=fixed;"
+            f"image={icon_data_uri};"
+            f"fillColor={bg};strokeColor=#0f172a;fontColor=#0f172a;"
+            "labelBackgroundColor=#ffffff;labelBorderColor=#dbe2ea;"
+            "labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;"
+            "spacingTop=4;spacing=8;whiteSpace=wrap;html=1;fontSize=12;fontStyle=1;"
         )
         return (
             f'<mxCell id="{cid}" value="{safe_label}" '
