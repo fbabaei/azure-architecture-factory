@@ -110,6 +110,17 @@ def process_brd_document(
     _write_text(project_root / "pyproject.toml", _build_pyproject(title))
     _write_text(infra_dir / "main.bicep", _build_infra_bicep(enable_observability, network_tier))
     _write_text(tests_dir / "test_generated_project.py", _build_test())
+
+    # Copy the shared model-selector script template into every generated project
+    # so users have a one-command way to switch Azure OpenAI deployments with
+    # cost and trade-off context.
+    scripts_dir = project_root / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    _template_root = Path(__file__).resolve().parent / "templates"
+    _select_model_src = _template_root / "select_model.ps1"
+    if _select_model_src.exists():
+        shutil.copyfile(_select_model_src, scripts_dir / "select_model.ps1")
+
     user_home_copy_path = _copy_project_to_user_home(project_root, slug)
 
     manifest = {

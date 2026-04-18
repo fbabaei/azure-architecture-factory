@@ -9,10 +9,8 @@ on:
       - "scripts/start_factory_portal.py"
       - "scripts/local_brd_runner.py"
       - "Dockerfile.portal"
-      - "assets/**"
-      - "docs/**"
-      - "projects/**"
-      - "factory-projects.generated.json"
+      - "assets/portal/**"
+      - ".github/workflows/portal-deploy.yml"
   workflow_dispatch:
     inputs:
       environment:
