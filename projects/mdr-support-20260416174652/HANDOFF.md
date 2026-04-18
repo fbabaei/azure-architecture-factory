@@ -55,6 +55,21 @@ python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000 
 
 For the Azure path, follow [`DEPLOY.md`](DEPLOY.md).
 
+## Switching the Azure OpenAI model
+
+An interactive picker is shipped with the project:
+
+```powershell
+# Local dev (updates .env)
+./scripts/select_model.ps1
+
+# Or apply to a running Container App
+./scripts/select_model.ps1 -Target azure `
+  -ContainerApp <app-name> -ResourceGroup <rg-name>
+```
+
+The script lists 5 chat models (gpt-5.2, gpt-5.2-mini, gpt-4o, gpt-4o-mini, o4-mini) with input/output prices and trade-offs, then writes `AZURE_OPENAI_DEPLOYMENT` to the chosen target. The portal's **🤖 Select Model** button on the project card offers the same UI.
+
 ## Read these in order
 
 1. [`README.md`](README.md) — project overview.

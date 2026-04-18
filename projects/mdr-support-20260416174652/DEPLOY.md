@@ -152,6 +152,13 @@ success, set the following environment variables on the Container App:
 | `FOUNDRY_PROJECT_ENDPOINT` | `https://<project>.services.ai.azure.com/api/projects/<project>` |
 | `FOUNDRY_MODEL_DEPLOYMENT_NAME` | `gpt-5.2` (or your deployment name) |
 
+> **Changing the chat model later:** run `./scripts/select_model.ps1`
+> (local) or `./scripts/select_model.ps1 -Target azure -ContainerApp <app>
+> -ResourceGroup <rg>` for a deployed app. It lists 5 models with
+> price + trade-off info and updates `AZURE_OPENAI_DEPLOYMENT`
+> accordingly. The same picker is available from the factory portal's
+> **🤖 Select Model** button on each project card.
+
 The user-assigned managed identity needs **Azure AI Developer** on the
 Foundry project (for chat completion access) in addition to the existing
 `Cognitive Services OpenAI User` role on the Azure OpenAI account. When
