@@ -81,19 +81,22 @@ python .\scripts\bootstrap_search_index.py `
 ## Optional: enable the Microsoft Agent Framework SDK runtime
 The chat and extraction agents can be driven by the Microsoft Agent
 Framework SDK (`agent-framework-core==1.0.0rc6`, backed by
-`FoundryChatClient`). Install order matters because `azure-ai-agentserver-*`
-pins `agent-framework-core<=rc3`:
+`FoundryChatClient`). The preview stack has to be installed in two
+phases because `azure-ai-agentserver-*` pins
+`agent-framework-core<=rc3` and would otherwise win resolution. Use the
+helper script to install them in the correct order:
 
 ```powershell
-pip install azure-ai-agentserver-agentframework==1.0.0b16 `
-            azure-ai-agentserver-core==1.0.0b16 `
-            agent-dev-cli==0.0.1b260316
-pip install agent-framework-core==1.0.0rc6 `
-            agent-framework-foundry==1.0.0rc6 `
-            agent-framework-openai==1.0.0rc6
+# Windows
+.\scripts\install_agent_framework.ps1
+
+# Linux / CI
+./scripts/install_agent_framework.sh
 ```
 
-Then set the following environment variables on the Container App:
+The script runs the agentserver phase first, upgrades the
+`agent-framework-*` packages to rc6, and verifies the import. On
+success, set the following environment variables on the Container App:
 
 | Variable | Value |
 |----------|-------|

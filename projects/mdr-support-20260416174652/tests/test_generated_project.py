@@ -405,3 +405,76 @@ def test_agent_runtime_selects_foundry_when_enabled() -> None:
         # local implementation rather than crash.
         assert isinstance(runtime.extraction_agent, ExtractionSpecialistAgent)
         assert isinstance(runtime.chat_agent, ChatOrchestratorAgent)
+
+
+def test_apply_answer_to_arrangement_public_alias_matches_legacy() -> None:
+    """The public ``apply_answer_to_arrangement`` helper and the legacy
+    private alias must behave identically \u2014 the Foundry SDK clarification
+    tools rely on the public name, existing code paths still import the
+    underscore-prefixed alias."""
+
+    from mdr_agent.models import MDRArrangement
+    from mdr_agent.services import chat_session
+
+    base = MDRArrangement(arrangement_id="ARR-TEST-001")
+    public_result = chat_session.apply_answer_to_arrangement(
+        base.model_copy(deep=True), "reference", "MDR-2026-42"
+    )
+    legacy_result = chat_session._apply_answer_to_arrangement(
+        base.model_copy(deep=True), "reference", "MDR-2026-42"
+    )
+    assert public_result.reference == "MDR-2026-42"
+    assert legacy_result.reference == "MDR-2026-42"
+    assert chat_session.apply_answer_to_arrangement is chat_session._apply_answer_to_arrangement
+
+
+def test_foundry_clarification_driver_falls_back_when_llm_stalls() -> None:
+    """When the clarification SDK agent makes no forward progress on the
+    missing-fields set, the Foundry extraction specialist must fall back
+    to the deterministic single-field merge so the clarification loop is
+    guaranteed to advance."""
+
+    if importlib.util.find_spec("agent_framework") is None:
+        import pytest
+
+        pytest.skip("agent_framework SDK not installed")
+
+    from mdr_agent.config import Settings
+    from mdr_agent.models import MDRArrangement
+    from mdr_agent.services.foundry_agent_runtime import (
+        FoundryExtractionSpecialistAgent,
+    )
+    from mdr_agent.services.repository import build_repository
+
+    settings = Settings()
+    repository = build_repository(settings)
+    arrangement = MDRArrangement(arrangement_id="ARR-FB-1")
+    repository.save(arrangement, reason="test_seed")
+
+    class _NoOpClarificationAgent:
+        async def run(self, _prompt: str) -> str:
+            # Simulate an LLM that decides not to call any tool.
+            return ""
+
+    class _LocalStub:
+        pass
+
+    specialist = FoundryExtractionSpecialistAgent(
+        agent=None,  # extraction agent is not exercised in this test
+        ingestion=None,  # type: ignore[arg-type]
+        repository=repository,
+        model_deployment="gpt-5.2",
+        local_fallback=_LocalStub(),  # type: ignore[arg-type]
+        clarification_agent=_NoOpClarificationAgent(),
+    )
+
+    response = specialist.continue_clarification(
+        arrangement_id="ARR-FB-1",
+        user_message="MDR-2026-99",
+    )
+
+    assert response.arrangement.reference == "MDR-2026-99", (
+        "Deterministic fallback must populate the first missing field when "
+        "the SDK clarification agent makes no progress."
+    )
+    assert "reference" not in response.clarifications.missing_fields

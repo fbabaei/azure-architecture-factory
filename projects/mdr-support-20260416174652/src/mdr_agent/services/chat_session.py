@@ -20,7 +20,7 @@ from .clarification_service import build_clarifications
 from .repository import ArrangementRepository
 
 
-def _apply_answer_to_arrangement(
+def apply_answer_to_arrangement(
     arrangement: MDRArrangement, field: str, answer: str
 ) -> MDRArrangement:
     """Merge a single user answer into the arrangement draft.
@@ -29,6 +29,9 @@ def _apply_answer_to_arrangement(
     fields directly. Structured fields (hallmarks, parties, jurisdictions)
     expect a later LLM parse step, which we stub here with a simple
     comma-split for jurisdictions to keep the happy path testable.
+
+    Exposed publicly so the Foundry SDK clarification tools can reuse
+    the validated field-merge contract without duplicating the parser.
     """
     data = arrangement.model_dump()
     if field in ("reference", "summary"):
@@ -57,6 +60,10 @@ def _apply_answer_to_arrangement(
             if name.strip()
         ]
     return MDRArrangement.model_validate(data)
+
+
+# Backwards-compatible alias retained for existing imports.
+_apply_answer_to_arrangement = apply_answer_to_arrangement
 
 
 def _next_field(bundle: ClarificationBundle) -> str | None:
