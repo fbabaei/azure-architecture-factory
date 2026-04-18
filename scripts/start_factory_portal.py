@@ -134,6 +134,19 @@ _ENV_ADMINS: frozenset[str] = frozenset(
     a.strip().lower() for a in _env_admins.split(",") if a.strip()
 )
 
+# Optional tenant allowlist. When set, only users whose Entra token 'tid' claim
+# (home tenant) is in this list may access the portal — used with a
+# multi-tenant app registration to accept e.g. any Microsoft employee while
+# still rejecting guests from other tenants.
+# Default: empty → no tenant restriction (single-tenant deployments rely on
+# Easy Auth's own issuer check to enforce the tenant).
+_allowed_tenants_raw = os.environ.get("FACTORY_PORTAL_ALLOWED_TENANTS", "").strip()
+ALLOWED_TENANTS: frozenset[str] | None = (
+    frozenset(t.strip().lower() for t in _allowed_tenants_raw.split(",") if t.strip())
+    if _allowed_tenants_raw
+    else None
+)
+
 
 def _load_owners() -> dict:
     """Load .portal-owners.json; return an empty structure on any error."""
@@ -576,6 +589,50 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return upn.strip()
         return None
 
+    def _current_tenant(self) -> str | None:
+        """Return the user's home tenant id (the 'tid' claim) from Easy Auth.
+
+        Easy Auth forwards a base64-encoded JSON principal in
+        X-MS-CLIENT-PRINCIPAL. We decode it and pluck the 'tid' claim so we
+        can enforce a per-deployment tenant allowlist independently of the
+        app registration's sign-in audience.
+        """
+        raw = self.headers.get("X-MS-CLIENT-PRINCIPAL")
+        if not raw:
+            return None
+        try:
+            # Container Apps pads the value correctly but be defensive.
+            padded = raw + "=" * (-len(raw) % 4)
+            principal = json.loads(base64.b64decode(padded).decode("utf-8"))
+        except Exception:
+            return None
+        for claim in principal.get("claims") or []:
+            typ = (claim.get("typ") or claim.get("type") or "").lower()
+            if typ in {"tid", "http://schemas.microsoft.com/identity/claims/tenantid"}:
+                val = claim.get("val") or claim.get("value")
+                if val:
+                    return str(val).strip().lower()
+        return None
+
+    def _tenant_allowed(self) -> bool:
+        """True when no tenant allowlist is configured, or the request's tenant is in it."""
+        if ALLOWED_TENANTS is None:
+            return True
+        tid = self._current_tenant()
+        return bool(tid) and tid in ALLOWED_TENANTS
+
+    def _authorized_user(self) -> str | None:
+        """Return the current user only when tenant policy allows them.
+
+        Users from disallowed tenants are treated as anonymous — they cannot
+        see any project. This is enforced above Easy Auth, so even if a guest
+        account from another tenant successfully signs in, they still get
+        zero access.
+        """
+        if not self._tenant_allowed():
+            return None
+        return self._current_user()
+
     def do_GET(self):
         """Handle GET requests"""
         parsed = urlparse(self.path)
@@ -598,12 +655,41 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/me":
             user = self._current_user()
+            tenant = self._current_tenant()
             return self._send_json({
                 "authMode": AUTH_MODE or "none",
                 "authenticated": bool(user),
                 "user": user,
-                "isAdmin": _is_admin(user),
+                "tenantId": tenant,
+                "tenantAllowed": self._tenant_allowed(),
+                "isAdmin": _is_admin(user) and self._tenant_allowed(),
             }, 200)
+
+        # Hard-deny requests whose token 'tid' is not in the tenant allowlist.
+        # /api/me, /health, and the login/logout endpoints are exempt so the
+        # user can see a friendly message and sign out. Static browser assets
+        # (css/js/images) stay accessible to avoid breaking the error page.
+        if (AUTH_MODE == "entra"
+                and ALLOWED_TENANTS is not None
+                and not self._tenant_allowed()
+                and not request_path.startswith(("/.auth/", "/api/me", "/health",
+                                                  "/assets/", "/favicon"))
+                and request_path != "/factory-portal.html"):
+            if request_path.startswith("/api/") or request_path.endswith(".json"):
+                return self._send_json({"error": "Tenant not authorized for this portal."}, 403)
+            self.send_response(403)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(
+                b"<!doctype html><meta charset='utf-8'><title>Access denied</title>"
+                b"<body style='font-family:Segoe UI,sans-serif;padding:3rem;max-width:640px'>"
+                b"<h1>Access denied</h1>"
+                b"<p>This portal is restricted to specific Microsoft Entra tenants. "
+                b"Your account is authenticated, but your home tenant is not in the "
+                b"allowlist for this deployment.</p>"
+                b"<p><a href='/.auth/logout'>Sign out</a> and try a different account.</p>"
+                b"</body>")
+            return
 
         if request_path == "/ready":
             return self._handle_ready()
@@ -663,7 +749,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path.startswith("/projects/"):
             parts = request_path.split("/", 3)  # ['', 'projects', '<slug>', 'rest...']
             if len(parts) >= 3 and parts[2]:
-                if not _user_can_see_project(parts[2], self._current_user()):
+                if not _user_can_see_project(parts[2], self._authorized_user()):
                     self.send_error(404, "Not Found")
                     return
 
@@ -988,7 +1074,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         return self._save_and_start_run(
-            file_name, content, generation_options, owner=self._current_user()
+            file_name, content, generation_options, owner=self._authorized_user()
         )
 
     def _save_and_start_run(self, file_name: str, content: str, generation_options: dict | None = None, owner: str | None = None):
@@ -1159,7 +1245,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         }
 
         return self._save_and_start_run(
-            file_name, content, generation_options, owner=self._current_user()
+            file_name, content, generation_options, owner=self._authorized_user()
         )
 
     def _handle_run_status(self, run_id):
@@ -1302,7 +1388,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         # Apply per-user ownership filtering when Entra auth is active.
         if AUTH_MODE == "entra":
-            user = self._current_user()
+            user = self._authorized_user()
             merged = [p for p in merged if _user_can_see_project(p.get("slug", ""), user)]
             # Annotate each record with the current user's role for UI hints.
             for p in merged:
@@ -1317,7 +1403,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:
         if not re.fullmatch(r"[A-Za-z0-9._-]+", slug or ""):
             return None
-        if not _user_can_see_project(slug, self._current_user()):
+        if not _user_can_see_project(slug, self._authorized_user()):
             return None
         project_root = (FACTORY_REPO_ROOT / "projects" / slug).resolve()
         projects_root = (FACTORY_REPO_ROOT / "projects").resolve()

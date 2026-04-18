@@ -4527,15 +4527,22 @@
             const el = document.getElementById('user-badge');
             if (!el) return;
             if (!me || me.authMode !== 'entra') { el.style.display = 'none'; return; }
-            const label = me.authenticated
-                ? `👤 ${me.user}${me.isAdmin ? ' · admin' : ''}`
-                : '🔒 Sign-in required';
+            let label, title, bg = '#eff6fc', border = '#c7e0f4', fg = '#003d6b';
+            if (!me.authenticated) {
+                label = '🔒 Sign-in required';
+                title = 'This portal requires Microsoft sign-in.';
+            } else if (me.tenantAllowed === false) {
+                label = `⛔ ${me.user} · tenant blocked`;
+                title = 'Your account is authenticated, but your home tenant is not allowed on this deployment.';
+                bg = '#fde7e9'; border = '#f1707a'; fg = '#7a0014';
+            } else {
+                label = `👤 ${me.user}${me.isAdmin ? ' · admin' : ''}`;
+                title = 'You see only projects you own (or all, if you are an admin).';
+            }
             el.textContent = label;
-            el.title = me.authenticated
-                ? 'You see only projects you own (or all, if you are an admin).'
-                : 'This portal requires Microsoft sign-in.';
+            el.title = title;
             el.style.cssText = 'display:inline-block;margin-left:0.5rem;padding:0.2rem 0.55rem;'
-                + 'background:#eff6fc;color:#003d6b;border:1px solid #c7e0f4;border-radius:12px;'
+                + `background:${bg};color:${fg};border:1px solid ${border};border-radius:12px;`
                 + 'font-size:0.75rem;font-weight:500;cursor:default';
         }
 
