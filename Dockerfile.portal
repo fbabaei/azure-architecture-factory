@@ -19,6 +19,9 @@ COPY docs/ docs/
 COPY assets/ assets/
 # Snapshot of the project feed baked into the image at build time
 COPY factory-projects.generated.json ./
+# Per-user ownership allowlist (slug → UPNs). Consumed when
+# FACTORY_PORTAL_AUTH_MODE=entra. Safe to include empty / missing.
+COPY .portal-owners.json ./
 
 RUN chown -R portal:portal /app
 

@@ -109,6 +109,87 @@ def _is_slug_visible(slug: str) -> bool:
         return True
     return bool(slug) and slug in VISIBLE_SLUGS
 
+
+# ── Per-user ownership (Entra ID via Container Apps Easy Auth) ───────────────
+#
+# When FACTORY_PORTAL_AUTH_MODE=entra, the portal reads the Easy Auth headers
+# (X-MS-CLIENT-PRINCIPAL-NAME = the user's UPN) and filters every project the
+# user can see based on the owner sidecar file: .portal-owners.json at repo
+# root. Shape:
+#   {
+#     "admins": ["admin@contoso.com"],
+#     "projects": {
+#       "slug-a": ["alice@contoso.com"],
+#       "slug-b": ["bob@contoso.com", "carol@contoso.com"]
+#     }
+#   }
+# Additional admins can be provided via FACTORY_PORTAL_ADMINS (comma list).
+# Admins always see every project. When AUTH_MODE is not 'entra', all users
+# see everything (local dev default — the allowlist above still applies if set).
+
+AUTH_MODE = os.environ.get("FACTORY_PORTAL_AUTH_MODE", "").strip().lower()
+OWNERS_FILE = FACTORY_REPO_ROOT / ".portal-owners.json"
+_env_admins = os.environ.get("FACTORY_PORTAL_ADMINS", "")
+_ENV_ADMINS: frozenset[str] = frozenset(
+    a.strip().lower() for a in _env_admins.split(",") if a.strip()
+)
+
+
+def _load_owners() -> dict:
+    """Load .portal-owners.json; return an empty structure on any error."""
+    try:
+        if OWNERS_FILE.is_file():
+            raw = json.loads(OWNERS_FILE.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                return raw
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.warning("Failed to read %s: %s", OWNERS_FILE.name, exc)
+    return {"admins": [], "projects": {}}
+
+
+def _save_owners(data: dict) -> None:
+    try:
+        OWNERS_FILE.write_text(
+            json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+    except OSError as exc:
+        logger.warning("Failed to write %s: %s", OWNERS_FILE.name, exc)
+
+
+def _is_admin(user: str | None) -> bool:
+    if not user:
+        return False
+    u = user.strip().lower()
+    if u in _ENV_ADMINS:
+        return True
+    owners = _load_owners()
+    for a in owners.get("admins") or []:
+        if isinstance(a, str) and a.strip().lower() == u:
+            return True
+    return False
+
+
+def _project_owners(slug: str) -> set[str]:
+    owners = _load_owners().get("projects") or {}
+    raw = owners.get(slug) or []
+    if isinstance(raw, str):
+        raw = [raw]
+    return {str(x).strip().lower() for x in raw if str(x).strip()}
+
+
+def _user_can_see_project(slug: str, user: str | None) -> bool:
+    """Apply both the VISIBLE_SLUGS allowlist and per-user ownership rules."""
+    if not _is_slug_visible(slug):
+        return False
+    if AUTH_MODE != "entra":
+        return True  # local dev / unauthenticated hosted = no per-user filter
+    if _is_admin(user):
+        return True
+    if not user:
+        return False
+    return user.strip().lower() in _project_owners(slug)
+
+
 MAX_PREVIEW_BYTES = 512_000
 TEXT_PREVIEW_SUFFIXES = {
     ".md", ".txt", ".py", ".json", ".yaml", ".yml", ".bicep", ".toml", ".ini",
@@ -481,6 +562,20 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(FACTORY_REPO_ROOT), **kwargs)
 
+    def _current_user(self) -> str | None:
+        """Return the authenticated user's UPN from Easy Auth headers, or None.
+
+        Container Apps Easy Auth forwards two headers on every authenticated
+        request:
+          X-MS-CLIENT-PRINCIPAL-NAME → user's preferred_username (UPN/email)
+          X-MS-CLIENT-PRINCIPAL      → base64-encoded JSON principal
+        We only need the UPN for authorization.
+        """
+        upn = self.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+        if upn:
+            return upn.strip()
+        return None
+
     def do_GET(self):
         """Handle GET requests"""
         parsed = urlparse(self.path)
@@ -500,6 +595,15 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/health":
             return self._handle_health()
+
+        if request_path == "/api/me":
+            user = self._current_user()
+            return self._send_json({
+                "authMode": AUTH_MODE or "none",
+                "authenticated": bool(user),
+                "user": user,
+                "isAdmin": _is_admin(user),
+            }, 200)
 
         if request_path == "/ready":
             return self._handle_ready()
@@ -556,11 +660,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         # Enforce per-deployment project visibility for direct /projects/<slug>/...
         # file access. When an allowlist is configured, hidden slugs return 404.
-        if VISIBLE_SLUGS is not None and request_path.startswith("/projects/"):
+        if request_path.startswith("/projects/"):
             parts = request_path.split("/", 3)  # ['', 'projects', '<slug>', 'rest...']
-            if len(parts) >= 3 and parts[2] and not _is_slug_visible(parts[2]):
-                self.send_error(404, "Not Found")
-                return
+            if len(parts) >= 3 and parts[2]:
+                if not _user_can_see_project(parts[2], self._current_user()):
+                    self.send_error(404, "Not Found")
+                    return
 
         if request_path == "/api/admin/tokens":
             if not self._require_admin_key():
@@ -882,9 +987,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Missing fileName or content"}, 400)
             return
 
-        return self._save_and_start_run(file_name, content, generation_options)
+        return self._save_and_start_run(
+            file_name, content, generation_options, owner=self._current_user()
+        )
 
-    def _save_and_start_run(self, file_name: str, content: str, generation_options: dict | None = None):
+    def _save_and_start_run(self, file_name: str, content: str, generation_options: dict | None = None, owner: str | None = None):
         """Save BRD file and launch pipeline worker thread."""
         brds_dir = FACTORY_REPO_ROOT / "docs" / "intake"
         brds_dir.mkdir(parents=True, exist_ok=True)
@@ -917,12 +1024,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "command": None,
                 "result": None,
                 "generationOptions": generation_options or {},
+                "owner": owner,
             }
 
         # Spawn pipeline worker thread
         thread = threading.Thread(
             target=self._run_pipeline,
-            args=(run_id, str(brd_path), generation_options or {}),
+            args=(run_id, str(brd_path), generation_options or {}, owner),
             daemon=True,
         )
         thread.start()
@@ -937,7 +1045,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             202,
         )
 
-    def _run_pipeline(self, run_id, brd_path, generation_options=None):
+    def _run_pipeline(self, run_id, brd_path, generation_options=None, owner: str | None = None):
         """Execute the pipeline in background"""
         with RUNS_LOCK:
             RUNS[run_id]["status"] = "running"
@@ -950,6 +1058,26 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 run_id,
                 generation_options or {},
             )
+
+            # Stamp the submitter as owner of the generated project so per-user
+            # filtering (Entra auth mode) gives them access. Best-effort only.
+            if owner and isinstance(output, dict):
+                slug = output.get("slug") or output.get("projectSlug")
+                if slug:
+                    try:
+                        data = _load_owners()
+                        projects = data.setdefault("projects", {})
+                        existing = projects.get(slug) or []
+                        if isinstance(existing, str):
+                            existing = [existing]
+                        lowered = {e.strip().lower() for e in existing if isinstance(e, str)}
+                        if owner.strip().lower() not in lowered:
+                            existing.append(owner)
+                            projects[slug] = existing
+                            _save_owners(data)
+                            logger.info("Recorded owner %s for project %s", owner, slug)
+                    except Exception as exc:  # noqa: BLE001 - best-effort
+                        logger.warning("Failed to persist owner for %s: %s", slug, exc)
 
             with RUNS_LOCK:
                 RUNS[run_id].update(
@@ -1030,7 +1158,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "networkTier": _sanitize_network_tier(network_tier_field),
         }
 
-        return self._save_and_start_run(file_name, content, generation_options)
+        return self._save_and_start_run(
+            file_name, content, generation_options, owner=self._current_user()
+        )
 
     def _handle_run_status(self, run_id):
         """Handle run status query"""
@@ -1170,6 +1300,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if VISIBLE_SLUGS is not None:
             merged = [p for p in merged if _is_slug_visible(p.get("slug", ""))]
 
+        # Apply per-user ownership filtering when Entra auth is active.
+        if AUTH_MODE == "entra":
+            user = self._current_user()
+            merged = [p for p in merged if _user_can_see_project(p.get("slug", ""), user)]
+            # Annotate each record with the current user's role for UI hints.
+            for p in merged:
+                p["_yours"] = bool(user) and user.strip().lower() in _project_owners(p.get("slug", ""))
+
         payload = {
             "generatedAt": generated_at,
             "projects": merged,
@@ -1179,7 +1317,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:
         if not re.fullmatch(r"[A-Za-z0-9._-]+", slug or ""):
             return None
-        if not _is_slug_visible(slug):
+        if not _user_can_see_project(slug, self._current_user()):
             return None
         project_root = (FACTORY_REPO_ROOT / "projects" / slug).resolve()
         projects_root = (FACTORY_REPO_ROOT / "projects").resolve()

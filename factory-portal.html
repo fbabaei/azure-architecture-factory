@@ -2289,6 +2289,7 @@
                 <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
                 <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
                 <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
+                <span id="user-badge" class="user-badge" style="display:none;margin-left:0.5rem"></span>
             </nav>
         </div>
     </header>
@@ -4522,10 +4523,38 @@
             }
         }
 
+        function renderUserBadge(me) {
+            const el = document.getElementById('user-badge');
+            if (!el) return;
+            if (!me || me.authMode !== 'entra') { el.style.display = 'none'; return; }
+            const label = me.authenticated
+                ? `👤 ${me.user}${me.isAdmin ? ' · admin' : ''}`
+                : '🔒 Sign-in required';
+            el.textContent = label;
+            el.title = me.authenticated
+                ? 'You see only projects you own (or all, if you are an admin).'
+                : 'This portal requires Microsoft sign-in.';
+            el.style.cssText = 'display:inline-block;margin-left:0.5rem;padding:0.2rem 0.55rem;'
+                + 'background:#eff6fc;color:#003d6b;border:1px solid #c7e0f4;border-radius:12px;'
+                + 'font-size:0.75rem;font-weight:500;cursor:default';
+        }
+
         async function loadProjects() {
             try {
-                const response = await fetch(`${API_BASE}/factory-projects.generated.json`);
-                const data = await response.json();
+                // Load current user context in parallel with the feed so the
+                // header can show who's signed in (Entra / Easy Auth mode).
+                const [feedResp, meResp] = await Promise.all([
+                    fetch(`${API_BASE}/factory-projects.generated.json`),
+                    fetch(`${API_BASE}/api/me`).catch(() => null),
+                ]);
+                const data = await feedResp.json();
+                if (meResp && meResp.ok) {
+                    try {
+                        const me = await meResp.json();
+                        window._currentUser = me;
+                        renderUserBadge(me);
+                    } catch (_) { /* ignore */ }
+                }
                 allProjects = data.projects || [];
                 const visibleProjects = getVisibleProjects(allProjects);
                 renderProjects(visibleProjects);
