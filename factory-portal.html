@@ -3242,6 +3242,45 @@
         </div>
     </div>
 
+    <!-- Model Selector Modal -->
+    <div id="model-selector-modal-overlay" class="cost-modal-overlay" onclick="if(event.target===this)closeModelSelectorModal()" role="dialog" aria-modal="true" aria-labelledby="model-selector-heading">
+        <div class="cost-modal-dialog">
+            <div class="cost-modal-header">
+                <h2 id="model-selector-heading">🤖 Select Model &mdash; <span id="model-selector-project-title"></span></h2>
+                <button class="cost-modal-close" onclick="closeModelSelectorModal()" title="Close">✕</button>
+            </div>
+            <div style="padding:0.75rem 1.25rem;">
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin:0 0 0.75rem">
+                    Pick an Azure OpenAI chat model. Prices are approximate list prices per 1M tokens (USD, Apr 2026).
+                    <a href="https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/" target="_blank" rel="noopener noreferrer">Verify current pricing →</a>
+                </p>
+                <div id="model-selector-cards"></div>
+                <div style="margin-top:1rem;border-top:1px solid var(--border,#dde4ea);padding-top:0.75rem">
+                    <label style="font-size:0.83rem;font-weight:600;display:block;margin-bottom:0.4rem">Target</label>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;font-size:0.83rem">
+                        <label><input type="radio" name="modelTarget" value="local" checked onchange="renderModelApplyCommands()"> Local (.env)</label>
+                        <label><input type="radio" name="modelTarget" value="azure" onchange="renderModelApplyCommands()"> Azure Container App</label>
+                    </div>
+                    <div id="model-azure-inputs" style="display:none;margin-top:0.6rem;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                        <div>
+                            <label for="model-container-app" style="font-size:0.78rem;font-weight:600">Container App</label>
+                            <input type="text" id="model-container-app" placeholder="my-project-app" oninput="renderModelApplyCommands()" style="width:100%;padding:0.35rem;font-size:0.8rem;border:1px solid var(--border,#dde4ea);border-radius:4px">
+                        </div>
+                        <div>
+                            <label for="model-resource-group" style="font-size:0.78rem;font-weight:600">Resource Group</label>
+                            <input type="text" id="model-resource-group" placeholder="my-project-dev-rg" oninput="renderModelApplyCommands()" style="width:100%;padding:0.35rem;font-size:0.8rem;border:1px solid var(--border,#dde4ea);border-radius:4px">
+                        </div>
+                    </div>
+                </div>
+                <div id="model-apply-commands" style="margin-top:0.9rem"></div>
+                <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.75rem;padding:0.5rem;background:#fff8e1;border-left:3px solid #f5b800;border-radius:3px">
+                    <strong>Reminder:</strong> the deployment name must exist in your Azure OpenAI resource.
+                    Create it in Azure AI Foundry portal or via <code>az cognitiveservices account deployment create</code>.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -4662,6 +4701,7 @@
                            🧠 View Analysis</a>
                         <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
                         <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
+                        <a href="#" class="project-link" onclick="openModelSelectorModal('${project.slug}', '${safeTitle}'); return false;" title="Pick an Azure OpenAI chat model with price and trade-off info, then generate the commands to apply it">🤖 Select Model</a>
                         <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
@@ -5485,6 +5525,99 @@ az deployment group what-if \\
 
         function closeDeployModal() {
             document.getElementById('deploy-modal-overlay').classList.remove('open');
+        }
+
+        // ── Model Selector Modal ──────────────────────────────────────────────
+        const MODEL_SELECTOR_CATALOG = [
+            { key: 'gpt-5.2',      tier: 'Premium',   input: 5.00, output: 15.00,
+              strengths: 'Best reasoning, vision, largest context. Production default.',
+              tradeoffs: 'Highest cost. Overkill for simple Q&A.' },
+            { key: 'gpt-5.2-mini', tier: 'Balanced',  input: 0.30, output: 1.20,
+              strengths: '~10× cheaper than gpt-5.2, still strong on extraction/RAG.',
+              tradeoffs: 'Slightly weaker on complex multi-step reasoning.' },
+            { key: 'gpt-4o',       tier: 'Standard',  input: 2.50, output: 10.00,
+              strengths: 'Mature, vision-capable, good extraction quality.',
+              tradeoffs: 'Older than gpt-5.2; no longer state-of-the-art.' },
+            { key: 'gpt-4o-mini',  tier: 'Cheapest',  input: 0.15, output: 0.60,
+              strengths: 'Cheapest paid option. Fast. Good for dev/test or high-volume simple chat.',
+              tradeoffs: 'Lower accuracy on complex tasks. Not recommended for prod.' },
+            { key: 'o4-mini',      tier: 'Reasoning', input: 1.10, output: 4.40,
+              strengths: 'Strong step-by-step reasoning. Good for agentic workflows.',
+              tradeoffs: 'Slower latency. No vision.' },
+        ];
+        let _modelSelectorSlug = null;
+        let _modelSelectorChoice = 'gpt-5.2';
+
+        function openModelSelectorModal(slug, title) {
+            _modelSelectorSlug = slug;
+            _modelSelectorChoice = 'gpt-5.2';
+            document.getElementById('model-selector-project-title').textContent = title || slug;
+            const rg = document.getElementById('model-resource-group');
+            if (rg && !rg.value) rg.value = `${slug}-dev-rg`;
+            const app = document.getElementById('model-container-app');
+            if (app && !app.value) app.value = `${slug}-app`;
+            renderModelSelectorCards();
+            renderModelApplyCommands();
+            document.getElementById('model-selector-modal-overlay').classList.add('open');
+        }
+
+        function closeModelSelectorModal() {
+            document.getElementById('model-selector-modal-overlay').classList.remove('open');
+        }
+
+        function renderModelSelectorCards() {
+            const host = document.getElementById('model-selector-cards');
+            if (!host) return;
+            host.innerHTML = MODEL_SELECTOR_CATALOG.map(m => {
+                const selected = (m.key === _modelSelectorChoice);
+                const border = selected ? '2px solid var(--primary,#0078d4)' : '1px solid var(--border,#dde4ea)';
+                const bg = selected ? '#eff6fc' : '#fff';
+                const tierColors = { Premium:'#8e44ad', Balanced:'#27ae60', Standard:'#2980b9', Cheapest:'#16a085', Reasoning:'#d35400' };
+                const tierColor = tierColors[m.tier] || '#555';
+                return `
+                <label style="display:block;border:${border};background:${bg};border-radius:6px;padding:0.65rem 0.85rem;margin-bottom:0.45rem;cursor:pointer">
+                    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.25rem">
+                        <input type="radio" name="modelSelectorChoice" value="${m.key}" ${selected?'checked':''} onchange="_modelSelectorChoice='${m.key}';renderModelSelectorCards();renderModelApplyCommands()">
+                        <strong style="font-size:0.92rem;font-family:monospace">${m.key}</strong>
+                        <span style="font-size:0.7rem;background:${tierColor};color:#fff;padding:0.1rem 0.5rem;border-radius:10px">${m.tier}</span>
+                        <span style="margin-left:auto;font-size:0.78rem;color:var(--text-secondary)">
+                            Input <strong>$${m.input.toFixed(2)}</strong> / Output <strong>$${m.output.toFixed(2)}</strong> per 1M tok
+                        </span>
+                    </div>
+                    <div style="font-size:0.78rem;color:#2d5a2d;margin-left:1.7rem">+ ${escapeHtml(m.strengths)}</div>
+                    <div style="font-size:0.78rem;color:#7a4a00;margin-left:1.7rem">− ${escapeHtml(m.tradeoffs)}</div>
+                </label>`;
+            }).join('');
+        }
+
+        function renderModelApplyCommands() {
+            const host = document.getElementById('model-apply-commands');
+            const azureInputs = document.getElementById('model-azure-inputs');
+            if (!host) return;
+            const target = (document.querySelector('input[name="modelTarget"]:checked') || {}).value || 'local';
+            if (azureInputs) azureInputs.style.display = (target === 'azure') ? 'grid' : 'none';
+            const deployment = _modelSelectorChoice;
+            const slug = _modelSelectorSlug || '<project>';
+            let blocks = '';
+
+            if (target === 'local') {
+                const psCmd = `./scripts/select_model.ps1`;
+                const envLine = `AZURE_OPENAI_DEPLOYMENT=${deployment}`;
+                blocks = `
+                    <p style="font-size:0.83rem;margin:0 0 0.35rem"><strong>Option A — Interactive script (recommended):</strong></p>
+                    <pre style="background:#1e1e1e;color:#d4d4d4;padding:0.6rem;border-radius:4px;font-size:0.78rem;margin:0 0 0.75rem;white-space:pre-wrap">cd projects/${escapeHtml(slug)}\n${escapeHtml(psCmd)}</pre>
+                    <p style="font-size:0.83rem;margin:0 0 0.35rem"><strong>Option B — Manual .env edit:</strong></p>
+                    <pre style="background:#1e1e1e;color:#d4d4d4;padding:0.6rem;border-radius:4px;font-size:0.78rem;margin:0;white-space:pre-wrap">${escapeHtml(envLine)}</pre>`;
+            } else {
+                const app = (document.getElementById('model-container-app').value || '<container-app>').trim();
+                const rg  = (document.getElementById('model-resource-group').value || '<resource-group>').trim();
+                const azCmd = `az containerapp update \\\n  --name ${app} \\\n  --resource-group ${rg} \\\n  --set-env-vars AZURE_OPENAI_DEPLOYMENT=${deployment}`;
+                blocks = `
+                    <p style="font-size:0.83rem;margin:0 0 0.35rem"><strong>Azure CLI command:</strong></p>
+                    <pre style="background:#1e1e1e;color:#d4d4d4;padding:0.6rem;border-radius:4px;font-size:0.78rem;margin:0;white-space:pre-wrap">${escapeHtml(azCmd)}</pre>
+                    <button class="btn-secondary" style="margin-top:0.5rem;font-size:0.78rem;padding:0.3rem 0.7rem" onclick="navigator.clipboard.writeText(${JSON.stringify(azCmd)}).then(()=>this.textContent='✓ Copied')">📋 Copy</button>`;
+            }
+            host.innerHTML = blocks;
         }
 
         function switchDeployTab(name, btn) {
