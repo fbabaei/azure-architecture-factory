@@ -22,7 +22,20 @@ Project name: customer-portal
 Environment: dev
 Region: eastus
 Deploy: false
+Runtime: auto
 ```
+
+### The `Runtime` argument
+
+`Runtime` controls which agent runtime the generated project ships. Pick one:
+
+| Value | Ship | Use when |
+| --- | --- | --- |
+| `local` | Deterministic Python only | Pure ETL, reporting, infra automation. No LLM. |
+| `agent-framework` | Both runtimes (SDK + local fallback) | Chat UX, document extraction, multi-turn clarification, Azure AI Foundry / Azure OpenAI. |
+| `auto` *(default)* | Factory decides | You are not sure. The factory classifier in [`scripts/factory_runtime/`](../scripts/factory_runtime/) reads the BRD and picks one for you. |
+
+The choice is recorded as `agent_runtime` in the project's `project-manifest.json`. The `agent-framework` option follows the pattern codified in [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md): the SDK runtime is preferred when configured, the deterministic runtime is always the fallback, so the service stays online even without Foundry.
 
 Expected output shape:
 
@@ -61,6 +74,18 @@ python -m unittest discover .\projects\storage-self-service-provisioning\tests
 ```
 
 These two suites are the current validation baseline surfaced by the demo portal because they exercise the strongest sample implementations in the repository.
+
+## 3a. What the portal classifier tells you
+
+Every BRD submitted through the portal is scored by the factory classifier before the project is generated. The result appears on the project record as `suggestedRuntime` and inside `project-manifest.json` as `suggested_runtime`. It tells you whether the BRD looks LLM-driven (signals like *chat agent*, *RAG*, *document extraction*, *Azure AI Foundry*) or whether deterministic Python is enough. You do not need to install the preview Agent Framework SDK for this to work — the deterministic classifier is always active inside the portal container.
+
+To opt the portal classifier into its SDK path, set on the Container App:
+
+- `FACTORY_AGENT_FRAMEWORK_ENABLED=1`
+- `FOUNDRY_PROJECT_ENDPOINT=https://<project>.services.ai.azure.com/api/projects/<name>`
+- `FOUNDRY_MODEL_DEPLOYMENT_NAME=<deployment>`
+
+If any of those are missing, or if the preview SDK is not installed, the portal silently falls back to the deterministic classifier. See [`scripts/factory_runtime/README.md`](../scripts/factory_runtime/README.md).
 
 ## 4. Launch The Developer Portal
 
@@ -113,3 +138,5 @@ This repository is strong for many Azure-first BRDs, but this gate should be use
 - `infra/` shared Bicep modules and parameter files
 - `demo/` developer-facing portal and dashboards
 - `docs/` repository guidance and positioning
+
+If you are new to Draw.io files, see [VIEW_DETAILED_ARCHITECTURE.md](VIEW_DETAILED_ARCHITECTURE.md).

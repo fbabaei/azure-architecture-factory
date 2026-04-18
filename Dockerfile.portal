@@ -11,7 +11,8 @@ RUN useradd -m -u 1000 portal && \
     chown -R portal:portal /app
 
 # Copy application code
-COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/
+COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/generate_guide_report.py scripts/
+COPY scripts/factory_runtime/ scripts/factory_runtime/
 COPY factory-portal.html ./
 COPY README.md ./
 COPY docs/ docs/

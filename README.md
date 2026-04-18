@@ -2,14 +2,19 @@
 
 Azure Architecture Factory is an AI-driven Azure delivery workspace that turns requirements into architecture, code, infrastructure, documentation, and deployment guidance.
 
-Start with these documents:
+## New here? Read these in order
 
-- [docs/README.md](docs/README.md) for the repository overview
-- [docs/QUICKSTART.md](docs/QUICKSTART.md) for the main workflows and local validation paths
-- [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) for viewing `.drawio` detailed architecture files on Windows
-- [docs/SELF_CONTAINED_SETUP.md](docs/SELF_CONTAINED_SETUP.md) to run this repo standalone without sibling repositories
-- [docs/PRD.md](docs/PRD.md) for product scope and capabilities
-- [docs/BRD.md](docs/BRD.md) for the business case and adoption goals
+1. [docs/QUICKSTART.md](docs/QUICKSTART.md) — the one-page "how do I use this" guide. Start here.
+2. [docs/WORKFLOW_GUIDE.md](docs/WORKFLOW_GUIDE.md) — what each agent does and when to pick one.
+3. [docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md](docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — when a generated project should ship the Agent Framework SDK runtime vs. stay deterministic.
+4. [docs/SELF_CONTAINED_SETUP.md](docs/SELF_CONTAINED_SETUP.md) — running the repo without any sibling checkouts.
+
+Reference material:
+
+- [docs/README.md](docs/README.md) repository overview
+- [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) viewing `.drawio` files on Windows
+- [docs/PRD.md](docs/PRD.md) product scope and capabilities
+- [docs/BRD.md](docs/BRD.md) business case and adoption goals
 
 Key repository areas:
 

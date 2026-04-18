@@ -4,6 +4,10 @@ A factory convention for adding **Microsoft Agent Framework SDK**-backed
 agents to generated projects while preserving the deterministic
 behaviour the factory guarantees.
 
+> **New here?** Read [QUICKSTART.md](QUICKSTART.md) first for the short
+> version of when to pick `local` vs `agent-framework` when you run the
+> orchestrator. This document is the long version of the same decision.
+
 ## Status
 - Pattern adopted: 2026-04-17
 - Canonical template: [`factory-templates/agent-framework/`](../factory-templates/agent-framework/)
