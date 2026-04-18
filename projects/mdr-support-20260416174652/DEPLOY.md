@@ -78,6 +78,36 @@ python .\scripts\bootstrap_search_index.py `
   --openai-endpoint "https://<openai>.openai.azure.com/"
 ```
 
+## Optional: enable the Microsoft Agent Framework SDK runtime
+The chat and extraction agents can be driven by the Microsoft Agent
+Framework SDK (`agent-framework-core==1.0.0rc6`, backed by
+`FoundryChatClient`). Install order matters because `azure-ai-agentserver-*`
+pins `agent-framework-core<=rc3`:
+
+```powershell
+pip install azure-ai-agentserver-agentframework==1.0.0b16 `
+            azure-ai-agentserver-core==1.0.0b16 `
+            agent-dev-cli==0.0.1b260316
+pip install agent-framework-core==1.0.0rc6 `
+            agent-framework-foundry==1.0.0rc6 `
+            agent-framework-openai==1.0.0rc6
+```
+
+Then set the following environment variables on the Container App:
+
+| Variable | Value |
+|----------|-------|
+| `AGENT_FRAMEWORK_ENABLED` | `1` |
+| `FOUNDRY_PROJECT_ENDPOINT` | `https://<project>.services.ai.azure.com/api/projects/<project>` |
+| `FOUNDRY_MODEL_DEPLOYMENT_NAME` | `gpt-5.2` (or your deployment name) |
+
+The user-assigned managed identity needs **Azure AI Developer** on the
+Foundry project (for chat completion access) in addition to the existing
+`Cognitive Services OpenAI User` role on the Azure OpenAI account. When
+the SDK is not installed or the Foundry settings are missing, the
+runtime transparently falls back to the deterministic local
+implementation and logs a warning.
+
 To create the index schema without seeding documents:
 
 ```powershell

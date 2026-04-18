@@ -4,11 +4,19 @@ This keeps the current FastAPI host while making the chat/extraction split
 explicit in code: a Chat Orchestrator Agent decides which capability to invoke,
 and an Extraction Specialist Agent owns document/text extraction plus
 clarification-driven case refinement.
+
+When the Microsoft Agent Framework SDK is installed and the Foundry
+runtime is enabled via ``AGENT_FRAMEWORK_ENABLED=1`` plus
+``FOUNDRY_PROJECT_ENDPOINT``/``FOUNDRY_MODEL_DEPLOYMENT_NAME``, the
+factory in this module returns an SDK-backed runtime instead of the
+deterministic implementation below. See ``foundry_agent_runtime.py``.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
+from ..config import Settings, get_settings
 from ..models import ApiChatResponse, ExtractionResult
 from .chat_session import handle_chat_turn
 from .document_ingestion import DocumentIngestionService
@@ -16,6 +24,8 @@ from .extraction_agent import ExtractionAgent
 from .guardrails import is_off_topic, off_topic_reply
 from .qa_service import QAService
 from .repository import ArrangementRepository
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -155,6 +165,7 @@ def build_agent_runtime(
     extractor: ExtractionAgent,
     repository: ArrangementRepository,
     qa_service: QAService,
+    settings: Settings | None = None,
 ) -> AgentRuntime:
     extraction_specialist = ExtractionSpecialistAgent(
         ingestion=ingestion,
@@ -166,7 +177,30 @@ def build_agent_runtime(
         repository=repository,
         extraction_specialist=extraction_specialist,
     )
-    return AgentRuntime(
+    local_runtime = AgentRuntime(
         chat_agent=chat_agent,
         extraction_agent=extraction_specialist,
     )
+
+    resolved_settings = settings or get_settings()
+    if not resolved_settings.foundry_runtime_enabled:
+        return local_runtime
+
+    # Deferred import: the SDK packages are preview-only and optional.
+    from .foundry_agent_runtime import build_foundry_runtime
+
+    try:
+        return build_foundry_runtime(
+            ingestion=ingestion,
+            extractor=extractor,
+            repository=repository,
+            qa_service=qa_service,
+            settings=resolved_settings,
+            local_runtime=local_runtime,
+        )
+    except RuntimeError as exc:
+        logger.warning(
+            "Falling back to local agent runtime (Foundry SDK unavailable): %s",
+            exc,
+        )
+        return local_runtime

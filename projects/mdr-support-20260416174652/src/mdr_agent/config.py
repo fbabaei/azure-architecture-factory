@@ -63,10 +63,32 @@ class Settings:
         "APPLICATIONINSIGHTS_CONNECTION_STRING", ""
     )
 
+    # Microsoft Agent Framework (Foundry) runtime - optional.
+    # When enabled, the chat and extraction agents are driven by
+    # ``agent_framework`` SDK ``Agent`` instances backed by
+    # ``FoundryChatClient``. Falls back to the deterministic local
+    # runtime when disabled or when the SDK is not installed.
+    foundry_project_endpoint: str = os.getenv("FOUNDRY_PROJECT_ENDPOINT", "")
+    foundry_model_deployment: str = os.getenv(
+        "FOUNDRY_MODEL_DEPLOYMENT_NAME", ""
+    )
+    agent_framework_enabled: bool = os.getenv(
+        "AGENT_FRAMEWORK_ENABLED", "false"
+    ).strip().lower() in {"1", "true", "yes", "on"}
+
     @property
     def azure_enabled(self) -> bool:
         """True when minimum Azure dependencies are configured."""
         return bool(self.openai_endpoint and self.blob_account_url)
+
+    @property
+    def foundry_runtime_enabled(self) -> bool:
+        """True when the Agent Framework SDK runtime should be used."""
+        return bool(
+            self.agent_framework_enabled
+            and self.foundry_project_endpoint
+            and self.foundry_model_deployment
+        )
 
 
 def get_settings() -> Settings:

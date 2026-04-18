@@ -22,7 +22,8 @@ design with:
 ## What is generated
 - `src/mdr_agent/main.py` — FastAPI app (upload, extract, chat, draft).
 - `src/mdr_agent/models.py` — Pydantic schema for MDR arrangements.
-- `src/mdr_agent/services/agent_runtime.py` — logical Chat + Extraction agent runtime.
+- `src/mdr_agent/services/agent_runtime.py` — logical Chat + Extraction agent runtime (deterministic local).
+- `src/mdr_agent/services/foundry_agent_runtime.py` — Microsoft Agent Framework SDK-backed runtime (opt-in via `AGENT_FRAMEWORK_ENABLED=1`).
 - `src/mdr_agent/services/document_ingestion.py` — Blob Storage + Document Intelligence.
 - `src/mdr_agent/services/extraction_agent.py` — Azure OpenAI structured extraction.
 - `src/mdr_agent/services/clarification_service.py` — Missing-field detection + prompts.
@@ -51,6 +52,41 @@ python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000 
 The agent auto-falls back to an in-memory repository and a heuristic
 extractor when Azure OpenAI / Blob / Cosmos endpoints are not configured,
 so the end-to-end upload + chat + draft flow works offline for tests.
+
+## Microsoft Agent Framework SDK runtime (optional)
+The chat and extraction agents can be driven by the
+[Microsoft Agent Framework SDK](https://learn.microsoft.com/azure/ai-foundry/)
+(`agent-framework-core`/`agent-framework-foundry` rc6). When enabled, the
+chat orchestrator uses a real `FoundryChatClient`-backed `Agent` with
+tool functions for `answer_mdr_question` and `fetch_arrangement_status`,
+and the extraction specialist becomes a JSON-emitting `Agent`. The local
+deterministic implementation remains the default and is still used when
+the SDK is unavailable or when the Foundry settings are not configured.
+
+Enable the SDK runtime:
+
+```powershell
+# 1. Install the preview SDK packages (order matters - see requirements.txt).
+pip install azure-ai-agentserver-agentframework==1.0.0b16 `
+            azure-ai-agentserver-core==1.0.0b16 `
+            agent-dev-cli==0.0.1b260316
+pip install agent-framework-core==1.0.0rc6 `
+            agent-framework-foundry==1.0.0rc6 `
+            agent-framework-openai==1.0.0rc6
+
+# 2. Configure Foundry.
+$env:AGENT_FRAMEWORK_ENABLED = "1"
+$env:FOUNDRY_PROJECT_ENDPOINT = "https://<project>.services.ai.azure.com/api/projects/<project>"
+$env:FOUNDRY_MODEL_DEPLOYMENT_NAME = "gpt-5.2"
+
+# 3. Start the app as usual.
+python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+Authentication uses `DefaultAzureCredential`, so `az login` works locally
+and the Container Apps user-assigned managed identity is used in
+production. If the SDK packages are missing, the factory logs a warning
+and returns the deterministic local runtime so the service stays online.
 
 ## Bootstrap the MDR knowledge base
 After Azure deployment, the quickest path is the PowerShell wrapper. It defaults to the checked-in sample corpus and can pull the Azure AI Search and Azure OpenAI endpoints from the latest successful deployment in your resource group.

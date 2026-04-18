@@ -20,6 +20,9 @@ def _load_bootstrap_module():
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    # Register in sys.modules BEFORE exec so @dataclass can resolve the
+    # module's __module__ attribute on Python 3.13+.
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -57,6 +60,7 @@ def test_generated_project_layout_exists() -> None:
         ROOT / "src" / "mdr_agent" / "main.py",
         ROOT / "src" / "mdr_agent" / "models.py",
         ROOT / "src" / "mdr_agent" / "services" / "agent_runtime.py",
+        ROOT / "src" / "mdr_agent" / "services" / "foundry_agent_runtime.py",
         ROOT / "src" / "mdr_agent" / "services" / "extraction_agent.py",
         ROOT / "src" / "mdr_agent" / "services" / "clarification_service.py",
         ROOT / "src" / "mdr_agent" / "services" / "document_ingestion.py",
@@ -323,3 +327,81 @@ def test_upload_rejects_unsupported_extension(client: TestClient) -> None:
     files = {"file": ("arrangement.exe", io.BytesIO(b"not allowed"), "application/octet-stream")}
     r = client.post("/arrangements/upload", files=files)
     assert r.status_code == 415, r.text
+
+
+def test_agent_runtime_falls_back_to_local_when_foundry_disabled() -> None:
+    from mdr_agent.config import Settings
+    from mdr_agent.services.agent_runtime import (
+        AgentRuntime,
+        ChatOrchestratorAgent,
+        ExtractionSpecialistAgent,
+        build_agent_runtime,
+    )
+    from mdr_agent.services.document_ingestion import build_ingestion_service
+    from mdr_agent.services.extraction_agent import build_extraction_agent
+    from mdr_agent.services.qa_service import build_qa_service
+    from mdr_agent.services.repository import build_repository
+
+    settings = Settings()
+    assert settings.foundry_runtime_enabled is False
+
+    runtime = build_agent_runtime(
+        ingestion=build_ingestion_service(settings),
+        extractor=build_extraction_agent(settings),
+        repository=build_repository(settings),
+        qa_service=build_qa_service(settings),
+        settings=settings,
+    )
+    assert isinstance(runtime, AgentRuntime)
+    assert isinstance(runtime.extraction_agent, ExtractionSpecialistAgent)
+    assert isinstance(runtime.chat_agent, ChatOrchestratorAgent)
+
+
+def test_agent_runtime_selects_foundry_when_enabled() -> None:
+    """When Foundry settings are populated, the factory should return
+    the SDK-backed runtime if the Agent Framework packages are
+    installed, or transparently fall back to the deterministic local
+    runtime otherwise."""
+
+    from mdr_agent.config import Settings
+    from mdr_agent.services.agent_runtime import (
+        AgentRuntime,
+        ChatOrchestratorAgent,
+        ExtractionSpecialistAgent,
+        build_agent_runtime,
+    )
+    from mdr_agent.services.document_ingestion import build_ingestion_service
+    from mdr_agent.services.extraction_agent import build_extraction_agent
+    from mdr_agent.services.qa_service import build_qa_service
+    from mdr_agent.services.repository import build_repository
+
+    settings = Settings(
+        agent_framework_enabled=True,
+        foundry_project_endpoint="https://example-foundry.services.ai.azure.com/api/projects/example",
+        foundry_model_deployment="gpt-5.2",
+    )
+    assert settings.foundry_runtime_enabled is True
+
+    runtime = build_agent_runtime(
+        ingestion=build_ingestion_service(settings),
+        extractor=build_extraction_agent(settings),
+        repository=build_repository(settings),
+        qa_service=build_qa_service(settings),
+        settings=settings,
+    )
+    assert isinstance(runtime, AgentRuntime)
+
+    sdk_installed = importlib.util.find_spec("agent_framework") is not None
+    if sdk_installed:
+        from mdr_agent.services.foundry_agent_runtime import (
+            FoundryChatOrchestratorAgent,
+            FoundryExtractionSpecialistAgent,
+        )
+
+        assert isinstance(runtime.extraction_agent, FoundryExtractionSpecialistAgent)
+        assert isinstance(runtime.chat_agent, FoundryChatOrchestratorAgent)
+    else:
+        # SDK not available -> factory must degrade to the deterministic
+        # local implementation rather than crash.
+        assert isinstance(runtime.extraction_agent, ExtractionSpecialistAgent)
+        assert isinstance(runtime.chat_agent, ChatOrchestratorAgent)
