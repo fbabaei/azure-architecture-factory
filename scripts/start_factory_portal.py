@@ -86,6 +86,29 @@ SERVICE_START_EPOCH = time.time()
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
+
+# Optional per-deployment project visibility allowlist. Comma-separated slugs.
+# When set, the portal only exposes (feed + file routes) the listed projects.
+# When unset or empty, all projects under projects/ are visible (local default).
+# Use this on the hosted/external portal to limit which projects are public.
+_visible_raw = os.environ.get("FACTORY_PORTAL_VISIBLE_SLUGS", "").strip()
+VISIBLE_SLUGS: frozenset[str] | None = (
+    frozenset(s.strip() for s in _visible_raw.split(",") if s.strip())
+    if _visible_raw
+    else None
+)
+
+
+def _is_slug_visible(slug: str) -> bool:
+    """Return True if the slug is allowed by the visibility allowlist.
+
+    When no allowlist is configured (VISIBLE_SLUGS is None), everything is
+    visible (local dev default). When configured, only listed slugs pass.
+    """
+    if VISIBLE_SLUGS is None:
+        return True
+    return bool(slug) and slug in VISIBLE_SLUGS
+
 MAX_PREVIEW_BYTES = 512_000
 TEXT_PREVIEW_SUFFIXES = {
     ".md", ".txt", ".py", ".json", ".yaml", ".yml", ".bicep", ".toml", ".ini",
@@ -530,6 +553,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path.startswith("/scripts/") or request_path == "/scripts":
             self.send_error(403, "Forbidden")
             return
+
+        # Enforce per-deployment project visibility for direct /projects/<slug>/...
+        # file access. When an allowlist is configured, hidden slugs return 404.
+        if VISIBLE_SLUGS is not None and request_path.startswith("/projects/"):
+            parts = request_path.split("/", 3)  # ['', 'projects', '<slug>', 'rest...']
+            if len(parts) >= 3 and parts[2] and not _is_slug_visible(parts[2]):
+                self.send_error(404, "Not Found")
+                return
 
         if request_path == "/api/admin/tokens":
             if not self._require_admin_key():
@@ -1134,6 +1165,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             reverse=True,
         )
 
+        # Apply per-deployment visibility allowlist (hides hidden projects on
+        # the hosted/external portal). No-op when unset.
+        if VISIBLE_SLUGS is not None:
+            merged = [p for p in merged if _is_slug_visible(p.get("slug", ""))]
+
         payload = {
             "generatedAt": generated_at,
             "projects": merged,
@@ -1142,6 +1178,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:
         if not re.fullmatch(r"[A-Za-z0-9._-]+", slug or ""):
+            return None
+        if not _is_slug_visible(slug):
             return None
         project_root = (FACTORY_REPO_ROOT / "projects" / slug).resolve()
         projects_root = (FACTORY_REPO_ROOT / "projects").resolve()
