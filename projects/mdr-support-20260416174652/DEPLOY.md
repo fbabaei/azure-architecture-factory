@@ -48,14 +48,40 @@ $mi = az identity show -g rg-mdr-support-dev -n mdr-support-dev-mi --query princ
 
 ## Bootstrap the hybrid AI Search index
 The application now issues semantic + vector queries. After infrastructure
-deployment, create the vector-capable index and optionally seed it with MDR source
-content:
+deployment, create the vector-capable index and seed it with the checked-in MDR sample corpus.
+
+Recommended path:
 
 ```powershell
-$env:AZURE_OPENAI_ENDPOINT = "https://<openai>.openai.azure.com/"
-$env:AZURE_AI_SEARCH_ENDPOINT = "https://<search>.search.windows.net"
-$env:AZURE_AI_SEARCH_INDEX_NAME = "compliance-knowledge-base"
-python .\scripts\bootstrap_search_index.py --source-dir ..\..\docs\intake
+.\scripts\run_search_index.ps1 -ResourceGroupName rg-mdr-support-dev
+```
+
+What the wrapper does:
+- Resolves `aiSearchEndpoint` and `openAiEndpoint` from the latest successful deployment in the resource group unless you pass them explicitly.
+- Uses `sample-corpus/manifest.json` by default, so the workflow is demo-ready immediately.
+- Calls `scripts/bootstrap_search_index.py`, which still remains the underlying implementation.
+
+If you prefer to target a specific deployment record:
+
+```powershell
+.\scripts\run_search_index.ps1 `
+  -ResourceGroupName rg-mdr-support-dev `
+  -DeploymentName mdr-support-dev
+```
+
+If you want to run the Python script directly, the equivalent flow is:
+
+```powershell
+python .\scripts\bootstrap_search_index.py `
+  --manifest .\sample-corpus\manifest.json `
+  --search-endpoint "https://<search>.search.windows.net" `
+  --openai-endpoint "https://<openai>.openai.azure.com/"
+```
+
+To create the index schema without seeding documents:
+
+```powershell
+.\scripts\run_search_index.ps1 -ResourceGroupName rg-mdr-support-dev -CreateOnly
 ```
 
 ## Build & push the container

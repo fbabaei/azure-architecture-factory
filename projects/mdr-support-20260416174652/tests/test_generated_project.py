@@ -1,6 +1,7 @@
 """Smoke tests for the regenerated MDR extraction agent."""
 from __future__ import annotations
 
+import importlib.util
 import io
 import sys
 from pathlib import Path
@@ -10,6 +11,20 @@ from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+
+
+def _load_bootstrap_module():
+    spec = importlib.util.spec_from_file_location(
+        "bootstrap_search_index",
+        ROOT / "scripts" / "bootstrap_search_index.py",
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+bootstrap_search_index = _load_bootstrap_module()
 
 from mdr_agent.main import app  # noqa: E402
 from mdr_agent.models import MANDATORY_FIELDS, MDRArrangement  # noqa: E402
@@ -61,9 +76,41 @@ def test_generated_project_layout_exists() -> None:
         ROOT / "project-manifest.json",
         ROOT / "infra" / "main.bicep",
         ROOT / "scripts" / "bootstrap_search_index.py",
+        ROOT / "scripts" / "run_search_index.ps1",
+        ROOT / "sample-corpus" / "manifest.json",
+        ROOT / "sample-corpus" / "dac6-hallmarks-overview.md",
+        ROOT / "sample-corpus" / "reporting-deadlines.txt",
+        ROOT / "sample-corpus" / "clarification-playbook.md",
     ]
     missing = [str(p) for p in required if not p.exists()]
     assert not missing, f"Missing generated files: {missing}"
+
+
+def test_sample_corpus_manifest_points_to_existing_files() -> None:
+    documents = bootstrap_search_index.load_manifest(
+        ROOT / "sample-corpus" / "manifest.json",
+        ROOT / "sample-corpus",
+        default_category="mdr-reference",
+    )
+
+    assert len(documents) == 3
+    assert all(document.path.exists() for document in documents)
+    assert {document.category for document in documents} == {
+        "dac6-guidance",
+        "reporting-obligations",
+        "analyst-playbook",
+    }
+
+
+def test_bootstrap_default_source_dir_contains_documents() -> None:
+    documents = bootstrap_search_index.build_source_documents(
+        bootstrap_search_index.DEFAULT_SOURCE_DIR,
+        manifest_path=bootstrap_search_index.DEFAULT_MANIFEST_PATH,
+        default_category="mdr-reference",
+    )
+
+    assert documents
+    assert all(document.source for document in documents)
 
 
 def test_health_endpoint(client: TestClient) -> None:

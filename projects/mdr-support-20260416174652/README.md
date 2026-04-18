@@ -37,6 +37,8 @@ design with:
 - `docs/` — architecture, traceability, governance, milestones, success criteria.
 - `tests/test_generated_project.py` — smoke tests for the extraction and chat loop.
 - `scripts/bootstrap_search_index.py` — creates and seeds the vector-capable search index.
+- `scripts/run_search_index.ps1` — PowerShell helper that can resolve deployment outputs and run indexing.
+- `sample-corpus/` — small MDR reference corpus and manifest for immediate RAG bootstrap demos.
 
 ## Run locally
 ```powershell
@@ -49,6 +51,34 @@ python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000 
 The agent auto-falls back to an in-memory repository and a heuristic
 extractor when Azure OpenAI / Blob / Cosmos endpoints are not configured,
 so the end-to-end upload + chat + draft flow works offline for tests.
+
+## Bootstrap the MDR knowledge base
+After Azure deployment, the quickest path is the PowerShell wrapper. It defaults to the checked-in sample corpus and can pull the Azure AI Search and Azure OpenAI endpoints from the latest successful deployment in your resource group.
+
+```powershell
+.\scripts\run_search_index.ps1 -ResourceGroupName rg-mdr-support-dev
+```
+
+Useful variations:
+
+```powershell
+# Create or update the index schema without uploading documents.
+.\scripts\run_search_index.ps1 -ResourceGroupName rg-mdr-support-dev -CreateOnly
+
+# Point at a different corpus or explicit endpoints.
+.\scripts\run_search_index.ps1 `
+  -SearchEndpoint "https://<search>.search.windows.net" `
+  -OpenAIEndpoint "https://<openai>.openai.azure.com/" `
+  -SourceDir .\sample-corpus
+```
+
+The underlying Python CLI is still available when you want full control:
+
+```powershell
+python .\scripts\bootstrap_search_index.py --manifest .\sample-corpus\manifest.json `
+  --search-endpoint "https://<search>.search.windows.net" `
+  --openai-endpoint "https://<openai>.openai.azure.com/"
+```
 
 ## API surface (design-aligned)
 - `POST /api/session` — create session.
