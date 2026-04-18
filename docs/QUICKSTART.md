@@ -37,6 +37,8 @@ Runtime: auto
 
 The choice is recorded as `agent_runtime` in the project's `project-manifest.json`. The `agent-framework` option follows the pattern codified in [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md): the SDK runtime is preferred when configured, the deterministic runtime is always the fallback, so the service stays online even without Foundry.
 
+For the full decision flow — what signals the classifier looks for, where it runs, what the manifest looks like afterwards — see [BRD_CLASSIFICATION_FLOW.md](BRD_CLASSIFICATION_FLOW.md).
+
 Expected output shape:
 
 ```text

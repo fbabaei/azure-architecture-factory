@@ -6,7 +6,10 @@ behaviour the factory guarantees.
 
 > **New here?** Read [QUICKSTART.md](QUICKSTART.md) first for the short
 > version of when to pick `local` vs `agent-framework` when you run the
-> orchestrator. This document is the long version of the same decision.
+> orchestrator. For the step-by-step BRD → runtime decision flow, see
+> [BRD_CLASSIFICATION_FLOW.md](BRD_CLASSIFICATION_FLOW.md). This document
+> is the long version of the four rules every adopting project must
+> follow.
 
 ## Status
 - Pattern adopted: 2026-04-17
