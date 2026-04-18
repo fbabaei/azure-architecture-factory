@@ -39,13 +39,22 @@ schema-safe output, and a human-in-the-loop completion cycle.
     remain.
 
 ### AI Services
-- **Azure OpenAI** (`gpt-4o` by default; GPT-5.2-ready via deployment config)
-  - structured JSON extraction from raw text and conversational response
-  generation. Prompt lives in `src/mdr_agent/services/extraction_agent.py`.
-- **Azure AI Document Intelligence** - `prebuilt-layout` model for
-  PDF layout extraction.
-- **Azure AI Search** - optional retrieval for compliance knowledge grounding
-  in Q&A and jurisdiction-specific context.
+- **Azure OpenAI** — default deployment **`gpt-5.2`** for chat, extraction,
+  Q&A synthesis, and (via vision) direct document analysis when the
+  Content Understanding / Document Intelligence path is bypassed.
+  Deployment name is env-driven (`AZURE_OPENAI_DEPLOYMENT`), so a redeploy
+  can swap to `gpt-4o` or any other chat-capable deployment without code
+  changes. Prompt logic lives in `src/mdr_agent/services/extraction_agent.py`.
+  Structured-output mode is used for schema-safe JSON; a Pydantic
+  post-generation validator is the safety net.
+- **Azure OpenAI embeddings** — `text-embedding-3-small` deployment
+  (`AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT`) for RAG index build and query.
+- **Azure AI Document Intelligence** — `prebuilt-layout` model for PDF
+  layout extraction (Phase 1 substitute for the reference design's
+  optional Azure AI Content Understanding path).
+- **Azure AI Search** — compliance knowledge base index with hybrid
+  search (vector + keyword) and the `default` semantic configuration for
+  reranking. Bootstrapped by `scripts/bootstrap_search_index.py`.
 
 ### Data
 - **Azure Blob Storage** (container: `mdr-documents`) - original

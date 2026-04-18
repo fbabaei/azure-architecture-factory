@@ -17,6 +17,34 @@ The system supports three feature paths:
 - F2: document upload to case draft.
 - F3: free-text prompt to case draft with missing-field follow-up.
 
+## Alignment With Compliance-Agent Technical Design
+This architecture is aligned with the
+[Compliance Intelligence Agent – Technical Design](https://github.com/aishwaryaumachandran/compliance-agent/blob/main/docs/Technical-Design.md)
+(April 16, 2026). Mapping:
+
+| Reference design element | MDR implementation |
+|---|---|
+| Three features (F1 Q&A, F2 upload → draft, F3 text → draft with follow-up) | `POST /api/chat`, `POST /api/upload`, `POST /api/case/from-text` |
+| Two-agent topology (Chat Agent + Extraction Agent) orchestrated via Microsoft Agent Framework | `ChatOrchestratorAgent` + `ExtractionSpecialistAgent` (see [`AGENT_FRAMEWORK_RUNTIME_PATTERN`](../../../docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md)) |
+| GPT-5.2 as primary model (chat + vision) | `AZURE_OPENAI_DEPLOYMENT=gpt-5.2`; `gpt-4o` retained as back-compat fallback via redeployment only |
+| `text-embedding-3-small` for RAG | `AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-3-small` |
+| Azure AI Content Understanding (optional) OR GPT-5.2 vision direct | Phase 1 uses **Azure AI Document Intelligence `prebuilt-layout`**; Phase 2 swaps in Content Understanding or GPT-5.2 vision behind the same `document_ingestion` service |
+| Azure AI Search — hybrid RAG (vector + keyword + semantic reranking) | `contentVector` field + `default` semantic configuration; bootstrapped by `scripts/bootstrap_search_index.py` |
+| Cosmos DB containers: sessions, case-drafts, audit-log | `arrangements`, `sessions`, `case-drafts`, `audit-log` |
+| Structured output mode for schema-safe extraction | OpenAI JSON mode + post-generation `MDRArrangement` Pydantic validation |
+| Three-layer off-topic guardrail (system prompt + intent classifier + keyword fallback) | `guardrails.py` implements all three layers |
+| Human-in-the-loop loop | `chat_session.handle_chat_turn` + `apply_answer_to_arrangement` with forward-progress safety net |
+| Session state in Cosmos (survives restart, multi-user concurrent) | `sessions` container keyed by `session_id` (= `arrangement_id`) |
+| Application Insights telemetry + prompt logging | `azure-monitor-opentelemetry` wiring |
+
+Deviations from the reference, with rationale:
+
+| Reference choice | MDR choice | Reason |
+|---|---|---|
+| .NET 8 + AgentBuilder | Python 3.13 + `Agent(client, name, ...)` | Factory Python convention; semantics are identical |
+| App Service or Functions | **Container Apps** | Same runtime envelope the factory uses elsewhere; KEDA scale-to-zero |
+| React or Blazor chat UI | Not in Phase 1 | API-first; UI deferred to Phase 2 |
+
 ## BRD Requirement Traceability
 - **Compliance agent supporting MDR-specific Q&A and arrangement creation**
   -> Container-hosted FastAPI agent fronted by API Management, with
@@ -42,18 +70,20 @@ The system supports three feature paths:
   -> No batch endpoints, no queue worker in the diagram - by design.
 
 ## Azure Building Blocks
-| Concern | Service |
-|---------|---------|
-| API gateway, JWT validation, rate limiting | Azure API Management |
-| Compute for the agent API | Azure Container Apps |
-| LLM extraction + clarification generation | Azure OpenAI (gpt-4o) |
-| PDF layout / text extraction | Azure AI Document Intelligence |
-| Knowledge retrieval (RAG) | Azure AI Search |
-| Source document persistence | Azure Blob Storage |
-| Arrangement drafts + chat session state | Azure Cosmos DB (serverless) |
-| Secrets + config | Azure Key Vault |
-| Workload identity | User-assigned Managed Identity |
-| Telemetry, metrics, logs | Application Insights + Log Analytics |
+| Concern | Service | Reference-design alignment |
+|---------|---------|----------------------------|
+| API gateway, JWT validation, rate limiting | Azure API Management | API surface matches §8 of reference |
+| Compute for the agent API | Azure Container Apps | Reference allows App Service or Functions; Container Apps is the factory equivalent |
+| LLM extraction, clarification, Q&A synthesis | Azure OpenAI — `gpt-5.2` (chat + vision) | D1: GPT-5.2 primary |
+| Embeddings for RAG indexing | Azure OpenAI — `text-embedding-3-small` | §2 target state |
+| PDF layout / text extraction | Azure AI Document Intelligence `prebuilt-layout` | Phase 1 substitute for Content Understanding / vision; see §6.1 of reference |
+| Knowledge retrieval (RAG) | Azure AI Search — hybrid (vector + keyword + semantic rerank) | D6 of reference |
+| Source document persistence | Azure Blob Storage — `mdr-documents` | §7 reference |
+| Knowledge-base source files | Azure Blob Storage — `knowledge-base-source` | §7 reference |
+| Arrangement drafts + chat session state + audit trail | Azure Cosmos DB (serverless) — `arrangements`, `sessions`, `case-drafts`, `audit-log` | D4 of reference |
+| Secrets + config | Azure Key Vault | §7 reference |
+| Workload identity | User-assigned Managed Identity | §10 reference |
+| Telemetry, metrics, logs, prompt logging | Application Insights + Log Analytics | §7 reference |
 
 All service-to-service auth uses managed identity + RBAC
 (`disableLocalAuth: true` on OpenAI, Document Intelligence, Cosmos).
@@ -72,8 +102,11 @@ Key Vault, OpenAI and Document Intelligence.
 - Source: `src/mdr_agent/`.
 
 ## Target State Notes
-- Model target can be switched by deployment to GPT-5.2-compatible
-  deployments while preserving the current API contract.
-- Document pipeline supports optional Content Understanding in a future
-  iteration; current implementation keeps the direct Document Intelligence +
-  LLM extraction path.
+- GPT-5.2 is the default model; redeployment to a different Azure OpenAI
+  deployment name (e.g. `gpt-4o`) is supported without code changes via the
+  `AZURE_OPENAI_DEPLOYMENT` env var.
+- Document pipeline can be switched to Azure AI Content Understanding or
+  direct GPT-5.2 vision by swapping the implementation of
+  `document_ingestion.py` — interface is stable.
+- Off-topic guardrail is layered (system prompt + intent classifier tool +
+  keyword fallback) per §6.4 of the reference design.
