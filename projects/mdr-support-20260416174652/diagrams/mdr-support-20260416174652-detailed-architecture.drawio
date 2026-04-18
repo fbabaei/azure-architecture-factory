@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="mdr-logical" name="MDR - Logical Architecture">
-        <mxGraphModel dx="2215" dy="1207" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2600" pageHeight="1400" math="0" shadow="0">
+        <mxGraphModel dx="2007" dy="1011" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2600" pageHeight="1400" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -192,11 +192,50 @@
                 <mxCell id="blob" value="Blob Storage&#xa;mdr-documents" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.storage;" vertex="1" parent="1">
                     <mxGeometry x="1650" y="180" width="60" height="60" as="geometry"/>
                 </mxCell>
+                <mxCell id="svc-chat-agent" value="Chat Agent&#xa;(orchestrator)" style="rounded=1;whiteSpace=wrap;fontSize=10;fillColor=#e8f5e9;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="lane-svc">
+                    <mxGeometry x="43" y="180" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-guardrail" value="Off-topic Guardrail&#xa;(prompt + intent + keyword)" style="rounded=1;whiteSpace=wrap;fontSize=9;fillColor=#fff4ce;strokeColor=#d6b656;" vertex="1" parent="lane-svc">
+                    <mxGeometry x="159" y="180" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-structured" value="Structured Output&#xa;+ Pydantic Validator" style="rounded=1;whiteSpace=wrap;fontSize=9;fillColor=#fff4ce;strokeColor=#d6b656;" vertex="1" parent="lane-svc">
+                    <mxGeometry x="43" y="700" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="acr" value="Container&#xa;Registry (ACR)" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.container_registries;" vertex="1" parent="lane-svc">
+                    <mxGeometry x="230" y="80" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="aisearch" value="Azure AI Search&#xa;hybrid + semantic rerank" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.azure_search;" vertex="1" parent="lane-ai">
+                    <mxGeometry x="110" y="620" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos-c" value="Cosmos DB&#xa;case-drafts" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.cosmos_db;" vertex="1" parent="lane-data">
+                    <mxGeometry x="130" y="510" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos-au" value="Cosmos DB&#xa;audit-log" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.cosmos_db;" vertex="1" parent="lane-data">
+                    <mxGeometry x="130" y="680" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="blob-kb" value="Blob Storage&#xa;knowledge-base-source" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#0072C6;strokeColor=#ffffff;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.azure.storage;" vertex="1" parent="lane-data">
+                    <mxGeometry x="130" y="820" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-acr-api" value="image pull&#xa;(AcrPull via MI)" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;entryX=0.5;entryY=0;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="acr" target="api">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-api-aisearch" value="hybrid RAG&#xa;(vector + semantic)" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.9;entryX=0;entryY=0.5;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="api" target="aisearch">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-api-cosmos-c" value="upsert case draft" style="endArrow=classic;html=1;startArrow=classic;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.95;entryX=0;entryY=0.5;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="api" target="cosmos-c">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-api-cosmos-au" value="audit event" style="endArrow=classic;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;entryX=0;entryY=0.5;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="api" target="cosmos-au">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-api-blob-kb" value="KB source docs" style="endArrow=classic;html=1;dashed=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;entryX=0;entryY=0.5;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="api" target="blob-kb">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="mdr-flows" name="MDR - Key Flows">
-        <mxGraphModel dx="2436" dy="1328" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1200" math="0" shadow="0">
+        <mxGraphModel dx="2208" dy="1112" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1200" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -447,7 +486,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="oT7Po7RpJepr3TYkycal" name="Page-4">
-        <mxGraphModel dx="1425" dy="592" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
