@@ -14,6 +14,13 @@ try:
 except ImportError:  # pragma: no cover - executed as a script
     from generate_guide_report import generate_guide_report  # type: ignore
 
+try:
+    from factory_runtime import classify_brd as _classify_brd  # type: ignore
+except ImportError:  # pragma: no cover - executed as a script
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from factory_runtime import classify_brd as _classify_brd  # type: ignore
+
 
 def process_brd_document(
     factory_repo_root: Path,
@@ -36,6 +43,7 @@ def process_brd_document(
     requirements = _extract_requirements(brd_text)
     success_criteria = _extract_success_criteria(brd_text)
     capabilities = _infer_capabilities(brd_text)
+    runtime_recommendation = _classify_runtime(brd_text)
     slug = f"{_slugify(title)}-{timestamp}"
 
     project_root = factory_repo_root / "projects" / slug
@@ -114,6 +122,7 @@ def process_brd_document(
         "requirements_detected": requirements,
         "success_criteria_detected": success_criteria,
         "capabilities": capabilities,
+        "suggested_runtime": runtime_recommendation,
         "generation_options": {
             "enableObservability": enable_observability,
             "networkTier": network_tier,
@@ -176,6 +185,7 @@ def process_brd_document(
         },
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
+        "suggestedRuntime": runtime_recommendation,
     }
     if manifest.get("guide_report"):
         project_record["guideReport"] = manifest["guide_report"]
@@ -241,6 +251,32 @@ def _extract_success_criteria(markdown: str) -> list[str]:
         if in_section and stripped.startswith(("- ", "* ")):
             criteria.append(stripped[2:].strip())
     return criteria or ["Generated starter solution is reviewed and refined before production deployment"]
+
+
+def _classify_runtime(markdown: str) -> dict[str, Any]:
+    """Ask the factory runtime classifier which agent runtime to recommend.
+
+    Non-breaking: wrapped in a try/except so a classifier bug can never
+    fail a factory run. Returns a small dict safe to embed in the
+    project manifest and feed.
+    """
+
+    try:
+        result = _classify_brd(markdown)
+    except Exception as exc:  # pragma: no cover - defensive
+        return {
+            "runtime": "local",
+            "source": "error-fallback",
+            "error": str(exc),
+        }
+    return {
+        "runtime": result.runtime,
+        "source": result.source,
+        "score": result.score,
+        "signals": result.signals,
+        "counterSignals": result.counter_signals,
+        "reasoning": result.reasoning,
+    }
 
 
 def _infer_capabilities(markdown: str) -> dict[str, bool]:

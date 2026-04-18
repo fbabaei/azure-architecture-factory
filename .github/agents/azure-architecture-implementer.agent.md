@@ -36,7 +36,7 @@ When the diagram contains Azure AI Foundry, Azure OpenAI, a chat agent, a docume
 6. Add the three required tests (local fallback, SDK selection, forward-progress safety net) using `importlib.util.find_spec("agent_framework")` to branch so CI passes with and without the preview SDK installed.
 7. Update the project's `README.md`, `DEPLOY.md`, and `requirements.txt` to point at the installer scripts; do not inline `pip install` commands.
 
-The canonical worked example is [`projects/mdr-support-20260416174652/`](../../projects/mdr-support-20260416174652/) — mirror its layout.
+The canonical reference is [`factory-templates/agent-framework/`](../../factory-templates/agent-framework/) — the template files are designed to be self-sufficient. The factory's own BRD classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) is a second worked example of the same pattern applied in-repo.
 
 ## Output Format
 Return:

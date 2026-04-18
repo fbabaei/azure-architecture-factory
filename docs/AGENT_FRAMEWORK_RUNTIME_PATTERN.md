@@ -6,8 +6,8 @@ behaviour the factory guarantees.
 
 ## Status
 - Pattern adopted: 2026-04-17
-- Reference implementation: [`projects/mdr-support-20260416174652/`](../projects/mdr-support-20260416174652/)
 - Canonical template: [`factory-templates/agent-framework/`](../factory-templates/agent-framework/)
+- Factory classifier (built on this pattern): [`scripts/factory_runtime/`](../scripts/factory_runtime/)
 
 ## When to apply this pattern
 
@@ -134,10 +134,11 @@ Projects adopting the pattern must have:
 3. A test that proves the forward-progress safety net fires when the
    LLM stalls (using a no-op stub agent).
 
-See the MDR project's `tests/test_generated_project.py` for worked
-examples: `test_agent_runtime_selects_foundry_when_enabled`,
-`test_apply_answer_to_arrangement_public_alias_matches_legacy`, and
-`test_foundry_clarification_driver_falls_back_when_llm_stalls`.
+See `factory-templates/agent-framework/foundry_agent_runtime.template.py`
+for the complete reference adapter, and
+`scripts/factory_runtime/tests/test_project_classifier.py` for worked
+examples of these three test shapes applied to the factory's own
+runner.
 
 ## How the factory applies this pattern
 
@@ -152,10 +153,12 @@ The factory agents are aware of the convention:
   Azure AI Foundry or any LLM component is present in the target
   architecture.
 
-The reference implementation in `projects/mdr-support-20260416174652/`
-stays the authoritative worked example. Updates to the pattern should
-land there first, prove out through the project's test suite, then be
-promoted back into `factory-templates/agent-framework/`.
+The factory itself adopts this pattern in
+[`scripts/factory_runtime/`](../scripts/factory_runtime/), which
+classifies BRDs into runtime recommendations with the same two-runtime
+/ deterministic-contract / forward-progress design. Updates to the
+pattern should prove out in `factory-templates/agent-framework/` and
+the factory's own runner before adopting projects follow.
 
 ## Why not just bake the SDK into every project
 

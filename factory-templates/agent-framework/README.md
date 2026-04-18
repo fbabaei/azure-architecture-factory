@@ -49,18 +49,18 @@ deterministic Python services remain the right choice there.
 6. Update the project's `README.md` and `DEPLOY.md` to point at the new
    installer scripts and env flags.
 
-The canonical, battle-tested example is the MDR support project at
-[`projects/mdr-support-20260416174652/`](../../projects/mdr-support-20260416174652).
-New adopters should mirror that project's layout.
+The files in this folder are the authoritative reference. They are
+designed to be self-sufficient — an adopter should be able to follow
+this README without reading any other project's source.
 
 ## The deterministic-contract pattern
 
 Every tool the SDK `Agent` calls **must** delegate mutation to a pure
-Python helper that already exists in the project (e.g.
-`apply_answer_to_arrangement`). The LLM decides *which* tool to invoke;
-the helper decides *how* the underlying state changes. This keeps schema
-validation, audit logging, and persistence identical across both
-runtimes and makes the SDK runtime strictly additive.
+Python helper that already exists in the project (e.g. a
+`apply_answer_to_domain_object` merge helper). The LLM decides *which*
+tool to invoke; the helper decides *how* the underlying state changes.
+This keeps schema validation, audit logging, and persistence identical
+across both runtimes and makes the SDK runtime strictly additive.
 
 See the pattern doc for the full rules and the forward-progress safety
 net that guarantees multi-turn loops always advance even when the LLM

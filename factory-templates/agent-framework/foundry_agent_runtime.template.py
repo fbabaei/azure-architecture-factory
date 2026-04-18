@@ -254,11 +254,130 @@ def build_foundry_runtime(*, settings: Any, repository: Any, qa_service: Any, lo
         settings.foundry_model_deployment,
     )
 
-    # PROJECT-SPECIFIC: return the project's AgentRuntime shape, wrapping
-    # the SDK agents in adapters that expose the same interface as the
-    # local deterministic runtime. See projects/mdr-support-*/src/mdr_agent/
-    # services/foundry_agent_runtime.py for a fully worked example.
-    raise NotImplementedError(
-        "Replace this line with your project's AgentRuntime wiring. "
-        "See factory-templates/agent-framework/README.md step 2."
+    return FoundryAgentRuntime(
+        extraction_agent=extraction_agent,
+        chat_agent=chat_agent,
+        clarification_agent=None,  # PROJECT-SPECIFIC: swap in clarification_agent above.
+        repository=repository,
+        local_runtime=local_runtime,
+        mandatory_fields=_resolve_mandatory_fields(settings),
     )
+
+
+# ---------------------------------------------------------------------------
+# Reference runtime - generic shape adopting projects can copy verbatim.
+# ---------------------------------------------------------------------------
+
+
+def _resolve_mandatory_fields(settings: Any) -> tuple[str, ...]:
+    """PROJECT-SPECIFIC: override with the project's MANDATORY_FIELDS tuple.
+
+    Default returns an empty tuple so the reference runtime runs even
+    for projects that do not have a clarification loop.
+    """
+
+    return tuple(getattr(settings, "mandatory_fields", ()) or ())
+
+
+@dataclass
+class FoundryAgentRuntime:
+    """Generic SDK-backed runtime.
+
+    This class is a complete reference implementation. Adopters can use
+    it as-is for the extraction + chat path and add a clarification
+    agent when their project needs one. The forward-progress safety net
+    is built in: every clarification turn compares the missing-field set
+    before and after the LLM call; if the LLM makes no progress, the
+    deterministic local runtime owns the step.
+    """
+
+    extraction_agent: Any
+    chat_agent: Any
+    clarification_agent: Any
+    repository: Any
+    local_runtime: Any
+    mandatory_fields: tuple[str, ...] = ()
+
+    # -- Extraction --------------------------------------------------------
+
+    def extract_document(self, text: str) -> dict[str, Any]:
+        """Run extraction via the SDK agent, fall back to local on failure."""
+
+        try:
+            response = _run_coro(self.extraction_agent.run(text))
+            raw = _extract_agent_text(response)
+            return json.loads(raw) if raw else {}
+        except Exception as exc:
+            logger.warning("Extraction agent failed, using local runtime: %s", exc)
+            return self.local_runtime.extract_document(text)
+
+    # -- Chat --------------------------------------------------------------
+
+    def respond(self, user_message: str, session_id: str | None = None) -> str:
+        """Run a single chat turn via the SDK agent, fall back to local."""
+
+        try:
+            prompt = json.dumps({"session_id": session_id, "user_message": user_message})
+            response = _run_coro(self.chat_agent.run(prompt))
+            text = _extract_agent_text(response)
+            if text:
+                return text
+        except Exception as exc:
+            logger.warning("Chat agent failed, using local runtime: %s", exc)
+        return self.local_runtime.respond(user_message, session_id=session_id)
+
+    # -- Clarification (multi-turn forward-progress) -----------------------
+
+    def continue_clarification(self, session_id: str, user_message: str) -> dict[str, Any]:
+        """Advance a clarification loop by exactly one step.
+
+        Implements rule 3 of the pattern: compute the missing-field set
+        before the LLM call, run the SDK agent (which delegates mutation
+        to ``record_clarification_answer``), compute the set again, and
+        if it did not shrink, ask the local runtime to apply a
+        deterministic step so the loop always progresses.
+        """
+
+        pre_missing = self._missing_fields(session_id)
+
+        if self.clarification_agent is None:
+            return self.local_runtime.continue_clarification(session_id, user_message)
+
+        try:
+            prompt = json.dumps(
+                {
+                    "session_id": session_id,
+                    "user_message": user_message,
+                    "missing_fields": pre_missing,
+                }
+            )
+            _run_coro(self.clarification_agent.run(prompt))
+        except Exception as exc:
+            logger.warning("Clarification agent failed, using local step: %s", exc)
+            return self.local_runtime.continue_clarification(session_id, user_message)
+
+        post_missing = self._missing_fields(session_id)
+        if set(post_missing) >= set(pre_missing):
+            # No progress. Fire the deterministic safety net.
+            logger.info(
+                "Clarification agent made no progress on %s; applying local step",
+                session_id,
+            )
+            return self.local_runtime.continue_clarification(session_id, user_message)
+
+        return {"session_id": session_id, "missing_fields": post_missing, "advanced_by": "agent-framework"}
+
+    # -- Internal helpers --------------------------------------------------
+
+    def _missing_fields(self, session_id: str) -> list[str]:
+        """PROJECT-SPECIFIC: compute missing fields from repository state.
+
+        Default implementation returns an empty list so the runtime is
+        usable even before the project wires its own helper.
+        """
+
+        state = self.repository.get(session_id)
+        if state is None:
+            return list(self.mandatory_fields)
+        present = {field for field in self.mandatory_fields if getattr(state, field, None)}
+        return [field for field in self.mandatory_fields if field not in present]

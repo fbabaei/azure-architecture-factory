@@ -4,7 +4,7 @@ description: "Use when you need to orchestrate an entire project lifecycle — f
 tools: [read, edit, search, execute, agent, todo, mcp]
 agents: [project-state-manager, brd-to-architecture-diagram, azure-architecture-implementer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
-argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal."
+argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), agent runtime (runtime: local|agent-framework|auto — default auto), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal."
 ---
 
 You are the master project orchestrator for Azure architecture-driven delivery.
@@ -131,8 +131,18 @@ After completion (either mode):
 ### Phase 2 — Implementation Scaffolding
 **Delegate to**: `azure-architecture-implementer`
 
+Resolve the agent runtime choice before delegating. The `runtime` argument accepts three values:
+
+| Value | Meaning |
+|-------|---------|
+| `local` | Ship the deterministic Python runtime only. No SDK install, no Foundry dependency. |
+| `agent-framework` | Ship both runtimes. Agent Framework SDK runtime is preferred when configured; local runtime is the fallback. |
+| `auto` (default) | Classify the diagram. If it contains Azure AI Foundry, Azure OpenAI, a chat agent, a document-extraction agent, or any multi-turn clarification loop, treat as `agent-framework`; otherwise treat as `local`. |
+
+The factory classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) performs the same analysis and is the authoritative resolver when `auto` is passed. Record the resolved value in the manifest as `agent_runtime`.
+
 Instruct the agent:
-> "Read the diagram at `projects/<slug>/diagrams/<slug>.drawio` and companion notes at `projects/<slug>/diagrams/<slug>.md`. Scaffold modular Python microservices and Azure resource mappings. Place all service code under `projects/<slug>/src/`, Bicep infrastructure under `projects/<slug>/infra/`, and tests under `projects/<slug>/tests/`. Do not write outside the `projects/<slug>/` folder. If the diagram contains Azure AI Foundry, Azure OpenAI, a chat agent, a document-extraction agent, or any multi-turn clarification loop, adopt the Agent Framework SDK runtime convention documented in `docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md` and copy the canonical files from `factory-templates/agent-framework/` into the project. Return the service layout and Azure resource mapping."
+> "Read the diagram at `projects/<slug>/diagrams/<slug>.drawio` and companion notes at `projects/<slug>/diagrams/<slug>.md`. Scaffold modular Python microservices and Azure resource mappings. Place all service code under `projects/<slug>/src/`, Bicep infrastructure under `projects/<slug>/infra/`, and tests under `projects/<slug>/tests/`. Do not write outside the `projects/<slug>/` folder. Target agent runtime: `<resolved-runtime>` (local or agent-framework). If `agent-framework`, adopt the Agent Framework SDK runtime convention documented in `docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md` and copy the canonical files from `factory-templates/agent-framework/` into the project. If `local`, ship only the deterministic Python runtime and do not reference the SDK template. Return the service layout and Azure resource mapping."
 
 After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
@@ -202,6 +212,8 @@ After completion:
   "target_environment": "dev|test|prod",
   "azure_region": "<region>",
   "deploy_requested": true|false,
+  "agent_runtime": "local|agent-framework",
+  "agent_runtime_source": "explicit|auto",
   "phases": {
     "0_setup": { "status": "complete|failed|skipped", "completed_at": "<ISO>" },
     "1_architecture": {
