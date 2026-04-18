@@ -6,6 +6,8 @@ Start with these documents:
 
 - [docs/README.md](docs/README.md) for the repository overview
 - [docs/QUICKSTART.md](docs/QUICKSTART.md) for the main workflows and local validation paths
+- [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) for viewing `.drawio` detailed architecture files on Windows
+- [docs/SELF_CONTAINED_SETUP.md](docs/SELF_CONTAINED_SETUP.md) to run this repo standalone without sibling repositories
 - [docs/PRD.md](docs/PRD.md) for product scope and capabilities
 - [docs/BRD.md](docs/BRD.md) for the business case and adoption goals
 
@@ -15,6 +17,7 @@ Key repository areas:
 - [diagrams](diagrams) for reusable architecture source artifacts
 - [projects](projects) for sample project outputs and generated examples
 - [infra/README.md](infra/README.md) for shared Bicep modules and deployment guidance
+- [factory-templates/agent-framework/README.md](factory-templates/agent-framework/README.md) for the reusable Microsoft Agent Framework SDK runtime template
 - [demo](demo) for the developer-facing portal and readiness dashboard
 
 Current sample portfolio includes order management, storage self-service, AKS microservices, e-commerce, and the restored Fabric Medallion pipeline reference.

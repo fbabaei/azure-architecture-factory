@@ -132,7 +132,7 @@ After completion (either mode):
 **Delegate to**: `azure-architecture-implementer`
 
 Instruct the agent:
-> "Read the diagram at `projects/<slug>/diagrams/<slug>.drawio` and companion notes at `projects/<slug>/diagrams/<slug>.md`. Scaffold modular Python microservices and Azure resource mappings. Place all service code under `projects/<slug>/src/`, Bicep infrastructure under `projects/<slug>/infra/`, and tests under `projects/<slug>/tests/`. Do not write outside the `projects/<slug>/` folder. Return the service layout and Azure resource mapping."
+> "Read the diagram at `projects/<slug>/diagrams/<slug>.drawio` and companion notes at `projects/<slug>/diagrams/<slug>.md`. Scaffold modular Python microservices and Azure resource mappings. Place all service code under `projects/<slug>/src/`, Bicep infrastructure under `projects/<slug>/infra/`, and tests under `projects/<slug>/tests/`. Do not write outside the `projects/<slug>/` folder. If the diagram contains Azure AI Foundry, Azure OpenAI, a chat agent, a document-extraction agent, or any multi-turn clarification loop, adopt the Agent Framework SDK runtime convention documented in `docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md` and copy the canonical files from `factory-templates/agent-framework/` into the project. Return the service layout and Azure resource mapping."
 
 After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.

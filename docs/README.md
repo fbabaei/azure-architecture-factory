@@ -7,8 +7,13 @@ Azure Architecture Factory is an internal Azure delivery workspace built around 
 - Agent definitions under [../.github/agents/README.md](../.github/agents/README.md)
 - Reusable architecture diagrams under [../diagrams](../diagrams)
 - Shared Bicep modules under [../infra/README.md](../infra/README.md)
+- Reusable project templates under [../factory-templates/agent-framework/README.md](../factory-templates/agent-framework/README.md)
 - Sample project outputs under [../projects](../projects)
 - A developer-facing portal under [../demo](../demo)
+
+## Factory Conventions
+
+- [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — how generated projects adopt the Microsoft Agent Framework SDK runtime alongside a deterministic fallback
 
 ## Delivery Model
 

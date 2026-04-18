@@ -1,0 +1,29 @@
+# Microsoft Agent Framework SDK - canonical pin list.
+#
+# DO NOT copy these into a project's requirements.txt as hard pins. The
+# packages are preview (rc/beta) and install-order-sensitive: the
+# azure-ai-agentserver-* packages pin agent-framework-core<=rc3, so the
+# rc6 agent-framework packages MUST be installed AFTER the agentserver
+# packages for rc6 to win resolution.
+#
+# Use the helper scripts to install in the correct order:
+#   Windows : scripts/install_agent_framework.ps1
+#   Linux   : scripts/install_agent_framework.sh
+#
+# The list below is the authoritative version set as of this template's
+# last update. Projects should paste these as commented-out references
+# in their own requirements.txt so the pin set is discoverable without
+# being auto-installed.
+
+# Phase 1 - agentserver stack (install first)
+# azure-ai-agentserver-agentframework==1.0.0b16
+# azure-ai-agentserver-core==1.0.0b16
+# agent-dev-cli==0.0.1b260316
+
+# Phase 2 - agent-framework rc6 (install second, pip upgrade)
+# agent-framework-core==1.0.0rc6
+# agent-framework-foundry==1.0.0rc6
+# agent-framework-openai==1.0.0rc6
+
+# Required for DefaultAzureCredential in the Foundry runtime
+# azure-identity>=1.17.0
