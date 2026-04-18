@@ -18,33 +18,81 @@ python -m uvicorn mdr_agent.main:app --app-dir src --host 127.0.0.1 --port 8000 
 Hit http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs.
 
 ## Deploy infrastructure
+
+The Bicep template provisions an Azure Container Registry by default
+(`provisionAcr=true`) and grants the workload's managed identity
+`AcrPull` on it. You can run the deployment once before you have an
+image — the Container App will start on a placeholder image, then pick
+up your real image on the next `az containerapp update`.
+
+### First deployment (provision the platform + ACR)
+
 ```powershell
 az group create --name rg-mdr-support-dev --location eastus2
 az deployment group create `
   --resource-group rg-mdr-support-dev `
   --template-file infra/main.bicep `
   --parameters environment=dev workloadName=mdr-support `
-               enableObservability=true `
-               containerImage="<acr>.azurecr.io/mdr-agent:latest"
+               enableObservability=true
 ```
 
-## Grant managed identity access
-After the deployment, assign the following built-in roles to the
-user-assigned managed identity (`<baseName>-mi`):
-
-| Role | Scope |
-|------|-------|
-| `Cognitive Services OpenAI User` | Azure OpenAI account |
-| `Cognitive Services User` | Document Intelligence account |
-| `Storage Blob Data Contributor` | Storage account |
-| `Cosmos DB Built-in Data Contributor` | Cosmos DB account |
-| `Key Vault Secrets User` | Key Vault |
-| `Search Index Data Reader` | Azure AI Search service |
+Capture the ACR login server from the deployment outputs:
 
 ```powershell
-$mi = az identity show -g rg-mdr-support-dev -n mdr-support-dev-mi --query principalId -o tsv
-# assign roles via az role assignment create ...
+$acr = az deployment group show -g rg-mdr-support-dev `
+  -n main --query properties.outputs.containerRegistryLoginServer.value -o tsv
 ```
+
+### Build and push the MDR agent image
+
+```powershell
+az acr login --name ($acr.Split('.')[0])
+docker build -t "$acr/mdr-agent:1.0.0" .
+docker push "$acr/mdr-agent:1.0.0"
+```
+
+### Redeploy with the real image
+
+```powershell
+az deployment group create `
+  --resource-group rg-mdr-support-dev `
+  --template-file infra/main.bicep `
+  --parameters environment=dev workloadName=mdr-support `
+               enableObservability=true `
+               containerImage="$acr/mdr-agent:1.0.0"
+```
+
+Or update the Container App directly:
+
+```powershell
+az containerapp update `
+  --resource-group rg-mdr-support-dev `
+  --name mdr-support-dev-api `
+  --image "$acr/mdr-agent:1.0.0"
+```
+
+### Using an existing registry
+
+Set `provisionAcr=false` and pass your own `containerImage`. You are then
+responsible for granting the managed identity `AcrPull` on the external
+registry.
+
+## Managed identity RBAC
+
+RBAC is wired in Bicep — the following role assignments are created
+automatically against the workload's user-assigned managed identity:
+
+| Role | Scope | Resource type |
+|------|-------|---------------|
+| `Cognitive Services OpenAI User` | Azure OpenAI account | `Microsoft.Authorization/roleAssignments` |
+| `Cognitive Services User` | Document Intelligence account | `Microsoft.Authorization/roleAssignments` |
+| `Storage Blob Data Contributor` | Storage account | `Microsoft.Authorization/roleAssignments` |
+| `Key Vault Secrets User` | Key Vault | `Microsoft.Authorization/roleAssignments` |
+| `Search Index Data Reader` | Azure AI Search service | `Microsoft.Authorization/roleAssignments` |
+| `AcrPull` | Container Registry (when `provisionAcr=true`) | `Microsoft.Authorization/roleAssignments` |
+| `Cosmos DB Built-in Data Contributor` | Cosmos DB account (data plane) | `Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments` |
+
+No manual `az role assignment create` calls are required.
 
 ## Bootstrap the hybrid AI Search index
 The application now issues semantic + vector queries. After infrastructure
@@ -115,22 +163,6 @@ To create the index schema without seeding documents:
 
 ```powershell
 .\scripts\run_search_index.ps1 -ResourceGroupName rg-mdr-support-dev -CreateOnly
-```
-
-## Build & push the container
-```powershell
-docker build -t <acr>.azurecr.io/mdr-agent:latest .
-az acr login --name <acr>
-docker push <acr>.azurecr.io/mdr-agent:latest
-```
-
-Then re-run the deployment with the new image tag, or update the Container
-App directly:
-```powershell
-az containerapp update `
-  --resource-group rg-mdr-support-dev `
-  --name mdr-support-dev-api `
-  --image <acr>.azurecr.io/mdr-agent:latest
 ```
 
 ## Data topology

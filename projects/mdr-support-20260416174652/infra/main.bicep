@@ -36,11 +36,15 @@ param openAiEmbeddingsModel string = 'text-embedding-3-small'
 @description('Optional audience for APIM JWT validation. Leave empty to skip validate-jwt.')
 param apiAudience string = ''
 
-@description('Container image for the MDR agent API')
-param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+@description('Container image for the MDR agent API. When empty, the ACR-hosted image tag \'mdr-agent:latest\' is used.')
+param containerImage string = ''
+
+@description('Provision an Azure Container Registry in this resource group for the MDR agent image.')
+param provisionAcr bool = true
 
 
 var baseName = toLower(replace('${workloadName}-${environment}', '_', '-'))
+var acrName = take('acr${uniqueString(resourceGroup().id, baseName)}', 50)
 var storageName = take('stg${uniqueString(resourceGroup().id, baseName)}', 24)
 var openIdConfigUrl = '${az.environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0/.well-known/openid-configuration'
 var apimPolicyXml = empty(apiAudience)
@@ -50,10 +54,13 @@ var roleDefinitionIds = {
   openAiUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
   cognitiveServicesUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
   blobContributor: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-  cosmosContributor: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00000000-0000-0000-0000-000000000002')
   keyVaultSecretsUser: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
   searchIndexReader: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')
+  acrPull: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 }
+
+// Cosmos data-plane role IDs are scoped to the account, not the subscription.
+var cosmosDataContributorRoleId = '00000000-0000-0000-0000-000000000002'
 var tags = {
   workload: workloadName
   environment: environment
@@ -67,6 +74,25 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   location: location
   tags: tags
 }
+
+// Container Registry (optional — when provisionAcr is true, a new ACR is created
+// in this resource group and AcrPull is granted to the managed identity. When
+// false, the caller must pass containerImage pointing to an existing registry
+// and optionally existingAcrResourceId to grant AcrPull on it.)
+resource acr 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' = if (provisionAcr) {
+  name: acrName
+  location: location
+  tags: tags
+  sku: { name: 'Basic' }
+  properties: {
+    adminUserEnabled: false
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+var effectiveContainerImage = !empty(containerImage)
+  ? containerImage
+  : (provisionAcr ? '${acr!.properties.loginServer}/mdr-agent:latest' : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest')
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: take('${baseName}-kv', 24)
@@ -309,12 +335,18 @@ resource mdrAgent 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
+      registries: provisionAcr ? [
+        {
+          server: acr!.properties.loginServer
+          identity: managedIdentity.id
+        }
+      ] : []
     }
     template: {
       containers: [
         {
           name: 'mdr-agent'
-          image: containerImage
+          image: effectiveContainerImage
           resources: { cpu: json('0.5'), memory: '1.0Gi' }
           env: [
             { name: 'AZURE_OPENAI_ENDPOINT', value: openAi.properties.endpoint }
@@ -552,13 +584,15 @@ resource blobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01'
   }
 }
 
-resource cosmosRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(cosmos.id, managedIdentity.id, 'cosmosContributor')
-  scope: cosmos
+// Cosmos DB data-plane access is granted via sqlRoleAssignments, not Microsoft.Authorization/roleAssignments.
+// The account-scoped Built-in Data Contributor role is required for the MI to read/write documents.
+resource cosmosDataRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  parent: cosmos
+  name: guid(cosmos.id, managedIdentity.id, 'cosmosDataContributor')
   properties: {
     principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: roleDefinitionIds.cosmosContributor
+    roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/${cosmosDataContributorRoleId}'
+    scope: cosmos.id
   }
 }
 
@@ -582,7 +616,19 @@ resource aiSearchRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (provisionAcr) {
+  name: guid(resourceGroup().id, managedIdentity.id, 'acrPull')
+  scope: acr
+  properties: {
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.acrPull
+  }
+}
+
 output managedIdentityClientId string = managedIdentity.properties.clientId
+output containerRegistryLoginServer string = provisionAcr ? acr!.properties.loginServer : ''
+output containerRegistryName string = provisionAcr ? acr!.name : ''
 output keyVaultUri string = keyVault.properties.vaultUri
 output storageAccountName string = storage.name
 output cosmosEndpoint string = cosmos.properties.documentEndpoint
