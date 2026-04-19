@@ -4536,14 +4536,49 @@
                 title = 'Your account is authenticated, but your home tenant is not allowed on this deployment.';
                 bg = '#fde7e9'; border = '#f1707a'; fg = '#7a0014';
             } else {
-                label = `👤 ${me.user}${me.isAdmin ? ' · admin' : ''}`;
-                title = 'You see only projects you own (or all, if you are an admin).';
+                label = `👤 ${me.user}${me.isAdmin ? ' · admin' : ''} ▾`;
+                title = 'Click to switch account or sign out.';
             }
             el.textContent = label;
             el.title = title;
+            const clickable = me.authenticated; // tenant-blocked users still need to sign out
             el.style.cssText = 'display:inline-block;margin-left:0.5rem;padding:0.2rem 0.55rem;'
                 + `background:${bg};color:${fg};border:1px solid ${border};border-radius:12px;`
-                + 'font-size:0.75rem;font-weight:500;cursor:default';
+                + `font-size:0.75rem;font-weight:500;cursor:${clickable ? 'pointer' : 'default'};`
+                + 'user-select:none;position:relative';
+            if (!clickable) { el.onclick = null; return; }
+            el.onclick = (ev) => {
+                ev.stopPropagation();
+                // Toggle dropdown menu
+                let menu = document.getElementById('user-badge-menu');
+                if (menu) { menu.remove(); return; }
+                menu = document.createElement('div');
+                menu.id = 'user-badge-menu';
+                menu.style.cssText = 'position:absolute;top:100%;right:0;margin-top:4px;'
+                    + 'background:#fff;border:1px solid #c7e0f4;border-radius:6px;'
+                    + 'box-shadow:0 4px 12px rgba(0,0,0,0.08);min-width:180px;z-index:9999;'
+                    + 'font-size:0.8rem;color:#003d6b;overflow:hidden';
+                const mkItem = (text, href) => {
+                    const a = document.createElement('a');
+                    a.href = href;
+                    a.textContent = text;
+                    a.style.cssText = 'display:block;padding:0.5rem 0.85rem;text-decoration:none;'
+                        + 'color:inherit;border-bottom:1px solid #eef3f9';
+                    a.onmouseenter = () => { a.style.background = '#f3f8fd'; };
+                    a.onmouseleave = () => { a.style.background = '#fff'; };
+                    return a;
+                };
+                menu.appendChild(mkItem('Switch account', '/.auth/login/aad?prompt=select_account&post_login_redirect_url=/'));
+                menu.appendChild(mkItem('Sign out',       '/.auth/logout?post_logout_redirect_uri=/'));
+                el.appendChild(menu);
+                const closer = (e) => {
+                    if (!menu.contains(e.target) && e.target !== el) {
+                        menu.remove();
+                        document.removeEventListener('click', closer);
+                    }
+                };
+                setTimeout(() => document.addEventListener('click', closer), 0);
+            };
         }
 
         async function loadProjects() {
