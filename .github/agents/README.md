@@ -72,6 +72,21 @@ Phase 1 is explicitly driven through the MCP Draw.io workflow via `brd-to-archit
 
 Inputs accepted: `BRD.md`, `PRD.md`, or inline requirements text.
 
+**Update Mode — BRD changes on existing projects**
+
+The orchestrator also runs in Update Mode when a BRD is resubmitted for a project that already exists. Triggers:
+- Portal resubmission (writes `projects/<slug>/.brd-update-pending.json`).
+- Explicit CLI / GHCP invocation with `update: true` and `slug: <existing-slug>`.
+- Drift detection: `docs/requirements.md` is newer than the manifest's Phase 1 completion time.
+
+In Update Mode the orchestrator:
+1. Snapshots the prior BRD, diagram, and notes under `projects/<slug>/docs/history/` and `projects/<slug>/diagrams/history/`.
+2. Computes a BRD diff and writes it to `docs/brd-diff-v<N>.md`.
+3. Calls `drawio-architecture-reader` to inventory the current architecture.
+4. Calls `brd-to-architecture-diagram` with the diff + inventory so the new diagram preserves unchanged components and only applies deltas.
+5. Calls `azure-architecture-implementer` in incremental mode — added services are scaffolded, removed services are moved to `src/_removed/v<N>/`, and modified services are updated in place.
+6. Re-runs Bicep validation and refreshes the production checklist. Never auto-deploys an update.
+
 ### azure-project-deployer
 Use this agent to deploy a project's Bicep infrastructure to Azure.
 
