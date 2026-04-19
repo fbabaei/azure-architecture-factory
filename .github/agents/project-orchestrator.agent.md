@@ -2,7 +2,7 @@
 name: project-orchestrator
 description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, optional Azure deployment, and post-deployment observability, while maintaining requirement traceability across all stages. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
-agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
+agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
 argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), agent runtime (runtime: local|agent-framework|auto — default auto), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal. For BRD updates on an existing project, pass update: true and slug: <existing-project-slug> — the orchestrator will diff the BRD, re-read the current architecture, regenerate the diagram, and apply targeted implementation changes."
 ---
@@ -185,23 +185,42 @@ After completion:
 - Log: `[PHASE U3] Architecture regenerated — +<added> / -<removed> / ~<modified> components`
 
 #### Phase U4 — Incremental Implementation Update
-**Delegate to**: `azure-architecture-implementer`
+**Delegate to**: `source-code-maintainer`
+
+The maintainer is the sole entry point for source-code changes during an update. It coordinates with `azure-architecture-implementer` to scaffold any net-new services, edits modified services in place, retires removed services to `src/_removed/v<N>/`, and keeps shared modules consistent.
 
 Instruct the agent:
-> "Apply architecture changes to an existing implementation. Do NOT rescaffold the whole project. Inputs:
-> - New diagram: `projects/<slug>/diagrams/<slug>.drawio`
-> - Companion notes: `projects/<slug>/diagrams/<slug>.md`
-> - Architecture change list from Phase U3: `{added: [...], removed: [...], modified: [...]}`
-> - Existing code under `projects/<slug>/src/`
-> - Existing infrastructure under `projects/<slug>/infra/`
+> "Reconcile source code with the new architecture. Inputs:
+> - project_path: `projects/<slug>`
+> - mode: `sync`
+> - diagram: `projects/<slug>/diagrams/<slug>.drawio`
+> - notes: `projects/<slug>/diagrams/<slug>.md`
+> - manifest: `projects/<slug>/project-manifest.json`
+> - architecture_changes from Phase U3: `{added: [...], removed: [...], modified: [...]}`
+> - inventory: `projects/<slug>/diagrams/history/inventory-v<N>.json`
 >
-> For each **added** component: scaffold the new service folder under `src/` (if it needs application code), and add a new Bicep module under `infra/modules/` plus a reference from `infra/main.bicep`. For each **removed** component: move the service folder to `projects/<slug>/src/_removed/v<N>/<service>/` (do not delete), and remove the Bicep module reference from `infra/main.bicep` (keep the module file under `infra/modules/_removed/v<N>/` as an audit trail). For each **modified** component: update the Bicep module parameters and the service README to reflect the new role; do NOT rewrite unchanged application logic. Preserve the project's agent runtime choice (`<resolved-runtime>`). Return the list of files created, moved, or modified."
->
-> Resolve `<resolved-runtime>` from the existing manifest's `agent_runtime` field — do not re-classify; updates inherit the original runtime unless the BRD diff explicitly demands a switch (in which case surface a blocker and stop).
+> Preserve the project's `agent_runtime` choice from the manifest. Do not touch Bicep. Do not modify the BRD. Return the structured change bundle including any blockers."
 
 After completion:
-- Delegate phase logging and manifest update (append to `manifest.updates[<N>].implementation_changes`) to `project-state-manager`.
+- If the maintainer reported blockers, stop the update, leave snapshots under `history/` and `_removed/` in place, and surface the blockers in the Update Summary.
+- Otherwise, delegate phase logging and manifest update (append to `manifest.updates[<N>].implementation_changes` from the maintainer's returned bundle) to `project-state-manager`.
 - Log: `[PHASE U4] Implementation updated — <A> added, <R> moved-to-_removed, <M> modified`
+
+#### Phase U4b — Infrastructure Delta
+**Delegate to**: `azure-architecture-implementer`
+
+The maintainer intentionally does not touch Bicep. This step adds Bicep modules for added components and retires modules for removed components. Modified components typically change only Bicep parameters.
+
+Instruct the agent:
+> "Apply Bicep infrastructure deltas only. Do not modify `src/` — the source-code-maintainer already handled that. Inputs:
+> - project_path: `projects/<slug>`
+> - architecture_changes from Phase U3: `{added: [...], removed: [...], modified: [...]}`
+> - update_version: `<N>`
+>
+> For each **added** component: add a Bicep module under `projects/<slug>/infra/modules/` and wire it into `infra/main.bicep`. For each **removed** component: move the module file to `projects/<slug>/infra/modules/_removed/v<N>/` and remove the reference from `main.bicep`. For each **modified** component: update module parameters only. Return the list of Bicep files created, moved, or edited."
+
+After completion:
+- Log: `[PHASE U4b] Infrastructure delta applied`
 
 #### Phase U5 — Update Finalization & Re-Validation
 1. Re-run Phase 3 (`bicep-infrastructure-validator`) against the updated `infra/` to catch any integration errors introduced by added/removed modules.
@@ -273,6 +292,14 @@ Instruct the agent:
 After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
 - Log: `[PHASE 2] Implementation scaffolded → projects/<slug>/src/, projects/<slug>/infra/`
+
+**Phase 2 follow-up — code/architecture drift check** (delegated to `source-code-maintainer`)
+
+After the implementer returns, invoke `source-code-maintainer` in `drift-check` mode to confirm every diagram component is represented in `src/` and vice versa:
+
+> "project_path: `projects/<slug>`. mode: `drift-check`. Confirm the scaffolded code matches the diagram inventory. Report any drift; do not fix."
+
+If the maintainer reports drift, re-invoke it in `sync` mode with the reported gaps as `architecture_changes.added`. This catches components the implementer missed (common for shared libraries and cross-cutting services).
 
 ### Phase 3 — Infrastructure Validation & Self-Healing
 **Delegate to**: `bicep-infrastructure-validator`

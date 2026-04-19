@@ -151,6 +151,23 @@ Typical uses:
 - Generate service structure and Azure mappings.
 - Update supporting documentation after implementation.
 
+### source-code-maintainer
+Use this agent to keep a project's source code in sync with its architecture over time. Complements `azure-architecture-implementer` — the implementer scaffolds, the maintainer maintains.
+
+Typical uses:
+- Drift check: compare the `.drawio` component inventory against what exists under `src/`.
+- Sync mode: during BRD updates, add code for new components, retire code for removed components (moved to `src/_removed/v<N>/`, never deleted), refactor modified components in place.
+- Generate mode: scaffold code for a caller-specified set of added components (delegates scaffolding to `azure-architecture-implementer`).
+- Refactor mode: update code for modified components without touching others.
+- Shared-library reconciliation: keep `src/_shared/` and `src/libs/` consistent with the active service list.
+- Hygiene pass scoped to edited files only — docstrings, typed signatures, no wildcard imports.
+
+Called automatically by `project-orchestrator`:
+- After Phase 2 (drift-check follow-up to catch anything the implementer missed).
+- During Update Phase U4 (sync mode with the BRD-diff-derived change list).
+
+Never touches Bicep, `docs/requirements.md`, or the `agent_runtime` choice. All log and manifest writes flow through `project-state-manager`.
+
 ### production-environment-advisor
 Use this agent to inspect the repository and identify the production environment needed to run the project for real.
 
