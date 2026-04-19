@@ -2615,6 +2615,34 @@
                                     <div id="admin-token-requests" style="margin-top: 1.5rem;"></div>
                                 </div>
                             </details>
+
+                            <!-- Admin: Project Access (per-user ownership) -->
+                            <details id="admin-project-access-panel" style="margin-top: 1rem; border: 1px solid #4a7ecb; border-radius: 6px; background: #f4f8ff;"
+                                     ontoggle="if(this.open){ loadProjectOwners(); }">
+                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #1b3a6b; user-select: none;">
+                                    👥 Admin: Project Access (Add / Remove Users)
+                                </summary>
+                                <div style="padding: 0 1rem 1.25rem;">
+                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Only takes effect when the portal runs in Entra auth mode (<code>FACTORY_PORTAL_AUTH_MODE=entra</code>). Admins see every project regardless.</p>
+                                    <div class="form-group">
+                                        <label for="owner-slug">Project</label>
+                                        <select id="owner-slug" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                                            <option value="">— select a project —</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="owner-email">User email</label>
+                                        <input type="text" id="owner-email" placeholder="user@contoso.com">
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="button" onclick="updateProjectOwner('add')" class="btn-primary">Add User</button>
+                                        <button type="button" onclick="updateProjectOwner('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove User</button>
+                                        <button type="button" onclick="loadProjectOwners()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                    </div>
+                                    <div id="admin-project-owners-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                    <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
+                                </div>
+                            </details>
                         </div>
                     </section>
                 </div><!-- /intake-col -->
@@ -3774,6 +3802,123 @@
             subField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             subField?.focus();
         }
+
+        // ─── Admin: Project Access (per-user ownership) ───────────────────────
+        function _setProjectOwnerStatus(message, kind) {
+            const box = document.getElementById('admin-project-owners-status');
+            if (!box) return;
+            if (!message) {
+                box.style.display = 'none';
+                box.textContent = '';
+                return;
+            }
+            const palette = {
+                ok:    { bg: '#eaf8ea', fg: '#205520', border: '#a8d8a8' },
+                error: { bg: '#fcebea', fg: '#8b1a13', border: '#e8a7a2' },
+                info:  { bg: '#eef4fc', fg: '#1b3a6b', border: '#b6cbe8' },
+            }[kind || 'info'] || { bg: '#eef4fc', fg: '#1b3a6b', border: '#b6cbe8' };
+            box.style.display = 'block';
+            box.style.background = palette.bg;
+            box.style.color = palette.fg;
+            box.style.border = `1px solid ${palette.border}`;
+            box.textContent = message;
+        }
+
+        async function loadProjectOwners() {
+            const apiKey = getPortalApiKey();
+            const listEl = document.getElementById('admin-project-owners-list');
+            const slugSelect = document.getElementById('owner-slug');
+            if (!apiKey) {
+                _setProjectOwnerStatus('Enter the master API key above to manage project access.', 'info');
+                if (listEl) listEl.innerHTML = '';
+                return;
+            }
+            _setProjectOwnerStatus('Loading…', 'info');
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/project-owners`, {
+                    headers: buildMutationHeaders(),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    _setProjectOwnerStatus(data.error || `HTTP ${resp.status}`, 'error');
+                    if (listEl) listEl.innerHTML = '';
+                    return;
+                }
+                const projects = data.projects || {};
+                const feedSlugs = Array.isArray(window._portalProjectSlugs) ? window._portalProjectSlugs : [];
+                const allSlugs = Array.from(new Set([...Object.keys(projects), ...feedSlugs])).sort();
+                if (slugSelect) {
+                    const currentValue = slugSelect.value;
+                    slugSelect.innerHTML = '<option value="">— select a project —</option>' +
+                        allSlugs.map(s => `<option value="${s}">${s}</option>`).join('');
+                    if (currentValue && allSlugs.includes(currentValue)) {
+                        slugSelect.value = currentValue;
+                    }
+                }
+                if (data.readOnly) {
+                    _setProjectOwnerStatus('Owners are read-only (FACTORY_PORTAL_OWNERS_JSON is set). Update the secret and restart.', 'info');
+                } else {
+                    _setProjectOwnerStatus('', 'info');
+                }
+                if (listEl) {
+                    const adminList = (data.admins || []).join(', ') || '—';
+                    const projectRows = Object.keys(projects).sort().map(s => {
+                        const users = (projects[s] || []).join(', ') || '<em style="color:var(--text-secondary);">(no users — admin-only)</em>';
+                        return `<tr>
+                            <td style="padding:5px 8px; white-space:nowrap;"><code>${s}</code></td>
+                            <td style="padding:5px 8px;">${users}</td>
+                        </tr>`;
+                    }).join('');
+                    listEl.innerHTML = `
+                        <div style="margin-bottom:0.75rem; font-size:0.82rem; color:var(--text-secondary);">
+                            <strong>Global admins:</strong> ${adminList}
+                        </div>
+                        <table style="width:100%; border-collapse:collapse; font-size:0.8rem; border:1px solid #b6cbe8; border-radius:4px; overflow:hidden;">
+                            <thead style="background:#e9f0fb;">
+                                <tr>
+                                    <th style="padding:6px 8px; text-align:left; color:#1b3a6b;">Project</th>
+                                    <th style="padding:6px 8px; text-align:left; color:#1b3a6b;">Assigned Users</th>
+                                </tr>
+                            </thead>
+                            <tbody>${projectRows || '<tr><td colspan="2" style="padding:8px; color:var(--text-secondary);">No per-project assignments yet.</td></tr>'}</tbody>
+                        </table>`;
+                }
+            } catch (e) {
+                _setProjectOwnerStatus(`Network error: ${e.message}`, 'error');
+            }
+        }
+
+        async function updateProjectOwner(action) {
+            const apiKey = getPortalApiKey();
+            if (!apiKey) {
+                _setProjectOwnerStatus('Enter the master API key above first.', 'error');
+                return;
+            }
+            const slug = (document.getElementById('owner-slug')?.value || '').trim();
+            const email = (document.getElementById('owner-email')?.value || '').trim();
+            if (!slug) { _setProjectOwnerStatus('Select a project.', 'error'); return; }
+            if (!email) { _setProjectOwnerStatus('Enter a user email.', 'error'); return; }
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/project-owners`, {
+                    method: 'POST',
+                    headers: buildMutationHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ slug, users: [email], action }),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    _setProjectOwnerStatus(data.error || `HTTP ${resp.status}`, 'error');
+                    return;
+                }
+                const verb = action === 'remove' ? 'removed from' : 'added to';
+                _setProjectOwnerStatus(`✓ ${email} ${verb} ${slug}. Current: ${(data.owners || []).join(', ') || '(none)'}`, 'ok');
+                const emailField = document.getElementById('owner-email');
+                if (emailField) emailField.value = '';
+                loadProjectOwners();
+            } catch (e) {
+                _setProjectOwnerStatus(`Network error: ${e.message}`, 'error');
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
         // ─────────────────────────────────────────────────────────────────────
 
         async function openDiagramInPortal(diagramPath) {
@@ -4605,6 +4750,7 @@
                 updateStats(visibleProjects);
                 updateProjectViewToggle(allProjects);
                 updateMainCopilotButton(allProjects);
+                window._portalProjectSlugs = allProjects.map(p => p.slug).filter(Boolean);
             } catch (error) {
                 console.error('Error loading projects:', error);
                 updateMainCopilotButton([]);

@@ -850,6 +850,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_token_request_list()
 
+        if request_path == "/api/admin/project-owners":
+            if not self._require_admin_key():
+                return
+            return self._handle_project_owners_list(parsed.query)
+
         # Default file serving
         return super().do_GET()
 
@@ -868,6 +873,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_admin_key():
                 return
             return self._handle_issue_token()
+        if path == "/api/admin/project-owners":
+            if not self._require_admin_key():
+                return
+            return self._handle_project_owners_update()
         if path == "/api/token-request":
             return self._handle_submit_token_request()
         if path == "/api/csa-copilot/ask":
@@ -1055,6 +1064,124 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             ]
         tokens.sort(key=lambda t: t["exp"], reverse=True)
         self._send_json({"tokens": tokens})
+
+    def _handle_project_owners_list(self, query: str):
+        """GET /api/admin/project-owners[?slug=...] — list owners.
+
+        Returns {"admins": [...], "projects": {slug: [users]}} when slug is
+        omitted, or {"slug": ..., "owners": [users]} when a slug is provided.
+        """
+        params = parse_qs(query or "")
+        slug = (params.get("slug", [""])[0] or "").strip()
+        owners = _load_owners()
+        if slug:
+            if not _is_slug_visible(slug):
+                self._send_json({"error": "Unknown project"}, 404)
+                return
+            project_owners = sorted(_project_owners(slug))
+            self._send_json({"slug": slug, "owners": project_owners})
+            return
+        projects = owners.get("projects") or {}
+        normalized = {
+            s: sorted({str(x).strip().lower() for x in (v if isinstance(v, list) else [v]) if str(x).strip()})
+            for s, v in projects.items()
+        }
+        self._send_json({
+            "admins": sorted({str(a).strip().lower() for a in (owners.get("admins") or []) if str(a).strip()}),
+            "projects": normalized,
+            "readOnly": bool(_OWNERS_JSON_ENV),
+        })
+
+    def _handle_project_owners_update(self):
+        """POST /api/admin/project-owners — add/remove/set users for a project.
+
+        Body: {"slug": "...", "users": ["a@b.com", ...], "action": "add"|"remove"|"set"}
+        Default action is "add". Emails are case-insensitive and de-duplicated.
+        """
+        if _OWNERS_JSON_ENV:
+            self._send_json({
+                "error": "Owners are read-only: FACTORY_PORTAL_OWNERS_JSON is set. "
+                         "Update the secret and restart the portal."
+            }, 409)
+            return
+
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+
+        slug = str(payload.get("slug", "")).strip()
+        action = str(payload.get("action", "add")).strip().lower() or "add"
+        raw_users = payload.get("users")
+        if raw_users is None and "user" in payload:
+            raw_users = [payload.get("user")]
+        if isinstance(raw_users, str):
+            raw_users = [raw_users]
+        if not isinstance(raw_users, list):
+            raw_users = []
+        users = []
+        for u in raw_users:
+            if not isinstance(u, str):
+                continue
+            u_norm = u.strip().lower()
+            if u_norm and u_norm not in users:
+                users.append(u_norm)
+
+        if not slug:
+            self._send_json({"error": "slug is required"}, 400)
+            return
+        if action not in {"add", "remove", "set"}:
+            self._send_json({"error": "action must be add, remove, or set"}, 400)
+            return
+        if action in {"add", "remove"} and not users:
+            self._send_json({"error": "users list cannot be empty for add/remove"}, 400)
+            return
+        if not _is_slug_visible(slug):
+            self._send_json({"error": "Unknown project slug"}, 404)
+            return
+
+        data = _load_owners()
+        if not isinstance(data.get("projects"), dict):
+            data["projects"] = {}
+        current_raw = data["projects"].get(slug) or []
+        if isinstance(current_raw, str):
+            current_raw = [current_raw]
+        current = []
+        for u in current_raw:
+            if not isinstance(u, str):
+                continue
+            u_norm = u.strip().lower()
+            if u_norm and u_norm not in current:
+                current.append(u_norm)
+
+        if action == "add":
+            for u in users:
+                if u not in current:
+                    current.append(u)
+        elif action == "remove":
+            current = [u for u in current if u not in set(users)]
+        else:  # set
+            current = list(users)
+
+        data["projects"][slug] = sorted(current)
+        _save_owners(data)
+
+        # Mirror to blob so other replicas / restarts pick it up.
+        try:
+            blob_sync.upload_owners(OWNERS_FILE)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Owners blob upload failed: %s", exc)
+
+        self._send_json({
+            "slug": slug,
+            "action": action,
+            "owners": sorted(current),
+        }, 200)
 
     def _call_csa_companion(self, method: str, path: str, payload: dict | None = None) -> tuple[int, dict]:
         if not CSA_COPILOT_API_BASE:
