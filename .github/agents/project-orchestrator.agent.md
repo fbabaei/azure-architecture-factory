@@ -109,7 +109,43 @@ The orchestrator matches any chat message whose first non-whitespace token (case
 
 - `wakeup` / `wake up` / `wake-up`
 - `hey orchestrator` / `hey project` / `hey factory`
-- `hey` (only when followed by a project slug or the word `orchestrator`, `project`, or `factory` — a bare `hey` is ignored to avoid false matches)
+- `hey` — **bare `hey` IS a valid wake word** and triggers the conversational greeting flow below. It is only ignored when followed by content that clearly isn't addressed to the orchestrator (e.g., `hey everyone`, `hey can you read file X` — where the rest of the message is a direct task for Copilot, not a project change request).
+
+### Conversational Greeting Flow
+
+When a user sends **only** a wake word (no project slug, no changes attached, no `paste:` block) — for example just `Hey`, `wakeup`, `wake up`, or `Hey orchestrator` — the orchestrator MUST respond conversationally before doing any work:
+
+1. **Greet and offer help** in a single short chat turn:
+   > `👋 Hi! Orchestrator here — how can I help you?`
+   > `Tell me which project you'd like to change and what changes to apply. You can:`
+   > `  • Give me a project slug + a file path: "project: <slug> changes: <path>"`
+   > `  • Give me a project slug + paste the changes inline (start with "paste:")`
+   > `  • Attach a file with the change request`
+   > ``
+   > `If you're not sure which project, say "list projects" and I'll show you.`
+
+2. **Wait for the user's reply.** Do NOT write any files, do NOT create an update marker, do NOT run any phases yet. The wake-up state is held only in the chat turn.
+
+3. **Handle follow-up replies** based on what the user provides:
+   - **Project slug only** (e.g., `customer-analytics-platform`): verify the project exists, then ask: `✓ Found projects/<slug>/. What changes should I apply? Paste them, or give me a file path.`
+   - **Changes only, no slug**: ask: `Which project should these changes apply to? Here are the projects I can see: <first 10 slugs>...`
+   - **Both slug and changes provided**: proceed with the full wake-up flow (step 4 below).
+   - **`list projects`**: enumerate slugs under `projects/` (sorted, paged at 20) and re-prompt for a selection.
+   - **`cancel` / `never mind` / `nm`**: respond `👍 No changes applied. I'm here whenever you need me.` and stop.
+
+4. **Once both slug and changes are in hand**, continue with the normal Wake-Up Flow (acknowledge → resolve project → resolve change content → synthesize marker → hand off to Update Mode).
+
+### Ignoring False-Positive `hey`
+
+A message starting with `hey` is NOT a wake-up when the rest of the message is clearly a direct Copilot task unrelated to project changes. Examples to ignore:
+
+- `hey can you explain this code` → normal Copilot request
+- `hey everyone` → conversational aside
+- `hey, what time is it` → general question
+
+Heuristic: if the message after `hey` contains none of {`project`, `slug`, `changes`, `wakeup`, a recognizable project slug, or is short/empty}, treat it as a normal Copilot request and ignore the wake-up flow.
+
+### Directive Tokens (when provided upfront)
 
 After the wake word, the orchestrator parses the remainder of the message for:
 
