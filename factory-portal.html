@@ -3828,8 +3828,19 @@
             const apiKey = getPortalApiKey();
             const listEl = document.getElementById('admin-project-owners-list');
             const slugSelect = document.getElementById('owner-slug');
+
+            // Always seed the project dropdown from the public feed so the form
+            // is usable even before the master API key is pasted.
+            const feedSlugs = Array.isArray(window._portalProjectSlugs) ? window._portalProjectSlugs : [];
+            if (slugSelect && feedSlugs.length && slugSelect.options.length <= 1) {
+                const current = slugSelect.value;
+                slugSelect.innerHTML = '<option value="">— select a project —</option>' +
+                    feedSlugs.slice().sort().map(s => `<option value="${s}">${s}</option>`).join('');
+                if (current) slugSelect.value = current;
+            }
+
             if (!apiKey) {
-                _setProjectOwnerStatus('Enter the master API key above to manage project access.', 'info');
+                _setProjectOwnerStatus('Enter the master API key in the "Portal Access Token" field above to load current assignments and add/remove users.', 'info');
                 if (listEl) listEl.innerHTML = '';
                 return;
             }
@@ -4751,6 +4762,12 @@
                 updateProjectViewToggle(allProjects);
                 updateMainCopilotButton(allProjects);
                 window._portalProjectSlugs = allProjects.map(p => p.slug).filter(Boolean);
+                // If the admin Project Access panel is open, refresh its dropdown
+                // now that the public project list is available.
+                if (document.getElementById('admin-project-access-panel')?.open &&
+                    typeof loadProjectOwners === 'function') {
+                    loadProjectOwners();
+                }
             } catch (error) {
                 console.error('Error loading projects:', error);
                 updateMainCopilotButton([]);
