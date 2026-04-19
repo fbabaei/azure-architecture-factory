@@ -4552,11 +4552,13 @@
                 // Toggle dropdown menu
                 let menu = document.getElementById('user-badge-menu');
                 if (menu) { menu.remove(); return; }
+                const rect = el.getBoundingClientRect();
                 menu = document.createElement('div');
                 menu.id = 'user-badge-menu';
-                menu.style.cssText = 'position:absolute;top:100%;right:0;margin-top:4px;'
+                menu.style.cssText = 'position:fixed;'
+                    + `top:${Math.round(rect.bottom + 4)}px;right:${Math.round(window.innerWidth - rect.right)}px;`
                     + 'background:#fff;border:1px solid #c7e0f4;border-radius:6px;'
-                    + 'box-shadow:0 4px 12px rgba(0,0,0,0.08);min-width:180px;z-index:9999;'
+                    + 'box-shadow:0 6px 18px rgba(0,0,0,0.12);min-width:180px;z-index:2147483000;'
                     + 'font-size:0.8rem;color:#003d6b;overflow:hidden';
                 const mkItem = (text, href) => {
                     const a = document.createElement('a');
@@ -4570,7 +4572,7 @@
                 };
                 menu.appendChild(mkItem('Switch account', '/.auth/login/aad?prompt=select_account&post_login_redirect_url=/'));
                 menu.appendChild(mkItem('Sign out',       '/.auth/logout?post_logout_redirect_uri=/'));
-                el.appendChild(menu);
+                document.body.appendChild(menu);
                 const closer = (e) => {
                     if (!menu.contains(e.target) && e.target !== el) {
                         menu.remove();
