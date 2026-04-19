@@ -128,7 +128,16 @@ def _is_slug_visible(slug: str) -> bool:
 # see everything (local dev default — the allowlist above still applies if set).
 
 AUTH_MODE = os.environ.get("FACTORY_PORTAL_AUTH_MODE", "").strip().lower()
-OWNERS_FILE = FACTORY_REPO_ROOT / ".portal-owners.json"
+# Owners data source — in order of precedence:
+#   1. FACTORY_PORTAL_OWNERS_JSON : inline JSON (e.g. mounted via Container App
+#      secret env var). Read-only; auto-stamping submitters is skipped.
+#   2. FACTORY_PORTAL_OWNERS_FILE : path override (e.g. Azure Files mount).
+#   3. <repo root>/.portal-owners.json : default for local dev and image seed.
+_OWNERS_JSON_ENV = os.environ.get("FACTORY_PORTAL_OWNERS_JSON", "").strip()
+OWNERS_FILE = pathlib.Path(
+    os.environ.get("FACTORY_PORTAL_OWNERS_FILE")
+    or (FACTORY_REPO_ROOT / ".portal-owners.json")
+)
 _env_admins = os.environ.get("FACTORY_PORTAL_ADMINS", "")
 _ENV_ADMINS: frozenset[str] = frozenset(
     a.strip().lower() for a in _env_admins.split(",") if a.strip()
@@ -149,7 +158,26 @@ ALLOWED_TENANTS: frozenset[str] | None = (
 
 
 def _load_owners() -> dict:
-    """Load .portal-owners.json; return an empty structure on any error."""
+    """Load owners data; return an empty structure on any error.
+
+    Sources in order: FACTORY_PORTAL_OWNERS_JSON env var (inline JSON, or
+    base64-encoded JSON — auto-detected), then OWNERS_FILE on disk.
+    """
+    if _OWNERS_JSON_ENV:
+        raw_text = _OWNERS_JSON_ENV
+        # If the value doesn't look like JSON, try base64-decoding it.
+        if not raw_text.lstrip().startswith("{"):
+            try:
+                raw_text = base64.b64decode(raw_text, validate=True).decode("utf-8")
+            except (ValueError, UnicodeDecodeError) as exc:
+                logger.warning("FACTORY_PORTAL_OWNERS_JSON b64 decode failed: %s", exc)
+                raw_text = _OWNERS_JSON_ENV
+        try:
+            raw = json.loads(raw_text)
+            if isinstance(raw, dict):
+                return raw
+        except json.JSONDecodeError as exc:
+            logger.warning("FACTORY_PORTAL_OWNERS_JSON is not valid JSON: %s", exc)
     try:
         if OWNERS_FILE.is_file():
             raw = json.loads(OWNERS_FILE.read_text(encoding="utf-8"))
@@ -161,6 +189,13 @@ def _load_owners() -> dict:
 
 
 def _save_owners(data: dict) -> None:
+    if _OWNERS_JSON_ENV:
+        # Secret-backed mode is read-only from the container; auto-stamping
+        # submitters is a no-op. Admins must update the secret out-of-band.
+        logger.info(
+            "Skipping owners write: FACTORY_PORTAL_OWNERS_JSON is set (read-only mode)"
+        )
+        return
     try:
         OWNERS_FILE.write_text(
             json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
