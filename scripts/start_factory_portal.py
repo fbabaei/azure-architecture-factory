@@ -29,6 +29,20 @@ try:
 except ModuleNotFoundError:
     from scripts.local_brd_runner import process_brd_document
 
+try:
+    import blob_sync
+except ModuleNotFoundError:
+    try:
+        from scripts import blob_sync  # type: ignore[no-redef]
+    except ModuleNotFoundError:
+        class _BlobSyncStub:
+            BLOB_ENABLED = False
+            def sync_down(self, *a, **k): return {}
+            def upload_project(self, *a, **k): return None
+            def upload_feed(self, *a, **k): return None
+            def upload_owners(self, *a, **k): return None
+        blob_sync = _BlobSyncStub()  # type: ignore[assignment]
+
 
 def _parse_multipart_form(content_type: str, body: bytes) -> dict:
     """Parse multipart/form-data body without the removed cgi module.
@@ -1238,6 +1252,23 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     except Exception as exc:  # noqa: BLE001 - best-effort
                         logger.warning("Failed to persist owner for %s: %s", slug, exc)
 
+            # Persist the new project artifacts + updated feed + owners to
+            # blob storage so they survive container restarts. No-op when
+            # FACTORY_PORTAL_BLOB_ACCOUNT is unset (local dev).
+            if blob_sync.BLOB_ENABLED and isinstance(output, dict):
+                slug = output.get("slug") or output.get("projectSlug")
+                try:
+                    if slug:
+                        project_dir = FACTORY_REPO_ROOT / "projects" / slug
+                        blob_sync.upload_project(project_dir, slug)
+                    blob_sync.upload_feed(
+                        FACTORY_REPO_ROOT / "factory-projects.generated.json"
+                    )
+                    if OWNERS_FILE.is_file():
+                        blob_sync.upload_owners(OWNERS_FILE)
+                except Exception as exc:  # noqa: BLE001 - best-effort
+                    logger.warning("Blob upload after run %s failed: %s", run_id, exc)
+
             with RUNS_LOCK:
                 RUNS[run_id].update(
                     {
@@ -1797,6 +1828,15 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
 
 def main():
+    # Pull persisted state (projects, feed, owners) from blob storage before
+    # serving any traffic. No-op when FACTORY_PORTAL_BLOB_ACCOUNT is unset.
+    if blob_sync.BLOB_ENABLED:
+        try:
+            summary = blob_sync.sync_down(FACTORY_REPO_ROOT)
+            logger.info("Blob sync-down summary: %s", summary)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Blob sync-down failed: %s", exc)
+
     httpd = HTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
     httpd.allow_reuse_address = True
     display_host = "localhost" if BIND_ADDRESS in {"0.0.0.0", "::"} else BIND_ADDRESS
