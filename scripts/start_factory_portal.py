@@ -615,14 +615,58 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         Container Apps Easy Auth forwards two headers on every authenticated
         request:
-          X-MS-CLIENT-PRINCIPAL-NAME → user's preferred_username (UPN/email)
-          X-MS-CLIENT-PRINCIPAL      → base64-encoded JSON principal
-        We only need the UPN for authorization.
+          X-MS-CLIENT-PRINCIPAL-NAME → identity "name" (sometimes display name,
+                                       sometimes UPN — depends on the token)
+          X-MS-CLIENT-PRINCIPAL      → base64-encoded JSON principal with full
+                                       claim list.
+        Because X-MS-CLIENT-PRINCIPAL-NAME can be a display name like
+        "MOD Administrator" rather than an email, we prefer the
+        preferred_username / upn / email claim from the decoded principal,
+        and only fall back to the header if those are absent.
         """
+        principal = self._decoded_principal()
+        if principal:
+            preferred_claim_types = {
+                "preferred_username",
+                "upn",
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
+                "email",
+                "emails",
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+            }
+            for claim in principal.get("claims") or []:
+                typ = (claim.get("typ") or claim.get("type") or "").lower()
+                if typ in preferred_claim_types:
+                    val = claim.get("val") or claim.get("value")
+                    if val and "@" in str(val):
+                        return str(val).strip()
+            # Some principals expose the UPN at top-level.
+            for key in ("userPrincipalName", "userDetails"):
+                val = principal.get(key)
+                if val and "@" in str(val):
+                    return str(val).strip()
         upn = self.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
-        if upn:
+        if upn and "@" in upn:
             return upn.strip()
         return None
+
+    def _decoded_principal(self) -> dict | None:
+        """Decode X-MS-CLIENT-PRINCIPAL once per request; cache on the handler."""
+        cached = getattr(self, "_cached_principal", False)
+        if cached is not False:
+            return cached  # may be None
+        raw = self.headers.get("X-MS-CLIENT-PRINCIPAL")
+        principal: dict | None = None
+        if raw:
+            try:
+                padded = raw + "=" * (-len(raw) % 4)
+                decoded = json.loads(base64.b64decode(padded).decode("utf-8"))
+                if isinstance(decoded, dict):
+                    principal = decoded
+            except Exception:
+                principal = None
+        self._cached_principal = principal
+        return principal
 
     def _current_tenant(self) -> str | None:
         """Return the user's home tenant id (the 'tid' claim) from Easy Auth.
@@ -632,14 +676,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         can enforce a per-deployment tenant allowlist independently of the
         app registration's sign-in audience.
         """
-        raw = self.headers.get("X-MS-CLIENT-PRINCIPAL")
-        if not raw:
-            return None
-        try:
-            # Container Apps pads the value correctly but be defensive.
-            padded = raw + "=" * (-len(raw) % 4)
-            principal = json.loads(base64.b64decode(padded).decode("utf-8"))
-        except Exception:
+        principal = self._decoded_principal()
+        if not principal:
             return None
         for claim in principal.get("claims") or []:
             typ = (claim.get("typ") or claim.get("type") or "").lower()
