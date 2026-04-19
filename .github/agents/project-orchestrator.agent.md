@@ -99,6 +99,91 @@ For Phase 1 Mode A the orchestrator must require `brd-to-architecture-diagram` t
 6. Save outputs only inside `projects/<slug>/diagrams/`.
 6. Return the component inventory, main data flow summary, and produced artifact paths.
 
+## Chat Invocation — Wake Words (GHCP)
+
+The orchestrator can be woken up directly from a GitHub Copilot Chat session using a natural-language wake phrase. This is the preferred path for quickly submitting changes against an existing project without opening the portal.
+
+### Recognized Wake Phrases
+
+The orchestrator matches any chat message whose first non-whitespace token (case-insensitive) is one of:
+
+- `wakeup` / `wake up` / `wake-up`
+- `hey orchestrator` / `hey project` / `hey factory`
+- `hey` (only when followed by a project slug or the word `orchestrator`, `project`, or `factory` — a bare `hey` is ignored to avoid false matches)
+
+After the wake word, the orchestrator parses the remainder of the message for:
+
+| Token | Meaning | Required |
+|-------|---------|----------|
+| `project: <slug>` or `slug: <slug>` or just `<slug>` as the next bareword | Target project under `projects/<slug>/` | Yes |
+| `changes: <path>` or `file: <path>` | Path to a file containing the change request / new BRD content | One of these three |
+| `paste:` followed by content (multi-line allowed until end of message) | Inline pasted change text | |
+| An attached file in the chat turn | Treated as `changes:` source | |
+| `mode: update \| drift-check \| sync \| generate \| refactor` | Optional — defaults to `update` if omitted | No |
+| `dry-run: true` | Show the plan without writing | No |
+| `deploy: true` | Redeploy after changes apply cleanly | No |
+
+### Examples
+
+```
+wakeup project: customer-analytics-platform changes: ./inbox/new-fraud-requirement.md
+```
+
+```
+Hey orchestrator, project csa-support-copilot, mode: drift-check
+```
+
+```
+Hey factory — slug: eldercare-facility
+paste:
+- Add HIPAA-compliant audit log export to blob storage every 24h
+- Remove the legacy SMS notification service
+- Tighten RBAC on the clinician portal to require MFA
+```
+
+```
+wake-up iot-telemetry-platform file: C:\tmp\telemetry-changes.md dry-run: true
+```
+
+### Wake-Up Flow
+
+When a wake phrase is matched, the orchestrator executes this flow before any standard Invocation Mode classification:
+
+1. **Acknowledge immediately** in chat with a one-line confirmation and a brief plan:
+   > `🛎️ Orchestrator awake. Target: projects/<slug>/. Change source: <file | inline | attachment>. Running: <mode>.`
+2. **Resolve the project**. If `projects/<slug>/` does not exist, respond with:
+   > `❌ No project found at projects/<slug>/. Use greenfield invocation (no wake word) to create a new project, or check the slug on the portal.`
+   Do NOT create a new project from a wake-up call — wake-up is strictly for existing projects.
+3. **Resolve the change content** in this priority order:
+   - Attached file in the chat turn → copy to `projects/<slug>/docs/requirements.md.new`
+   - `changes:` / `file:` path → read the file; copy to `requirements.md.new`
+   - `paste:` block → write the inline content to `requirements.md.new`
+4. **Synthesize the update marker** at `projects/<slug>/.brd-update-pending.json`:
+   ```json
+   {
+     "triggered_at": "<ISO timestamp>",
+     "source": "ghcp-wakeup",
+     "submitted_by": "<chat user>",
+     "new_brd_path": "projects/<slug>/docs/requirements.md.new",
+     "prior_brd_path": "projects/<slug>/docs/requirements.md",
+     "notes": "<wake phrase + any free-text after the directives>"
+   }
+   ```
+5. **Hand off to Update Mode** — the marker triggers the normal Update Mode classification (Phase U0 onward). The wake-up layer does not run phases itself; it only normalizes the chat input into the format Update Mode already understands.
+6. **Stream progress back to chat**. Each completed phase posts a single line:
+   > `✓ Phase U1 — BRD diff computed (+3 / -1 / ~2)`
+   > `✓ Phase U2 — Current architecture inventoried`
+   > `⚠ Phase U4 — source-code-maintainer reported 1 blocker; halted`
+7. **Finish with an Update Summary** (see Update Summary Output below).
+
+### Wake-Up Safety Rules
+
+- A wake phrase MUST identify an **existing** project. Never auto-create projects from chat.
+- If `dry-run: true`, produce the full plan (BRD diff, architecture delta, code-change plan) but do NOT write any files under `src/`, `infra/`, or update the manifest status past `planned`.
+- If the parsed project slug is ambiguous (e.g., two projects match a partial slug), list the candidates and stop — do not guess.
+- Wake-up calls are logged to `projects/<slug>/logs/orchestration.log` with source `ghcp-wakeup` so every chat-driven change is auditable alongside portal-driven changes.
+- A wake-up call cannot bypass the reviewer lockout rules defined elsewhere in this spec; Update Mode safety rules (snapshots, `_removed/v<N>/`, never-delete) apply identically.
+
 ## Invocation Modes
 
 Before running any phases, classify the invocation:
@@ -129,7 +214,7 @@ Update Mode exists so the portal and GitHub Copilot (GHCP) can resubmit a BRD ag
      "notes": "<optional user-provided change summary>"
    }
    ```
-2. **GHCP / CLI trigger** — The user invokes the orchestrator explicitly with `update: true` and either a new BRD file path or inline requirements. The orchestrator stages the new content at `projects/<slug>/docs/requirements.md.new` and synthesizes the marker above.
+2. **GHCP / CLI trigger** — The user invokes the orchestrator explicitly with `update: true` and either a new BRD file path or inline requirements. The orchestrator stages the new content at `projects/<slug>/docs/requirements.md.new` and synthesizes the marker above. Chat-driven wake-up calls (see **Chat Invocation — Wake Words**) also land here; their marker sets `source: "ghcp-wakeup"`.
 3. **Drift-detected trigger** — On any invocation, if `requirements.md` mtime is newer than the manifest's Phase 1 completion time, the orchestrator treats the current file as the new BRD, copies the manifest-recorded prior BRD out of git history (or from `projects/<slug>/docs/requirements.prior.md` if present) into `requirements.md.prior`, and proceeds.
 
 ### Update Phases

@@ -87,6 +87,23 @@ In Update Mode the orchestrator:
 5. Calls `azure-architecture-implementer` in incremental mode — added services are scaffolded, removed services are moved to `src/_removed/v<N>/`, and modified services are updated in place.
 6. Re-runs Bicep validation and refreshes the production checklist. Never auto-deploys an update.
 
+**Chat wake-up from GHCP**
+
+The orchestrator also accepts chat-driven wake-up calls from GitHub Copilot Chat. Start a message with `wakeup`, `wake up`, `hey orchestrator`, `hey factory`, or `hey project` and provide the target slug plus either a file path, an attached file, or a pasted change block. Wake-up calls route through Update Mode — they cannot create new projects. Example:
+
+```
+wakeup project: customer-analytics-platform changes: ./inbox/new-fraud-requirement.md
+```
+
+```
+Hey factory — slug: eldercare-facility
+paste:
+- Add HIPAA audit log export every 24h
+- Remove legacy SMS notifier
+```
+
+Supports `dry-run: true` for plan-only output and `mode: drift-check | sync | generate | refactor` to override the default update flow.
+
 ### azure-project-deployer
 Use this agent to deploy a project's Bicep infrastructure to Azure.
 
