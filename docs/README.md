@@ -14,6 +14,7 @@ Azure Architecture Factory is an internal Azure delivery workspace built around 
 ## Factory Conventions
 
 - [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — how generated projects adopt the Microsoft Agent Framework SDK runtime alongside a deterministic fallback
+- [CHAT_WAKEUP_GUIDE.md](CHAT_WAKEUP_GUIDE.md) — update an existing project from GitHub Copilot Chat using wake words (`hey`, `wakeup`, etc.)
 
 ## Delivery Model
 
@@ -35,6 +36,7 @@ The repository demonstrates that workflow through multiple sample outputs rather
 | `project-orchestrator` | Drives the end-to-end lifecycle from requirements to finished project folder |
 | `brd-to-architecture-diagram` | Produces Azure diagrams and companion notes |
 | `azure-architecture-implementer` | Converts diagram intent into source code and Azure mappings |
+| `source-code-maintainer` | Keeps source code in sync with the architecture (drift detection, incremental sync, retirement) |
 | `bicep-infrastructure-validator` | Validates and repairs Bicep modules and parameter files |
 | `production-environment-advisor` | Produces production-readiness prerequisites and blockers |
 | `azure-project-deployer` | Handles optional deployment execution |
