@@ -1051,13 +1051,15 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             }, 200)
 
         # Hard-deny requests whose token 'tid' is not in the tenant allowlist.
-        # /api/me, /health, and the login/logout endpoints are exempt so the
-        # user can see a friendly message and sign out. Static browser assets
-        # (css/js/images) stay accessible to avoid breaking the error page.
+        # /api/me, /health, /ready, and the login/logout endpoints are exempt
+        # so probes and the user can see a friendly message and sign out.
+        # Static browser assets (css/js/images) stay accessible to avoid
+        # breaking the error page.
         if (AUTH_MODE == "entra"
                 and ALLOWED_TENANTS is not None
                 and not self._tenant_allowed()
                 and not request_path.startswith(("/.auth/", "/api/me", "/health",
+                                                  "/ready",
                                                   "/assets/", "/favicon"))
                 and request_path != "/factory-portal.html"):
             if request_path.startswith("/api/") or request_path.endswith(".json"):
