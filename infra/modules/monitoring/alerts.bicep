@@ -26,6 +26,9 @@ param containerAppName string
 @description('Email addresses to notify. Leave empty to skip receiver creation.')
 param alertEmails array = []
 
+@description('Microsoft Teams incoming webhook URL. Leave empty to skip Teams notifications.')
+param teamsWebhookUrl string = ''
+
 @description('Alert severity (0 critical … 4 verbose). Default 2 = warning.')
 @minValue(0)
 @maxValue(4)
@@ -61,6 +64,13 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
       emailAddress: email
       useCommonAlertSchema: true
     }]
+    webhookReceivers: empty(teamsWebhookUrl) ? [] : [
+      {
+        name: 'teams'
+        serviceUri: teamsWebhookUrl
+        useCommonAlertSchema: true
+      }
+    ]
   }
 }
 

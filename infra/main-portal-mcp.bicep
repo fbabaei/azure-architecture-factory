@@ -31,6 +31,9 @@ param entraClientId string = ''
 @description('Email addresses to notify on portal alerts. Leave empty to skip.')
 param alertEmails array = []
 
+@description('Microsoft Teams incoming webhook URL. Leave empty to skip Teams notifications.')
+param teamsWebhookUrl string = ''
+
 @description('Disable the portal alert rules (useful for dev toggling). Alerts still deploy.')
 param alertsEnabled bool = true
 
@@ -264,6 +267,7 @@ module portalAlerts 'modules/monitoring/alerts.bicep' = {
     workspaceId: logAnalytics.outputs.workspaceId
     containerAppName: portalAppName
     alertEmails: alertEmails
+    teamsWebhookUrl: teamsWebhookUrl
     enabled: alertsEnabled
     tags: commonTags
   }
