@@ -1,17 +1,24 @@
 # Azure Architecture Factory Portal Server
-# Stdlib-only Python HTTP server — no pip dependencies
+# Stdlib-only Python HTTP server + optional OpenTelemetry / Azure Monitor
 
 FROM python:3.13-slim
 
 WORKDIR /app
 
+# Install OpenTelemetry + Azure Monitor exporter. Telemetry is gated at
+# runtime by APPLICATIONINSIGHTS_CONNECTION_STRING, so building with these
+# deps is always safe — they simply lie dormant if the env var isn't set.
+COPY scripts/requirements.portal.txt /tmp/requirements.portal.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.portal.txt && \
+    rm /tmp/requirements.portal.txt
+
 # Create non-root user
 RUN useradd -m -u 1000 portal && \
-    mkdir -p /app/docs/intake /app/projects /app/outputs/brd-runs && \
+    mkdir -p /app/docs/intake /app/projects /app/outputs/brd-runs /app/logs && \
     chown -R portal:portal /app
 
 # Copy application code
-COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/generate_guide_report.py scripts/blob_sync.py scripts/
+COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/generate_guide_report.py scripts/blob_sync.py scripts/telemetry.py scripts/
 COPY scripts/factory_runtime/ scripts/factory_runtime/
 COPY factory-portal.html ./
 COPY README.md ./

@@ -26,6 +26,37 @@ from urllib.request import urlopen, Request
 from urllib.error import URLError
 
 try:
+    from telemetry import init_otel, get_tracer
+except ModuleNotFoundError:
+    # Telemetry module is optional; provide no-op shims so the portal runs
+    # with stdlib only when scripts/ isn't on sys.path yet.
+    def init_otel(*_args, **_kwargs):
+        return False
+
+    def get_tracer(_name="aaf-portal"):
+        class _Noop:
+            def start_as_current_span(self, *a, **kw):
+                class _S:
+                    def __enter__(self_inner):
+                        return self_inner
+
+                    def __exit__(self_inner, *a):
+                        return False
+
+                    def set_attribute(self_inner, *a, **kw):
+                        pass
+
+                    def set_status(self_inner, *a, **kw):
+                        pass
+
+                    def record_exception(self_inner, *a, **kw):
+                        pass
+
+                return _S()
+
+        return _Noop()
+
+try:
     from local_brd_runner import process_brd_document
 except ModuleNotFoundError:
     from scripts.local_brd_runner import process_brd_document
@@ -1414,84 +1445,94 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     def _run_pipeline(self, run_id, brd_path, generation_options=None, owner: str | None = None):
         """Execute the pipeline in background"""
-        with RUNS_LOCK:
-            RUNS[run_id]["status"] = "running"
-            RUNS[run_id]["startedAt"] = datetime.utcnow().isoformat() + "Z"
-            _persist_runs_unlocked()
+        tracer = get_tracer("aaf-portal.pipeline")
+        with tracer.start_as_current_span("brd.pipeline") as span:
+            span.set_attribute("aaf.run_id", run_id)
+            span.set_attribute("aaf.brd_path", str(brd_path))
+            if owner:
+                span.set_attribute("aaf.owner", owner)
 
-        try:
-            output = process_brd_document(
-                FACTORY_REPO_ROOT,
-                pathlib.Path(brd_path),
-                run_id,
-                generation_options or {},
-            )
+            with RUNS_LOCK:
+                RUNS[run_id]["status"] = "running"
+                RUNS[run_id]["startedAt"] = datetime.utcnow().isoformat() + "Z"
+                _persist_runs_unlocked()
 
-            # Stamp the submitter as owner of the generated project so per-user
-            # filtering (Entra auth mode) gives them access. Best-effort only.
-            if owner and isinstance(output, dict):
-                slug = output.get("slug") or output.get("projectSlug")
-                if slug:
-                    try:
-                        data = _load_owners()
-                        projects = data.setdefault("projects", {})
-                        existing = projects.get(slug) or []
-                        if isinstance(existing, str):
-                            existing = [existing]
-                        lowered = {e.strip().lower() for e in existing if isinstance(e, str)}
-                        if owner.strip().lower() not in lowered:
-                            existing.append(owner)
-                            projects[slug] = existing
-                            _save_owners(data)
-                            logger.info("Recorded owner %s for project %s", owner, slug)
-                    except Exception as exc:  # noqa: BLE001 - best-effort
-                        logger.warning("Failed to persist owner for %s: %s", slug, exc)
+            try:
+                output = process_brd_document(
+                    FACTORY_REPO_ROOT,
+                    pathlib.Path(brd_path),
+                    run_id,
+                    generation_options or {},
+                )
 
-            # Persist the new project artifacts + updated feed + owners to
-            # blob storage so they survive container restarts. No-op when
-            # FACTORY_PORTAL_BLOB_ACCOUNT is unset (local dev).
-            if blob_sync.BLOB_ENABLED and isinstance(output, dict):
-                slug = output.get("slug") or output.get("projectSlug")
-                try:
+                # Stamp the submitter as owner of the generated project so per-user
+                # filtering (Entra auth mode) gives them access. Best-effort only.
+                if owner and isinstance(output, dict):
+                    slug = output.get("slug") or output.get("projectSlug")
                     if slug:
-                        project_dir = FACTORY_REPO_ROOT / "projects" / slug
-                        blob_sync.upload_project(project_dir, slug)
-                    blob_sync.upload_feed(
-                        FACTORY_REPO_ROOT / "factory-projects.generated.json"
+                        try:
+                            data = _load_owners()
+                            projects = data.setdefault("projects", {})
+                            existing = projects.get(slug) or []
+                            if isinstance(existing, str):
+                                existing = [existing]
+                            lowered = {e.strip().lower() for e in existing if isinstance(e, str)}
+                            if owner.strip().lower() not in lowered:
+                                existing.append(owner)
+                                projects[slug] = existing
+                                _save_owners(data)
+                                logger.info("Recorded owner %s for project %s", owner, slug)
+                        except Exception as exc:  # noqa: BLE001 - best-effort
+                            logger.warning("Failed to persist owner for %s: %s", slug, exc)
+
+                # Persist the new project artifacts + updated feed + owners to
+                # blob storage so they survive container restarts. No-op when
+                # FACTORY_PORTAL_BLOB_ACCOUNT is unset (local dev).
+                if blob_sync.BLOB_ENABLED and isinstance(output, dict):
+                    slug = output.get("slug") or output.get("projectSlug")
+                    try:
+                        if slug:
+                            project_dir = FACTORY_REPO_ROOT / "projects" / slug
+                            blob_sync.upload_project(project_dir, slug)
+                        blob_sync.upload_feed(
+                            FACTORY_REPO_ROOT / "factory-projects.generated.json"
+                        )
+                        if OWNERS_FILE.is_file():
+                            blob_sync.upload_owners(OWNERS_FILE)
+                    except Exception as exc:  # noqa: BLE001 - best-effort
+                        logger.warning("Blob upload after run %s failed: %s", run_id, exc)
+
+                with RUNS_LOCK:
+                    RUNS[run_id].update(
+                        {
+                            "status": "completed",
+                            "finishedAt": datetime.utcnow().isoformat() + "Z",
+                            "returnCode": 0,
+                            "stdout": None,
+                            "stderr": None,
+                            "command": "azure_native_factory_runner",
+                            "result": output,
+                        }
                     )
-                    if OWNERS_FILE.is_file():
-                        blob_sync.upload_owners(OWNERS_FILE)
-                except Exception as exc:  # noqa: BLE001 - best-effort
-                    logger.warning("Blob upload after run %s failed: %s", run_id, exc)
+                    _persist_runs_unlocked()
 
-            with RUNS_LOCK:
-                RUNS[run_id].update(
-                    {
-                        "status": "completed",
-                        "finishedAt": datetime.utcnow().isoformat() + "Z",
-                        "returnCode": 0,
-                        "stdout": None,
-                        "stderr": None,
-                        "command": "azure_native_factory_runner",
-                        "result": output,
-                    }
-                )
-                _persist_runs_unlocked()
-
-            logger.info(f"Pipeline completed for run {run_id}: returnCode=0")
-        except Exception as e:
-            logger.exception(f"Pipeline error for run {run_id}: {e}")
-            with RUNS_LOCK:
-                RUNS[run_id].update(
-                    {
-                        "status": "failed",
-                        "finishedAt": datetime.utcnow().isoformat() + "Z",
-                        "returnCode": -1,
-                        "stderr": str(e),
-                        "result": {"status": "failed", "message": str(e)},
-                    }
-                )
-                _persist_runs_unlocked()
+                span.set_attribute("aaf.status", "completed")
+                logger.info(f"Pipeline completed for run {run_id}: returnCode=0")
+            except Exception as e:
+                logger.exception(f"Pipeline error for run {run_id}: {e}")
+                span.set_attribute("aaf.status", "failed")
+                span.record_exception(e)
+                with RUNS_LOCK:
+                    RUNS[run_id].update(
+                        {
+                            "status": "failed",
+                            "finishedAt": datetime.utcnow().isoformat() + "Z",
+                            "returnCode": -1,
+                            "stderr": str(e),
+                            "result": {"status": "failed", "message": str(e)},
+                        }
+                    )
+                    _persist_runs_unlocked()
 
     def _handle_brd_upload(self):
         """Handle multipart/form-data BRD file upload."""
@@ -2033,6 +2074,13 @@ def main():
             logger.info("Blob sync-down summary: %s", summary)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Blob sync-down failed: %s", exc)
+
+    # Initialize OpenTelemetry / Azure Monitor. Safe no-op when deps are not
+    # installed or APPLICATIONINSIGHTS_CONNECTION_STRING is not set.
+    if init_otel(service_name="aaf-portal", service_version=os.environ.get("AAFACTORY_VERSION", "dev")):
+        logger.info("OpenTelemetry initialized (Azure Monitor exporter active)")
+    else:
+        logger.info("OpenTelemetry not initialized (no connection string or deps missing)")
 
     # ThreadingHTTPServer handles concurrent HTTP requests instead of serializing
     # them. Previously a single slow request blocked every other client on the
