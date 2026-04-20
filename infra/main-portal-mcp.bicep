@@ -37,6 +37,9 @@ param teamsWebhookUrl string = ''
 @description('Disable the portal alert rules (useful for dev toggling). Alerts still deploy.')
 param alertsEnabled bool = true
 
+@description('Allowed Origin for portal CORS. Use \'*\' for dev; lock to the portal FQDN (https://arch-factory-prod-portal.<region>.azurecontainerapps.io) for prod. Comma-separate for multiple.')
+param allowedOrigin string = '*'
+
 // ── Derived names ───────────────────────────────────────────
 var baseName = '${projectName}-${environment}'
 var acrName = replace('${baseName}acr', '-', '')
@@ -166,7 +169,7 @@ module portal 'modules/compute/containerapp.bicep' = {
     tags: commonTags
     envVars: concat([
       { name: 'ENVIRONMENT', value: environment }
-      { name: 'FACTORY_PORTAL_ALLOWED_ORIGIN', value: '*' }
+      { name: 'FACTORY_PORTAL_ALLOWED_ORIGIN', value: allowedOrigin }
       { name: 'FACTORY_PORTAL_BIND', value: '0.0.0.0' }
       { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.outputs.connectionString }
       { name: 'ENTRA_TENANT_ID', value: entraTenantId }

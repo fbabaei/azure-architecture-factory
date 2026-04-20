@@ -18,3 +18,7 @@ param alertEmails = ['fbabaei@microsoft.com']
 // portal alerts into Teams. Leave empty to skip.
 param teamsWebhookUrl = ''
 param alertsEnabled = true
+
+// CORS allowed origin(s). '*' is fine for dev; prod should pin to
+// 'https://arch-factory-prod-portal.<region>.azurecontainerapps.io'.
+param allowedOrigin = '*'

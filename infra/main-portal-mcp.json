@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "5386078173757623283"
+      "templateHash": "13724756888868349769"
     }
   },
   "parameters": {
@@ -70,11 +70,25 @@
         "description": "Email addresses to notify on portal alerts. Leave empty to skip."
       }
     },
+    "teamsWebhookUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft Teams incoming webhook URL. Leave empty to skip Teams notifications."
+      }
+    },
     "alertsEnabled": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
         "description": "Disable the portal alert rules (useful for dev toggling). Alerts still deploy."
+      }
+    },
+    "allowedOrigin": {
+      "type": "string",
+      "defaultValue": "*",
+      "metadata": {
+        "description": "Allowed Origin for portal CORS. Use '*' for dev; lock to the portal FQDN (https://arch-factory-prod-portal.<region>.azurecontainerapps.io) for prod. Comma-separate for multiple."
       }
     }
   },
@@ -634,7 +648,7 @@
             "value": "[variables('commonTags')]"
           },
           "envVars": {
-            "value": "[concat(createArray(createObject('name', 'ENVIRONMENT', 'value', parameters('environment')), createObject('name', 'FACTORY_PORTAL_ALLOWED_ORIGIN', 'value', '*'), createObject('name', 'FACTORY_PORTAL_BIND', 'value', '0.0.0.0'), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', reference(resourceId('Microsoft.Resources/deployments', 'appInsights'), '2025-04-01').outputs.connectionString.value), createObject('name', 'ENTRA_TENANT_ID', 'value', parameters('entraTenantId')), createObject('name', 'ENTRA_CLIENT_ID', 'value', parameters('entraClientId'))), if(not(empty(parameters('portalApiKey'))), createArray(createObject('name', 'FACTORY_PORTAL_API_KEY', 'secretRef', 'portal-api-key')), createArray()))]"
+            "value": "[concat(createArray(createObject('name', 'ENVIRONMENT', 'value', parameters('environment')), createObject('name', 'FACTORY_PORTAL_ALLOWED_ORIGIN', 'value', parameters('allowedOrigin')), createObject('name', 'FACTORY_PORTAL_BIND', 'value', '0.0.0.0'), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', reference(resourceId('Microsoft.Resources/deployments', 'appInsights'), '2025-04-01').outputs.connectionString.value), createObject('name', 'ENTRA_TENANT_ID', 'value', parameters('entraTenantId')), createObject('name', 'ENTRA_CLIENT_ID', 'value', parameters('entraClientId'))), if(not(empty(parameters('portalApiKey'))), createArray(createObject('name', 'FACTORY_PORTAL_API_KEY', 'secretRef', 'portal-api-key')), createArray()))]"
           },
           "secrets": "[if(not(empty(parameters('portalApiKey'))), createObject('value', createArray(createObject('name', 'portal-api-key', 'value', parameters('portalApiKey')))), createObject('value', createArray()))]",
           "registries": {
@@ -1331,6 +1345,9 @@
           "alertEmails": {
             "value": "[parameters('alertEmails')]"
           },
+          "teamsWebhookUrl": {
+            "value": "[parameters('teamsWebhookUrl')]"
+          },
           "enabled": {
             "value": "[parameters('alertsEnabled')]"
           },
@@ -1345,7 +1362,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "9839580629907186796"
+              "templateHash": "16188932900013452680"
             }
           },
           "parameters": {
@@ -1379,6 +1396,13 @@
               "defaultValue": [],
               "metadata": {
                 "description": "Email addresses to notify. Leave empty to skip receiver creation."
+              }
+            },
+            "teamsWebhookUrl": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Microsoft Teams incoming webhook URL. Leave empty to skip Teams notifications."
               }
             },
             "severity": {
@@ -1437,7 +1461,8 @@
                   }
                 ],
                 "groupShortName": "[variables('shortName')]",
-                "enabled": true
+                "enabled": true,
+                "webhookReceivers": "[if(empty(parameters('teamsWebhookUrl')), createArray(), createArray(createObject('name', 'teams', 'serviceUri', parameters('teamsWebhookUrl'), 'useCommonAlertSchema', true())))]"
               }
             },
             {
