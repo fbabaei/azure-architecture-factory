@@ -18,9 +18,20 @@ import threading
 import time
 import uuid
 import zipfile
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
+
+UTC = timezone.utc
+
+
+def _utcnow_iso() -> str:
+    """Timezone-aware UTC ISO 8601 string (Python 3.13-compatible).
+
+    Preserves the legacy `datetime.utcnow().isoformat() + 'Z'` output format.
+    """
+    return datetime.now(UTC).replace(tzinfo=None).isoformat() + "Z"
 from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen, Request
 from urllib.error import URLError
@@ -122,6 +133,13 @@ FACTORY_REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
 PORT = int(os.environ.get("FACTORY_PORTAL_PORT", "5501"))
 BIND_ADDRESS = os.environ.get("FACTORY_PORTAL_BIND", "0.0.0.0")
 MAX_REQUEST_BYTES = 1_000_000  # 1 MB intake payload limit
+# BRD schema bounds (applied after size check)
+MIN_BRD_CONTENT_CHARS = int(os.environ.get("AAFACTORY_MIN_BRD_CHARS", "50"))
+MAX_BRD_CONTENT_CHARS = int(os.environ.get("AAFACTORY_MAX_BRD_CHARS", "800000"))
+MAX_BRD_FILENAME_LEN = 120
+# Intake rate limit (sliding window per caller key — UPN if authenticated, else IP)
+INTAKE_RATE_PER_MIN = int(os.environ.get("AAFACTORY_INTAKE_RATE_PER_MIN", "6"))
+INTAKE_RATE_WINDOW_SECONDS = 60
 ALLOWED_ORIGIN = os.environ.get("FACTORY_PORTAL_ALLOWED_ORIGIN", f"http://localhost:{PORT}")
 API_KEY_ENV = "FACTORY_PORTAL_API_KEY"
 PORTAL_PATH_ALIASES = {"/portal", "/p"}
@@ -132,6 +150,51 @@ SERVICE_START_EPOCH = time.time()
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
+
+
+class _SlidingWindowRateLimiter:
+    """Per-key sliding-window rate limiter.
+
+    Thread-safe. Keeps a deque of recent hit timestamps per caller key and
+    rejects once the window count exceeds `limit`. Memory is bounded by the
+    number of active callers over any given window.
+    """
+
+    def __init__(self, limit: int, window_seconds: int):
+        self._limit = max(1, int(limit))
+        self._window = max(1, int(window_seconds))
+        self._hits: dict[str, deque[float]] = {}
+        self._lock = threading.Lock()
+
+    def check(self, key: str) -> tuple[bool, int]:
+        """Return (allowed, retry_after_seconds).
+
+        retry_after_seconds is 0 when allowed; otherwise the number of seconds
+        the caller should wait before the next slot frees up.
+        """
+        if not key:
+            return True, 0
+        now = time.monotonic()
+        cutoff = now - self._window
+        with self._lock:
+            bucket = self._hits.get(key)
+            if bucket is None:
+                bucket = deque()
+                self._hits[key] = bucket
+            while bucket and bucket[0] < cutoff:
+                bucket.popleft()
+            if len(bucket) >= self._limit:
+                retry = max(1, int(self._window - (now - bucket[0])))
+                return False, retry
+            bucket.append(now)
+            return True, 0
+
+
+_INTAKE_LIMITER = _SlidingWindowRateLimiter(
+    limit=INTAKE_RATE_PER_MIN,
+    window_seconds=INTAKE_RATE_WINDOW_SECONDS,
+)
+
 
 # Optional per-deployment project visibility allowlist. Comma-separated slugs.
 # When set, the portal only exposes (feed + file routes) the listed projects.
@@ -638,7 +701,7 @@ def _restore_runs_on_startup() -> None:
         return
     if not isinstance(data, dict):
         return
-    now = datetime.utcnow().isoformat() + "Z"
+    now = _utcnow_iso()
     with RUNS_LOCK:
         for run_id, run in data.items():
             if not isinstance(run, dict):
@@ -1356,8 +1419,54 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         return content_length
 
+    def _client_ip(self) -> str:
+        """Best-effort caller IP. Honors X-Forwarded-For if present (Easy Auth / ACA)."""
+        fwd = self.headers.get("X-Forwarded-For", "")
+        if fwd:
+            return fwd.split(",")[0].strip()
+        try:
+            return self.client_address[0]
+        except Exception:
+            return "unknown"
+
+    def _rate_limit_key(self) -> str:
+        """Prefer authenticated UPN; fall back to client IP."""
+        upn = None
+        try:
+            upn = self._authorized_user()
+        except Exception:
+            upn = None
+        return f"user:{upn}" if upn else f"ip:{self._client_ip()}"
+
+    def _check_intake_rate_limit(self) -> bool:
+        """Return True if the caller is allowed; otherwise emit 429 and return False."""
+        allowed, retry_after = _INTAKE_LIMITER.check(self._rate_limit_key())
+        if allowed:
+            return True
+        self.send_response(429)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Retry-After", str(retry_after))
+        self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
+        self.send_header("Vary", "Origin")
+        self.end_headers()
+        body = json.dumps(
+            {
+                "error": "Rate limit exceeded",
+                "limit": INTAKE_RATE_PER_MIN,
+                "windowSeconds": INTAKE_RATE_WINDOW_SECONDS,
+                "retryAfterSeconds": retry_after,
+            }
+        ).encode("utf-8")
+        try:
+            self.wfile.write(body)
+        except Exception:
+            pass
+        return False
+
     def _handle_brd_intake(self):
         """Handle BRD intake submission (JSON body)"""
+        if not self._check_intake_rate_limit():
+            return
         content_length = self._safe_content_length()
         if content_length is None:
             return
@@ -1368,20 +1477,51 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": f"Invalid request: {e}"}, 400)
             return
 
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        raw_file_name = payload.get("fileName", "brd.md")
+        if not isinstance(raw_file_name, str) or len(raw_file_name) > MAX_BRD_FILENAME_LEN:
+            self._send_json(
+                {"error": f"fileName must be a string of at most {MAX_BRD_FILENAME_LEN} characters"},
+                400,
+            )
+            return
+
         try:
-            file_name = _sanitize_brd_filename(payload.get("fileName", "brd.md"))
+            file_name = _sanitize_brd_filename(raw_file_name)
         except ValueError as exc:
             self._send_json({"error": str(exc)}, 400)
             return
-        content = payload.get("content", "").strip()
-        generation_options = {
-            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
-            "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
-        }
+
+        raw_content = payload.get("content", "")
+        if not isinstance(raw_content, str):
+            self._send_json({"error": "content must be a string"}, 400)
+            return
+        content = raw_content.strip()
 
         if not file_name or not content:
             self._send_json({"error": "Missing fileName or content"}, 400)
             return
+
+        if len(content) < MIN_BRD_CONTENT_CHARS:
+            self._send_json(
+                {"error": f"BRD content too short (min {MIN_BRD_CONTENT_CHARS} characters)"},
+                400,
+            )
+            return
+        if len(content) > MAX_BRD_CONTENT_CHARS:
+            self._send_json(
+                {"error": f"BRD content too long (max {MAX_BRD_CONTENT_CHARS} characters)"},
+                400,
+            )
+            return
+
+        generation_options = {
+            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
+            "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
+        }
 
         return self._save_and_start_run(
             file_name, content, generation_options, owner=self._authorized_user()
@@ -1410,7 +1550,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             RUNS[run_id] = {
                 "id": run_id,
                 "status": "queued",
-                "createdAt": datetime.utcnow().isoformat() + "Z",
+                "createdAt": _utcnow_iso(),
                 "brdFile": str(brd_path),
                 "startedAt": None,
                 "finishedAt": None,
@@ -1454,7 +1594,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
             with RUNS_LOCK:
                 RUNS[run_id]["status"] = "running"
-                RUNS[run_id]["startedAt"] = datetime.utcnow().isoformat() + "Z"
+                RUNS[run_id]["startedAt"] = _utcnow_iso()
                 _persist_runs_unlocked()
 
             try:
@@ -1506,7 +1646,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     RUNS[run_id].update(
                         {
                             "status": "completed",
-                            "finishedAt": datetime.utcnow().isoformat() + "Z",
+                            "finishedAt": _utcnow_iso(),
                             "returnCode": 0,
                             "stdout": None,
                             "stderr": None,
@@ -1526,7 +1666,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     RUNS[run_id].update(
                         {
                             "status": "failed",
-                            "finishedAt": datetime.utcnow().isoformat() + "Z",
+                            "finishedAt": _utcnow_iso(),
                             "returnCode": -1,
                             "stderr": str(e),
                             "result": {"status": "failed", "message": str(e)},
@@ -1536,6 +1676,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     def _handle_brd_upload(self):
         """Handle multipart/form-data BRD file upload."""
+        if not self._check_intake_rate_limit():
+            return
         content_type = self.headers.get("Content-Type", "")
         if "multipart/form-data" not in content_type:
             self._send_json({"error": "Expected multipart/form-data"}, 415)
@@ -2024,7 +2166,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "status": "ok",
                 "service": "azure-architecture-factory-portal",
                 "probe": "liveness",
-                "timeUtc": datetime.utcnow().isoformat() + "Z",
+                "timeUtc": _utcnow_iso(),
                 "uptimeSeconds": uptime_seconds,
             },
             200,
@@ -2045,7 +2187,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "status": "ready" if ready else "not_ready",
                 "service": "azure-architecture-factory-portal",
                 "probe": "readiness",
-                "timeUtc": datetime.utcnow().isoformat() + "Z",
+                "timeUtc": _utcnow_iso(),
                 "checks": checks,
             },
             status,
