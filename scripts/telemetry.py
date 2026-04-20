@@ -28,6 +28,18 @@ def init_otel(service_name: str = "aaf-portal", service_version: str = "1.0.0") 
         # deployments continue working.
         return False
 
+    # The Azure Monitor exporter uses the Azure SDK's HttpLoggingPolicy which
+    # dumps every telemetry-export HTTP request/response at INFO level. Left
+    # alone, this fills Log Analytics with exporter-loop noise and drowns
+    # real portal logs. Silence those loggers before initializing.
+    import logging
+    for _noisy in (
+        "azure",
+        "azure.core.pipeline.policies.http_logging_policy",
+        "azure.monitor.opentelemetry.exporter",
+    ):
+        logging.getLogger(_noisy).setLevel(logging.WARNING)
+
     try:
         configure_azure_monitor(
             connection_string=conn_str,
