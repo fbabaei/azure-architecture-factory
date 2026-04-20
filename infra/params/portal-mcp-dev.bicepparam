@@ -11,5 +11,5 @@ param portalApiKey = ''
 
 // Leave alertEmails empty for dev; set to a list like ['ops@example.com']
 // to enable email receivers on the portal alert rules.
-param alertEmails = []
+param alertEmails = ['fbabaei@microsoft.com']
 param alertsEnabled = true
