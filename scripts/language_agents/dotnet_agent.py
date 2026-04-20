@@ -372,6 +372,7 @@ class DotnetAgent:
                 "- xUnit + FluentAssertions + WebApplicationFactory integration tests",
                 "- Multi-stage Dockerfile (sdk:8.0 → aspnet:8.0, port 8080)",
             ],
+            primary_source_path="src/Program.cs",
         )
 
 

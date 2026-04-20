@@ -139,7 +139,6 @@ def process_brd_document(
     _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
     _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones(enable_observability))
     _write_text(docs_dir / "success-criteria.md", _build_success_criteria(success_criteria))
-    _write_text(docs_dir / "traceability-matrix.md", _build_traceability_matrix(requirements, success_criteria))
     _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability, network_tier))
     _write_text(diagrams_dir / diagram_basename, _build_drawio(title, network_tier, capabilities))
 
@@ -154,6 +153,14 @@ def process_brd_document(
             requirements=requirements,
             enable_observability=enable_observability,
         )
+    )
+
+    # Traceability matrix references the language agent's actual primary
+    # source path (e.g. src/mdr_support/main.py, src/Program.cs) so the
+    # "Starter API" row in generated docs always points at a real file.
+    _write_text(
+        docs_dir / "traceability-matrix.md",
+        _build_traceability_matrix(requirements, success_criteria, language_result.primary_source_path),
     )
 
     # Delegate infrastructure emission to the IaC specialist — unless the
@@ -504,10 +511,15 @@ def _build_success_criteria(success_criteria: list[str]) -> str:
     return f"# Success Criteria\n\n## KPI Candidates\n{lines}\n\n## Measurement Approach\n- Establish a baseline before implementation\n- Track changes through test results, deployment validation, and user feedback\n- Assign an owner for each acceptance criterion\n"
 
 
-def _build_traceability_matrix(requirements: list[str], success_criteria: list[str]) -> str:
+def _build_traceability_matrix(
+    requirements: list[str],
+    success_criteria: list[str],
+    primary_source_path: str = "src/copilot_api/main.py",
+) -> str:
+    starter_api = f"Starter API — `{primary_source_path}`"
     _ARTIFACT_MAP: list[tuple[set[str], str]] = [
         ({"api", "endpoint", "rest", "integration", "connect", "webhook", "http"},
-         "Starter API — `src/copilot_api/main.py`"),
+         starter_api),
         ({"auth", "identity", "rbac", "managed", "secret", "key vault", "security", "access", "permission"},
          "Bicep infra — `infra/main.bicep` (Identity & RBAC)"),
         ({"observ", "monitor", "log", "metric", "alert", "insight", "telemetry", "trace", "dashboard"},
@@ -529,7 +541,7 @@ def _build_traceability_matrix(requirements: list[str], success_criteria: list[s
         matched = [artifact for keywords, artifact in _ARTIFACT_MAP if any(kw in lower for kw in keywords)]
         if not matched:
             matched = ["Architecture overview — `docs/architecture-overview.md`",
-                       "Starter API — `src/copilot_api/main.py`"]
+                       starter_api]
         return "; ".join(matched[:2])
 
     def _infer_status(req_text: str) -> str:

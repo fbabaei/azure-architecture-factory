@@ -1,13 +1,18 @@
 """Python / FastAPI language specialist.
 
-DEFAULT language agent — matches the pre-refactor behaviour of
-`scripts/local_brd_runner.py` exactly. Emits:
+DEFAULT language agent. Emits a FastAPI starter where the Python
+package name is derived from the project slug (e.g. ``mdr-support`` ->
+``mdr_support``) so generated projects feel domain-owned instead of
+generic. Falls back to ``copilot_api`` when the slug cannot be turned
+into a valid Python identifier.
 
-    src/copilot_api/__init__.py
-    src/copilot_api/main.py
-    src/copilot_api/models.py
-    src/copilot_api/services/__init__.py
-    src/copilot_api/services/copilot_service.py
+Files written:
+
+    src/<package>/__init__.py
+    src/<package>/main.py
+    src/<package>/models.py
+    src/<package>/services/__init__.py
+    src/<package>/services/copilot_service.py
     requirements.txt
     pyproject.toml
     tests/test_generated_project.py
@@ -16,15 +21,42 @@ DEFAULT language agent — matches the pre-refactor behaviour of
 """
 from __future__ import annotations
 
+import keyword
 import re
 from pathlib import Path
 
 from .base import LanguageAgent, LanguageEmitContext, LanguageEmitResult
 
 
+# Fallback package name when slug cannot be normalized safely.
+_DEFAULT_PACKAGE_NAME = "copilot_api"
+
+
 def _slugify(value: str) -> str:
     normalized = re.sub(r"[^a-z0-9]+", "-", value.lower())
     return normalized.strip("-") or "project"
+
+
+def _package_name_from_slug(slug: str) -> str:
+    """Derive a valid Python package name from a project slug.
+
+    Strips the factory's ``-YYYYMMDDHHMMSS`` timestamp suffix (so the
+    package name stays stable across regenerations), replaces hyphens
+    with underscores, drops any remaining non-identifier characters,
+    and ensures the result is a non-keyword identifier that does not
+    start with a digit. Falls back to ``copilot_api`` when the slug is
+    empty, numeric-only, or otherwise cannot be normalized.
+    """
+
+    if not slug:
+        return _DEFAULT_PACKAGE_NAME
+    stem = re.sub(r"-\d{14}$", "", slug.strip().lower())
+    cleaned = re.sub(r"[^a-z0-9_]+", "_", stem).strip("_")
+    if not cleaned or not re.match(r"[a-z_]", cleaned[0]):
+        return _DEFAULT_PACKAGE_NAME
+    if keyword.iskeyword(cleaned):
+        return _DEFAULT_PACKAGE_NAME
+    return cleaned
 
 
 def _write_text(path: Path, content: str) -> None:
@@ -86,7 +118,7 @@ def _build_pyproject(title: str) -> str:
     )
 
 
-def _build_test() -> str:
+def _build_test(package_name: str) -> str:
     return (
         "from pathlib import Path\n\n\n"
         "def test_generated_project_docs_exist():\n"
@@ -95,9 +127,9 @@ def _build_test() -> str:
         "        root / 'README.md',\n"
         "        root / 'DEPLOY.md',\n"
         "        root / 'requirements.txt',\n"
-        "        root / 'src' / 'copilot_api' / 'main.py',\n"
-        "        root / 'src' / 'copilot_api' / 'models.py',\n"
-        "        root / 'src' / 'copilot_api' / 'services' / 'copilot_service.py',\n"
+        f"        root / 'src' / '{package_name}' / 'main.py',\n"
+        f"        root / 'src' / '{package_name}' / 'models.py',\n"
+        f"        root / 'src' / '{package_name}' / 'services' / 'copilot_service.py',\n"
         "        root / 'docs' / 'architecture-overview.md',\n"
         "        root / 'docs' / 'governance-model.md',\n"
         "        root / 'docs' / 'delivery-milestones.md',\n"
@@ -111,7 +143,7 @@ def _build_test() -> str:
     )
 
 
-def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str], enable_observability: bool) -> str:
+def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str], enable_observability: bool, package_name: str) -> str:
     highlights = "\n".join(f"- {item}" for item in requirements[:10])
     observability_line = (
         "- Monitoring and observability wiring requested: Yes"
@@ -131,9 +163,9 @@ def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str
         f"- `docs/traceability-matrix.md`\n"
         f"- `diagrams/{slug}.md`\n"
         f"- `diagrams/{slug}.drawio`\n"
-        f"- `src/copilot_api/main.py`\n"
-        f"- `src/copilot_api/models.py`\n"
-        f"- `src/copilot_api/services/copilot_service.py`\n"
+        f"- `src/{package_name}/main.py`\n"
+        f"- `src/{package_name}/models.py`\n"
+        f"- `src/{package_name}/services/copilot_service.py`\n"
         f"- `requirements.txt`\n"
         f"- `tests/test_generated_project.py`\n\n"
         f"## Selected Generation Options\n{observability_line}\n\n"
@@ -141,7 +173,7 @@ def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str
     )
 
 
-def _build_deploy(slug: str, enable_observability: bool) -> str:
+def _build_deploy(slug: str, enable_observability: bool, package_name: str) -> str:
     deployment_steps = [
         "1. Review and customize `infra/main.bicep`.",
         "2. Provision hosting, identity, Key Vault access, and Application Insights.",
@@ -174,7 +206,7 @@ def _build_deploy(slug: str, enable_observability: bool) -> str:
         "```\n\n"
         "## Local Run\n"
         "```bash\n"
-        "python -m uvicorn src.copilot_api.main:app --host 127.0.0.1 --port 8000 --reload\n"
+        f"python -m uvicorn src.{package_name}.main:app --host 127.0.0.1 --port 8000 --reload\n"
         "```\n\n"
         "## Azure Deployment Outline\n"
         + "\n".join(deployment_steps)
@@ -188,7 +220,8 @@ class PythonAgent:
 
     def emit(self, ctx: LanguageEmitContext) -> LanguageEmitResult:
         project_root = ctx.project_root
-        src_dir = project_root / "src" / "copilot_api"
+        package_name = _package_name_from_slug(ctx.slug)
+        src_dir = project_root / "src" / package_name
         services_dir = src_dir / "services"
         services_dir.mkdir(parents=True, exist_ok=True)
         ctx.tests_dir.mkdir(parents=True, exist_ok=True)
@@ -203,20 +236,20 @@ class PythonAgent:
             "fastapi==0.116.1\nuvicorn[standard]==0.32.1\npydantic==2.10.3\n",
         )
         _write_text(project_root / "pyproject.toml", _build_pyproject(ctx.title))
-        _write_text(ctx.tests_dir / "test_generated_project.py", _build_test())
+        _write_text(ctx.tests_dir / "test_generated_project.py", _build_test(package_name))
         _write_text(
             project_root / "README.md",
-            _build_readme(ctx.title, ctx.source_brd, ctx.slug, ctx.requirements, ctx.enable_observability),
+            _build_readme(ctx.title, ctx.source_brd, ctx.slug, ctx.requirements, ctx.enable_observability, package_name),
         )
-        _write_text(project_root / "DEPLOY.md", _build_deploy(ctx.slug, ctx.enable_observability))
+        _write_text(project_root / "DEPLOY.md", _build_deploy(ctx.slug, ctx.enable_observability, package_name))
 
         return LanguageEmitResult(
             files_written=[
-                "src/copilot_api/__init__.py",
-                "src/copilot_api/main.py",
-                "src/copilot_api/models.py",
-                "src/copilot_api/services/__init__.py",
-                "src/copilot_api/services/copilot_service.py",
+                f"src/{package_name}/__init__.py",
+                f"src/{package_name}/main.py",
+                f"src/{package_name}/models.py",
+                f"src/{package_name}/services/__init__.py",
+                f"src/{package_name}/services/copilot_service.py",
                 "requirements.txt",
                 "pyproject.toml",
                 "tests/test_generated_project.py",
@@ -227,6 +260,7 @@ class PythonAgent:
                 "- Python 3.11+ FastAPI starter with health endpoint",
                 "- pytest scaffold validating generated project shape",
             ],
+            primary_source_path=f"src/{package_name}/main.py",
         )
 
 

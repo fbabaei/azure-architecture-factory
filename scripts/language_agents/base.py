@@ -36,6 +36,11 @@ class LanguageEmitResult:
 
     files_written: list[str]
     readme_bullets: list[str]
+    # Main application entrypoint (repo-relative, forward slashes).
+    # Used by the runner when building the traceability matrix so
+    # the "Starter API" row points at the actual emitted file
+    # (e.g. src/mdr_support/main.py, src/Program.cs).
+    primary_source_path: str = "src/copilot_api/main.py"
 
 
 class LanguageAgent(Protocol):
