@@ -2557,7 +2557,29 @@
                                             <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
                                         </select>
                                         <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Sets the generated Bicep network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code>.
+                                            Sets the generated network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code> or <code>infra/main.tf</code>.
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="brd-implementation-language">Implementation Language</label>
+                                        <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <option value="" selected>Auto (infer from BRD, default Python)</option>
+                                            <option value="python">Python / FastAPI</option>
+                                            <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
+                                        </select>
+                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                            Overrides <code>Implementation language:</code> in the BRD. Controls which language specialist emits <code>src/</code>.
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="brd-iac-tool">Infrastructure-as-Code</label>
+                                        <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <option value="" selected>Auto (infer from BRD, default Bicep)</option>
+                                            <option value="bicep">Bicep (Azure-native)</option>
+                                            <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
+                                        </select>
+                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                            Overrides <code>Infrastructure as code:</code> in the BRD. Controls whether <code>infra/</code> is emitted as Bicep or Terraform.
                                         </p>
                                     </div>
                                     <div class="button-group">
@@ -4416,6 +4438,8 @@
             const contentInput = document.getElementById('brd-content').value.trim();
             const enableObservability = document.getElementById('brd-enable-observability')?.checked ?? true;
             const networkTier = document.getElementById('brd-network-tier')?.value || 'public';
+            const implementationLanguage = document.getElementById('brd-implementation-language')?.value || '';
+            const iacTool = document.getElementById('brd-iac-tool')?.value || '';
             const uploadInput = document.getElementById('brd-upload');
             const uploadedFile = uploadInput?.files?.[0] || null;
             const button = document.getElementById('submit-brd-btn');
@@ -4442,6 +4466,8 @@
                     form.append('project_name', normalizeBrdFileName(fileNameInput));
                     form.append('enable_observability', enableObservability ? 'true' : 'false');
                     form.append('network_tier', networkTier);
+                    if (implementationLanguage) form.append('implementation_language', implementationLanguage);
+                    if (iacTool) form.append('iac_tool', iacTool);
                     form.append('brd_file', uploadedFile, uploadedFile.name);
                     response = await fetch(API_BRD_UPLOAD, {
                         method: 'POST',
@@ -4457,7 +4483,9 @@
                             fileName: normalizeBrdFileName(fileNameInput),
                             content: contentInput,
                             enableObservability,
-                            networkTier
+                            networkTier,
+                            implementationLanguage: implementationLanguage || undefined,
+                            iacTool: iacTool || undefined
                         })
                     });
                 }

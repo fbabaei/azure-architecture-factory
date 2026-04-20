@@ -2,7 +2,7 @@
 name: project-orchestrator
 description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, optional Azure deployment, and post-deployment observability, while maintaining requirement traceability across all stages. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
-agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, lang-dotnet-implementer, security-compliance-auditor, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
+agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, lang-dotnet-implementer, security-compliance-auditor, bicep-infrastructure-validator, terraform-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
 argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), agent runtime (runtime: local|agent-framework|auto — default auto), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal. For BRD updates on an existing project, pass update: true and slug: <existing-project-slug> — the orchestrator will diff the BRD, re-read the current architecture, regenerate the diagram, and apply targeted implementation changes."
 ---
@@ -57,7 +57,7 @@ projects/
 - ALWAYS log phase start and end timestamps to `logs/orchestration.log`.
 - ALWAYS write per-phase logs to the appropriate `logs/phase-N-*.log` file.
 - ALWAYS update `project-manifest.json` after each completed phase.
-- NEVER skip the validation phase; always run `bicep-infrastructure-validator` before deployment.
+- NEVER skip the validation phase; always run the appropriate IaC validator (`bicep-infrastructure-validator` for Bicep, `terraform-infrastructure-validator` for Terraform) before deployment.
 - ALWAYS use the MCP Draw.io workflow for Phase 1 architecture generation; do not allow ad hoc diagram creation.
 - ALWAYS run Phase 2.5 (Alignment Convergence Loop), Phase 2.6 (Security & Compliance Gate), Phase 2.7 (Error-Handling Gate), Phase 2.8 (Scalability Gate), and Phase 3.7 (Test Convergence Loop) for every greenfield project AND every Update Mode invocation. Alignment and test loops require a minimum of 3 iterations. Phases 2.6, 2.7, and 2.8 MUST exit with zero `critical` and zero `major` findings before Phase 3 runs. Skipping is only allowed via `skip-alignment: true`, `skip-security: true`, `skip-error-handling: true`, or `skip-scalability: true` (each must be logged as a governance exception).
 - If any phase fails, log the error, and continue with the next phase if it is non-blocking; stop and report if the failure is blocking.
@@ -612,14 +612,19 @@ After loop completion:
 > `[PHASE 2.8] Scalability gate <passed|unresolved> after N iterations (cost_impact_notes: C)`
 
 ### Phase 3 — Infrastructure Validation & Self-Healing
-**Delegate to**: `bicep-infrastructure-validator`
+**Delegate to**: `bicep-infrastructure-validator` **or** `terraform-infrastructure-validator` — select based on `iac_tool` from `project-manifest.json`.
 
-Instruct the agent:
-> "Validate and auto-fix all Bicep files under `projects/<slug>/infra/`. Check modules and parameter files. Fix all errors. Return a validation report."
+| `iac_tool` | Validator |
+|------------|-----------|
+| `bicep` (default, or absent) | `bicep-infrastructure-validator` |
+| `terraform` | `terraform-infrastructure-validator` |
+
+Instruct the selected agent:
+> "Validate and auto-fix all infrastructure files under `projects/<slug>/infra/`. Check modules/resources, parameter/variable files. Fix all errors. Return a validation report."
 
 After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
-- Log: `[PHASE 3] Infrastructure validated → projects/<slug>/infra/ (N errors fixed)`
+- Log: `[PHASE 3] Infrastructure validated (<iac_tool>) → projects/<slug>/infra/ (N errors fixed)`
 
 ### Phase 3.7 — Test Convergence Loop (MANDATORY)
 

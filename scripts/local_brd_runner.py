@@ -54,6 +54,15 @@ def process_brd_document(
     runtime_recommendation = _classify_runtime(brd_text)
     language_agent = language_agents.resolve_from_brd(brd_text)
     iac_agent = iac_agents.resolve_from_brd(brd_text)
+    # Portal / caller override: generation_options can force a specific
+    # language or IaC tool, bypassing BRD markdown inference. Unknown
+    # values fall back to the default agent (handled by `.get()`).
+    language_override = str(generation_options.get("implementationLanguage") or "").strip().lower()
+    if language_override:
+        language_agent = language_agents.get(language_override)
+    iac_override = str(generation_options.get("iacTool") or "").strip().lower()
+    if iac_override:
+        iac_agent = iac_agents.get(iac_override)
     base_slug = f"{_slugify(title)}-{timestamp}"
     # Collision guard: two BRD runs within the same second must not overwrite
     # each other. If the target folder already exists, append a short suffix

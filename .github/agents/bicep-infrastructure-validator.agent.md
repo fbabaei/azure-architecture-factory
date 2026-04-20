@@ -21,6 +21,14 @@ Your job is to:
 - DO NOT introduce breaking changes; maintain backward compatibility.
 - ALWAYS validate fixes by re-checking errors after edits.
 
+## Precondition — iac_tool guard
+
+Before doing ANY work, read `projects/<slug>/project-manifest.json` and confirm `iac_tool == "bicep"` (or absent — `bicep` is the default).
+
+- If `iac_tool == "terraform"`, STOP and respond:
+  > "This project uses Terraform (`iac_tool: terraform`). Re-route to `terraform-infrastructure-validator`."
+- If `iac_tool` is any other value, STOP and escalate to the orchestrator with a blocker.
+
 ## Owns vs. Does Not Own
 
 **Owns:**

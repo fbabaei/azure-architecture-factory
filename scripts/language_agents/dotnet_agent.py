@@ -36,7 +36,12 @@ def _write_text(path: Path, content: str) -> None:
     path.write_text(content.rstrip() + "\n", encoding="utf-8")
 
 
-def _build_csproj() -> str:
+def _build_csproj(enable_observability: bool) -> str:
+    observability_pkg = (
+        "    <PackageReference Include=\"Microsoft.ApplicationInsights.AspNetCore\" Version=\"2.23.0\" />\n"
+        if enable_observability
+        else ""
+    )
     return (
         "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n\n"
         "  <PropertyGroup>\n"
@@ -51,19 +56,28 @@ def _build_csproj() -> str:
         "    <PackageReference Include=\"Swashbuckle.AspNetCore\" Version=\"6.8.1\" />\n"
         "    <PackageReference Include=\"Azure.Identity\" Version=\"1.13.1\" />\n"
         "    <PackageReference Include=\"Microsoft.Extensions.Azure\" Version=\"1.7.6\" />\n"
+        f"{observability_pkg}"
         "  </ItemGroup>\n\n"
         "</Project>\n"
     )
 
 
-def _build_program(title: str) -> str:
+def _build_program(title: str, enable_observability: bool) -> str:
     safe_title = title.replace("\"", "'")
+    observability_block = (
+        "// Application Insights — reads APPLICATIONINSIGHTS_CONNECTION_STRING from env.\n"
+        "builder.Services.AddApplicationInsightsTelemetry();\n"
+        if enable_observability
+        else ""
+    )
     return (
         "using Microsoft.AspNetCore.Mvc;\n\n"
         "var builder = WebApplication.CreateBuilder(args);\n\n"
         "builder.Services.AddEndpointsApiExplorer();\n"
         "builder.Services.AddSwaggerGen();\n"
-        "builder.Services.AddProblemDetails();\n\n"
+        "builder.Services.AddProblemDetails();\n"
+        f"{observability_block}"
+        "\n"
         "var app = builder.Build();\n\n"
         "if (app.Environment.IsDevelopment())\n"
         "{\n"
@@ -321,8 +335,8 @@ class DotnetAgent:
         src_dir.mkdir(parents=True, exist_ok=True)
         ctx.tests_dir.mkdir(parents=True, exist_ok=True)
 
-        _write_text(src_dir / f"{project_name}.csproj", _build_csproj())
-        _write_text(src_dir / "Program.cs", _build_program(ctx.title))
+        _write_text(src_dir / f"{project_name}.csproj", _build_csproj(ctx.enable_observability))
+        _write_text(src_dir / "Program.cs", _build_program(ctx.title, ctx.enable_observability))
         _write_text(src_dir / "appsettings.json", _build_appsettings())
         _write_text(src_dir / "appsettings.Development.json", _build_appsettings_dev())
         _write_text(src_dir / "Dockerfile", _build_dockerfile(project_name))

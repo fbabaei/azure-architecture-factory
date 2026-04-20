@@ -1785,6 +1785,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
             "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
         }
+        impl_lang = str(payload.get("implementationLanguage") or "").strip().lower()
+        if impl_lang:
+            generation_options["implementationLanguage"] = impl_lang
+        iac_tool = str(payload.get("iacTool") or "").strip().lower()
+        if iac_tool:
+            generation_options["iacTool"] = iac_tool
 
         return self._save_and_start_run(
             file_name, content, generation_options, owner=self._authorized_user()
@@ -1960,6 +1966,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         project_name_field = (fields.get("project_name") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         enable_observability_field = (fields.get("enable_observability") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         network_tier_field = (fields.get("network_tier") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        implementation_language_field = (fields.get("implementation_language") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
+        iac_tool_field = (fields.get("iac_tool") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
         brd_field = fields.get("brd_file")
 
         if not brd_field:
@@ -1991,6 +1999,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "enableObservability": _coerce_bool(enable_observability_field, default=True),
             "networkTier": _sanitize_network_tier(network_tier_field),
         }
+        if implementation_language_field:
+            generation_options["implementationLanguage"] = implementation_language_field
+        if iac_tool_field:
+            generation_options["iacTool"] = iac_tool_field
 
         return self._save_and_start_run(
             file_name, content, generation_options, owner=self._authorized_user()
