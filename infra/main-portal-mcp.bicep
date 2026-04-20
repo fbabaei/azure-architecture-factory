@@ -28,6 +28,12 @@ param entraTenantId string = ''
 @description('Entra ID application (client) ID for the portal app registration')
 param entraClientId string = ''
 
+@description('Email addresses to notify on portal alerts. Leave empty to skip.')
+param alertEmails array = []
+
+@description('Disable the portal alert rules (useful for dev toggling). Alerts still deploy.')
+param alertsEnabled bool = true
+
 // ── Derived names ───────────────────────────────────────────
 var baseName = '${projectName}-${environment}'
 var acrName = replace('${baseName}acr', '-', '')
@@ -246,6 +252,20 @@ module mcpServer 'modules/compute/containerapp.bicep' = {
         identity: identity.outputs.id
       }
     ]
+  }
+}
+
+// ── Portal alerts ───────────────────────────────────────────
+module portalAlerts 'modules/monitoring/alerts.bicep' = {
+  name: 'portalAlerts'
+  params: {
+    location: location
+    baseName: baseName
+    workspaceId: logAnalytics.outputs.workspaceId
+    containerAppName: portalAppName
+    alertEmails: alertEmails
+    enabled: alertsEnabled
+    tags: commonTags
   }
 }
 

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "8311987781773140364"
+      "templateHash": "5386078173757623283"
     }
   },
   "parameters": {
@@ -61,6 +61,20 @@
       "defaultValue": "",
       "metadata": {
         "description": "Entra ID application (client) ID for the portal app registration"
+      }
+    },
+    "alertEmails": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Email addresses to notify on portal alerts. Leave empty to skip."
+      }
+    },
+    "alertsEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Disable the portal alert rules (useful for dev toggling). Alerts still deploy."
       }
     }
   },
@@ -1290,6 +1304,272 @@
         "[resourceId('Microsoft.Resources/deployments', 'appInsights')]",
         "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvName'))]",
         "[resourceId('Microsoft.Resources/deployments', 'identity')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "portalAlerts",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "baseName": {
+            "value": "[variables('baseName')]"
+          },
+          "workspaceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'logAnalytics'), '2025-04-01').outputs.workspaceId.value]"
+          },
+          "containerAppName": {
+            "value": "[variables('portalAppName')]"
+          },
+          "alertEmails": {
+            "value": "[parameters('alertEmails')]"
+          },
+          "enabled": {
+            "value": "[parameters('alertsEnabled')]"
+          },
+          "tags": {
+            "value": "[variables('commonTags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.42.1.51946",
+              "templateHash": "9839580629907186796"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Azure region for alert resources."
+              }
+            },
+            "baseName": {
+              "type": "string",
+              "metadata": {
+                "description": "Base name (e.g. arch-factory-dev)."
+              }
+            },
+            "workspaceId": {
+              "type": "string",
+              "metadata": {
+                "description": "Log Analytics workspace resource id to query."
+              }
+            },
+            "containerAppName": {
+              "type": "string",
+              "metadata": {
+                "description": "Container app name to scope queries (e.g. arch-factory-dev-portal)."
+              }
+            },
+            "alertEmails": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Email addresses to notify. Leave empty to skip receiver creation."
+              }
+            },
+            "severity": {
+              "type": "int",
+              "defaultValue": 2,
+              "minValue": 0,
+              "maxValue": 4,
+              "metadata": {
+                "description": "Alert severity (0 critical … 4 verbose). Default 2 = warning."
+              }
+            },
+            "enabled": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable / disable all alert rules (useful for dev toggling)."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Tags propagated to every resource."
+              }
+            }
+          },
+          "variables": {
+            "actionGroupName": "[format('{0}-alerts-ag', parameters('baseName'))]",
+            "shortName": "[substring(replace(parameters('baseName'), '-', ''), 0, min(12, length(replace(parameters('baseName'), '-', ''))))]",
+            "queryReadyDegraded": "[format('ContainerAppConsoleLogs_CL\n| where ContainerAppName_s == \"{0}\"\n| where Log_s has ''\"path\": \"/ready\"''\n| where Log_s has ''\"status\": \"degraded\"'' or Log_s has ''\"status\":\"degraded\"''', parameters('containerAppName'))]",
+            "queryWatchdog": "[format('ContainerAppConsoleLogs_CL\n| where ContainerAppName_s == \"{0}\"\n| where Log_s has \"[watchdog]\" or Log_s has \"returnCode=-2\"', parameters('containerAppName'))]",
+            "query5xx": "[format('ContainerAppConsoleLogs_CL\n| where ContainerAppName_s == \"{0}\"\n| where Log_s matches regex ''\"status\"\\\\s*:\\\\s*5\\\\d\\\\d''\n| where Log_s !has ''\"path\": \"/ready\"'' and Log_s !has ''\"path\": \"/health\"''', parameters('containerAppName'))]",
+            "actionsBlock": {
+              "actionGroups": [
+                "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+              ]
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Insights/actionGroups",
+              "apiVersion": "2023-01-01",
+              "name": "[variables('actionGroupName')]",
+              "location": "global",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "emailReceivers",
+                    "count": "[length(parameters('alertEmails'))]",
+                    "input": {
+                      "name": "[format('email-{0}', copyIndex('emailReceivers'))]",
+                      "emailAddress": "[parameters('alertEmails')[copyIndex('emailReceivers')]]",
+                      "useCommonAlertSchema": true
+                    }
+                  }
+                ],
+                "groupShortName": "[variables('shortName')]",
+                "enabled": true
+              }
+            },
+            {
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2023-03-15-preview",
+              "name": "[format('{0}-alert-ready-degraded', parameters('baseName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "displayName": "Portal /ready degraded",
+                "description": "Fires when the portal /ready probe returns a non-ok status.",
+                "severity": "[parameters('severity')]",
+                "enabled": "[parameters('enabled')]",
+                "scopes": [
+                  "[parameters('workspaceId')]"
+                ],
+                "evaluationFrequency": "PT5M",
+                "windowSize": "PT10M",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "[variables('queryReadyDegraded')]",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThanOrEqual",
+                      "threshold": 2,
+                      "failingPeriods": {
+                        "minFailingPeriodsToAlert": 1,
+                        "numberOfEvaluationPeriods": 1
+                      }
+                    }
+                  ]
+                },
+                "actions": "[variables('actionsBlock')]",
+                "autoMitigate": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2023-03-15-preview",
+              "name": "[format('{0}-alert-watchdog-kills', parameters('baseName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "displayName": "Portal watchdog terminated stuck runs",
+                "description": "Fires when the pipeline watchdog marks runs as failed (returnCode=-2).",
+                "severity": "[parameters('severity')]",
+                "enabled": "[parameters('enabled')]",
+                "scopes": [
+                  "[parameters('workspaceId')]"
+                ],
+                "evaluationFrequency": "PT15M",
+                "windowSize": "PT30M",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "[variables('queryWatchdog')]",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThanOrEqual",
+                      "threshold": 1,
+                      "failingPeriods": {
+                        "minFailingPeriodsToAlert": 1,
+                        "numberOfEvaluationPeriods": 1
+                      }
+                    }
+                  ]
+                },
+                "actions": "[variables('actionsBlock')]",
+                "autoMitigate": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2023-03-15-preview",
+              "name": "[format('{0}-alert-5xx-rate', parameters('baseName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "displayName": "Portal sustained HTTP 5xx rate",
+                "description": "Fires when the portal emits 5+ 5xx responses in 15 minutes (excluding /ready & /health probes).",
+                "severity": "[parameters('severity')]",
+                "enabled": "[parameters('enabled')]",
+                "scopes": [
+                  "[parameters('workspaceId')]"
+                ],
+                "evaluationFrequency": "PT5M",
+                "windowSize": "PT15M",
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "[variables('query5xx')]",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThanOrEqual",
+                      "threshold": 5,
+                      "failingPeriods": {
+                        "minFailingPeriodsToAlert": 1,
+                        "numberOfEvaluationPeriods": 1
+                      }
+                    }
+                  ]
+                },
+                "actions": "[variables('actionsBlock')]",
+                "autoMitigate": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "actionGroupId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+            },
+            "alertIds": {
+              "type": "array",
+              "value": [
+                "[resourceId('Microsoft.Insights/scheduledQueryRules', format('{0}-alert-ready-degraded', parameters('baseName')))]",
+                "[resourceId('Microsoft.Insights/scheduledQueryRules', format('{0}-alert-watchdog-kills', parameters('baseName')))]",
+                "[resourceId('Microsoft.Insights/scheduledQueryRules', format('{0}-alert-5xx-rate', parameters('baseName')))]"
+              ]
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'logAnalytics')]"
       ]
     }
   ],
