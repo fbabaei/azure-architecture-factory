@@ -5055,8 +5055,28 @@
         window.addEventListener('hashchange', openAnalysisFromHash);
         window.addEventListener('hashchange', syncIntakeFromHash);
 
-        // Auto-refresh every 30 seconds
-        setInterval(loadProjects, 30000);
+        // Auto-refresh every 30 seconds, but only when the tab is visible.
+        // Hidden tabs skip the refresh; on becoming visible again we refresh
+        // immediately so the user sees current data without waiting a cycle.
+        let _projectsPollTimer = null;
+        function _startProjectsPoll() {
+            if (_projectsPollTimer) return;
+            _projectsPollTimer = setInterval(() => {
+                if (!document.hidden) loadProjects();
+            }, 30000);
+        }
+        function _stopProjectsPoll() {
+            if (_projectsPollTimer) { clearInterval(_projectsPollTimer); _projectsPollTimer = null; }
+        }
+        _startProjectsPoll();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                _stopProjectsPoll();
+            } else {
+                loadProjects();
+                _startProjectsPoll();
+            }
+        });
 
         // Dynamic analysis modal functions
         async function openDynamicAnalysis(event, projectSlug) {

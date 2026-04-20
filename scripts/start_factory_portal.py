@@ -2475,6 +2475,21 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             status,
         )
 
+    # Extensions/paths the browser can safely cache for a few seconds.
+    # Short max-age lets F5 inside the window serve from memory-cache instantly
+    # without a conditional request, while still picking up edits within ~10s.
+    _STATIC_CACHE_EXTS = (".html", ".css", ".js", ".svg", ".png", ".jpg",
+                          ".jpeg", ".gif", ".ico", ".woff", ".woff2")
+
+    def _is_static_cacheable(self) -> bool:
+        try:
+            path = urlparse(self.path).path.lower()
+        except Exception:
+            return False
+        if path.startswith("/api/") or path.startswith("/.auth/"):
+            return False
+        return path.endswith(self._STATIC_CACHE_EXTS)
+
     def end_headers(self):
         """Add CORS headers to all responses"""
         self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
@@ -2482,6 +2497,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Factory-Api-Key, Authorization")
         self.send_header("Vary", "Origin")
         self.send_header("X-Content-Type-Options", "nosniff")
+        if self._is_static_cacheable():
+            # Short, must-revalidate window so rapid reloads are instant but
+            # real edits are picked up on the next poll.
+            self.send_header("Cache-Control", "private, max-age=10, must-revalidate")
         super().end_headers()
 
     def log_message(self, format, *args):
