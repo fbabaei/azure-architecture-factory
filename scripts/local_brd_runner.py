@@ -21,6 +21,14 @@ except ImportError:  # pragma: no cover - executed as a script
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
     from factory_runtime import classify_brd as _classify_brd  # type: ignore
 
+try:
+    from . import language_agents, iac_agents  # type: ignore
+except ImportError:  # pragma: no cover - executed as a script
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import language_agents  # type: ignore
+    import iac_agents  # type: ignore
+
 
 def process_brd_document(
     factory_repo_root: Path,
@@ -44,6 +52,8 @@ def process_brd_document(
     success_criteria = _extract_success_criteria(brd_text)
     capabilities = _infer_capabilities(brd_text)
     runtime_recommendation = _classify_runtime(brd_text)
+    language_agent = language_agents.resolve_from_brd(brd_text)
+    iac_agent = iac_agents.resolve_from_brd(brd_text)
     base_slug = f"{_slugify(title)}-{timestamp}"
     # Collision guard: two BRD runs within the same second must not overwrite
     # each other. If the target folder already exists, append a short suffix
@@ -61,14 +71,12 @@ def process_brd_document(
     project_root = factory_repo_root / "projects" / slug
     diagrams_dir = project_root / "diagrams"
     docs_dir = project_root / "docs"
-    src_dir = project_root / "src" / "copilot_api"
-    services_dir = src_dir / "services"
     tests_dir = project_root / "tests"
     infra_dir = project_root / "infra"
     logs_dir = project_root / "logs"
     outputs_dir = factory_repo_root / "outputs" / "brd-runs"
 
-    for path in [diagrams_dir, docs_dir, services_dir, tests_dir, infra_dir, logs_dir, outputs_dir]:
+    for path in [diagrams_dir, docs_dir, tests_dir, infra_dir, logs_dir, outputs_dir]:
         path.mkdir(parents=True, exist_ok=True)
 
     diagram_basename = f"{slug}.drawio"
@@ -102,10 +110,10 @@ def process_brd_document(
             "enableObservability": enable_observability,
             "networkTier": network_tier,
         },
+        "implementationLanguage": language_agent.name,
+        "iacTool": iac_agent.name,
     }
 
-    _write_text(project_root / "README.md", _build_readme(title, brd_path.name, slug, requirements, enable_observability))
-    _write_text(project_root / "DEPLOY.md", _build_deploy(slug, enable_observability))
     _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier))
     _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
     _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones(enable_observability))
@@ -113,15 +121,31 @@ def process_brd_document(
     _write_text(docs_dir / "traceability-matrix.md", _build_traceability_matrix(requirements, success_criteria))
     _write_text(diagrams_dir / diagram_notes_basename, _build_diagram_notes(title, requirements, capabilities, enable_observability, network_tier))
     _write_text(diagrams_dir / diagram_basename, _build_drawio(title, network_tier, capabilities))
-    _write_text(src_dir / "__init__.py", "")
-    _write_text(src_dir / "main.py", _build_api_main())
-    _write_text(src_dir / "models.py", _build_api_models())
-    _write_text(services_dir / "__init__.py", "")
-    _write_text(services_dir / "copilot_service.py", _build_api_service())
-    _write_text(project_root / "requirements.txt", "fastapi==0.116.1\nuvicorn[standard]==0.32.1\npydantic==2.10.3\n")
-    _write_text(project_root / "pyproject.toml", _build_pyproject(title))
-    _write_text(infra_dir / "main.bicep", _build_infra_bicep(enable_observability, network_tier))
-    _write_text(tests_dir / "test_generated_project.py", _build_test())
+
+    # Delegate language-specific source code to the language specialist.
+    language_result = language_agent.emit(
+        language_agents.LanguageEmitContext(
+            project_root=project_root,
+            tests_dir=tests_dir,
+            title=title,
+            slug=slug,
+            source_brd=brd_path.name,
+            requirements=requirements,
+            enable_observability=enable_observability,
+        )
+    )
+
+    # Delegate infrastructure emission to the IaC specialist.
+    iac_result = iac_agent.emit(
+        iac_agents.IacEmitContext(
+            infra_dir=infra_dir,
+            title=title,
+            slug=slug,
+            enable_observability=enable_observability,
+            network_tier=network_tier,
+            language=language_agent.name,
+        )
+    )
 
     # Copy the shared model-selector script template into every generated project
     # so users have a one-command way to switch Azure OpenAI deployments with
@@ -150,6 +174,10 @@ def process_brd_document(
             "enableObservability": enable_observability,
             "networkTier": network_tier,
         },
+        "implementation_language": language_agent.name,
+        "iac_tool": iac_agent.name,
+        "language_files": language_result.files_written,
+        "iac_files": iac_result.files_written,
         "user_home_copy": str(user_home_copy_path),
     }
     _write_json(project_root / "project-manifest.json", manifest)
@@ -209,6 +237,8 @@ def process_brd_document(
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
         "suggestedRuntime": runtime_recommendation,
+        "implementationLanguage": language_agent.name,
+        "iacTool": iac_agent.name,
     }
     if manifest.get("guide_report"):
         project_record["guideReport"] = manifest["guide_report"]
@@ -341,28 +371,6 @@ def _update_project_feed(feed_path: Path, generated_at: str, project_record: dic
     payload["generatedAt"] = generated_at
     payload["projects"] = [project_record, *existing]
     _write_json(feed_path, payload)
-
-
-def _build_readme(title: str, source_brd: str, slug: str, requirements: list[str], enable_observability: bool) -> str:
-    highlights = "\n".join(f"- {item}" for item in requirements[:10])
-    observability_line = "- Monitoring and observability wiring requested: Yes" if enable_observability else "- Monitoring and observability wiring requested: No"
-    return f"# {title}\n\nGenerated from BRD `{source_brd}` by the Azure-native factory runner.\n\n## What Was Generated\n- `docs/architecture-overview.md`\n- `docs/governance-model.md`\n- `docs/delivery-milestones.md`\n- `docs/success-criteria.md`\n- `docs/traceability-matrix.md`\n- `diagrams/{slug}.md`\n- `diagrams/{slug}.drawio`\n- `src/copilot_api/main.py`\n- `src/copilot_api/models.py`\n- `src/copilot_api/services/copilot_service.py`\n- `requirements.txt`\n- `infra/main.bicep`\n- `tests/test_generated_project.py`\n\n## Selected Generation Options\n{observability_line}\n\n## BRD Requirement Highlights\n{highlights}\n"
-
-
-def _build_deploy(slug: str, enable_observability: bool) -> str:
-    deployment_steps = [
-        "1. Review and customize `infra/main.bicep`.",
-        "2. Provision hosting, identity, Key Vault access, and Application Insights.",
-        "3. Configure application settings for the generated API.",
-        f"4. Deploy the project from `projects/{slug}`.",
-        "5. Validate `/health` after deployment.",
-    ]
-    if enable_observability:
-        deployment_steps[1] = "2. Provision hosting, identity, Key Vault access, Application Insights, and Log Analytics."
-        deployment_steps.insert(3, "4. Configure health probes, alerts, dashboards, and operational ownership for the generated workload.")
-        deployment_steps[4] = f"5. Deploy the project from `projects/{slug}`."
-        deployment_steps[5] = "6. Validate `/health` after deployment and confirm telemetry reaches Azure Monitor."
-    return "# Deploy\n\n## Prerequisites\n- Python 3.11+\n- Azure CLI authenticated\n- Target Azure subscription and resource group\n\n## Local Validation\n```bash\npython -m venv .venv\n.venv\\Scripts\\activate\npython -m pip install -r requirements.txt\npython -m pytest tests -q\n```\n\n## Local Run\n```bash\npython -m uvicorn src.copilot_api.main:app --host 127.0.0.1 --port 8000 --reload\n```\n\n## Azure Deployment Outline\n" + "\n".join(deployment_steps) + "\n"
 
 
 def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool, network_tier: str = "public") -> str:
@@ -759,178 +767,3 @@ def _build_drawio(title: str, network_tier: str = "public", capabilities: dict[s
         f'</root></mxGraphModel></diagram></mxfile>'
     )
 
-
-def _build_api_main() -> str:
-    return "from datetime import datetime, timezone\nfrom fastapi import FastAPI\n\nfrom .models import AskRequest, AskResponse\nfrom .services.copilot_service import build_response\n\n\napp = FastAPI(title=\"Generated Copilot API\", version=\"0.1.0\")\n\n\n@app.get(\"/health\")\ndef health() -> dict:\n    return {\"status\": \"ok\", \"timestamp\": datetime.now(timezone.utc).isoformat()}\n\n\n@app.post(\"/api/copilot/ask\", response_model=AskResponse)\ndef ask_copilot(payload: AskRequest) -> AskResponse:\n    return AskResponse(answer=build_response(payload.question, payload.context), source=\"generated-starter\")\n"
-
-
-def _build_api_models() -> str:
-    return "from pydantic import BaseModel, Field\n\n\nclass AskRequest(BaseModel):\n    question: str = Field(min_length=3)\n    context: str = Field(default=\"\")\n\n\nclass AskResponse(BaseModel):\n    answer: str\n    source: str\n"
-
-
-def _build_api_service() -> str:
-    return "def build_response(question: str, context: str) -> str:\n    summary = context.strip()[:240]\n    if summary:\n        return \"Starter copilot response for question: '\" + question + \"'. Context summary: \" + summary + \". Replace this logic with your workload-specific orchestration.\"\n    return \"Starter copilot response for question: '\" + question + \"'. Replace this logic with your workload-specific orchestration.\"\n"
-
-
-def _build_pyproject(title: str) -> str:
-    normalized = _slugify(title).replace("-", "_")
-    return f"[project]\nname = \"{normalized}\"\nversion = \"0.1.0\"\ndescription = \"Generated starter project for {title}\"\nrequires-python = \">=3.11\"\ndependencies = [\n  \"fastapi==0.116.1\",\n  \"uvicorn[standard]==0.32.1\",\n  \"pydantic==2.10.3\",\n]\n"
-
-
-def _build_infra_bicep(enable_observability: bool, network_tier: str = "public") -> str:
-    enable_obs_default = "true" if enable_observability else "false"
-
-    params = (
-        "targetScope = 'resourceGroup'\n\n"
-        "@description('Deployment location')\n"
-        "param location string = resourceGroup().location\n\n"
-        "@description('Environment name')\n"
-        "param environment string = 'dev'\n\n"
-        "@description('Logical workload name used in generated resource names')\n"
-        "param workloadName string = 'starter-workload'\n\n"
-        "@description('Whether the starter should include monitoring and observability resources')\n"
-        f"param enableObservability bool = {enable_obs_default}\n\n"
-        "@description('Optional operations email for alert notifications. Leave empty to skip email actions.')\n"
-        "param operationsEmail string = ''\n"
-    )
-
-    if network_tier == "vnet-integrated":
-        params += (
-            "\n@description('Address prefix for the virtual network')\n"
-            "param vnetAddressPrefix string = '10.0.0.0/16'\n\n"
-            "@description('Address prefix for the application subnet')\n"
-            "param appSubnetPrefix string = '10.0.0.0/24'\n"
-        )
-    elif network_tier == "private":
-        params += (
-            "\n@description('Address prefix for the virtual network')\n"
-            "param vnetAddressPrefix string = '10.0.0.0/16'\n\n"
-            "@description('Address prefix for the application subnet')\n"
-            "param appSubnetPrefix string = '10.0.0.0/24'\n\n"
-            "@description('Address prefix for the private endpoint subnet')\n"
-            "param peSubnetPrefix string = '10.0.1.0/24'\n"
-        )
-
-    base = params + "\n\nvar resourceBaseName = toLower(replace('${workloadName}-${environment}', '_', '-'))\n"
-
-    if network_tier in ("vnet-integrated", "private"):
-        subnets = (
-            "      {\n"
-            "        name: 'app-subnet'\n"
-            "        properties: {\n"
-            "          addressPrefix: appSubnetPrefix\n"
-            "          networkSecurityGroup: { id: nsg.id }\n"
-            "          delegations: [\n"
-            "            {\n"
-            "              name: 'app-env-delegation'\n"
-            "              properties: { serviceName: 'Microsoft.App/environments' }\n"
-            "            }\n"
-            "          ]\n"
-            "        }\n"
-            "      }\n"
-        )
-        if network_tier == "private":
-            subnets += (
-                "      {\n"
-                "        name: 'pe-subnet'\n"
-                "        properties: {\n"
-                "          addressPrefix: peSubnetPrefix\n"
-                "          privateEndpointNetworkPolicies: 'Disabled'\n"
-                "        }\n"
-                "      }\n"
-            )
-
-        base += (
-            "\nresource nsg 'Microsoft.Network/networkSecurityGroups@2023-04-01' = {\n"
-            "  name: '${resourceBaseName}-nsg'\n"
-            "  location: location\n"
-            "  properties: {\n"
-            "    securityRules: [\n"
-            "      {\n"
-            "        name: 'deny-inbound-default'\n"
-            "        properties: {\n"
-            "          priority: 4000\n"
-            "          direction: 'Inbound'\n"
-            "          access: 'Deny'\n"
-            "          protocol: '*'\n"
-            "          sourcePortRange: '*'\n"
-            "          destinationPortRange: '*'\n"
-            "          sourceAddressPrefix: '*'\n"
-            "          destinationAddressPrefix: '*'\n"
-            "        }\n"
-            "      }\n"
-            "    ]\n"
-            "  }\n"
-            "}\n"
-            "\nresource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {\n"
-            "  name: '${resourceBaseName}-vnet'\n"
-            "  location: location\n"
-            "  properties: {\n"
-            "    addressSpace: { addressPrefixes: [ vnetAddressPrefix ] }\n"
-            f"    subnets: [\n{subnets}"
-            "    ]\n"
-            "  }\n"
-            "  dependsOn: [ nsg ]\n"
-            "}\n"
-        )
-
-    base += (
-        "\nresource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (enableObservability) {\n"
-        "  name: '${resourceBaseName}-law'\n"
-        "  location: location\n"
-        "  properties: {\n"
-        "    retentionInDays: 30\n"
-        "    features: {\n"
-        "      enableLogAccessUsingOnlyResourcePermissions: true\n"
-        "    }\n"
-        "  }\n"
-        "  sku: {\n"
-        "    name: 'PerGB2018'\n"
-        "  }\n"
-        "}\n\n"
-        "resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = if (enableObservability) {\n"
-        "  name: '${resourceBaseName}-appi'\n"
-        "  location: location\n"
-        "  kind: 'web'\n"
-        "  properties: {\n"
-        "    Application_Type: 'web'\n"
-        "    WorkspaceResourceId: logAnalyticsWorkspace.id\n"
-        "    IngestionMode: 'LogAnalytics'\n"
-        "  }\n"
-        "}\n\n"
-        "resource operationsActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableObservability && !empty(operationsEmail)) {\n"
-        "  name: '${resourceBaseName}-opsag'\n"
-        "  location: 'global'\n"
-        "  properties: {\n"
-        "    enabled: true\n"
-        "    groupShortName: 'opsalert'\n"
-        "    emailReceivers: [\n"
-        "      {\n"
-        "        name: 'operations-team'\n"
-        "        emailAddress: operationsEmail\n"
-        "        useCommonAlertSchema: true\n"
-        "      }\n"
-        "    ]\n"
-        "  }\n"
-        "}\n"
-        "\noutput deploymentHint string = 'Replace this starter Bicep file with workload-specific Azure resources.'\n"
-        "output locationUsed string = location\n"
-        "output environmentName string = environment\n"
-        "output observabilityEnabled bool = enableObservability\n"
-        "output logAnalyticsWorkspaceName string = enableObservability ? logAnalyticsWorkspace.name : 'not-enabled'\n"
-        "output appInsightsName string = enableObservability ? applicationInsights.name : 'not-enabled'\n"
-        "output appInsightsConnectionString string = enableObservability ? applicationInsights.properties.ConnectionString : ''\n"
-        "output actionGroupName string = (enableObservability && !empty(operationsEmail)) ? operationsActionGroup.name : 'not-configured'\n"
-    )
-
-    if network_tier in ("vnet-integrated", "private"):
-        base += "output vnetName string = vnet.name\n"
-        base += "output appSubnetId string = vnet.properties.subnets[0].id\n"
-    if network_tier == "private":
-        base += "output peSubnetId string = vnet.properties.subnets[1].id\n"
-
-    return base
-
-
-def _build_test() -> str:
-    return "from pathlib import Path\n\n\ndef test_generated_project_docs_exist():\n    root = Path(__file__).resolve().parents[1]\n    required = [\n        root / 'README.md',\n        root / 'DEPLOY.md',\n        root / 'requirements.txt',\n        root / 'src' / 'copilot_api' / 'main.py',\n        root / 'src' / 'copilot_api' / 'models.py',\n        root / 'src' / 'copilot_api' / 'services' / 'copilot_service.py',\n        root / 'docs' / 'architecture-overview.md',\n        root / 'docs' / 'governance-model.md',\n        root / 'docs' / 'delivery-milestones.md',\n        root / 'docs' / 'success-criteria.md',\n        root / 'docs' / 'traceability-matrix.md',\n        root / 'diagrams' / (root.name + '.md'),\n        root / 'project-manifest.json',\n    ]\n    missing = [str(path) for path in required if not path.exists()]\n    assert not missing, f'Missing generated docs: {missing}'\n"
