@@ -39,6 +39,13 @@ def process_brd_document(
     brd_text = brd_path.read_text(encoding="utf-8")
     generation_options = generation_options or {}
     enable_observability = bool(generation_options.get("enableObservability", True))
+    # Infra and security are ON by default. Portal / CLI can opt OUT via
+    # generateInfra=false or runSecurityAudit=false to produce a docs-only or
+    # audit-skipped project. Both flags propagate into the manifest so the
+    # orchestrator's Phase 3 (infra validation) and Phase 2.6 (security gate)
+    # can skip cleanly without re-reading the original portal payload.
+    generate_infra = bool(generation_options.get("generateInfra", True))
+    run_security_audit = bool(generation_options.get("runSecurityAudit", True))
     _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
     network_tier = str(generation_options.get("networkTier", "public")).strip().lower()
     if network_tier not in _VALID_NETWORK_TIERS:
@@ -85,7 +92,10 @@ def process_brd_document(
     logs_dir = project_root / "logs"
     outputs_dir = factory_repo_root / "outputs" / "brd-runs"
 
-    for path in [diagrams_dir, docs_dir, tests_dir, infra_dir, logs_dir, outputs_dir]:
+    _base_dirs = [diagrams_dir, docs_dir, tests_dir, logs_dir, outputs_dir]
+    if generate_infra:
+        _base_dirs.append(infra_dir)
+    for path in _base_dirs:
         path.mkdir(parents=True, exist_ok=True)
 
     diagram_basename = f"{slug}.drawio"
@@ -118,9 +128,11 @@ def process_brd_document(
         "generationOptions": {
             "enableObservability": enable_observability,
             "networkTier": network_tier,
+            "generateInfra": generate_infra,
+            "runSecurityAudit": run_security_audit,
         },
         "implementationLanguage": language_agent.name,
-        "iacTool": iac_agent.name,
+        "iacTool": iac_agent.name if generate_infra else "disabled",
     }
 
     _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier))
@@ -144,17 +156,27 @@ def process_brd_document(
         )
     )
 
-    # Delegate infrastructure emission to the IaC specialist.
-    iac_result = iac_agent.emit(
-        iac_agents.IacEmitContext(
-            infra_dir=infra_dir,
-            title=title,
-            slug=slug,
-            enable_observability=enable_observability,
-            network_tier=network_tier,
-            language=language_agent.name,
+    # Delegate infrastructure emission to the IaC specialist — unless the
+    # caller opted out via generation_options.generateInfra=false. Skipping
+    # leaves infra_dir unwritten and records iac_files=[] + iac_tool="disabled"
+    # so the orchestrator's Phase 3 skips cleanly without trying to validate
+    # a missing folder.
+    if generate_infra:
+        iac_result = iac_agent.emit(
+            iac_agents.IacEmitContext(
+                infra_dir=infra_dir,
+                title=title,
+                slug=slug,
+                enable_observability=enable_observability,
+                network_tier=network_tier,
+                language=language_agent.name,
+            )
         )
-    )
+        iac_files_written: list[str] = iac_result.files_written
+        iac_tool_recorded = iac_agent.name
+    else:
+        iac_files_written = []
+        iac_tool_recorded = "disabled"
 
     # Copy the shared model-selector script template into every generated project
     # so users have a one-command way to switch Azure OpenAI deployments with
@@ -182,11 +204,13 @@ def process_brd_document(
         "generation_options": {
             "enableObservability": enable_observability,
             "networkTier": network_tier,
+            "generateInfra": generate_infra,
+            "runSecurityAudit": run_security_audit,
         },
         "implementation_language": language_agent.name,
-        "iac_tool": iac_agent.name,
+        "iac_tool": iac_tool_recorded,
         "language_files": language_result.files_written,
-        "iac_files": iac_result.files_written,
+        "iac_files": iac_files_written,
         "user_home_copy": str(user_home_copy_path),
     }
     _write_json(project_root / "project-manifest.json", manifest)
@@ -242,12 +266,14 @@ def process_brd_document(
         "options": {
             "enableObservability": enable_observability,
             "networkTier": network_tier,
+            "generateInfra": generate_infra,
+            "runSecurityAudit": run_security_audit,
         },
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
         "suggestedRuntime": runtime_recommendation,
         "implementationLanguage": language_agent.name,
-        "iacTool": iac_agent.name,
+        "iacTool": iac_tool_recorded,
     }
     if manifest.get("guide_report"):
         project_record["guideReport"] = manifest["guide_report"]

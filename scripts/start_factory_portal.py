@@ -1783,6 +1783,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         generation_options = {
             "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
+            "generateInfra": _coerce_bool(payload.get("generateInfra"), default=True),
+            "runSecurityAudit": _coerce_bool(payload.get("runSecurityAudit"), default=True),
             "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
         }
         impl_lang = str(payload.get("implementationLanguage") or "").strip().lower()
@@ -1965,6 +1967,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         project_name_field = (fields.get("project_name") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         enable_observability_field = (fields.get("enable_observability") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        generate_infra_field = (fields.get("generate_infra") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        run_security_audit_field = (fields.get("run_security_audit") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         network_tier_field = (fields.get("network_tier") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         implementation_language_field = (fields.get("implementation_language") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
         iac_tool_field = (fields.get("iac_tool") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
@@ -1997,6 +2001,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         generation_options = {
             "enableObservability": _coerce_bool(enable_observability_field, default=True),
+            "generateInfra": _coerce_bool(generate_infra_field, default=True),
+            "runSecurityAudit": _coerce_bool(run_security_audit_field, default=True),
             "networkTier": _sanitize_network_tier(network_tier_field),
         }
         if implementation_language_field:

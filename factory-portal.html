@@ -2550,6 +2550,24 @@
                                         </label>
                                     </div>
                                     <div class="form-group">
+                                        <label for="brd-generate-infra" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                            <input type="checkbox" id="brd-generate-infra" checked style="margin-top:0.25rem;">
+                                            <span>
+                                                <strong>Generate Azure infrastructure (Bicep or Terraform)</strong><br>
+                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Emits <code>infra/</code> with the selected IaC tool. Turn off for a docs-and-code-only project; the orchestrator will skip Phase 3 infra validation.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="brd-run-security-audit" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                            <input type="checkbox" id="brd-run-security-audit" checked style="margin-top:0.25rem;">
+                                            <span>
+                                                <strong>Run the security &amp; compliance audit</strong><br>
+                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Runs Phase 2.6 (secrets, managed identity, RBAC, CVEs, data-in-transit, BRD-declared frameworks). Turn off only for quick scaffolding spikes — never for production work.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
                                         <label for="brd-network-tier">Network Isolation</label>
                                         <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
                                             <option value="public" selected>Public — internet-facing, no VNet (default)</option>
@@ -4437,6 +4455,8 @@
             const fileNameInput = document.getElementById('brd-file-name').value.trim();
             const contentInput = document.getElementById('brd-content').value.trim();
             const enableObservability = document.getElementById('brd-enable-observability')?.checked ?? true;
+            const generateInfra = document.getElementById('brd-generate-infra')?.checked ?? true;
+            const runSecurityAudit = document.getElementById('brd-run-security-audit')?.checked ?? true;
             const networkTier = document.getElementById('brd-network-tier')?.value || 'public';
             const implementationLanguage = document.getElementById('brd-implementation-language')?.value || '';
             const iacTool = document.getElementById('brd-iac-tool')?.value || '';
@@ -4465,6 +4485,8 @@
                     const form = new FormData();
                     form.append('project_name', normalizeBrdFileName(fileNameInput));
                     form.append('enable_observability', enableObservability ? 'true' : 'false');
+                    form.append('generate_infra', generateInfra ? 'true' : 'false');
+                    form.append('run_security_audit', runSecurityAudit ? 'true' : 'false');
                     form.append('network_tier', networkTier);
                     if (implementationLanguage) form.append('implementation_language', implementationLanguage);
                     if (iacTool) form.append('iac_tool', iacTool);
@@ -4483,6 +4505,8 @@
                             fileName: normalizeBrdFileName(fileNameInput),
                             content: contentInput,
                             enableObservability,
+                            generateInfra,
+                            runSecurityAudit,
                             networkTier,
                             implementationLanguage: implementationLanguage || undefined,
                             iacTool: iacTool || undefined
@@ -4607,6 +4631,10 @@
                     document.getElementById('brd-file-name').value = '';
                     document.getElementById('brd-content').value = '';
                     document.getElementById('brd-enable-observability').checked = true;
+                    const infraEl = document.getElementById('brd-generate-infra');
+                    if (infraEl) infraEl.checked = true;
+                    const secEl = document.getElementById('brd-run-security-audit');
+                    if (secEl) secEl.checked = true;
                     const networkTierEl = document.getElementById('brd-network-tier');
                     if (networkTierEl) networkTierEl.value = 'public';
                     const upload = document.getElementById('brd-upload');

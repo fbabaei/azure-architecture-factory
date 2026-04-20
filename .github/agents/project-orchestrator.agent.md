@@ -498,7 +498,9 @@ If the specialist reports drift, re-invoke it in `sync` mode with the reported g
 After loop completion:
 > `[PHASE 2.5] Alignment converged after N iterations (<status>)` or `[PHASE 2.5] Alignment unresolved after 5 iterations — escalation required`
 
-### Phase 2.6 — Security & Compliance Gate (MANDATORY)
+### Phase 2.6 — Security & Compliance Gate (MANDATORY unless opted out)
+
+**Opt-out**: If `project-manifest.json → generation_options.runSecurityAudit` is `false` (set via portal checkbox or `runSecurityAudit: false` in `generation_options`), skip this phase entirely. Log: `[PHASE 2.6] Skipped — generation_options.runSecurityAudit=false (governance exception).` Record `phases.2_6_security_gate = { skipped: true, reason: "opted-out" }` in the manifest. This opt-out is intended for docs-only scaffolding spikes — never for production work.
 
 **Goal:** Every service and every Bicep module in the project satisfies the baseline security contract (no hardcoded secrets, Managed Identity only, authN/authZ on every non-public route, diagnostic settings wired, dependencies free of `high`/`critical` CVEs) and any compliance framework the BRD explicitly names (HIPAA, SOC 2, PCI DSS, GDPR). No project proceeds to Phase 2.7 with unresolved `critical` or `major` findings.
 
@@ -612,6 +614,9 @@ After loop completion:
 > `[PHASE 2.8] Scalability gate <passed|unresolved> after N iterations (cost_impact_notes: C)`
 
 ### Phase 3 — Infrastructure Validation & Self-Healing
+
+**Opt-out**: If `project-manifest.json → generation_options.generateInfra` is `false` (set via portal checkbox or `generateInfra: false` in `generation_options`), skip this phase entirely. Log: `[PHASE 3] Skipped — generation_options.generateInfra=false; no infra/ emitted.` Record `phases.3_infra_validation = { skipped: true, reason: "infra-not-generated" }` in the manifest and do NOT proceed to Phase 5 (deployment). The project is a docs + code deliverable only.
+
 **Delegate to**: `bicep-infrastructure-validator` **or** `terraform-infrastructure-validator` — select based on `iac_tool` from `project-manifest.json`.
 
 | `iac_tool` | Validator |

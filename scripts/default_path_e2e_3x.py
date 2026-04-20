@@ -182,6 +182,19 @@ def _alignment_checks(project_root: Path, manifest: dict) -> list[tuple[str, boo
         f".tf count={len(tf_files)}",
     ))
 
+    # Opt-in defaults: infra + security audit are on unless opted out.
+    gen_opts = manifest.get("generation_options") or {}
+    checks.append((
+        "default generateInfra is true",
+        gen_opts.get("generateInfra") is True,
+        f"got {gen_opts.get('generateInfra')!r}",
+    ))
+    checks.append((
+        "default runSecurityAudit is true",
+        gen_opts.get("runSecurityAudit") is True,
+        f"got {gen_opts.get('runSecurityAudit')!r}",
+    ))
+
     return checks
 
 
