@@ -4473,7 +4473,13 @@
                 const result = await response.json();
                 const runId = result.id;
 
-                setBrdStatus(`Run started (ID: ${runId}). Waiting for processing...`, false);
+                const shortId = String(runId).length > 12 ? String(runId).slice(0, 8) + '…' : String(runId);
+                setBrdStatus(
+                    `<span class="loading"></span> Run started ` +
+                    `(<code title="${escapeHtml(runId)}" style="user-select:all">${escapeHtml(shortId)}</code>). ` +
+                    `Waiting for processing...`,
+                    false
+                );
                 pollRunStatus(runId);
             } catch (error) {
                 setBrdStatus(`Error: ${error.message}`, true);
@@ -4484,43 +4490,75 @@
         }
 
         async function pollRunStatus(runId) {
-            let attempts = 0;
-            const maxAttempts = 180; // 6 minutes
-            const interval = 2000; // 2 seconds
+            const startedAt = Date.now();
+            const hardTimeoutMs = 6 * 60 * 1000; // 6 minutes
+            let consecutiveErrors = 0;
+            const maxConsecutiveErrors = 5;
+            let timer = null;
 
-            const timer = setInterval(async () => {
-                attempts++;
+            // Adaptive polling: 1s for first 10s, 2s for next minute, 5s after.
+            const nextInterval = () => {
+                const elapsedMs = Date.now() - startedAt;
+                if (elapsedMs < 10_000) return 1000;
+                if (elapsedMs < 70_000) return 2000;
+                return 5000;
+            };
+
+            const stopWithTimeout = () => {
+                if (timer) clearTimeout(timer);
+                setBrdStatus(
+                    `Timeout: run ${escapeHtml(runId)} did not complete within 6 minutes. ` +
+                    `It may still be running — refresh to check projects.`,
+                    true
+                );
+                document.getElementById('submit-brd-btn').disabled = false;
+            };
+
+            const tick = async () => {
+                if (Date.now() - startedAt > hardTimeoutMs) {
+                    stopWithTimeout();
+                    return;
+                }
 
                 try {
                     const response = await fetch(API_RUN_STATUS(runId));
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
                     const status = await response.json();
+                    consecutiveErrors = 0;
 
                     if (status.status === 'completed') {
-                        clearInterval(timer);
                         handleRunCompletion(status);
                         return;
                     }
 
                     if (status.status === 'failed') {
-                        clearInterval(timer);
-                        const failMsg = status.result?.message || status.stderr || 'Pipeline error — check server logs';
-                        setBrdStatus(`Failed: ${failMsg}`, true);
+                        const stderr = String(status.stderr || '');
+                        const isWatchdog = status.returnCode === -2 || /\[watchdog\]/i.test(stderr);
+                        const failMsg = isWatchdog
+                            ? 'Run timed out and was terminated by the pipeline watchdog (no progress within threshold). Check server logs with this run ID for details.'
+                            : (status.result?.message || stderr || 'Pipeline error — check server logs');
+                        setBrdStatus(`Failed: ${escapeHtml(failMsg)}`, true);
                         document.getElementById('submit-brd-btn').disabled = false;
                         return;
                     }
 
-                    const elapsed = Math.round(attempts * interval / 1000);
+                    const elapsed = Math.round((Date.now() - startedAt) / 1000);
                     setBrdStatus(renderRunProgress(status, elapsed), false);
                 } catch (error) {
-                    if (attempts >= maxAttempts) {
-                        clearInterval(timer);
-                        setBrdStatus(`Timeout: ${error.message}`, true);
+                    consecutiveErrors++;
+                    if (consecutiveErrors >= maxConsecutiveErrors) {
+                        if (timer) clearTimeout(timer);
+                        setBrdStatus(`Connection error: ${escapeHtml(error.message)}`, true);
                         document.getElementById('submit-brd-btn').disabled = false;
+                        return;
                     }
+                    // transient — keep polling
                 }
-            }, interval);
+
+                timer = setTimeout(tick, nextInterval());
+            };
+
+            tick();
         }
 
         function handleRunCompletion(status) {
@@ -4571,10 +4609,17 @@
             return `${slug}.md`;
         }
 
+        function formatElapsed(totalSeconds) {
+            const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+            const m = Math.floor(s / 60);
+            const rem = s % 60;
+            return m > 0 ? `${m}m ${rem}s` : `${rem}s`;
+        }
+
         function renderRunProgress(status, elapsedSeconds) {
             const runState = String(status?.status || 'running').toLowerCase();
             const stateLabel = runState.charAt(0).toUpperCase() + runState.slice(1);
-            return `<span class="loading"></span> ${stateLabel} (${elapsedSeconds}s)...`;
+            return `<span class="loading"></span> ${stateLabel} — ${formatElapsed(elapsedSeconds)} elapsed`;
         }
 
         function setBrdStatus(message, isError) {
@@ -4590,10 +4635,10 @@
                 toast.id = '_portal-toast';
                 toast.style.cssText = [
                     'position:fixed', 'z-index:9999',
-                    'padding:0.45rem 0.9rem', 'border-radius:6px', 'font-size:0.8rem',
+                    'padding:0.55rem 0.95rem', 'border-radius:6px', 'font-size:0.8rem',
                     'font-family:inherit', 'box-shadow:0 3px 10px rgba(0,0,0,0.22)',
-                    'max-width:280px', 'line-height:1.4', 'transition:opacity 0.3s',
-                    'pointer-events:none', 'white-space:nowrap',
+                    'max-width:360px', 'line-height:1.45', 'transition:opacity 0.3s',
+                    'pointer-events:none', 'white-space:normal', 'word-break:break-word',
                 ].join(';');
                 document.body.appendChild(toast);
             }
@@ -4602,7 +4647,7 @@
             toast.style.color = '#fff';
             toast.style.opacity = '1';
             if (anchorRect) {
-                const popW = 260;
+                const popW = 340;
                 let left = Math.round(anchorRect.left + anchorRect.width / 2 - popW / 2);
                 left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
                 const top = Math.round(anchorRect.top - 40);
