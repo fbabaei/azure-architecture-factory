@@ -1,8 +1,8 @@
 """E2E harness: run the .NET + Terraform BRD through the factory 3 times and
 verify the language + IaC agent registries emit the right artifacts deterministically.
 
-Mirrors mdr_e2e_3x.py but targets the dotnet + terraform code paths introduced
-by the scripts/language_agents + scripts/iac_agents packages.
+Peer of scripts/default_path_e2e_3x.py but targets the dotnet + terraform code
+paths exposed by the scripts/language_agents + scripts/iac_agents packages.
 
 The BRD is written inline (as a tempfile) so this harness is fully self-contained
 and does not depend on docs/intake/ (which is gitignored).
