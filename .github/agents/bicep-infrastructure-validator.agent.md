@@ -36,6 +36,25 @@ Your job is to:
 - Auditing for production readiness (pre-deploy) → `production-environment-advisor`.
 - Auditing observability posture → `project-observability-advisor`.
 
+## Language-Aware Compute Module Selection
+
+When the project manifest declares `implementation_language` (set by `project-orchestrator` from `BRD.implementation.language`), the validator uses that value to pick the correct compute module family. Every `module` reference in `projects/<slug>/infra/main.bicep` that targets a Container App MUST match the table below. If the wrong module is referenced, treat it as a fixable wiring error and rewrite the `module` path.
+
+| `implementation_language` | Correct compute module | Default container port | Health probe paths |
+|---------------------------|------------------------|------------------------|---------------------|
+| `python` (default, or absent) | `infra/modules/compute/containerapp.bicep` | 8000 | caller-provided |
+| `dotnet` | `infra/modules/compute/containerapp-dotnet.bicep` | 8080 | `/health`, `/health/ready` (module built-in) |
+| `java` / `go` / `node` | not yet supported — escalate via the validator's `blockers` output |
+
+**Validator behavior:**
+
+1. Read `projects/<slug>/project-manifest.json` (or orchestrator-provided input). Extract `implementation_language`. Default to `python` if absent.
+2. For each Container App module reference in `infra/`, confirm the path matches the language. If not, rewrite the `module ... './path/to/correct.bicep'` line, re-run `get_errors`, and record the swap in the fix log with category `language_module_mismatch`.
+3. Confirm `containerPort` aligns with the language default unless the BRD explicitly overrides.
+4. If a `dotnet` project references `containerapp.bicep`, the fix is: (a) swap the module path, (b) remove any caller-supplied `containerPort` that equals the Python default (8000), (c) ensure `appInsightsConnectionString` is wired when the project has an App Insights module.
+5. Do NOT auto-fix language mismatches in the reverse direction (.NET module on a Python project) — those indicate a deeper authoring error and MUST be flagged as a blocker for human review.
+
+
 ## Self-Healing Approach
 1. **Scan** — Read all `.bicep` and `.bicepparam` files in `infra/`.
 2. **Validate** — Run `get_errors` on each file to identify problems.

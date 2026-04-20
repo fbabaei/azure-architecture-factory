@@ -18,6 +18,7 @@ Reference guidance: [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md)
 - Reviewer:
 - Target workload type:
 - Target environment:
+- Implementation language: _(default `python`; accepted: `python`, `dotnet`; planned: `java`, `go`, `node`)_
 
 ## Weighted Scorecard
 

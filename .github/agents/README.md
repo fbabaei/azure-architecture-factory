@@ -21,9 +21,12 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 │   │                             OWNS: new services, new Bicep modules, tests, initial docs
 │   └── drawio-architecture-reader      helper: reads diagram, returns inventory
 │                                       (+ Phase 2.5 mode: inventory → canonical JSON)
-├── source-code-maintainer        Phase 2 follow-up + Phase 2.5/2.6/2.7/2.8/3.7 loops
+├── source-code-maintainer        Phase 2 follow-up + Phase 2.5/2.6/2.7/2.8/3.7 loops (Python)
 │                                 (modes: drift-check, inventory, error-handling-audit, scalability-audit, add-to-service, refactor, sync)
 │                                 OWNS: changes INSIDE existing services — never creates a new service
+├── lang-dotnet-implementer       Phase 2 + follow-up loops when BRD.implementation.language == "dotnet"
+│                                 (modes: scaffold, sync, add-to-service, refactor, drift-check)
+│                                 OWNS: ASP.NET Core 8 services under src/, xUnit tests, .NET Dockerfiles
 ├── [Phase 2.5] Alignment Convergence Loop — BRD↔diagram↔code 3-way diff (≥3 iterations)
 ├── security-compliance-auditor   Phase 2.6: read-only security + compliance audit
 │                                 OWNS: secrets, identity, authZ, CVEs, HIPAA/SOC2/PCI/GDPR

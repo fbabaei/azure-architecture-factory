@@ -2,7 +2,7 @@
 name: project-orchestrator
 description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, optional Azure deployment, and post-deployment observability, while maintaining requirement traceability across all stages. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
-agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, security-compliance-auditor, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
+agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, lang-dotnet-implementer, security-compliance-auditor, bicep-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
 user-invocable: true
 argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), agent runtime (runtime: local|agent-framework|auto — default auto), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal. For BRD updates on an existing project, pass update: true and slug: <existing-project-slug> — the orchestrator will diff the BRD, re-read the current architecture, regenerate the diagram, and apply targeted implementation changes."
 ---
@@ -408,20 +408,36 @@ Resolve the agent runtime choice before delegating. The `runtime` argument accep
 
 The factory classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) performs the same analysis and is the authoritative resolver when `auto` is passed. Record the resolved value in the manifest as `agent_runtime`.
 
-Instruct the agent:
+**Resolve implementation language.** Read `BRD.implementation.language` (accepts `python`, `dotnet`, `java`, `go`, `node`; default `python` when absent). Record the resolved value in the manifest as `implementation_language`. This value selects the language specialist and the Bicep compute module family for the rest of the pipeline:
+
+| Language | Implementer agent | Compute Bicep module |
+|----------|-------------------|----------------------|
+| `python` (default) | `azure-architecture-implementer` scaffolds; `source-code-maintainer` follows up | `infra/modules/compute/containerapp.bicep` |
+| `dotnet` | `lang-dotnet-implementer` scaffolds and maintains end-to-end | `infra/modules/compute/containerapp-dotnet.bicep` |
+| `java` / `go` / `node` | Not yet supported. Halt with an escalation block: "BRD requested `<lang>` but no specialist agent is registered. Add `lang-<lang>-implementer` before proceeding." |
+
+Instruct the agent (Python path):
 > "Read the diagram at `projects/<slug>/diagrams/<slug>.drawio` and companion notes at `projects/<slug>/diagrams/<slug>.md`. Scaffold modular Python microservices and Azure resource mappings. Place all service code under `projects/<slug>/src/`, Bicep infrastructure under `projects/<slug>/infra/`, and tests under `projects/<slug>/tests/`. Do not write outside the `projects/<slug>/` folder. Target agent runtime: `<resolved-runtime>` (local or agent-framework). If `agent-framework`, adopt the Agent Framework SDK runtime convention documented in `docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md` and copy the canonical files from `factory-templates/agent-framework/` into the project. If `local`, ship only the deterministic Python runtime and do not reference the SDK template. Return the service layout and Azure resource mapping."
+
+Instruct the agent (.NET path):
+> "project_path: `projects/<slug>`. mode: `scaffold`. Read the diagram and companion notes at `projects/<slug>/diagrams/`. Emit ASP.NET Core 8 (net8.0) services under `projects/<slug>/src/<service>/` following the `lang-dotnet-implementer` conventions. When generating Bicep for compute, reference `infra/modules/compute/containerapp-dotnet.bicep` — NOT the generic `containerapp.bicep`. Return the service layout, build status, and Azure resource mapping. If `dotnet build` fails on any service, revert that service and report the failure; do not commit a broken tree."
 
 After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
-- Log: `[PHASE 2] Implementation scaffolded → projects/<slug>/src/, projects/<slug>/infra/`
+- Log: `[PHASE 2] Implementation scaffolded (<implementation_language>) → projects/<slug>/src/, projects/<slug>/infra/`
 
-**Phase 2 follow-up — code/architecture drift check** (delegated to `source-code-maintainer`)
+**Phase 2 follow-up — code/architecture drift check** (delegated to the language specialist)
 
-After the implementer returns, invoke `source-code-maintainer` in `drift-check` mode to confirm every diagram component is represented in `src/` and vice versa:
+After the implementer returns, invoke the language specialist in `drift-check` mode to confirm every diagram component is represented in `src/` and vice versa. Choose the specialist based on `implementation_language`:
+
+- `python` → `source-code-maintainer`
+- `dotnet` → `lang-dotnet-implementer`
 
 > "project_path: `projects/<slug>`. mode: `drift-check`. Confirm the scaffolded code matches the diagram inventory. Report any drift; do not fix."
 
-If the maintainer reports drift, re-invoke it in `sync` mode with the reported gaps as `architecture_changes.added`. This catches components the implementer missed (common for shared libraries and cross-cutting services).
+If the specialist reports drift, re-invoke it in `sync` mode with the reported gaps as `architecture_changes.added`. This catches components the scaffolder missed (common for shared libraries and cross-cutting services).
+
+**Downstream agent handoff.** Every subsequent phase that references `source-code-maintainer` (Phase 2.5 alignment loop, Phase 2.7 error-handling gate, Phase 2.8 scalability gate, Phase 3.7 test convergence, Update Phase U4) MUST substitute the resolved language specialist. The agent contract (modes, output schema, dry-run support) is identical across specialists, so only the agent name changes.
 
 ### Phase 2.5 — Alignment Convergence Loop (MANDATORY)
 
