@@ -18,8 +18,9 @@ import threading
 import time
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen, Request
 from urllib.error import URLError
@@ -564,6 +565,70 @@ if ENTRA_TENANT_ID and ENTRA_CLIENT_ID:
 # Thread-safe run tracking
 RUNS = {}
 RUNS_LOCK = threading.Lock()
+
+# ── Run persistence (crash-safe) ──────────────────────────────────────────────
+# Runs are snapshotted to disk after every status transition so a container
+# restart does not orphan in-flight or recently-finished work. The file is
+# ignored by git (see .gitignore). Active runs (queued/running) are marked
+# "interrupted" on startup so the UI can surface them instead of pretending
+# they are still executing.
+_RUNS_STATE_PATH = pathlib.Path(os.environ.get(
+    "AAFACTORY_RUNS_STATE",
+    str(pathlib.Path(__file__).resolve().parent.parent / "logs" / "portal-runs.state.json"),
+))
+_RUNS_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _persist_runs_unlocked() -> None:
+    """Write RUNS to disk atomically. Caller must hold RUNS_LOCK."""
+    try:
+        tmp = _RUNS_STATE_PATH.with_suffix(".tmp")
+        tmp.write_text(json.dumps(RUNS, default=str), encoding="utf-8")
+        tmp.replace(_RUNS_STATE_PATH)
+    except Exception:  # noqa: BLE001
+        # Persistence is best-effort — never break a live request because
+        # the disk is full or the path is unwritable.
+        pass
+
+
+def persist_runs() -> None:
+    """Acquire the lock and snapshot RUNS to disk."""
+    with RUNS_LOCK:
+        _persist_runs_unlocked()
+
+
+def _restore_runs_on_startup() -> None:
+    """Load RUNS from disk at boot. Mark any queued/running entries as interrupted."""
+    if not _RUNS_STATE_PATH.exists():
+        return
+    try:
+        data = json.loads(_RUNS_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return
+    if not isinstance(data, dict):
+        return
+    now = datetime.utcnow().isoformat() + "Z"
+    with RUNS_LOCK:
+        for run_id, run in data.items():
+            if not isinstance(run, dict):
+                continue
+            if run.get("status") in {"queued", "running"}:
+                run["status"] = "interrupted"
+                run["finishedAt"] = now
+                run["stderr"] = (run.get("stderr") or "") + "\n[portal restart] run interrupted by container restart"
+            RUNS[run_id] = run
+        _persist_runs_unlocked()
+
+
+# ── Bounded pipeline worker pool ──────────────────────────────────────────────
+# Every BRD submission used to spawn a raw daemon thread, which meant 50
+# concurrent submissions spawned 50 threads competing for CPU. A bounded pool
+# queues extra submissions instead of saturating the container.
+_PIPELINE_MAX_WORKERS = int(os.environ.get("AAFACTORY_PIPELINE_MAX_WORKERS", "4"))
+_PIPELINE_POOL = ThreadPoolExecutor(
+    max_workers=_PIPELINE_MAX_WORKERS,
+    thread_name_prefix="aaf-pipeline",
+)
 
 # ── Issued-token store (in-memory, usage-counted) ─────────────────────────────
 # Structure: { jti: { "uses": int, "max_uses": int, "exp": float, "sub": str, "purpose": str } }
@@ -1327,13 +1392,15 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "owner": owner,
             }
 
-        # Spawn pipeline worker thread
-        thread = threading.Thread(
-            target=self._run_pipeline,
-            args=(run_id, str(brd_path), generation_options or {}, owner),
-            daemon=True,
+        # Snapshot queued state and dispatch to bounded pipeline pool
+        persist_runs()
+        _PIPELINE_POOL.submit(
+            self._run_pipeline,
+            run_id,
+            str(brd_path),
+            generation_options or {},
+            owner,
         )
-        thread.start()
 
         self._send_json(
             {
@@ -1350,6 +1417,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         with RUNS_LOCK:
             RUNS[run_id]["status"] = "running"
             RUNS[run_id]["startedAt"] = datetime.utcnow().isoformat() + "Z"
+            _persist_runs_unlocked()
 
         try:
             output = process_brd_document(
@@ -1408,6 +1476,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                         "result": output,
                     }
                 )
+                _persist_runs_unlocked()
 
             logger.info(f"Pipeline completed for run {run_id}: returnCode=0")
         except Exception as e:
@@ -1422,6 +1491,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                         "result": {"status": "failed", "message": str(e)},
                     }
                 )
+                _persist_runs_unlocked()
 
     def _handle_brd_upload(self):
         """Handle multipart/form-data BRD file upload."""
@@ -1964,7 +2034,13 @@ def main():
         except Exception as exc:  # noqa: BLE001
             logger.warning("Blob sync-down failed: %s", exc)
 
-    httpd = HTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
+    # ThreadingHTTPServer handles concurrent HTTP requests instead of serializing
+    # them. Previously a single slow request blocked every other client on the
+    # TCP accept loop; this is particularly visible under burst load or when
+    # several users poll status at once.
+    _restore_runs_on_startup()
+    httpd = ThreadingHTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
+    httpd.daemon_threads = True
     httpd.allow_reuse_address = True
     display_host = "localhost" if BIND_ADDRESS in {"0.0.0.0", "::"} else BIND_ADDRESS
 
