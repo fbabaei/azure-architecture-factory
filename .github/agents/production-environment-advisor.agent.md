@@ -14,6 +14,19 @@ Your job is to inspect the repository and identify what a real production enviro
 - DO NOT assume local-development settings are production-safe.
 - DO NOT stop at Python package requirements; include infrastructure, identity, networking, storage, observability, and operational requirements.
 
+## Owns vs. Does Not Own
+
+**Owns (READ-ONLY advisory):**
+- Listing runtime, networking, identity, secret, build, deployment, and monitoring **prerequisites** a project needs before it can run in a real production environment.
+- Flagging missing prerequisites so the orchestrator or the user can decide how to close them.
+
+**Does NOT own:**
+- Applying security or compliance fixes → `security-compliance-auditor` audits, fixers dispatched by the orchestrator.
+- Applying scalability or performance fixes → Phase 2.8 gate (`source-code-maintainer` / `bicep-infrastructure-validator`).
+- Applying error-handling fixes → Phase 2.7 gate.
+- Modifying any source code, Bicep, or docs. This agent is read-only.
+- Post-deployment analysis (cost, observability, traceability) → the respective advisor agents.
+
 ## Approach
 1. Inspect dependency manifests, environment templates, service entry points, and documentation.
 2. Identify runtime requirements such as Python version, OS assumptions, background jobs, network access, and secret dependencies.
