@@ -20,6 +20,8 @@ RUN useradd -m -u 1000 portal && \
 # Copy application code
 COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/generate_guide_report.py scripts/blob_sync.py scripts/telemetry.py scripts/
 COPY scripts/factory_runtime/ scripts/factory_runtime/
+COPY scripts/language_agents/ scripts/language_agents/
+COPY scripts/iac_agents/ scripts/iac_agents/
 COPY factory-portal.html ./
 COPY README.md ./
 COPY docs/ docs/
