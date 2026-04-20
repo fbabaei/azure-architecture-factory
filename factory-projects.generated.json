@@ -1,6 +1,25 @@
 {
-  "generatedAt": "2026-04-15T21:24:50.733266Z",
+  "generatedAt": "2026-04-16T17:46:52.562243Z",
   "projects": [
+    {
+      "slug": "mdr-support-20260416174652",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-16T17:46:52.562243Z",
+      "options": {
+        "enableObservability": false,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260416174652/README.md",
+        "deploy": "projects/mdr-support-20260416174652/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260416174652/diagrams/mdr-support-20260416174652.drawio",
+        "architectureOverview": "projects/mdr-support-20260416174652/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260416174652/docs/traceability-matrix.md"
+      },
+      "runLog": "outputs/brd-runs/20260416-174652-mdr-support.log"
+    },
     {
       "slug": "field-service-intelligence-platform-20260415212450",
       "title": "Field Service Intelligence Platform",

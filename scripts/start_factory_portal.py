@@ -1060,20 +1060,26 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """
         principal = self._decoded_principal()
         if principal:
-            preferred_claim_types = {
+            # Prefer claims in a deterministic priority order so that for B2B
+            # guests we land on the user's original email (preferred_username /
+            # email) rather than the mangled `user_domain.com#EXT#@tenant` UPN.
+            claim_priority = [
                 "preferred_username",
-                "upn",
-                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
                 "email",
                 "emails",
                 "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
-            }
+                "upn",
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn",
+            ]
+            by_type: dict[str, str] = {}
             for claim in principal.get("claims") or []:
                 typ = (claim.get("typ") or claim.get("type") or "").lower()
-                if typ in preferred_claim_types:
-                    val = claim.get("val") or claim.get("value")
-                    if val and "@" in str(val):
-                        return str(val).strip()
+                val = claim.get("val") or claim.get("value")
+                if typ and val and "@" in str(val) and typ not in by_type:
+                    by_type[typ] = str(val).strip()
+            for typ in claim_priority:
+                if typ in by_type:
+                    return by_type[typ]
             # Some principals expose the UPN at top-level.
             for key in ("userPrincipalName", "userDetails"):
                 val = principal.get(key)

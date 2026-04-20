@@ -24,6 +24,10 @@ COPY factory-portal.html ./
 COPY README.md ./
 COPY docs/ docs/
 COPY assets/ assets/
+# Bake generated project folders into the image so detail pages work
+# (README, diagrams, /api/projects/*/files). Per-user visibility is enforced
+# at request time via .portal-owners.json + Easy Auth principal headers.
+COPY projects/ projects/
 # Snapshot of the project feed baked into the image at build time
 COPY factory-projects.generated.json ./
 # Per-user ownership allowlist (slug → UPNs). Consumed when

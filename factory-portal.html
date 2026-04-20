@@ -4970,7 +4970,7 @@
                     <div class="project-links">
                         ${links.readme ? `<a href="${links.readme}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview(\'${links.readme}\', \'${safeTitle} — README\'); return false;">📖 README</a>` : ''}
                         ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
-                        ${architectureOverview ? `<a href="${architectureOverview}" class="project-link">🧭 Architecture Overview</a>` : ''}
+                        ${architectureOverview ? `<a href="${architectureOverview}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview('${architectureOverview}', '${safeTitle} — Architecture Overview'); return false;">🧭 Architecture Overview</a>` : ''}
                                 <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
                         <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
                                 <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;" title="Open this project in GitHub Copilot to run or extend it locally in VS Code">&#9655; Open in GitHub Copilot</a>
