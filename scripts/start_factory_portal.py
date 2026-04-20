@@ -1011,6 +1011,33 @@ def _sanitize_network_tier(value) -> str:
     return candidate if candidate in _VALID_NETWORK_TIERS else "public"
 
 
+def _validate_brd_content(raw: object) -> tuple[str | None, str | None]:
+    """Validate a BRD content payload.
+
+    Returns ``(content, None)`` on success or ``(None, error_message)`` on
+    failure. Enforces: must be a string, UTF-8 decodable (already, since we
+    got a str), no NUL or other C0 control bytes (except tab/newline/CR),
+    and within the configured min/max length bounds after stripping.
+    """
+    if not isinstance(raw, str):
+        return None, "content must be a string"
+    content = raw.strip()
+    if not content:
+        return None, "content is empty"
+    # Reject embedded NUL and other C0 control characters that are neither
+    # whitespace nor standard line terminators. These frequently appear in
+    # obfuscated payloads and can break downstream tooling.
+    for ch in content:
+        code = ord(ch)
+        if code < 0x20 and ch not in ("\t", "\n", "\r"):
+            return None, "content contains disallowed control characters"
+    if len(content) < MIN_BRD_CONTENT_CHARS:
+        return None, f"BRD content too short (min {MIN_BRD_CONTENT_CHARS} characters)"
+    if len(content) > MAX_BRD_CONTENT_CHARS:
+        return None, f"BRD content too long (max {MAX_BRD_CONTENT_CHARS} characters)"
+    return content, None
+
+
 class FactoryPortalHandler(SimpleHTTPRequestHandler):
     """HTTP handler for factory portal with BRD intake API"""
 
@@ -1703,6 +1730,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """Handle BRD intake submission (JSON body)"""
         if not self._check_intake_rate_limit():
             return
+        content_type = self.headers.get("Content-Type", "")
+        # Accept application/json with optional charset parameter. Reject
+        # other content types outright so form posts can't bypass the JSON
+        # schema check below.
+        if not content_type.lower().split(";", 1)[0].strip() == "application/json":
+            self._send_json({"error": "Expected Content-Type: application/json"}, 415)
+            return
         content_length = self._safe_content_length()
         if content_length is None:
             return
@@ -1732,26 +1766,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         raw_content = payload.get("content", "")
-        if not isinstance(raw_content, str):
-            self._send_json({"error": "content must be a string"}, 400)
+        content, err = _validate_brd_content(raw_content)
+        if err is not None:
+            self._send_json({"error": err}, 400)
             return
-        content = raw_content.strip()
 
         if not file_name or not content:
             self._send_json({"error": "Missing fileName or content"}, 400)
-            return
-
-        if len(content) < MIN_BRD_CONTENT_CHARS:
-            self._send_json(
-                {"error": f"BRD content too short (min {MIN_BRD_CONTENT_CHARS} characters)"},
-                400,
-            )
-            return
-        if len(content) > MAX_BRD_CONTENT_CHARS:
-            self._send_json(
-                {"error": f"BRD content too long (max {MAX_BRD_CONTENT_CHARS} characters)"},
-                400,
-            )
             return
 
         generation_options = {
@@ -1940,13 +1961,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            content = brd_field["data"].decode("utf-8")
+            raw_decoded = brd_field["data"].decode("utf-8")
         except UnicodeDecodeError:
             self._send_json({"error": "BRD file must be UTF-8 encoded text"}, 400)
             return
 
-        if not content.strip():
-            self._send_json({"error": "Uploaded BRD file is empty"}, 400)
+        content, err = _validate_brd_content(raw_decoded)
+        if err is not None:
+            self._send_json({"error": err}, 400)
             return
 
         uploaded_filename = brd_field.get("filename") or "brd.md"
