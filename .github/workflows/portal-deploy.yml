@@ -34,8 +34,22 @@ env:
   CONTAINER_APP_NAME: arch-factory-dev-portal
 
 jobs:
+  test:
+    name: Portal tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pytest
+        run: python -m pip install --upgrade pip && pip install pytest
+      - name: Run portal test suite
+        run: python -m pytest tests/portal -v --tb=short
+
   build-and-deploy:
     name: Build & deploy portal
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       id-token: write   # Required for OIDC federated credential (no stored password)
@@ -76,9 +90,37 @@ jobs:
             --output none
 
       - name: Print portal URL
+        id: portal-url
         run: |
-          az containerapp show \
+          FQDN=$(az containerapp show \
             --name "${{ env.CONTAINER_APP_NAME }}" \
             --resource-group "${{ env.RESOURCE_GROUP }}" \
             --query "properties.configuration.ingress.fqdn" \
-            --output tsv
+            --output tsv)
+          echo "https://${FQDN}"
+          echo "fqdn=${FQDN}" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test deployed revision
+        env:
+          FQDN: ${{ steps.portal-url.outputs.fqdn }}
+        run: |
+          set -euo pipefail
+          BASE="https://${FQDN}"
+          echo "Waiting for new revision to serve traffic..."
+          for i in $(seq 1 24); do
+            body=$(curl -fsS --max-time 10 "${BASE}/health" || true)
+            if echo "$body" | grep -q '"status": "ok"'; then
+              echo "/health OK on attempt $i"
+              echo "$body"
+              break
+            fi
+            if [ "$i" = "24" ]; then
+              echo "Timed out waiting for /health" >&2
+              echo "Last body: $body" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "Probing /ready..."
+          curl -fsS --max-time 15 "${BASE}/ready" | tee /tmp/ready.json
+          python3 -c "import json,sys; d=json.load(open('/tmp/ready.json')); assert d.get('status')=='ok', d; print('ready OK')"
