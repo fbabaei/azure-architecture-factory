@@ -44,7 +44,19 @@ def process_brd_document(
     success_criteria = _extract_success_criteria(brd_text)
     capabilities = _infer_capabilities(brd_text)
     runtime_recommendation = _classify_runtime(brd_text)
-    slug = f"{_slugify(title)}-{timestamp}"
+    base_slug = f"{_slugify(title)}-{timestamp}"
+    # Collision guard: two BRD runs within the same second must not overwrite
+    # each other. If the target folder already exists, append a short suffix
+    # derived from the run_id (stable across the same run, unique across runs).
+    slug = base_slug
+    if (factory_repo_root / "projects" / slug).exists():
+        suffix = (run_id or "").replace("-", "")[-6:] or generated_at.strftime("%f")[:6]
+        slug = f"{base_slug}-{suffix}"
+        # Paranoia: if that ALSO exists, walk a counter until we find a free slot.
+        counter = 1
+        while (factory_repo_root / "projects" / slug).exists():
+            slug = f"{base_slug}-{suffix}-{counter}"
+            counter += 1
 
     project_root = factory_repo_root / "projects" / slug
     diagrams_dir = project_root / "diagrams"
