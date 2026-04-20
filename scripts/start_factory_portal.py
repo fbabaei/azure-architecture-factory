@@ -196,6 +196,78 @@ _INTAKE_LIMITER = _SlidingWindowRateLimiter(
 )
 
 
+# ---------------------------------------------------------------------------
+# Readiness-probe helpers
+# ---------------------------------------------------------------------------
+READINESS_BLOB_CACHE_TTL_SECONDS = 30
+_READINESS_BLOB_CACHE: dict = {"expiresAt": 0.0, "value": None}
+_READINESS_BLOB_CACHE_LOCK = threading.Lock()
+
+
+def _probe_intake_writable(intake_dir: pathlib.Path) -> bool:
+    """Return True if intake_dir can be created, written to, and cleaned up."""
+    try:
+        intake_dir.mkdir(parents=True, exist_ok=True)
+        probe = intake_dir / f".readiness-probe-{os.getpid()}"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+        return True
+    except Exception:
+        return False
+
+
+def _otel_enabled() -> bool:
+    """Return True if the OpenTelemetry exporter was successfully initialized."""
+    try:
+        import telemetry  # local module
+        return bool(getattr(telemetry, "telemetry_enabled", False))
+    except Exception:
+        return False
+
+
+def _probe_blob_storage_cached() -> dict:
+    """HEAD the configured blob container. Result cached for 30s to keep the
+    readiness probe cheap and avoid hammering storage on every Kubernetes tick.
+    """
+    now = time.monotonic()
+    with _READINESS_BLOB_CACHE_LOCK:
+        cached = _READINESS_BLOB_CACHE.get("value")
+        if cached is not None and _READINESS_BLOB_CACHE["expiresAt"] > now:
+            return cached
+
+    result: dict = {"ok": False, "checkedAt": _utcnow_iso()}
+    try:
+        import urllib.request
+        account = os.environ.get("FACTORY_PORTAL_BLOB_ACCOUNT", "").strip()
+        container = os.environ.get("FACTORY_PORTAL_BLOB_CONTAINER", "portal-state").strip() or "portal-state"
+        if not account:
+            result["error"] = "no account configured"
+        else:
+            # Unauthenticated HEAD — we only care that the endpoint reachable.
+            # A 401/403 still proves storage DNS + TLS + TCP are healthy.
+            url = f"https://{account}.blob.core.windows.net/{container}?restype=container"
+            req = urllib.request.Request(url, method="HEAD")
+            try:
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    result["ok"] = True
+                    result["statusCode"] = resp.status
+            except urllib.error.HTTPError as http_exc:
+                # 401/403 = reachable but we're not authorized (expected).
+                if http_exc.code in (401, 403, 404):
+                    result["ok"] = True
+                    result["statusCode"] = http_exc.code
+                else:
+                    result["statusCode"] = http_exc.code
+                    result["error"] = f"HTTP {http_exc.code}"
+    except Exception as exc:  # noqa: BLE001 - probe must never crash caller
+        result["error"] = f"{type(exc).__name__}: {exc}"
+
+    with _READINESS_BLOB_CACHE_LOCK:
+        _READINESS_BLOB_CACHE["value"] = result
+        _READINESS_BLOB_CACHE["expiresAt"] = now + READINESS_BLOB_CACHE_TTL_SECONDS
+    return result
+
+
 # Optional per-deployment project visibility allowlist. Comma-separated slugs.
 # When set, the portal only exposes (feed + file routes) the listed projects.
 # When unset or empty, all projects under projects/ are visible (local default).
@@ -736,10 +808,77 @@ _TOKEN_REQUESTS: list = []
 _TOKEN_REQUESTS_LOCK = threading.Lock()
 
 # Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s: %(message)s"
-)
+class _JsonFormatter(logging.Formatter):
+    """Emit one JSON object per log record.
+
+    Fields: ts (ISO-8601 UTC), level, logger, msg. Any attributes added via
+    `logger.info("...", extra={...})` are merged as top-level keys, so calls
+    like `logger.info("run started", extra={"run_id": rid, "owner": upn})`
+    produce `{"ts": ..., "msg": "run started", "run_id": ..., "owner": ...}`.
+    Exceptions are rendered as a single-string `exc` field.
+    """
+
+    # Attributes stdlib LogRecord sets itself; anything outside this set is
+    # considered an `extra` key contributed by the caller.
+    _RESERVED = {
+        "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
+        "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
+        "created", "msecs", "relativeCreated", "thread", "threadName",
+        "processName", "process", "message", "asctime", "taskName",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict = {
+            "ts": datetime.fromtimestamp(record.created, tz=UTC)
+                .replace(tzinfo=None).isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "msg": record.getMessage(),
+        }
+        for key, value in record.__dict__.items():
+            if key in self._RESERVED or key.startswith("_"):
+                continue
+            # Best-effort serialization; fall back to repr.
+            try:
+                json.dumps(value)
+            except (TypeError, ValueError):
+                value = repr(value)
+            payload[key] = value
+        if record.exc_info:
+            payload["exc"] = self.formatException(record.exc_info)
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def _configure_logging() -> None:
+    level_name = os.environ.get("AAFACTORY_LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+
+    # Auto-enable JSON in container environments (ACA sets CONTAINER_APP_NAME)
+    # unless explicitly overridden.
+    json_env = os.environ.get("AAFACTORY_LOG_JSON", "").strip().lower()
+    if json_env in ("1", "true", "yes"):
+        use_json = True
+    elif json_env in ("0", "false", "no"):
+        use_json = False
+    else:
+        use_json = bool(os.environ.get("CONTAINER_APP_NAME", "").strip())
+
+    handler = logging.StreamHandler()
+    if use_json:
+        handler.setFormatter(_JsonFormatter())
+    else:
+        handler.setFormatter(
+            logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
+        )
+    root = logging.getLogger()
+    # Clear prior handlers so repeated calls (tests) don't stack output.
+    for existing in list(root.handlers):
+        root.removeHandler(existing)
+    root.addHandler(handler)
+    root.setLevel(level)
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -2173,14 +2312,37 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         )
 
     def _handle_ready(self):
-        """Readiness probe that verifies local portal assets are available."""
+        """Readiness probe verifying portal can actually serve intake traffic.
+
+        Critical checks (gate 503):
+          - portalHtml: factory-portal.html is present
+          - projectsDir: projects/ directory exists
+          - intakeDirWritable: docs/intake/ can be written + deleted
+
+        Informational (reported but do not gate):
+          - otelEnabled: OpenTelemetry exporter initialized
+          - rateLimiterActive: always True when reached (proves module loaded)
+          - blobStorage: cached HEAD probe against container when BLOB_ENABLED
+        """
         portal_file = FACTORY_REPO_ROOT / "factory-portal.html"
         projects_dir = FACTORY_REPO_ROOT / "projects"
-        checks = {
+        intake_dir = FACTORY_REPO_ROOT / "docs" / "intake"
+
+        checks: dict = {
             "portalHtml": portal_file.is_file(),
             "projectsDir": projects_dir.is_dir(),
+            "intakeDirWritable": _probe_intake_writable(intake_dir),
         }
-        ready = all(checks.values())
+        critical_ok = all(checks.values())
+
+        info: dict = {
+            "otelEnabled": _otel_enabled(),
+            "rateLimiterActive": _INTAKE_LIMITER is not None,
+        }
+        if blob_sync.BLOB_ENABLED:
+            info["blobStorage"] = _probe_blob_storage_cached()
+
+        ready = critical_ok
         status = 200 if ready else 503
         return self._send_json(
             {
@@ -2189,6 +2351,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "probe": "readiness",
                 "timeUtc": _utcnow_iso(),
                 "checks": checks,
+                "info": info,
             },
             status,
         )
