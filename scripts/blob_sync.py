@@ -41,6 +41,51 @@ _IMDS_ENDPOINT = os.environ.get(
 ) or "http://169.254.169.254/metadata/identity/oauth2/token"
 _IMDS_HEADER = os.environ.get("IDENTITY_HEADER", "")  # Container Apps secret header
 
+# Retry config for transient blob failures. Defaults balance recovery speed
+# against overall request latency — 3 tries with 0.5s/1s/2s backoff means a
+# pathological call returns after ~3.5s instead of failing immediately.
+_MAX_RETRIES = int(os.environ.get("AAFACTORY_BLOB_MAX_RETRIES", "3"))
+_RETRY_BASE_SECONDS = float(os.environ.get("AAFACTORY_BLOB_RETRY_BASE_SEC", "0.5"))
+# HTTP status codes worth retrying. 401/403 are not retried — they are auth
+# config problems that won't resolve by retrying. 404 is semantically valid
+# ("blob not found") and is handled by callers.
+_RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
+
+
+def _is_retryable_exception(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in _RETRYABLE_STATUS
+    if isinstance(exc, urllib.error.URLError):
+        return True
+    if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+        return True
+    return False
+
+
+def _with_retry(operation: str, fn):
+    """Invoke fn() with bounded exponential backoff on transient failures.
+
+    Returns fn()'s result on success; re-raises the final exception otherwise.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001 - we re-raise below
+            last_exc = exc
+            if attempt >= _MAX_RETRIES or not _is_retryable_exception(exc):
+                raise
+            delay = _RETRY_BASE_SECONDS * (2 ** (attempt - 1))
+            logger.warning(
+                "blob.%s attempt %d/%d failed (%s); retrying in %.2fs",
+                operation, attempt, _MAX_RETRIES, exc, delay,
+            )
+            time.sleep(delay)
+    # Unreachable; the loop always returns or raises.
+    assert last_exc is not None
+    raise last_exc
+
+
 # ---------------------------------------------------------------------------
 # Token cache
 
@@ -108,9 +153,13 @@ def _list_blobs(prefix: str = "") -> list[str]:
             params["marker"] = marker
         url = (f"https://{BLOB_ACCOUNT}.blob.core.windows.net/"
                f"{BLOB_CONTAINER}?{urllib.parse.urlencode(params)}")
-        req = urllib.request.Request(url, headers=_auth_headers())
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            body = resp.read()
+
+        def _do_list():
+            req = urllib.request.Request(url, headers=_auth_headers())
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.read()
+
+        body = _with_retry("list", _do_list)
         root = ET.fromstring(body)
         for blob in root.iter("Blob"):
             name_el = blob.find("Name")
@@ -124,24 +173,28 @@ def _list_blobs(prefix: str = "") -> list[str]:
 
 
 def _download_blob(blob_name: str) -> bytes:
-    req = urllib.request.Request(_blob_url(blob_name), headers=_auth_headers())
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return resp.read()
+    def _do_download():
+        req = urllib.request.Request(_blob_url(blob_name), headers=_auth_headers())
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return resp.read()
+    return _with_retry("download", _do_download)
 
 
 def _upload_blob(blob_name: str, data: bytes, content_type: str = "application/octet-stream") -> None:
-    req = urllib.request.Request(
-        _blob_url(blob_name),
-        data=data,
-        method="PUT",
-        headers=_auth_headers({
-            "x-ms-blob-type": "BlockBlob",
-            "Content-Type": content_type,
-            "Content-Length": str(len(data)),
-        }),
-    )
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        resp.read()
+    def _do_upload():
+        req = urllib.request.Request(
+            _blob_url(blob_name),
+            data=data,
+            method="PUT",
+            headers=_auth_headers({
+                "x-ms-blob-type": "BlockBlob",
+                "Content-Type": content_type,
+                "Content-Length": str(len(data)),
+            }),
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            resp.read()
+    _with_retry("upload", _do_upload)
 
 
 def _delete_blob(blob_name: str) -> None:

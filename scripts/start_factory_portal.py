@@ -20,7 +20,7 @@ import uuid
 import zipfile
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 UTC = timezone.utc
@@ -795,6 +795,101 @@ _PIPELINE_POOL = ThreadPoolExecutor(
     max_workers=_PIPELINE_MAX_WORKERS,
     thread_name_prefix="aaf-pipeline",
 )
+
+# ── Stuck-run watchdog ────────────────────────────────────────────────────────
+# A pipeline run whose worker thread dies (segfault, OOM, process SIGKILL)
+# leaves its RUNS entry in "running" forever because only the happy path
+# transitions the status. The watchdog scans periodically and marks any run
+# whose startedAt is older than the threshold as "failed" with a clear
+# stderr marker, so the UI surfaces it instead of spinning forever.
+_PIPELINE_STUCK_MINUTES = int(os.environ.get("AAFACTORY_PIPELINE_STUCK_MINUTES", "30"))
+_PIPELINE_WATCHDOG_INTERVAL_SECONDS = int(
+    os.environ.get("AAFACTORY_PIPELINE_WATCHDOG_INTERVAL_SECONDS", "60")
+)
+_PIPELINE_WATCHDOG_STARTED = False
+_PIPELINE_WATCHDOG_LOCK = threading.Lock()
+
+
+def _parse_iso_z(stamp: str) -> datetime | None:
+    """Parse our _utcnow_iso() output back into a tz-aware UTC datetime."""
+    if not isinstance(stamp, str) or not stamp.endswith("Z"):
+        return None
+    try:
+        return datetime.fromisoformat(stamp[:-1]).replace(tzinfo=UTC)
+    except Exception:
+        return None
+
+
+def _sweep_stuck_runs(now_utc: datetime | None = None) -> int:
+    """Mark runs stuck in queued/running past the threshold as failed.
+
+    Returns the number of runs transitioned. Called by the watchdog thread
+    and directly by unit tests.
+    """
+    now_utc = now_utc or datetime.now(UTC)
+    threshold = now_utc - timedelta(minutes=_PIPELINE_STUCK_MINUTES)
+    transitioned = 0
+    with RUNS_LOCK:
+        for run_id, run in RUNS.items():
+            if not isinstance(run, dict):
+                continue
+            if run.get("status") not in {"queued", "running"}:
+                continue
+            anchor_raw = run.get("startedAt") or run.get("createdAt")
+            anchor = _parse_iso_z(anchor_raw) if anchor_raw else None
+            if anchor is None or anchor >= threshold:
+                continue
+            logger.warning(
+                "Stuck run detected: %s status=%s anchor=%s minutes=%d",
+                run_id, run.get("status"), anchor_raw, _PIPELINE_STUCK_MINUTES,
+            )
+            run["status"] = "failed"
+            run["finishedAt"] = _utcnow_iso()
+            run["returnCode"] = -2
+            run["stderr"] = (
+                (run.get("stderr") or "")
+                + f"\n[watchdog] Run exceeded {_PIPELINE_STUCK_MINUTES} minutes "
+                  "without completion — marked failed."
+            )
+            if not isinstance(run.get("result"), dict):
+                run["result"] = {}
+            run["result"].setdefault(
+                "message",
+                f"Run exceeded {_PIPELINE_STUCK_MINUTES}-minute watchdog threshold.",
+            )
+            run["result"].setdefault("status", "failed")
+            transitioned += 1
+        if transitioned:
+            _persist_runs_unlocked()
+    return transitioned
+
+
+def _watchdog_loop() -> None:
+    while True:
+        try:
+            time.sleep(_PIPELINE_WATCHDOG_INTERVAL_SECONDS)
+            n = _sweep_stuck_runs()
+            if n:
+                logger.info("Watchdog transitioned %d stuck run(s) to failed", n)
+        except Exception as exc:  # noqa: BLE001 - must never die
+            logger.warning("Watchdog iteration failed: %s", exc)
+
+
+def _start_watchdog() -> None:
+    """Start the stuck-run watchdog thread once per process."""
+    global _PIPELINE_WATCHDOG_STARTED
+    with _PIPELINE_WATCHDOG_LOCK:
+        if _PIPELINE_WATCHDOG_STARTED:
+            return
+        _PIPELINE_WATCHDOG_STARTED = True
+    t = threading.Thread(
+        target=_watchdog_loop, name="aaf-watchdog", daemon=True
+    )
+    t.start()
+    logger.info(
+        "Pipeline watchdog started (interval=%ds, stuck-threshold=%dm)",
+        _PIPELINE_WATCHDOG_INTERVAL_SECONDS, _PIPELINE_STUCK_MINUTES,
+    )
 
 # ── Issued-token store (in-memory, usage-counted) ─────────────────────────────
 # Structure: { jti: { "uses": int, "max_uses": int, "exp": float, "sub": str, "purpose": str } }
@@ -2394,6 +2489,7 @@ def main():
     # TCP accept loop; this is particularly visible under burst load or when
     # several users poll status at once.
     _restore_runs_on_startup()
+    _start_watchdog()
     httpd = ThreadingHTTPServer((BIND_ADDRESS, PORT), FactoryPortalHandler)
     httpd.daemon_threads = True
     httpd.allow_reuse_address = True
