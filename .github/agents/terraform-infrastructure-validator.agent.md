@@ -26,6 +26,8 @@ Your job is to:
 
 Before doing ANY work, read `projects/<slug>/project-manifest.json` and confirm `iac_tool == "terraform"`.
 
+- If `iac_tool == "disabled"` (the caller set `generation_options.generateInfra=false`), STOP and respond:
+  > "This project opted out of infrastructure generation (`iac_tool: disabled`). There is no `infra/` to validate. Skipping Phase 3."
 - If `iac_tool == "bicep"` (or `iac_tool` is absent and `infra/main.bicep` exists), STOP and respond:
   > "This project uses Bicep (`iac_tool: bicep`). Re-route to `bicep-infrastructure-validator`."
 - If `iac_tool` is any other value, STOP and escalate to the orchestrator with a blocker.

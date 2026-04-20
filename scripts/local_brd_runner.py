@@ -135,7 +135,7 @@ def process_brd_document(
         "iacTool": iac_agent.name if generate_infra else "disabled",
     }
 
-    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier))
+    _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier, generate_infra))
     _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
     _write_text(docs_dir / "delivery-milestones.md", _build_delivery_milestones(enable_observability))
     _write_text(docs_dir / "success-criteria.md", _build_success_criteria(success_criteria))
@@ -408,7 +408,7 @@ def _update_project_feed(feed_path: Path, generated_at: str, project_record: dic
     _write_json(feed_path, payload)
 
 
-def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool, network_tier: str = "public") -> str:
+def _build_architecture_overview(title: str, requirements: list[str], capabilities: dict[str, bool], enable_observability: bool, network_tier: str = "public", generate_infra: bool = True) -> str:
     capability_lines = [
         f"- Azure OpenAI: {'Yes' if capabilities['openai'] else 'Not explicitly requested'}",
         f"- Microsoft Copilot: {'Yes' if capabilities['copilot'] else 'Not explicitly requested'}",
@@ -442,6 +442,16 @@ def _build_architecture_overview(title: str, requirements: list[str], capabiliti
             "  - Requires VPN Gateway or ExpressRoute for developer access"
         ),
     }.get(network_tier, f"- **Network Tier**: {network_tier}")
+    infra_section = (
+        "Infrastructure-as-Code artifacts are emitted under `infra/`."
+        if generate_infra
+        else (
+            "Infrastructure-as-Code generation was **opted out** for this run (`generateInfra=false`). "
+            "The `infra/` folder is intentionally absent; Phase 3 (infra validation) and Phase 5 (deployment) "
+            "are skipped. Re-run the BRD with the *Generate Azure infrastructure* option enabled to produce "
+            "deployable Bicep or Terraform."
+        )
+    )
     return (
         f"# {title} - Architecture Overview\n\n"
         "## Target Architecture\n"
@@ -449,6 +459,7 @@ def _build_architecture_overview(title: str, requirements: list[str], capabiliti
         f"## Requirement Signals\n{requirement_lines}\n\n"
         "## Recommended Building Blocks\n" + "\n".join(building_blocks) + "\n\n"
         f"## Network Topology\n{network_section}\n\n"
+        f"## Infrastructure-as-Code\n{infra_section}\n\n"
         "## Capability Coverage\n" + "\n".join(capability_lines) + "\n"
     )
 

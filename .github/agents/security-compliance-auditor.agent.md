@@ -142,11 +142,11 @@ Never recommend a fixer not on this list; if none applies, escalate as a `human_
 
 ## Execution Steps
 
-1. Read `projects/<slug>/project-manifest.json` to learn the service list, agent runtime, and BRD path.
+1. Read `projects/<slug>/project-manifest.json` to learn the service list, agent runtime, `iac_tool`, and BRD path.
 2. Read the BRD and extract declared compliance frameworks (search under `## Compliance`, `## Regulatory`, or similar).
 3. Read the latest code inventory from `docs/alignment/code-inventory-iter-*.json`.
 4. For each service: run the code-layer checks. Use static analysis only.
-5. For each Bicep module under `infra/`: run the infra-layer checks.
+5. **Infra scan is conditional**: if `iac_tool == "disabled"` OR `infra/` does not exist, skip infra-layer checks entirely and record `infra_scan: "skipped (opted out)"` at the top of the report. Otherwise, for each `.bicep` or `.tf` module under `infra/`: run the infra-layer checks.
 6. For each declared compliance framework: run the extra compliance checks.
 7. Run `pip-audit --requirement projects/<slug>/requirements.txt --format json` (or equivalent per service) and merge the result into `dependency_cves` findings.
 8. Assemble the JSON report at the caller-specified path.
