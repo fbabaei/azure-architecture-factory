@@ -204,6 +204,6 @@ if ($Target -eq 'azure' -or $Target -eq 'both') {
 # --------------------------------------------------------------------------
 Write-Host 'Reminder: the deployment name above must exist in your Azure OpenAI resource.' -ForegroundColor Yellow
 Write-Host 'Create it via Azure AI Foundry portal or:' -ForegroundColor Yellow
-Write-Host ("  az cognitiveservices account deployment create --name <aoai-resource> --resource-group <rg> \`" ) -ForegroundColor DarkGray
+Write-Host '  az cognitiveservices account deployment create --name <aoai-resource> --resource-group <rg>' -ForegroundColor DarkGray
 Write-Host ("    --deployment-name {0} --model-name {0} --model-format OpenAI --sku-name Standard --sku-capacity 10" -f $chosen.Deployment) -ForegroundColor DarkGray
 Write-Host ''
