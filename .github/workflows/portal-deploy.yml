@@ -80,7 +80,7 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
 
       - name: Scan image with Trivy (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: ${{ env.IMAGE_TAG }}
           format: table
