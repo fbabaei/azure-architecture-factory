@@ -6863,7 +6863,13 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         const data = await resp.json();
                         const reply = data.reply || '(no reply)';
                         state.history.push({ role: 'assistant', content: reply });
-                        addMessage('assistant', reply);
+                        let toolsSuffix = '';
+                        if (Array.isArray(data.tools_used) && data.tools_used.length) {
+                            const names = data.tools_used.map(t => t.name || 'tool');
+                            const uniq = [...new Set(names)];
+                            toolsSuffix = `\n\n<small style="color: var(--text-muted, #666);">🔧 Used: ${uniq.join(', ')}</small>`;
+                        }
+                        addMessage('assistant', reply + toolsSuffix);
                     }
                 } catch (err) {
                     removeTyping();

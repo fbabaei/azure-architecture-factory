@@ -1993,6 +1993,442 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         return "\n".join(chunks) if chunks else "(no project context available)"
 
+    # ---------------------------------------------------------------------
+    # Phase 3: Tool-calling for Project Copilot
+    # All tools are READ-ONLY. No deploys. No writes. Paths are clamped
+    # to the project root to prevent directory traversal.
+    # ---------------------------------------------------------------------
+    _PROJECT_CHAT_TOOLS = [
+        {
+            "type": "function",
+            "function": {
+                "name": "read_project_file",
+                "description": (
+                    "Read the contents of a single file inside the current project. "
+                    "Use this to inspect a file not included in the initial context "
+                    "bundle. Returns up to 20 KB of text."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Relative path inside the project, e.g. 'infra/modules/compute/containerapp.bicep' or 'src/main.py'.",
+                        }
+                    },
+                    "required": ["path"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "list_project_files",
+                "description": (
+                    "List files in the project matching a glob relative to the project root. "
+                    "Returns up to 200 paths. Use this to discover files before calling read_project_file."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "glob": {
+                            "type": "string",
+                            "description": "Glob pattern, e.g. 'infra/**/*.bicep', 'src/**/*.py', 'docs/*.md'.",
+                        }
+                    },
+                    "required": ["glob"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "scan_cost_resources",
+                "description": (
+                    "Scan the project's infra files (Bicep and Terraform) and return a structured list "
+                    "of billable Azure resources with their SKUs, kinds, and the file they were declared in. "
+                    "Use this as the factual basis for cost estimation. Never invent resources not in the output."
+                ),
+                "parameters": {"type": "object", "properties": {}},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "scan_observability",
+                "description": (
+                    "Deterministic scan of infra + code for observability signals: Application Insights, "
+                    "Log Analytics workspace, health probe endpoints, structured logging, alert rules, "
+                    "OpenTelemetry wiring. Returns a checklist with present / missing items."
+                ),
+                "parameters": {"type": "object", "properties": {}},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "prepare_deploy_commands",
+                "description": (
+                    "Return the copy-paste Azure CLI / azd commands to deploy this project, based on the "
+                    "detected IaC tool (Bicep or Terraform). Does NOT execute anything. The user runs the "
+                    "commands themselves in a terminal."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "resource_group": {
+                            "type": "string",
+                            "description": "Target Azure resource group name. If unknown, pass 'rg-<slug>'.",
+                        },
+                        "location": {
+                            "type": "string",
+                            "description": "Azure region, e.g. 'eastus2'. Defaults to 'eastus2' if omitted.",
+                        },
+                    },
+                    "required": [],
+                },
+            },
+        },
+    ]
+
+    _PROJECT_CHAT_TOOL_MAX_FILE_BYTES = 20_000
+    _PROJECT_CHAT_TOOL_MAX_ITERATIONS = 5
+
+    def _tool_read_project_file(self, project_root: pathlib.Path, args: dict) -> str:
+        rel = str(args.get("path", "")).strip().lstrip("/\\")
+        if not rel or ".." in rel.split("/") or ".." in rel.split("\\"):
+            return json.dumps({"error": "invalid path"})
+        target = (project_root / rel).resolve()
+        if project_root.resolve() not in target.parents and target != project_root.resolve():
+            return json.dumps({"error": "path escapes project root"})
+        if not target.exists() or not target.is_file():
+            return json.dumps({"error": f"file not found: {rel}"})
+        try:
+            data = target.read_bytes()
+        except Exception as e:
+            return json.dumps({"error": f"read failed: {e}"})
+        truncated = False
+        if len(data) > self._PROJECT_CHAT_TOOL_MAX_FILE_BYTES:
+            data = data[: self._PROJECT_CHAT_TOOL_MAX_FILE_BYTES]
+            truncated = True
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            text = data.decode("utf-8", errors="replace")
+        return json.dumps({"path": rel, "truncated": truncated, "content": text})
+
+    def _tool_list_project_files(self, project_root: pathlib.Path, args: dict) -> str:
+        glob = str(args.get("glob", "")).strip().lstrip("/\\")
+        if not glob or ".." in glob:
+            return json.dumps({"error": "invalid glob"})
+        try:
+            matches: list[str] = []
+            for p in project_root.glob(glob):
+                if p.is_file():
+                    rel = p.relative_to(project_root).as_posix()
+                    matches.append(rel)
+                    if len(matches) >= 200:
+                        break
+            return json.dumps({"glob": glob, "count": len(matches), "paths": matches})
+        except Exception as e:
+            return json.dumps({"error": f"glob failed: {e}"})
+
+    # Heuristic resource-cost table — rough list prices in USD/month, eastus2.
+    # These are deliberately approximate; the chat model is instructed to show
+    # assumptions and cite this as "heuristic, verify with Azure Pricing Calc".
+    _COST_HEURISTICS_USD_MONTH = {
+        "Microsoft.App/containerApps": (15, 120),
+        "Microsoft.Web/sites": (13, 200),
+        "Microsoft.Web/serverfarms": (13, 300),
+        "Microsoft.DocumentDB/databaseAccounts": (25, 300),
+        "Microsoft.Storage/storageAccounts": (2, 40),
+        "Microsoft.KeyVault/vaults": (0, 5),
+        "Microsoft.CognitiveServices/accounts": (20, 500),
+        "Microsoft.Insights/components": (0, 50),
+        "Microsoft.OperationalInsights/workspaces": (0, 80),
+        "Microsoft.ContainerRegistry/registries": (5, 50),
+        "Microsoft.ServiceBus/namespaces": (10, 100),
+        "Microsoft.EventHub/namespaces": (10, 150),
+        "Microsoft.Sql/servers": (0, 0),
+        "Microsoft.Sql/servers/databases": (5, 200),
+        "Microsoft.Cache/Redis": (17, 200),
+        "Microsoft.ApiManagement/service": (150, 2700),
+        "Microsoft.Network/virtualNetworks": (0, 0),
+        "Microsoft.Network/networkSecurityGroups": (0, 0),
+        "Microsoft.Network/privateEndpoints": (8, 12),
+        "Microsoft.Search/searchServices": (75, 1000),
+    }
+
+    def _tool_scan_cost_resources(self, project_root: pathlib.Path, args: dict) -> str:
+        infra = project_root / "infra"
+        if not infra.is_dir():
+            return json.dumps({"resources": [], "note": "No infra/ directory found."})
+
+        resources: list[dict] = []
+        # Bicep: match `resource <symbol> 'Microsoft.Foo/bar@<api>' = {`
+        bicep_re = re.compile(
+            r"resource\s+(\w+)\s+'([A-Za-z0-9.]+/[A-Za-z0-9/]+)@[^']+'\s*=",
+        )
+        # Terraform: match `resource "azurerm_<type>" "<name>"`
+        tf_re = re.compile(r'resource\s+"(azurerm_[a-z0-9_]+)"\s+"([A-Za-z0-9_-]+)"')
+        # Try to pull SKU / tier hints if nearby.
+        sku_re = re.compile(r"(?i)\b(?:sku|tier|kind)\s*[:=]\s*['\"]?([A-Za-z0-9_.-]+)")
+
+        for path in sorted(infra.rglob("*")):
+            if not path.is_file():
+                continue
+            name = path.name.lower()
+            if not (name.endswith(".bicep") or name.endswith(".tf")):
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            rel = path.relative_to(project_root).as_posix()
+            if name.endswith(".bicep"):
+                for m in bicep_re.finditer(text):
+                    symbol, rtype = m.group(1), m.group(2)
+                    # Look ahead 400 chars for SKU/tier/kind
+                    window = text[m.end(): m.end() + 400]
+                    sku_match = sku_re.search(window)
+                    low, high = self._COST_HEURISTICS_USD_MONTH.get(rtype, (0, 0))
+                    resources.append({
+                        "symbol": symbol,
+                        "type": rtype,
+                        "file": rel,
+                        "sku_hint": sku_match.group(1) if sku_match else None,
+                        "monthly_usd_low": low,
+                        "monthly_usd_high": high,
+                    })
+            else:
+                for m in tf_re.finditer(text):
+                    tf_type, tf_name = m.group(1), m.group(2)
+                    resources.append({
+                        "symbol": tf_name,
+                        "type": tf_type,
+                        "file": rel,
+                        "sku_hint": None,
+                        "monthly_usd_low": 0,  # TF list would need a separate mapping
+                        "monthly_usd_high": 0,
+                    })
+
+        total_low = sum(r["monthly_usd_low"] for r in resources)
+        total_high = sum(r["monthly_usd_high"] for r in resources)
+        return json.dumps({
+            "resources": resources,
+            "count": len(resources),
+            "monthly_total_usd_low": total_low,
+            "monthly_total_usd_high": total_high,
+            "assumptions": [
+                "Region: East US 2",
+                "Consumption / Standard SKUs where not specified",
+                "Low traffic (under 1M requests/mo, <10 GB egress)",
+                "Log retention: 30 days",
+                "Figures are heuristic. Verify with Azure Pricing Calculator before committing to budget.",
+            ],
+        })
+
+    def _tool_scan_observability(self, project_root: pathlib.Path, args: dict) -> str:
+        signals = {
+            "application_insights": False,
+            "log_analytics_workspace": False,
+            "health_probe_endpoint": False,
+            "structured_logging": False,
+            "alert_rules": False,
+            "opentelemetry": False,
+            "diagnostic_settings": False,
+        }
+        evidence: dict[str, list[str]] = {k: [] for k in signals}
+
+        # Scan infra
+        infra = project_root / "infra"
+        if infra.is_dir():
+            for path in infra.rglob("*"):
+                if not path.is_file():
+                    continue
+                if path.suffix.lower() not in (".bicep", ".tf", ".bicepparam"):
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    continue
+                rel = path.relative_to(project_root).as_posix()
+                lower = text.lower()
+                if "microsoft.insights/components" in lower or "azurerm_application_insights" in lower:
+                    signals["application_insights"] = True
+                    evidence["application_insights"].append(rel)
+                if "microsoft.operationalinsights/workspaces" in lower or "azurerm_log_analytics_workspace" in lower:
+                    signals["log_analytics_workspace"] = True
+                    evidence["log_analytics_workspace"].append(rel)
+                if "microsoft.insights/metricalerts" in lower or "azurerm_monitor_metric_alert" in lower or "microsoft.insights/scheduledqueryrules" in lower:
+                    signals["alert_rules"] = True
+                    evidence["alert_rules"].append(rel)
+                if "microsoft.insights/diagnosticsettings" in lower or "azurerm_monitor_diagnostic_setting" in lower:
+                    signals["diagnostic_settings"] = True
+                    evidence["diagnostic_settings"].append(rel)
+
+        # Scan code for health probe + OTel + structured logging hints
+        src = project_root / "src"
+        if src.is_dir():
+            for path in src.rglob("*"):
+                if not path.is_file():
+                    continue
+                if path.suffix.lower() not in (".py", ".cs", ".ts", ".js"):
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                except Exception:
+                    continue
+                rel = path.relative_to(project_root).as_posix()
+                lower = text.lower()
+                if "/health" in lower or "/healthz" in lower or "healthcheck" in lower or "addhealthchecks" in lower:
+                    signals["health_probe_endpoint"] = True
+                    evidence["health_probe_endpoint"].append(rel)
+                if "opentelemetry" in lower or "otlp" in lower or "addopentelemetry" in lower:
+                    signals["opentelemetry"] = True
+                    evidence["opentelemetry"].append(rel)
+                if "ilogger<" in lower or "structlog" in lower or "logging.getlogger" in lower or "applicationinsights" in lower:
+                    signals["structured_logging"] = True
+                    evidence["structured_logging"].append(rel)
+
+        # Cap evidence lists to 5 entries each for brevity.
+        for k in evidence:
+            evidence[k] = evidence[k][:5]
+
+        return json.dumps({
+            "signals": signals,
+            "evidence": evidence,
+            "score": f"{sum(1 for v in signals.values() if v)}/{len(signals)}",
+        })
+
+    def _tool_prepare_deploy_commands(self, project_root: pathlib.Path, slug: str, args: dict) -> str:
+        rg = str(args.get("resource_group", "")).strip() or f"rg-{slug}"
+        loc = str(args.get("location", "")).strip() or "eastus2"
+
+        infra = project_root / "infra"
+        has_bicep = infra.is_dir() and any(infra.rglob("main.bicep"))
+        has_tf = infra.is_dir() and any(infra.rglob("main.tf"))
+        has_azure_yaml = (project_root / "azure.yaml").is_file()
+
+        blocks: list[dict] = []
+
+        if has_azure_yaml:
+            blocks.append({
+                "tool": "azd",
+                "title": "Deploy with Azure Developer CLI",
+                "commands": [
+                    "azd auth login",
+                    f"azd env new {slug} --location {loc}",
+                    "azd up",
+                ],
+            })
+
+        if has_bicep:
+            blocks.append({
+                "tool": "az bicep",
+                "title": "Deploy with Azure CLI + Bicep",
+                "commands": [
+                    "az login",
+                    f"az group create --name {rg} --location {loc}",
+                    f"az deployment group create --resource-group {rg} "
+                    f"--template-file infra/main.bicep "
+                    f"--parameters @infra/params/main.bicepparam",
+                ],
+            })
+
+        if has_tf:
+            blocks.append({
+                "tool": "terraform",
+                "title": "Deploy with Terraform",
+                "commands": [
+                    "az login",
+                    "cd infra",
+                    "terraform init",
+                    "terraform validate",
+                    f"terraform plan -var=\"resource_group_name={rg}\" -var=\"location={loc}\"",
+                    "terraform apply",
+                ],
+            })
+
+        if not blocks:
+            blocks.append({
+                "tool": "none",
+                "title": "No deployment artifacts detected",
+                "commands": [
+                    "# This project does not contain infra/ or azure.yaml.",
+                    "# Was it generated with generate_infra=false?",
+                ],
+            })
+
+        return json.dumps({
+            "resource_group": rg,
+            "location": loc,
+            "blocks": blocks,
+            "note": "These commands are not executed by the portal — copy-paste into a terminal.",
+        })
+
+    def _execute_project_chat_tool(
+        self,
+        project_root: pathlib.Path,
+        slug: str,
+        tool_name: str,
+        args: dict,
+    ) -> str:
+        try:
+            if tool_name == "read_project_file":
+                return self._tool_read_project_file(project_root, args)
+            if tool_name == "list_project_files":
+                return self._tool_list_project_files(project_root, args)
+            if tool_name == "scan_cost_resources":
+                return self._tool_scan_cost_resources(project_root, args)
+            if tool_name == "scan_observability":
+                return self._tool_scan_observability(project_root, args)
+            if tool_name == "prepare_deploy_commands":
+                return self._tool_prepare_deploy_commands(project_root, slug, args)
+            return json.dumps({"error": f"unknown tool: {tool_name}"})
+        except Exception as e:
+            logging.warning("Tool %s failed: %s", tool_name, e)
+            return json.dumps({"error": f"tool {tool_name} failed: {e}"})
+
+    def _call_aoai_raw(self, messages: list, *, tools: list | None = None,
+                       max_tokens: int = 1500, temperature: float = 0.2) -> tuple[int, dict | str]:
+        """Low-level AOAI call that returns the raw first-choice message dict (or error string)."""
+        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
+        deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
+        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
+        api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+
+        if not (endpoint and deployment and api_key):
+            return 200, {
+                "role": "assistant",
+                "content": (
+                    "**Project Copilot is not configured on this portal.**\n\n"
+                    "Set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, and "
+                    "`AZURE_OPENAI_API_KEY` on the portal server and restart."
+                ),
+            }
+
+        req_body: dict = {"messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+        if tools:
+            req_body["tools"] = tools
+            req_body["tool_choice"] = "auto"
+
+        url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+        req = Request(url, data=json.dumps(req_body).encode("utf-8"), method="POST")
+        req.add_header("Content-Type", "application/json")
+        req.add_header("api-key", api_key)
+
+        try:
+            with urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            return 200, data["choices"][0]["message"]
+        except URLError as e:
+            logging.warning("Azure OpenAI call failed: %s", e)
+            return 502, f"Azure OpenAI call failed: {e}"
+        except Exception as e:
+            logging.warning("Azure OpenAI unexpected error: %s", e)
+            return 502, f"Azure OpenAI call failed: {e}"
+
     def _handle_project_chat(self, slug: str):
         project_root = self._resolve_project_root(slug)
         if not project_root:
@@ -2032,18 +2468,83 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "messages must contain at least one user turn"}, 400)
             return
 
-        # Build grounded context from the project tree.
         context_block = self._build_project_chat_context(project_root)
-
         system_prompt = (
             f"{self._PROJECT_CHAT_SYSTEM_PROMPT}\n\n"
             f"### CURRENT PROJECT\n\nslug: `{slug}`\n\n"
-            f"### CONTEXT\n\n{context_block}"
+            f"### CONTEXT\n\n{context_block}\n\n"
+            "### TOOLS\n\n"
+            "You have read-only tools to explore files, scan cost, audit observability, and prepare "
+            "deploy commands. Prefer calling tools over guessing. Use `scan_cost_resources` before "
+            "estimating cost, `scan_observability` before answering observability questions, and "
+            "`prepare_deploy_commands` for any deployment request. Use `read_project_file` only when "
+            "the context bundle does not already contain what you need."
         )
 
-        chat_messages = [{"role": "system", "content": system_prompt}] + cleaned
-        status, reply_text = self._call_azure_openai(chat_messages, max_tokens=1500, temperature=0.2)
-        self._send_json({"reply": reply_text, "slug": slug, "context_size": len(context_block)}, status)
+        chat_messages: list = [{"role": "system", "content": system_prompt}] + cleaned
+
+        tools_used: list[dict] = []
+        final_text: str = ""
+        status_code = 200
+
+        for iteration in range(self._PROJECT_CHAT_TOOL_MAX_ITERATIONS):
+            status_code, msg = self._call_aoai_raw(
+                chat_messages,
+                tools=self._PROJECT_CHAT_TOOLS,
+                max_tokens=1500,
+                temperature=0.2,
+            )
+            if status_code != 200:
+                final_text = msg if isinstance(msg, str) else str(msg)
+                break
+            if isinstance(msg, str):
+                final_text = msg
+                break
+
+            tool_calls = msg.get("tool_calls") or []
+            if not tool_calls:
+                final_text = str(msg.get("content") or "").strip()
+                break
+
+            # Append the assistant's tool-call turn, then execute each tool.
+            chat_messages.append({
+                "role": "assistant",
+                "content": msg.get("content") or "",
+                "tool_calls": tool_calls,
+            })
+            for call in tool_calls:
+                tool_name = str(call.get("function", {}).get("name", ""))
+                raw_args = str(call.get("function", {}).get("arguments", "{}"))
+                try:
+                    args = json.loads(raw_args) if raw_args else {}
+                    if not isinstance(args, dict):
+                        args = {}
+                except Exception:
+                    args = {}
+                result = self._execute_project_chat_tool(project_root, slug, tool_name, args)
+                tools_used.append({"name": tool_name, "args": args})
+                chat_messages.append({
+                    "role": "tool",
+                    "tool_call_id": call.get("id", ""),
+                    "content": result,
+                })
+        else:
+            # Loop exhausted without a terminal assistant message.
+            final_text = (
+                final_text
+                or "⚠️ I used up my tool-call budget before I could finish. "
+                "Try breaking the question into smaller pieces."
+            )
+
+        self._send_json(
+            {
+                "reply": final_text or "(no reply)",
+                "slug": slug,
+                "context_size": len(context_block),
+                "tools_used": tools_used,
+            },
+            status_code,
+        )
 
     # Shared Azure OpenAI caller used by BRD Copilot and Project Copilot.
     def _call_azure_openai(
