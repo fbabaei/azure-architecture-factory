@@ -1016,6 +1016,30 @@ def _aoai_auth_header() -> tuple[str, str] | None:
             return None
 
 
+def _aoai_urlopen(req: Request, *, timeout: int = 60) -> bytes:
+    """POST to Azure OpenAI with a single retry on transient disconnects.
+
+    AOAI occasionally closes an idle HTTPS keep-alive between requests,
+    which surfaces to stdlib urllib as ``RemoteDisconnected`` or
+    ``ConnectionResetError``. A single immediate retry fixes it.
+    """
+    import http.client
+    last_exc: Exception | None = None
+    for attempt in range(2):
+        try:
+            with urlopen(req, timeout=timeout) as resp:
+                return resp.read()
+        except (http.client.RemoteDisconnected,
+                http.client.IncompleteRead,
+                ConnectionResetError) as e:
+            last_exc = e
+            logger.warning("AOAI transient disconnect (attempt %d): %s",
+                           attempt + 1, e)
+            continue
+    # Both attempts failed — re-raise the last error.
+    raise last_exc  # type: ignore[misc]
+
+
 def _sanitize_brd_filename(raw_name: str) -> str:
     """Return a safe BRD filename constrained to a simple .md basename."""
     name = pathlib.Path((raw_name or "brd.md").strip()).name
@@ -2548,8 +2572,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         req.add_header(auth[0], auth[1])
 
         try:
-            with urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+            data = json.loads(_aoai_urlopen(req, timeout=60).decode("utf-8"))
             return 200, data["choices"][0]["message"]
         except URLError as e:
             logging.warning("Azure OpenAI call failed: %s", e)
@@ -2719,8 +2742,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         req.add_header(auth[0], auth[1])
 
         try:
-            with urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+            data = json.loads(_aoai_urlopen(req, timeout=60).decode("utf-8"))
             return 200, str(data["choices"][0]["message"]["content"]).strip()
         except URLError as e:
             logging.warning("Azure OpenAI call failed: %s", e)
