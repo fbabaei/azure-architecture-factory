@@ -1,6 +1,6 @@
 # Azure Architecture Factory
 
-Azure Architecture Factory is an AI-driven Azure delivery workspace that turns requirements into architecture, code, infrastructure, documentation, and deployment guidance.
+Azure Architecture Factory is an AI-driven Azure delivery workspace that turns requirements into architecture, code, infrastructure, documentation, and deployment guidance. Generated services ship in **Python 3.11 / FastAPI** or **.NET 8 / ASP.NET Core**, with infrastructure in **Bicep** or **Terraform** — selectable per BRD.
 
 ## New here? Read these in order
 
@@ -14,6 +14,7 @@ Reference material:
 
 - [docs/README.md](docs/README.md) repository overview
 - [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) viewing `.drawio` files on Windows
+- [docs/MDR_PY_VS_DOTNET.md](docs/MDR_PY_VS_DOTNET.md) side-by-side comparison of Python vs .NET output for the same `extraction-chat` BRD
 - [docs/PRD.md](docs/PRD.md) product scope and capabilities
 - [docs/BRD.md](docs/BRD.md) business case and adoption goals
 

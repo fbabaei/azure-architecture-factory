@@ -43,6 +43,32 @@ When submitting a BRD through the portal, set **Network Isolation** to one of:
 
 The selected value is carried into generated project metadata and starter infrastructure.
 
+### Language, IaC, and Opt-Out Options
+
+Alongside Network Isolation, the BRD intake accepts these toggles:
+
+| Option | Values | Default | Effect |
+|---|---|---|---|
+| Implementation language | `python`, `dotnet` | Python (or inferred from BRD) | Phase 2 routes to `azure-architecture-implementer` (Python/FastAPI) or `lang-dotnet-implementer` (ASP.NET Core 8). |
+| IaC tool | `bicep`, `terraform` | Bicep (or inferred) | Phase 3 routes to `bicep-infrastructure-validator` or `terraform-infrastructure-validator`. |
+| Generate infra | on / off | on | Off = skip `infra/` emission for docs-only spikes. Phase 3 gate auto-skips. |
+| Run security audit | on / off | on | Off = skip the Phase 2.6 Security Gate (`security-compliance-auditor` still runs in audit-only mode if you ask). |
+| Enable observability | on / off | on | On = Application Insights wired in both Python and .NET scaffolds. |
+
+All settings land in `project-manifest.json` under `generation_options` so downstream phases can honor them deterministically.
+
+### Workload Archetype Detection
+
+The runner also infers an **archetype** from the BRD text and threads it into the language agent:
+
+| Archetype | Signals | What the scaffold emits |
+|---|---|---|
+| `extraction-chat` | Document upload, form extraction, clarification loop, human-in-the-loop chat | 5 domain services (Ingestion / Extraction / Clarification / Repository / Session), 6 endpoints, `sample-corpus/`, `docs/detailed-architecture.md` |
+| `rag-qa` | Knowledge base, corpus search, retrieval-augmented generation | `qa_service` + `corpus_loader`, corpus folder, grounded Q&A endpoint |
+| `api-service` *(default)* | Anything else | Single starter `/ask` endpoint (Python) or `MapPost /api/ask` (.NET) |
+
+Archetype is recorded under `analysis.archetype` in the manifest. The Python and .NET agents emit domain-equivalent scaffolds for the same archetype (see [MDR_PY_VS_DOTNET.md](MDR_PY_VS_DOTNET.md)).
+
 ---
 
 ## The Factory Workflow — Phase by Phase
@@ -202,5 +228,6 @@ Yes. Point it at any project folder under `projects/` that has a `project-manife
 
 - [⚡ Quick Start](QUICKSTART.md) — fastest path from zero to a running project
 - [🧭 Getting Started](GETTING_STARTED.md) — full onboarding walkthrough
+- [🏗️ Guide Me Architecture](GUIDE_ME_ARCHITECTURE.md) — component-level and sequence-level flow detail for Guide Me
 - [🔄 App Modernization Guide](APP_MODERNIZATION_GUIDE.md) — for legacy application modernization
 - [agents/README.md](../.github/agents/README.md) — full list of all factory agents and what they do

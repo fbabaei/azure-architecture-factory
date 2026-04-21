@@ -39,6 +39,21 @@ The choice is recorded as `agent_runtime` in the project's `project-manifest.jso
 
 For the full decision flow — what signals the classifier looks for, where it runs, what the manifest looks like afterwards — see [BRD_CLASSIFICATION_FLOW.md](BRD_CLASSIFICATION_FLOW.md).
 
+### Generation options (language, IaC tool, opt-outs)
+
+Beyond `Runtime`, the BRD intake (portal or CLI) accepts these generation options — all optional with sensible defaults:
+
+| Option | Values | Default | What it controls |
+| --- | --- | --- | --- |
+| `implementationLanguage` | `python`, `dotnet` | `python` (or inferred from BRD) | Which language agent emits the service scaffold. `dotnet` produces an ASP.NET Core 8 minimal API with xUnit tests and a multi-stage Dockerfile; `python` produces FastAPI + pytest. |
+| `iacTool` | `bicep`, `terraform` | `bicep` (or inferred from BRD) | Which IaC agent generates `infra/`. Both paths produce equivalent resource shapes (Container Apps + managed identity + Key Vault + optional App Insights). |
+| `networkTier` | `public`, `vnet-integrated`, `private` | `public` | See "Network Isolation Option" below. |
+| `generateInfra` | `true`, `false` | `true` | Set to `false` to skip `infra/` generation for docs-only spikes. Phase 3 infra validation is skipped cleanly. |
+| `runSecurityAudit` | `true`, `false` | `true` | Set to `false` to bypass the Phase 2.6 Security Gate (audit-only mode). |
+| `enableObservability` | `true`, `false` | `true` | When on, scaffolds wire Application Insights via `APPLICATIONINSIGHTS_CONNECTION_STRING` (both Python and .NET paths). |
+
+The factory also detects a workload **archetype** from the BRD — `extraction-chat` (document upload + clarification loop), `rag-qa` (corpus-grounded Q&A), or `api-service` (generic). The selected archetype drives the language agent's emission shape (e.g., extraction-chat produces 5 domain services and 6 endpoints instead of a single starter endpoint) and is recorded under `analysis.archetype` in `project-manifest.json`. See [docs/MDR_PY_VS_DOTNET.md](MDR_PY_VS_DOTNET.md) for a side-by-side of Python vs .NET output for the same `extraction-chat` BRD.
+
 Expected output shape:
 
 ```text
@@ -61,8 +76,10 @@ Use these when you only need one part of the workflow.
 | Agent | Use Case |
 | --- | --- |
 | `brd-to-architecture-diagram` | Generate or import an Azure architecture diagram |
-| `azure-architecture-implementer` | Convert diagram intent into code and Azure resources |
+| `azure-architecture-implementer` | Convert diagram intent into Python services + Bicep scaffolding |
+| `lang-dotnet-implementer` | Same as above but emits ASP.NET Core 8 services when `implementationLanguage` is `dotnet` |
 | `bicep-infrastructure-validator` | Validate and repair Bicep modules and params |
+| `terraform-infrastructure-validator` | Validate and repair Terraform configuration when `iacTool` is `terraform` |
 | `production-environment-advisor` | Produce runtime and deployment prerequisites |
 | `azure-project-deployer` | Execute deployment for a prepared project |
 
