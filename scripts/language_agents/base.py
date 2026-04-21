@@ -28,6 +28,15 @@ class LanguageEmitContext:
     source_brd: str
     requirements: list[str]
     enable_observability: bool
+    # Workload archetype inferred from BRD keyword signals. Known values:
+    #   "extraction-chat" - document ingestion + extraction + clarification
+    #                       loop + human-in-the-loop chat (MDR, tax, claims).
+    #   "rag-qa"          - Q&A / retrieval over a corpus (policy lookup,
+    #                       customer support, knowledge base).
+    #   "api-service"     - generic REST API (default fallback).
+    # Unknown values MUST be treated as "api-service" by agents so the
+    # emitter never crashes on a new archetype it does not recognize.
+    archetype: str = "api-service"
 
 
 @dataclass

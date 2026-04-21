@@ -58,6 +58,7 @@ def process_brd_document(
     requirements = _extract_requirements(brd_text)
     success_criteria = _extract_success_criteria(brd_text)
     capabilities = _infer_capabilities(brd_text)
+    archetype = _detect_archetype(requirements, brd_text)
     runtime_recommendation = _classify_runtime(brd_text)
     language_agent = language_agents.resolve_from_brd(brd_text)
     iac_agent = iac_agents.resolve_from_brd(brd_text)
@@ -133,6 +134,7 @@ def process_brd_document(
         },
         "implementationLanguage": language_agent.name,
         "iacTool": iac_agent.name if generate_infra else "disabled",
+        "archetype": archetype,
     }
 
     _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier, generate_infra))
@@ -152,6 +154,7 @@ def process_brd_document(
             source_brd=brd_path.name,
             requirements=requirements,
             enable_observability=enable_observability,
+            archetype=archetype,
         )
     )
 
@@ -216,6 +219,7 @@ def process_brd_document(
         },
         "implementation_language": language_agent.name,
         "iac_tool": iac_tool_recorded,
+        "archetype": archetype,
         "language_files": language_result.files_written,
         "iac_files": iac_files_written,
         "user_home_copy": str(user_home_copy_path),
@@ -384,6 +388,56 @@ def _infer_capabilities(markdown: str) -> dict[str, bool]:
         "workflow": any(term in lowered for term in ["workflow", "process", "approval", "orchestration"]),
         "api": any(term in lowered for term in ["api", "rest", "endpoint", "integration"]),
     }
+
+
+# Archetype detection: maps BRD keyword signals to a workload shape so the
+# Python language agent can emit domain-appropriate scaffolding instead of a
+# generic single-endpoint stub. Detection is deterministic and keyword-based
+# so the same BRD always produces the same archetype.
+#
+#   extraction-chat - document ingestion + structured extraction + interactive
+#                     clarification loop + human-in-the-loop chat. Matches
+#                     workloads like MDR arrangement creation, insurance
+#                     claim intake, KYC, tax form filling.
+#   rag-qa          - Q&A / retrieval over a corpus (policy lookup, customer
+#                     support knowledge base).
+#   api-service     - default fallback: a generic REST API stub.
+_EXTRACTION_CHAT_SIGNALS = (
+    "extract", "extraction", "ingest", "ingestion",
+    "document upload", "upload", "unstructured",
+    "clarif",  # clarification, clarifying
+    "arrangement", "draft", "draft generation",
+    "form filling", "form-filling", "form fill",
+    "human-in-the-loop", "human in the loop",
+    "chat experience", "interactive chat", "chat flow",
+    "json format", "structured data",
+    "pdf", "mandatory field",
+)
+_RAG_QA_SIGNALS = (
+    "q&a", "qa ", "question and answer", "questions and answers",
+    "retrieve", "retrieval", "knowledge base", "vector search",
+    "policy lookup", "customer support", "search corpus",
+    "rag",
+)
+
+
+def _detect_archetype(requirements: list[str], markdown: str) -> str:
+    """Pick the best-fit workload archetype from BRD text.
+
+    Counts distinct keyword matches across requirements + full BRD body and
+    picks the archetype with the most hits (minimum 2). Ties break toward
+    ``extraction-chat`` because its scaffolding is a superset of ``rag-qa``
+    (upload + extract is a strict richer shape than Q&A alone).
+    """
+
+    text = (markdown + "\n" + "\n".join(requirements)).lower()
+    extraction_hits = sum(1 for sig in _EXTRACTION_CHAT_SIGNALS if sig in text)
+    rag_hits = sum(1 for sig in _RAG_QA_SIGNALS if sig in text)
+    if extraction_hits >= 2 and extraction_hits >= rag_hits:
+        return "extraction-chat"
+    if rag_hits >= 2:
+        return "rag-qa"
+    return "api-service"
 
 
 def _slugify(value: str) -> str:
