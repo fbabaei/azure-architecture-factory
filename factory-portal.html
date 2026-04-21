@@ -6825,12 +6825,15 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     const isMail = /^mailto:/i.test(raw);
                     if (isMail) return;
                     if (!isAbsolute) {
-                        // Treat as a project-relative file path.
+                        // Treat as a project-relative file path. Route to the static
+                        // project tree (/projects/<slug>/<path>) so the browser gets
+                        // the raw file instead of a JSON preview wrapper.
                         const clean = raw.replace(/^\.\/+/, '').split('#')[0].split('?')[0];
                         if (clean) {
+                            const parts = clean.split('/').map(encodeURIComponent).join('/');
                             a.setAttribute(
                                 'href',
-                                `${window.location.origin}/api/projects/${encodeURIComponent(state.slug)}/file?path=${encodeURIComponent(clean)}`
+                                `${window.location.origin}/projects/${encodeURIComponent(state.slug)}/${parts}`
                             );
                         }
                     }

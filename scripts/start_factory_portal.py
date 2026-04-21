@@ -2176,7 +2176,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "scope": "BRD authoring + review",
                 "how_to_reach": "bottom-left 💬 button on the portal (a separate copilot, not me)",
             },
-            "user_guide": "docs/COPILOT_GUIDE.md",
+            "user_guide": "/docs/COPILOT_GUIDE.md",
             "footer_shown_when_tools_used": "🛠️ Used: <tool_names>",
         })
 
