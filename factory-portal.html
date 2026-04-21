@@ -5190,6 +5190,7 @@
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
                         <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
+                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Chat with an AI assistant grounded in this project: architecture, cost, operations, observability">💬 Ask Copilot</a>
                     </div>
                 </div>
             `;
@@ -6715,6 +6716,202 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         })();
     </script>
     <!-- ========== /BRD Copilot ========== -->
+
+    <!-- ========== Project Copilot (Phase 2: per-project Q&A, cost, ops, observability) ========== -->
+    <div id="project-chat-panel" role="dialog" aria-label="Project Copilot"
+         style="position: fixed; right: 1.25rem; bottom: 1.25rem; width: 480px; max-width: calc(100vw - 2.5rem);
+                height: 640px; max-height: calc(100vh - 3rem); background: white; border: 1px solid var(--border);
+                border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.28); z-index: 1050;
+                display: none; flex-direction: column; overflow: hidden;">
+        <div style="background: var(--primary); color: white; padding: 0.75rem 1rem;
+                    display: flex; align-items: center; justify-content: space-between; font-weight: 600;">
+            <div style="overflow: hidden;">
+                <div id="project-chat-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">💬 Project Copilot</div>
+                <div style="font-size: 0.72rem; font-weight: 400; opacity: 0.85;">
+                    Architecture · Cost · Operations · Observability
+                </div>
+            </div>
+            <button id="project-chat-close" type="button" onclick="closeProjectChat()" title="Close"
+                    style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; line-height: 1;">✕</button>
+        </div>
+        <div id="project-chat-quickstart" style="padding: 0.55rem 0.8rem; background: #f1f4fa;
+                    border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 0.35rem;">
+            <!-- quick-ask chips inserted by JS -->
+        </div>
+        <div id="project-chat-messages" aria-live="polite"
+             style="flex: 1; overflow-y: auto; padding: 0.9rem; background: #f8f9fb; font-size: 0.88rem;"></div>
+        <div style="border-top: 1px solid var(--border); padding: 0.6rem; background: white; display: flex; gap: 0.5rem;">
+            <textarea id="project-chat-input" rows="2"
+                placeholder="Ask about architecture, cost, operations, or observability…"
+                onkeydown="projectChatOnKey(event)"
+                style="flex: 1; resize: none; border: 1px solid var(--border); border-radius: 4px;
+                       padding: 0.5rem; font-size: 0.88rem; font-family: inherit; min-height: 44px; max-height: 120px;"></textarea>
+            <button id="project-chat-send" type="button" onclick="projectChatSend()"
+                    style="background: var(--primary); color: white; border: none; border-radius: 4px;
+                           padding: 0 1rem; font-size: 0.9rem; cursor: pointer;">Send</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const state = {
+                open: false,
+                busy: false,
+                slug: null,
+                title: null,
+                history: [],
+            };
+            const QUICK_ASKS = [
+                { label: '💰 Estimate cost', q: 'Estimate the monthly Azure cost for this project. List each resource, a rough USD range, stated assumptions (region, traffic, retention), and the top 3 cost-reduction moves.' },
+                { label: '📡 Observability audit', q: 'Audit observability for this project. What is wired (App Insights, Log Analytics, alerts, health probes)? What is missing? Give me a prioritized gap list with the exact file paths I would edit.' },
+                { label: '🛠 Operations playbook', q: 'Write a 1-page operations playbook for this project: deployment steps, rollback, health checks, common incidents, scaling guidance, and on-call essentials.' },
+                { label: '🏗️ Architecture summary', q: 'Summarize the architecture: services, data flows, key Azure resources, trust boundaries, and the workload archetype. Call out anything unusual.' },
+                { label: '🔒 Security posture', q: 'Review the security posture: managed identity usage, secrets management, network isolation, RBAC, and data-in-transit. What should I fix first?' },
+            ];
+
+            function el(id) { return document.getElementById(id); }
+
+            function renderMarkdown(text) {
+                try {
+                    if (window.marked && typeof window.marked.parse === 'function') {
+                        return window.marked.parse(text);
+                    }
+                } catch (_) { /* fall through */ }
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML.replace(/\n/g, '<br>');
+            }
+
+            function addMessage(role, content) {
+                const list = el('project-chat-messages');
+                const wrap = document.createElement('div');
+                wrap.className = `brd-chat-msg ${role}`;
+                const bubble = document.createElement('div');
+                bubble.className = 'brd-chat-bubble';
+                bubble.innerHTML = renderMarkdown(content || '');
+                wrap.appendChild(bubble);
+                list.appendChild(wrap);
+                list.scrollTop = list.scrollHeight;
+            }
+
+            function addTyping() {
+                const list = el('project-chat-messages');
+                const wrap = document.createElement('div');
+                wrap.className = 'brd-chat-msg assistant';
+                wrap.id = 'project-chat-typing-row';
+                const bubble = document.createElement('div');
+                bubble.className = 'brd-chat-bubble brd-chat-typing';
+                bubble.textContent = '…thinking (reading project files)';
+                wrap.appendChild(bubble);
+                list.appendChild(wrap);
+                list.scrollTop = list.scrollHeight;
+            }
+
+            function removeTyping() {
+                const row = el('project-chat-typing-row');
+                if (row) row.remove();
+            }
+
+            function renderQuickAsks() {
+                const row = el('project-chat-quickstart');
+                row.innerHTML = '';
+                QUICK_ASKS.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = item.label;
+                    btn.style.cssText =
+                        'background: white; border: 1px solid var(--border); border-radius: 999px;' +
+                        'padding: 0.3rem 0.7rem; font-size: 0.78rem; cursor: pointer; color: var(--primary);';
+                    btn.onclick = () => {
+                        el('project-chat-input').value = item.q;
+                        sendCurrent();
+                    };
+                    row.appendChild(btn);
+                });
+            }
+
+            async function sendCurrent() {
+                if (state.busy || !state.slug) return;
+                const input = el('project-chat-input');
+                const text = (input.value || '').trim();
+                if (!text) return;
+
+                state.busy = true;
+                el('project-chat-send').disabled = true;
+                input.value = '';
+
+                addMessage('user', text);
+                state.history.push({ role: 'user', content: text });
+                addTyping();
+
+                let headers = { 'Content-Type': 'application/json' };
+                if (typeof buildMutationHeaders === 'function') {
+                    headers = buildMutationHeaders(headers);
+                }
+
+                try {
+                    const url = `${window.location.origin}/api/projects/${encodeURIComponent(state.slug)}/chat`;
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ messages: state.history }),
+                    });
+                    removeTyping();
+                    if (!resp.ok) {
+                        const errText = await resp.text().catch(() => resp.statusText);
+                        addMessage('assistant', `⚠️ Error ${resp.status}: ${errText || 'request failed'}`);
+                    } else {
+                        const data = await resp.json();
+                        const reply = data.reply || '(no reply)';
+                        state.history.push({ role: 'assistant', content: reply });
+                        addMessage('assistant', reply);
+                    }
+                } catch (err) {
+                    removeTyping();
+                    addMessage('assistant', `⚠️ Network error: ${err.message || err}`);
+                } finally {
+                    state.busy = false;
+                    el('project-chat-send').disabled = false;
+                    input.focus();
+                }
+            }
+
+            window.openProjectChat = function (slug, title) {
+                if (!slug) return;
+                // If switching project, reset history.
+                if (state.slug !== slug) {
+                    state.slug = slug;
+                    state.title = title || slug;
+                    state.history = [];
+                    el('project-chat-messages').innerHTML = '';
+                    el('project-chat-title').textContent = `💬 ${state.title}`;
+                    renderQuickAsks();
+                    addMessage('assistant',
+                        `Hi — I'm grounded in **${state.title}**. I can answer questions about ` +
+                        `its architecture, estimate monthly Azure cost, draft an operations playbook, ` +
+                        `and audit observability. Pick a quick-ask above or type your own question.`
+                    );
+                }
+                state.open = true;
+                el('project-chat-panel').style.display = 'flex';
+                setTimeout(() => el('project-chat-input').focus(), 50);
+            };
+
+            window.closeProjectChat = function () {
+                state.open = false;
+                el('project-chat-panel').style.display = 'none';
+            };
+
+            window.projectChatOnKey = function (event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendCurrent();
+                }
+            };
+
+            window.projectChatSend = sendCurrent;
+        })();
+    </script>
+    <!-- ========== /Project Copilot ========== -->
 
 </body>
 </html>

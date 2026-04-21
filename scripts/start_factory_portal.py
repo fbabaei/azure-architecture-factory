@@ -1315,6 +1315,15 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_brd_chat()
+        if path.startswith("/api/projects/") and path.endswith("/chat"):
+            if not self._require_auth_for_mutation():
+                return
+            # path = /api/projects/<slug>/chat
+            parts = path.split("/")
+            if len(parts) == 5 and parts[3]:
+                return self._handle_project_chat(parts[3])
+            self._send_json({"error": "Invalid project chat path"}, 400)
+            return
         if path == "/api/guide/refresh":
             if not self._require_auth_for_mutation():
                 return
@@ -1855,6 +1864,233 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             },
             200,
         )
+
+    # ---------------------------------------------------------------------
+    # Per-project Copilot (Phase 2 prototype)
+    # - Architecture Q&A  - Cost evaluation  - Operations  - Observability
+    # ---------------------------------------------------------------------
+    _PROJECT_CHAT_SYSTEM_PROMPT = (
+        "You are Project Copilot, embedded in the Azure Architecture Factory (AAF) portal. "
+        "You answer questions about ONE specific generated project. You have access to a "
+        "READ-ONLY context bundle (project-manifest.json excerpts, doc excerpts, infra "
+        "excerpts) injected below by the server. You are an expert on:\n"
+        "  1. Architecture & code — what services exist, how they connect, which archetype was used.\n"
+        "  2. Cost evaluation — estimate monthly Azure spend from the infra resources and offer "
+        "concrete cost-reduction moves (tier downgrade, autoscale, reserved capacity, serverless).\n"
+        "  3. Operations — deployment, rollout strategy, rollback, incident response, health probes, "
+        "scaling, backup/restore, disaster recovery.\n"
+        "  4. Observability — Application Insights wiring, Log Analytics, KQL queries, alert rules, "
+        "dashboards, SLOs/SLIs, distributed tracing.\n\n"
+        "RULES:\n"
+        "- Ground every answer in the provided CONTEXT. If the context does not contain the answer, "
+        "say so plainly and suggest what file the user should look at.\n"
+        "- When asked about cost, always list assumptions (region, traffic, retention) and give a "
+        "rough monthly USD range per resource. Prefer Azure list prices (East US 2) unless the "
+        "manifest says otherwise.\n"
+        "- Never invent file paths, resource names, or SKUs that are not in the context.\n"
+        "- Keep responses under ~500 words unless the user explicitly asks for more depth.\n"
+        "- Use concise markdown: short paragraphs, bullet lists, tables for cost/ops summaries.\n"
+        "- When suggesting changes, reference the exact file path the user would edit "
+        "(e.g., `infra/modules/compute/containerapp.bicep`)."
+    )
+
+    # Per-project file budget — keep total prompt bounded.
+    _PROJECT_CHAT_MAX_CONTEXT_CHARS = 18_000
+    _PROJECT_CHAT_DOC_FILES = (
+        "docs/architecture-overview.md",
+        "docs/detailed-architecture.md",
+        "docs/production-readiness.md",
+        "docs/governance-model.md",
+        "docs/traceability-matrix.md",
+        "docs/delivery-milestones.md",
+        "docs/success-criteria.md",
+        "README.md",
+        "DEPLOY.md",
+    )
+    _PROJECT_CHAT_INFRA_GLOBS = ("main.bicep", "main.tf", "main.bicepparam")
+
+    def _build_project_chat_context(self, project_root: pathlib.Path) -> str:
+        """Read a bounded bundle of project files and format as a system context block."""
+        budget = self._PROJECT_CHAT_MAX_CONTEXT_CHARS
+        chunks: list[str] = []
+
+        def _add(label: str, body: str) -> None:
+            nonlocal budget
+            if budget <= 0 or not body:
+                return
+            body = body.strip()
+            if len(body) > budget:
+                body = body[: max(0, budget - 40)] + "\n…[truncated]"
+            chunk = f"### {label}\n\n{body}\n"
+            chunks.append(chunk)
+            budget -= len(chunk)
+
+        # 1. Manifest (compact — drop verbose prose fields).
+        manifest_path = project_root / "project-manifest.json"
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                compact = {
+                    "project": manifest.get("project"),
+                    "title": manifest.get("title"),
+                    "status": manifest.get("status"),
+                    "capabilities": manifest.get("capabilities"),
+                    "generation_options": manifest.get("generation_options"),
+                    "analysis": manifest.get("analysis"),
+                    "implementation_language": manifest.get("implementation_language"),
+                    "iac_tool": manifest.get("iac_tool"),
+                    "services": manifest.get("services"),
+                    "architecture": manifest.get("architecture"),
+                }
+                compact = {k: v for k, v in compact.items() if v is not None}
+                _add("project-manifest.json (compact)", json.dumps(compact, indent=2))
+            except Exception:
+                pass
+
+        # 2. Doc excerpts.
+        for rel in self._PROJECT_CHAT_DOC_FILES:
+            if budget <= 0:
+                break
+            path = project_root / rel
+            if path.is_file():
+                try:
+                    _add(rel, path.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+
+        # 3. Infra — scan infra/ for the known roots.
+        infra_dir = project_root / "infra"
+        if infra_dir.is_dir() and budget > 0:
+            for name in self._PROJECT_CHAT_INFRA_GLOBS:
+                if budget <= 0:
+                    break
+                for infra_path in sorted(infra_dir.rglob(name)):
+                    if budget <= 0:
+                        break
+                    try:
+                        rel = infra_path.relative_to(project_root).as_posix()
+                        _add(rel, infra_path.read_text(encoding="utf-8"))
+                    except Exception:
+                        continue
+
+        # 4. Dir listing (so the model can point the user at files it didn't ingest).
+        if budget > 0:
+            try:
+                listing: list[str] = []
+                for entry in sorted(project_root.rglob("*")):
+                    if entry.is_dir():
+                        continue
+                    rel = entry.relative_to(project_root).as_posix()
+                    # Skip heavyweight dirs we would never cite.
+                    if rel.startswith(("logs/", ".git/", "node_modules/", "__pycache__/")):
+                        continue
+                    listing.append(rel)
+                    if len(listing) >= 200:
+                        break
+                _add("file-tree (paths only, up to 200)", "\n".join(listing))
+            except Exception:
+                pass
+
+        return "\n".join(chunks) if chunks else "(no project context available)"
+
+    def _handle_project_chat(self, slug: str):
+        project_root = self._resolve_project_root(slug)
+        if not project_root:
+            self._send_json({"error": "Project not found"}, 404)
+            return
+
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body)
+        except Exception as e:
+            self._send_json({"error": f"Invalid request: {e}"}, 400)
+            return
+
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        raw_messages = payload.get("messages", [])
+        if not isinstance(raw_messages, list) or not raw_messages:
+            self._send_json({"error": "messages must be a non-empty list"}, 400)
+            return
+
+        cleaned: list[dict] = []
+        for m in raw_messages[-20:]:
+            if not isinstance(m, dict):
+                continue
+            role = str(m.get("role", "")).strip().lower()
+            content = str(m.get("content", "")).strip()
+            if role not in ("user", "assistant") or not content:
+                continue
+            cleaned.append({"role": role, "content": content[:4000]})
+
+        if not cleaned:
+            self._send_json({"error": "messages must contain at least one user turn"}, 400)
+            return
+
+        # Build grounded context from the project tree.
+        context_block = self._build_project_chat_context(project_root)
+
+        system_prompt = (
+            f"{self._PROJECT_CHAT_SYSTEM_PROMPT}\n\n"
+            f"### CURRENT PROJECT\n\nslug: `{slug}`\n\n"
+            f"### CONTEXT\n\n{context_block}"
+        )
+
+        chat_messages = [{"role": "system", "content": system_prompt}] + cleaned
+        status, reply_text = self._call_azure_openai(chat_messages, max_tokens=1500, temperature=0.2)
+        self._send_json({"reply": reply_text, "slug": slug, "context_size": len(context_block)}, status)
+
+    # Shared Azure OpenAI caller used by BRD Copilot and Project Copilot.
+    def _call_azure_openai(
+        self,
+        messages: list,
+        *,
+        max_tokens: int = 1200,
+        temperature: float = 0.3,
+        response_format: dict | None = None,
+    ) -> tuple[int, str]:
+        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
+        deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
+        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
+        api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+
+        if not (endpoint and deployment and api_key):
+            return (
+                200,
+                "**Project Copilot is not configured on this portal.**\n\n"
+                "Set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, and "
+                "`AZURE_OPENAI_API_KEY` on the portal server and restart. "
+                "Until then, browse the project's `docs/` folder directly.",
+            )
+
+        req_body: dict = {
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if response_format:
+            req_body["response_format"] = response_format
+
+        url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+        req = Request(url, data=json.dumps(req_body).encode("utf-8"), method="POST")
+        req.add_header("Content-Type", "application/json")
+        req.add_header("api-key", api_key)
+
+        try:
+            with urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            return 200, str(data["choices"][0]["message"]["content"]).strip()
+        except URLError as e:
+            logging.warning("Azure OpenAI call failed: %s", e)
+            return 502, f"Azure OpenAI call failed: {e}"
+        except Exception as e:
+            logging.warning("Azure OpenAI unexpected error: %s", e)
+            return 502, f"Azure OpenAI call failed: {e}"
 
     def _safe_content_length(self) -> int | None:
         """Return validated content length or emit an error response."""
