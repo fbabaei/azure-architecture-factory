@@ -1,6 +1,2555 @@
 {
-  "generatedAt": "2026-04-16T17:46:52.562243Z",
+  "generatedAt": "2026-04-21T00:36:44.742936Z",
   "projects": [
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421003644-53ccdc",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:36:44.742936Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/diagrams/brd-net-terraform-smoke-test-20260421003644-53ccdc.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003644-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421003644-53ccdc/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:44.909845Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421003644-612ed3",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:36:44.474582Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/diagrams/brd-net-terraform-smoke-test-20260421003644-612ed3.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003644-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421003644-612ed3/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:44.631800Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421003644",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:36:44.072593Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421003644/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421003644/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421003644/diagrams/brd-net-terraform-smoke-test-20260421003644.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421003644/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421003644/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421003644/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003644-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421003644/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:44.271669Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260421003634-rnet02",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-21T00:36:34.980466Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260421003634-rnet02/README.md",
+        "deploy": "projects/mdr-support-20260421003634-rnet02/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260421003634-rnet02/diagrams/mdr-support-20260421003634-rnet02.drawio",
+        "architectureOverview": "projects/mdr-support-20260421003634-rnet02/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260421003634-rnet02/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260421003634-rnet02/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003634-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260421003634-rnet02/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:35.267642Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260421003634-rnet01",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-21T00:36:34.707582Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260421003634-rnet01/README.md",
+        "deploy": "projects/mdr-support-20260421003634-rnet01/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260421003634-rnet01/diagrams/mdr-support-20260421003634-rnet01.drawio",
+        "architectureOverview": "projects/mdr-support-20260421003634-rnet01/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260421003634-rnet01/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260421003634-rnet01/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003634-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260421003634-rnet01/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:34.869451Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260421003634",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-21T00:36:34.276060Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260421003634/README.md",
+        "deploy": "projects/mdr-support-20260421003634/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260421003634/diagrams/mdr-support-20260421003634.drawio",
+        "architectureOverview": "projects/mdr-support-20260421003634/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260421003634/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260421003634/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003634-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260421003634/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:34.479030Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260421003611",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-21T00:36:11.335756Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260421003611/README.md",
+        "deploy": "projects/mdr-support-20260421003611/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260421003611/diagrams/mdr-support-20260421003611.drawio",
+        "architectureOverview": "projects/mdr-support-20260421003611/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260421003611/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260421003611/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-003611-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260421003611/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:36:11.544147Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421002221-eac0c9",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:22:21.474130Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/diagrams/brd-net-terraform-smoke-test-20260421002221-eac0c9.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002221-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421002221-eac0c9/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:22:21.603613Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421002221",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:22:21.174713Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421002221/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421002221/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421002221/diagrams/brd-net-terraform-smoke-test-20260421002221.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421002221/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421002221/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421002221/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002221-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421002221/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:22:21.340613Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260421002220",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-21T00:22:20.777427Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260421002220/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260421002220/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260421002220/diagrams/brd-net-terraform-smoke-test-20260421002220.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260421002220/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260421002220/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260421002220/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002220-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260421002220/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:22:21.115746Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "docs-only-spike-20260421002211",
+      "title": "Docs-only Spike",
+      "status": "Ready",
+      "generatedFrom": "docs-only-spike.md",
+      "generatedAt": "2026-04-21T00:22:11.771220Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": false,
+        "runSecurityAudit": false
+      },
+      "links": {
+        "readme": "projects/docs-only-spike-20260421002211/README.md",
+        "deploy": "projects/docs-only-spike-20260421002211/DEPLOY.md",
+        "diagram": "projects/docs-only-spike-20260421002211/diagrams/docs-only-spike-20260421002211.drawio",
+        "architectureOverview": "projects/docs-only-spike-20260421002211/docs/architecture-overview.md",
+        "traceability": "projects/docs-only-spike-20260421002211/docs/traceability-matrix.md",
+        "guideReport": "projects/docs-only-spike-20260421002211/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002211-docs-only-spike.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "disabled",
+      "guideReport": {
+        "path": "projects/docs-only-spike-20260421002211/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:22:11.973110Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260421002112-329112",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-21T00:21:12.241197Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260421002112-329112/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260421002112-329112/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260421002112-329112/diagrams/brd-default-path-smoke-test-20260421002112-329112.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260421002112-329112/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260421002112-329112/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260421002112-329112/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002112-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260421002112-329112/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:21:12.332612Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260421002112",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-21T00:21:12.033789Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260421002112/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260421002112/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260421002112/diagrams/brd-default-path-smoke-test-20260421002112.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260421002112/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260421002112/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260421002112/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002112-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260421002112/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:21:12.204471Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260421002111",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-21T00:21:11.806268Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260421002111/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260421002111/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260421002111/diagrams/brd-default-path-smoke-test-20260421002111.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260421002111/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260421002111/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260421002111/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002111-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260421002111/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:21:12.010036Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260421002041",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-21T00:20:41.684229Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260421002041/README.md",
+        "deploy": "projects/mdr-support-20260421002041/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260421002041/diagrams/mdr-support-20260421002041.drawio",
+        "architectureOverview": "projects/mdr-support-20260421002041/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260421002041/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260421002041/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260421-002041-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260421002041/docs/guide-report.md",
+        "generated_at": "2026-04-21T00:20:42.080900Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420233132",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T23:31:32.485803Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420233132/README.md",
+        "deploy": "projects/mdr-support-20260420233132/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420233132/diagrams/mdr-support-20260420233132.drawio",
+        "architectureOverview": "projects/mdr-support-20260420233132/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420233132/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420233132/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233132-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420233132/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:32.736181Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "docs-only-spike-20260420233107",
+      "title": "Docs-only Spike",
+      "status": "Ready",
+      "generatedFrom": "docs-only-spike.md",
+      "generatedAt": "2026-04-20T23:31:07.240567Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": false,
+        "runSecurityAudit": false
+      },
+      "links": {
+        "readme": "projects/docs-only-spike-20260420233107/README.md",
+        "deploy": "projects/docs-only-spike-20260420233107/DEPLOY.md",
+        "diagram": "projects/docs-only-spike-20260420233107/diagrams/docs-only-spike-20260420233107.drawio",
+        "architectureOverview": "projects/docs-only-spike-20260420233107/docs/architecture-overview.md",
+        "traceability": "projects/docs-only-spike-20260420233107/docs/traceability-matrix.md",
+        "guideReport": "projects/docs-only-spike-20260420233107/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233107-docs-only-spike.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "disabled",
+      "guideReport": {
+        "path": "projects/docs-only-spike-20260420233107/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:07.337413Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420233105-0f503b",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T23:31:05.734120Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/diagrams/brd-net-terraform-smoke-test-20260420233105-0f503b.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233105-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420233105-0f503b/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:05.874060Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420233105",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T23:31:05.358017Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420233105/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420233105/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420233105/diagrams/brd-net-terraform-smoke-test-20260420233105.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420233105/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420233105/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420233105/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233105-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420233105/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:05.621762Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420233104",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T23:31:04.751119Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420233104/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420233104/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420233104/diagrams/brd-net-terraform-smoke-test-20260420233104.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420233104/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420233104/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420233104/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233104-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420233104/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:05.115794Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420233103-81ff47",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T23:31:03.409084Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420233103-81ff47/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420233103-81ff47/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420233103-81ff47/diagrams/brd-default-path-smoke-test-20260420233103-81ff47.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420233103-81ff47/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420233103-81ff47/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420233103-81ff47/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233103-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420233103-81ff47/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:03.548504Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420233103",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T23:31:03.128118Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420233103/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420233103/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420233103/diagrams/brd-default-path-smoke-test-20260420233103.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420233103/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420233103/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420233103/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233103-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420233103/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:03.357891Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420233102",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T23:31:02.711167Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420233102/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420233102/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420233102/diagrams/brd-default-path-smoke-test-20260420233102.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420233102/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420233102/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420233102/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-233102-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420233102/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:31:03.021031Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420232000",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T23:20:00.978347Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420232000/README.md",
+        "deploy": "projects/mdr-support-20260420232000/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420232000/diagrams/mdr-support-20260420232000.drawio",
+        "architectureOverview": "projects/mdr-support-20260420232000/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420232000/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420232000/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-232000-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420232000/docs/guide-report.md",
+        "generated_at": "2026-04-20T23:20:01.197896Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "docs-only-spike-20260420222801",
+      "title": "Docs-only Spike",
+      "status": "Ready",
+      "generatedFrom": "docs-only-spike.md",
+      "generatedAt": "2026-04-20T22:28:01.617188Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": false,
+        "runSecurityAudit": false
+      },
+      "links": {
+        "readme": "projects/docs-only-spike-20260420222801/README.md",
+        "deploy": "projects/docs-only-spike-20260420222801/DEPLOY.md",
+        "diagram": "projects/docs-only-spike-20260420222801/diagrams/docs-only-spike-20260420222801.drawio",
+        "architectureOverview": "projects/docs-only-spike-20260420222801/docs/architecture-overview.md",
+        "traceability": "projects/docs-only-spike-20260420222801/docs/traceability-matrix.md",
+        "guideReport": "projects/docs-only-spike-20260420222801/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222801-docs-only-spike.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "disabled",
+      "guideReport": {
+        "path": "projects/docs-only-spike-20260420222801/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:28:01.724897Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222800-d1e5b4",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:28:00.774737Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/diagrams/brd-net-terraform-smoke-test-20260420222800-d1e5b4.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222800-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222800-d1e5b4/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:28:00.900089Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222800-40e28c",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:28:00.564426Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/diagrams/brd-net-terraform-smoke-test-20260420222800-40e28c.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222800-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222800-40e28c/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:28:00.729176Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222800",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:28:00.117433Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222800/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222800/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222800/diagrams/brd-net-terraform-smoke-test-20260420222800.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222800/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222800/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222800/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222800-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222800/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:28:00.303963Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222759",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:27:59.106712Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222759/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222759/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222759/diagrams/brd-default-path-smoke-test-20260420222759.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222759/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222759/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222759/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222759-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222759/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:27:59.244455Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222758-b19f54",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:27:58.925611Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222758-b19f54/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222758-b19f54/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222758-b19f54/diagrams/brd-default-path-smoke-test-20260420222758-b19f54.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222758-b19f54/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222758-b19f54/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222758-b19f54/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222758-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222758-b19f54/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:27:59.069682Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222758",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:27:58.772393Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222758/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222758/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222758/diagrams/brd-default-path-smoke-test-20260420222758.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222758/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222758/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222758/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222758-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222758/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:27:58.891692Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "docs-only-spike-20260420222240",
+      "title": "Docs-only Spike",
+      "status": "Ready",
+      "generatedFrom": "docs-only-spike.md",
+      "generatedAt": "2026-04-20T22:22:40.918646Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": false,
+        "runSecurityAudit": false
+      },
+      "links": {
+        "readme": "projects/docs-only-spike-20260420222240/README.md",
+        "deploy": "projects/docs-only-spike-20260420222240/DEPLOY.md",
+        "diagram": "projects/docs-only-spike-20260420222240/diagrams/docs-only-spike-20260420222240.drawio",
+        "architectureOverview": "projects/docs-only-spike-20260420222240/docs/architecture-overview.md",
+        "traceability": "projects/docs-only-spike-20260420222240/docs/traceability-matrix.md",
+        "guideReport": "projects/docs-only-spike-20260420222240/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222240-docs-only-spike.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "disabled",
+      "guideReport": {
+        "path": "projects/docs-only-spike-20260420222240/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:22:41.041787Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222138",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:21:38.078835Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222138/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222138/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222138/diagrams/brd-net-terraform-smoke-test-20260420222138.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222138/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222138/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222138/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222138-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222138/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:38.204949Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222137-e670c0",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:21:37.903563Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/diagrams/brd-net-terraform-smoke-test-20260420222137-e670c0.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222137-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222137-e670c0/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:38.027904Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420222137",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T22:21:37.723662Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420222137/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420222137/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420222137/diagrams/brd-net-terraform-smoke-test-20260420222137.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420222137/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420222137/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420222137/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222137-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420222137/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:37.872220Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222110-83bdeb",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:21:10.354500Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/diagrams/brd-default-path-smoke-test-20260420222110-83bdeb.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222110-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222110-83bdeb/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:10.503510Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222110",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:21:10.082724Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222110/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222110/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222110/diagrams/brd-default-path-smoke-test-20260420222110.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222110/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222110/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222110/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222110-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222110/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:10.290859Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420222109",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T22:21:09.494489Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public",
+        "generateInfra": true,
+        "runSecurityAudit": true
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420222109/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420222109/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420222109/diagrams/brd-default-path-smoke-test-20260420222109.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420222109/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420222109/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420222109/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-222109-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420222109/docs/guide-report.md",
+        "generated_at": "2026-04-20T22:21:09.975653Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420213342-bb8836",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T21:33:42.279764Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420213342-bb8836/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420213342-bb8836/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420213342-bb8836/diagrams/brd-default-path-smoke-test-20260420213342-bb8836.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420213342-bb8836/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420213342-bb8836/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420213342-bb8836/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-213342-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420213342-bb8836/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:33:42.390282Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420213342",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T21:33:42.101261Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420213342/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420213342/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420213342/diagrams/brd-default-path-smoke-test-20260420213342.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420213342/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420213342/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420213342/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-213342-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420213342/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:33:42.236792Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-default-path-smoke-test-20260420213341",
+      "title": "BRD \u2014 Default Path Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "default-path-smoke.md",
+      "generatedAt": "2026-04-20T21:33:41.942251Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-default-path-smoke-test-20260420213341/README.md",
+        "deploy": "projects/brd-default-path-smoke-test-20260420213341/DEPLOY.md",
+        "diagram": "projects/brd-default-path-smoke-test-20260420213341/diagrams/brd-default-path-smoke-test-20260420213341.drawio",
+        "architectureOverview": "projects/brd-default-path-smoke-test-20260420213341/docs/architecture-overview.md",
+        "traceability": "projects/brd-default-path-smoke-test-20260420213341/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-default-path-smoke-test-20260420213341/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-213341-brd-default-path-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-default-path-smoke-test-20260420213341/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:33:42.063292Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "override-test-20260420212750",
+      "title": "Override Test",
+      "status": "Ready",
+      "generatedFrom": "brd.md",
+      "generatedAt": "2026-04-20T21:27:50.815547Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/override-test-20260420212750/README.md",
+        "deploy": "projects/override-test-20260420212750/DEPLOY.md",
+        "diagram": "projects/override-test-20260420212750/diagrams/override-test-20260420212750.drawio",
+        "architectureOverview": "projects/override-test-20260420212750/docs/architecture-overview.md",
+        "traceability": "projects/override-test-20260420212750/docs/traceability-matrix.md",
+        "guideReport": "projects/override-test-20260420212750/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212750-override-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/override-test-20260420212750/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:27:50.973089Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "override-test-20260420212719",
+      "title": "Override Test",
+      "status": "Ready",
+      "generatedFrom": "brd.md",
+      "generatedAt": "2026-04-20T21:27:19.712152Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/override-test-20260420212719/README.md",
+        "deploy": "projects/override-test-20260420212719/DEPLOY.md",
+        "diagram": "projects/override-test-20260420212719/diagrams/override-test-20260420212719.drawio",
+        "architectureOverview": "projects/override-test-20260420212719/docs/architecture-overview.md",
+        "traceability": "projects/override-test-20260420212719/docs/traceability-matrix.md",
+        "guideReport": "projects/override-test-20260420212719/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212719-override-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/override-test-20260420212719/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:27:19.823559Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420212626-dfae7a",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:26:26.611064Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/diagrams/brd-net-terraform-smoke-test-20260420212626-dfae7a.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212626-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420212626-dfae7a/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:26.758903Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420212626-0cad1f",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:26:26.427390Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/diagrams/brd-net-terraform-smoke-test-20260420212626-0cad1f.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212626-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420212626-0cad1f/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:26.558136Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420212626",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:26:26.159466Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420212626/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420212626/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420212626/diagrams/brd-net-terraform-smoke-test-20260420212626.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420212626/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420212626/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420212626/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212626-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420212626/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:26.320080Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420212608",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T21:26:08.083769Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420212608/README.md",
+        "deploy": "projects/mdr-support-20260420212608/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420212608/diagrams/mdr-support-20260420212608.drawio",
+        "architectureOverview": "projects/mdr-support-20260420212608/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420212608/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420212608/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212608-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420212608/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:08.230228Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420212607-7ff777",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T21:26:07.874529Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420212607-7ff777/README.md",
+        "deploy": "projects/mdr-support-20260420212607-7ff777/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420212607-7ff777/diagrams/mdr-support-20260420212607-7ff777.drawio",
+        "architectureOverview": "projects/mdr-support-20260420212607-7ff777/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420212607-7ff777/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420212607-7ff777/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212607-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420212607-7ff777/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:07.996288Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420212607",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T21:26:07.551054Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420212607/README.md",
+        "deploy": "projects/mdr-support-20260420212607/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420212607/diagrams/mdr-support-20260420212607.drawio",
+        "architectureOverview": "projects/mdr-support-20260420212607/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420212607/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420212607/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-212607-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420212607/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:26:07.750335Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211227",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:12:27.028342Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211227/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211227/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211227/diagrams/brd-net-terraform-smoke-test-20260420211227.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211227/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211227/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211227/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211227-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211227/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:12:27.152499Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211226-05ec0e",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:12:26.818242Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/diagrams/brd-net-terraform-smoke-test-20260420211226-05ec0e.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211226-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211226-05ec0e/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:12:26.965745Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211226",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:12:26.662865Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211226/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211226/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211226/diagrams/brd-net-terraform-smoke-test-20260420211226.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211226/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211226/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211226/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211226-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211226/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:12:26.769050Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211158-b05fa8",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:58.602446Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/diagrams/brd-net-terraform-smoke-test-20260420211158-b05fa8.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211158-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211158-b05fa8/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:58.726662Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211158-004623",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:58.446865Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211158-004623/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211158-004623/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211158-004623/diagrams/brd-net-terraform-smoke-test-20260420211158-004623.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211158-004623/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211158-004623/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211158-004623/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211158-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211158-004623/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:58.563238Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211158",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:58.305879Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211158/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211158/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211158/diagrams/brd-net-terraform-smoke-test-20260420211158.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211158/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211158/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211158/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211158-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211158/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:58.414233Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211137-5972f1",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:37.656109Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/diagrams/brd-net-terraform-smoke-test-20260420211137-5972f1.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211137-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211137-5972f1/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:37.859491Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211137",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:37.454489Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211137/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211137/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211137/diagrams/brd-net-terraform-smoke-test-20260420211137.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211137/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211137/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211137/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211137-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211137/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:37.589339Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420211136",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:11:36.937212Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420211136/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420211136/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420211136/diagrams/brd-net-terraform-smoke-test-20260420211136.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420211136/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420211136/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420211136/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-211136-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420211136/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:11:37.319906Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420210452",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:04:52.338674Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420210452/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420210452/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420210452/diagrams/brd-net-terraform-smoke-test-20260420210452.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420210452/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420210452/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420210452/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-210452-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "dotnet",
+      "iacTool": "terraform",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420210452/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:04:52.728569Z",
+        "severity_counts": {
+          "critical": 2,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "brd-net-terraform-smoke-test-20260420210414",
+      "title": "BRD \u2014 .NET + Terraform Smoke Test",
+      "status": "Ready",
+      "generatedFrom": "dotnet-terraform-smoke.md",
+      "generatedAt": "2026-04-20T21:04:14.124601Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/brd-net-terraform-smoke-test-20260420210414/README.md",
+        "deploy": "projects/brd-net-terraform-smoke-test-20260420210414/DEPLOY.md",
+        "diagram": "projects/brd-net-terraform-smoke-test-20260420210414/diagrams/brd-net-terraform-smoke-test-20260420210414.drawio",
+        "architectureOverview": "projects/brd-net-terraform-smoke-test-20260420210414/docs/architecture-overview.md",
+        "traceability": "projects/brd-net-terraform-smoke-test-20260420210414/docs/traceability-matrix.md",
+        "guideReport": "projects/brd-net-terraform-smoke-test-20260420210414/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-210414-brd-net-terraform-smoke-test.log",
+      "suggestedRuntime": {
+        "runtime": "local",
+        "source": "local",
+        "score": 0,
+        "signals": [],
+        "counterSignals": [],
+        "reasoning": "No LLM-driven components detected in the BRD. The deterministic Python runtime is sufficient; shipping the SDK would add a preview dependency without benefit."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/brd-net-terraform-smoke-test-20260420210414/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:04:14.263122Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
+    {
+      "slug": "mdr-support-20260420210345",
+      "title": "Mdr Support",
+      "status": "Ready",
+      "generatedFrom": "mdr-support.md",
+      "generatedAt": "2026-04-20T21:03:45.235832Z",
+      "options": {
+        "enableObservability": true,
+        "networkTier": "public"
+      },
+      "links": {
+        "readme": "projects/mdr-support-20260420210345/README.md",
+        "deploy": "projects/mdr-support-20260420210345/DEPLOY.md",
+        "diagram": "projects/mdr-support-20260420210345/diagrams/mdr-support-20260420210345.drawio",
+        "architectureOverview": "projects/mdr-support-20260420210345/docs/architecture-overview.md",
+        "traceability": "projects/mdr-support-20260420210345/docs/traceability-matrix.md",
+        "guideReport": "projects/mdr-support-20260420210345/docs/guide-report.md"
+      },
+      "runLog": "outputs\\brd-runs\\20260420-210345-mdr-support.log",
+      "suggestedRuntime": {
+        "runtime": "agent-framework",
+        "source": "local",
+        "score": 2,
+        "signals": [
+          "prompt-based reasoning",
+          "multi-turn clarification loop"
+        ],
+        "counterSignals": [],
+        "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+      },
+      "implementationLanguage": "python",
+      "iacTool": "bicep",
+      "guideReport": {
+        "path": "projects/mdr-support-20260420210345/docs/guide-report.md",
+        "generated_at": "2026-04-20T21:03:45.482183Z",
+        "severity_counts": {
+          "critical": 3,
+          "warning": 2,
+          "advisory": 1,
+          "ok": 1
+        }
+      }
+    },
     {
       "slug": "mdr-support-20260416174652",
       "title": "Mdr Support",

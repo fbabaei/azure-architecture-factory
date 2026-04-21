@@ -1,0 +1,82 @@
+{
+  "project": "mdr-support-20260421003611",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\mdr-support.md",
+  "created_at": "2026-04-21T00:36:11.335756Z",
+  "generator": "azure_native_factory_runner",
+  "title": "Mdr Support",
+  "requirements_detected": [
+    "The EY Tax team is looking to build a compliance agent to support Mandatory Disclosure Rules (MDR) arrangement creation. The goal is to deliver an agent that enables MDR\u2011specific Q&A and supports two arrangement\u2011creation flows:",
+    "File upload\u2013based extraction",
+    "An interactive, human\u2011in\u2011the\u2011loop chat experience that guides users through creating an arrangement.",
+    "This CodeWith will focus on Phase 1, building a data extraction agent capable of ingesting unstructured documents (PDFs and text inputs), extracting structured MDR arrangement data into a consistent JSON format, and enabling an intelligent clarification loop. The agent will identify missing mandatory fields and prompt the user for additional inputs before generating an arrangement draft.",
+    "The outcome will be a more reliable, scalable, and user\u2011friendly arrangement creation workflow, with batch and multi\u2011arrangement processing explicitly deferred to a later phase.",
+    "This engagement will also produce a clear technical blueprint, reusable extraction patterns, and testable end\u2011to\u2011end flows that EY can extend into their MDR modernization roadmap and also while significantly reducing the manual time and effort required per document for arrangement creation and review."
+  ],
+  "success_criteria_detected": [
+    "Generated starter solution is reviewed and refined before production deployment"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": false
+  },
+  "suggested_runtime": {
+    "runtime": "agent-framework",
+    "source": "local",
+    "score": 2,
+    "signals": [
+      "prompt-based reasoning",
+      "multi-turn clarification loop"
+    ],
+    "counterSignals": [],
+    "reasoning": "Detected prompt-based reasoning, multi-turn clarification loop \u2014 recommending the Agent Framework SDK runtime alongside the deterministic fallback."
+  },
+  "generation_options": {
+    "enableObservability": true,
+    "networkTier": "public",
+    "generateInfra": true,
+    "runSecurityAudit": true
+  },
+  "implementation_language": "dotnet",
+  "iac_tool": "bicep",
+  "archetype": "extraction-chat",
+  "language_files": [
+    "src/MdrSupport.csproj",
+    "src/Program.cs",
+    "src/Models.cs",
+    "src/Services/DocumentIngestionService.cs",
+    "src/Services/ExtractionService.cs",
+    "src/Services/ClarificationService.cs",
+    "src/Services/DraftRepository.cs",
+    "src/Services/SessionService.cs",
+    "src/appsettings.json",
+    "src/appsettings.Development.json",
+    "src/Dockerfile",
+    "src/.dockerignore",
+    "tests/MdrSupport.Tests.csproj",
+    "tests/HealthEndpointTests.cs",
+    "global.json",
+    "sample-corpus/README.md",
+    "sample-corpus/manifest.json",
+    "README.md",
+    "DEPLOY.md"
+  ],
+  "iac_files": [
+    "infra/main.bicep"
+  ],
+  "user_home_copy": "C:\\Users\\fbabaei\\app\\mdr-support-20260421003611",
+  "guide_report": {
+    "path": "projects/mdr-support-20260421003611/docs/guide-report.md",
+    "generated_at": "2026-04-21T00:36:11.544147Z",
+    "severity_counts": {
+      "critical": 3,
+      "warning": 2,
+      "advisory": 1,
+      "ok": 1
+    }
+  }
+}
