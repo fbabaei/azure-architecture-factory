@@ -6811,6 +6811,34 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 return div.innerHTML.replace(/\n/g, '<br>');
             }
 
+            function rewriteBubbleLinks(bubble) {
+                // Links inside chat bubbles would otherwise navigate the whole portal
+                // and 404 (the model emits relative paths like "infra/main.bicep").
+                // Route project-relative file refs through the existing file API and
+                // force every link to open in a new tab so the chat panel survives.
+                if (!state.slug) return;
+                const anchors = bubble.querySelectorAll('a[href]');
+                anchors.forEach(a => {
+                    const raw = (a.getAttribute('href') || '').trim();
+                    if (!raw || raw.startsWith('#')) return;
+                    const isAbsolute = /^(https?:)?\/\//i.test(raw) || raw.startsWith('/');
+                    const isMail = /^mailto:/i.test(raw);
+                    if (isMail) return;
+                    if (!isAbsolute) {
+                        // Treat as a project-relative file path.
+                        const clean = raw.replace(/^\.\/+/, '').split('#')[0].split('?')[0];
+                        if (clean) {
+                            a.setAttribute(
+                                'href',
+                                `${window.location.origin}/api/projects/${encodeURIComponent(state.slug)}/file?path=${encodeURIComponent(clean)}`
+                            );
+                        }
+                    }
+                    a.setAttribute('target', '_blank');
+                    a.setAttribute('rel', 'noopener');
+                });
+            }
+
             function addMessage(role, content) {
                 const list = el('project-chat-messages');
                 const wrap = document.createElement('div');
@@ -6818,6 +6846,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 const bubble = document.createElement('div');
                 bubble.className = 'brd-chat-bubble';
                 bubble.innerHTML = renderMarkdown(content || '');
+                rewriteBubbleLinks(bubble);
                 wrap.appendChild(bubble);
                 list.appendChild(wrap);
                 list.scrollTop = list.scrollHeight;
