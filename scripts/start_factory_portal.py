@@ -433,6 +433,14 @@ ENTRA_TENANT_ID = os.environ.get("ENTRA_TENANT_ID", "").strip()
 ENTRA_CLIENT_ID = os.environ.get("ENTRA_CLIENT_ID", "").strip()  # App registration Application (client) ID
 ENTRA_AUDIENCE = os.environ.get("ENTRA_AUDIENCE", "").strip() or ENTRA_CLIENT_ID  # Defaults to client ID
 
+# When the portal runs behind Azure Container Apps / App Service EasyAuth,
+# the ingress strips any caller-supplied X-MS-CLIENT-PRINCIPAL* headers and
+# replaces them with values from the validated session. Setting this env var
+# tells the portal it is safe to trust those headers as proof of an
+# authenticated Entra user (browser UI flow — no Bearer token required).
+# NEVER enable this when the portal is exposed without EasyAuth in front.
+TRUST_EASYAUTH_HEADERS = os.environ.get("TRUST_EASYAUTH_HEADERS", "").strip().lower() in ("1", "true", "yes")
+
 
 # ── Entra ID JWT validation (stdlib + minimal base64 decode) ─────────────────
 
@@ -1407,6 +1415,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         Auth precedence:
         1. If Entra ID env vars are set → validate Bearer token
+           (or, if TRUST_EASYAUTH_HEADERS=1, accept EasyAuth's forwarded
+           X-MS-CLIENT-PRINCIPAL-* headers from the browser session)
         2. Else if API key env var is set:
            a. X-Factory-Api-Key contains a '.' → treat as issued token (HMAC-signed, expirable, usage-counted)
            b. Otherwise → compare directly as master key
@@ -1414,6 +1424,23 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """
         # --- Entra ID (preferred) ---
         if _jwks_cache is not None:
+            # Defense-in-depth: if EasyAuth is in front and has already
+            # validated the browser session, it forwards principal headers
+            # that a forged caller cannot inject (EasyAuth strips incoming
+            # copies before forwarding). Trust them only when explicitly
+            # opted in.
+            if TRUST_EASYAUTH_HEADERS:
+                principal_id = self.headers.get("X-MS-CLIENT-PRINCIPAL-ID", "").strip()
+                principal_idp = self.headers.get("X-MS-CLIENT-PRINCIPAL-IDP", "").strip().lower()
+                if principal_id and principal_idp in ("aad", "azureactivedirectory"):
+                    principal_name = self.headers.get("X-MS-CLIENT-PRINCIPAL-NAME", "").strip()
+                    self._entra_claims = {
+                        "oid": principal_id,
+                        "preferred_username": principal_name,
+                        "source": "easyauth",
+                    }
+                    return True
+
             auth_header = self.headers.get("Authorization", "")
             if not auth_header:
                 self._send_json(
