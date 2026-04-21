@@ -452,6 +452,42 @@ BRD_INTAKE_ALLOWED_PRINCIPALS = _parse_principal_allowlist(
     os.environ.get("BRD_INTAKE_ALLOWED_PRINCIPALS", "")
 )
 
+# File-backed overlay for the allowlist so admins can edit it from the portal
+# without redeploying. The file is merged with BRD_INTAKE_ALLOWED_PRINCIPALS;
+# removing an env-baked entry requires changing the env var (env is the seed).
+BRD_ALLOWLIST_FILE = pathlib.Path(
+    os.environ.get("BRD_INTAKE_ALLOWLIST_FILE")
+    or (FACTORY_REPO_ROOT / ".brd-allowlist.json")
+)
+
+
+def _load_brd_allowlist_file() -> set[str]:
+    try:
+        if BRD_ALLOWLIST_FILE.is_file():
+            raw = json.loads(BRD_ALLOWLIST_FILE.read_text(encoding="utf-8"))
+            if isinstance(raw, list):
+                return {str(x).strip().lower() for x in raw if str(x).strip()}
+            if isinstance(raw, dict) and isinstance(raw.get("principals"), list):
+                return {str(x).strip().lower() for x in raw["principals"] if str(x).strip()}
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.warning("Failed to read %s: %s", BRD_ALLOWLIST_FILE.name, exc)
+    return set()
+
+
+def _save_brd_allowlist_file(principals: set[str]) -> None:
+    try:
+        BRD_ALLOWLIST_FILE.write_text(
+            json.dumps({"principals": sorted(principals)}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        logger.warning("Failed to write %s: %s", BRD_ALLOWLIST_FILE.name, exc)
+
+
+def _current_brd_allowlist() -> set[str]:
+    """Effective allowlist = env seed ∪ file overlay."""
+    return BRD_INTAKE_ALLOWED_PRINCIPALS | _load_brd_allowlist_file()
+
 
 # ── Entra ID JWT validation (stdlib + minimal base64 decode) ─────────────────
 
@@ -1365,6 +1401,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_project_owners_list(parsed.query)
 
+        if request_path == "/api/admin/brd-allowlist":
+            if not self._require_brd_admin():
+                return
+            return self._handle_brd_allowlist_list()
+
         # Default file serving
         return super().do_GET()
 
@@ -1391,6 +1432,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_admin_key():
                 return
             return self._handle_project_owners_update()
+        if path == "/api/admin/brd-allowlist":
+            if not self._require_brd_admin():
+                return
+            return self._handle_brd_allowlist_update()
         if path == "/api/token-request":
             return self._handle_submit_token_request()
         if path == "/api/csa-copilot/ask":
@@ -1510,24 +1555,16 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         return True
 
     def _require_brd_intake_principal(self) -> bool:
-        """Enforce BRD_INTAKE_ALLOWED_PRINCIPALS against the authenticated caller.
+        """Enforce BRD allowlist (env seed + file overlay) against the authenticated caller.
 
         Must be called AFTER `_require_auth_for_mutation`, so `self._entra_claims`
-        is populated. If the env var is empty, any authenticated user is allowed.
+        is populated. If the effective allowlist is empty, any authenticated user is allowed.
         """
-        if not BRD_INTAKE_ALLOWED_PRINCIPALS:
+        effective = _current_brd_allowlist()
+        if not effective:
             return True  # No allowlist configured
 
-        claims = getattr(self, "_entra_claims", None) or {}
-        candidates = {
-            str(claims.get("preferred_username", "")).strip().lower(),
-            str(claims.get("upn", "")).strip().lower(),
-            str(claims.get("email", "")).strip().lower(),
-            str(claims.get("oid", "")).strip().lower(),
-            str(claims.get("sub", "")).strip().lower(),
-        }
-        candidates.discard("")
-        if candidates & BRD_INTAKE_ALLOWED_PRINCIPALS:
+        if self._caller_principals() & effective:
             return True
 
         self._send_json(
@@ -1535,6 +1572,50 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             403,
         )
         return False
+
+    def _caller_principals(self) -> set[str]:
+        """Lowercased identifiers that can match an allowlist entry."""
+        claims = getattr(self, "_entra_claims", None) or {}
+        values = {
+            str(claims.get("preferred_username", "")).strip().lower(),
+            str(claims.get("upn", "")).strip().lower(),
+            str(claims.get("email", "")).strip().lower(),
+            str(claims.get("oid", "")).strip().lower(),
+            str(claims.get("sub", "")).strip().lower(),
+        }
+        values.discard("")
+        return values
+
+    def _require_brd_admin(self) -> bool:
+        """Allow BRD allowlist management for: master API key, portal admins,
+        OR any user already on the BRD allowlist (bootstraps self-service)."""
+        # Master key still works
+        expected_key = os.environ.get(API_KEY_ENV, "").strip()
+        if expected_key:
+            provided = self.headers.get("X-Factory-Api-Key", "")
+            if provided and hmac.compare_digest(provided, expected_key):
+                return True
+
+        # Require auth if Entra is configured
+        if _jwks_cache is not None:
+            if not self._require_auth_for_mutation():
+                return False
+            caller = self._caller_principals()
+            # Portal-level admins
+            for principal in caller:
+                if _is_admin(principal):
+                    return True
+            # Current allowlist members can manage the list
+            if caller & _current_brd_allowlist():
+                return True
+            self._send_json(
+                {"error": "Only portal admins or current BRD allowlist members can manage the allowlist."},
+                403,
+            )
+            return False
+
+        # No auth configured — local dev
+        return True
 
     def _handle_issue_token(self):
         """POST /api/admin/issue-token — create a signed, usage-counted token."""
@@ -1637,6 +1718,69 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             ]
         tokens.sort(key=lambda t: t["exp"], reverse=True)
         self._send_json({"tokens": tokens})
+
+    def _handle_brd_allowlist_list(self):
+        """GET /api/admin/brd-allowlist — effective allowlist + source breakdown."""
+        env_seed = sorted(BRD_INTAKE_ALLOWED_PRINCIPALS)
+        file_overlay = sorted(_load_brd_allowlist_file())
+        effective = sorted(_current_brd_allowlist())
+        self._send_json({
+            "envSeed": env_seed,
+            "fileOverlay": file_overlay,
+            "effective": effective,
+            "allowlistFile": str(BRD_ALLOWLIST_FILE),
+            "note": "env seed is read-only (set BRD_INTAKE_ALLOWED_PRINCIPALS). file overlay is editable here.",
+        })
+
+    def _handle_brd_allowlist_update(self):
+        """POST /api/admin/brd-allowlist — add/remove/set principals in the file overlay."""
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+
+        action = str(payload.get("action", "add")).strip().lower() or "add"
+        raw = payload.get("principals")
+        if raw is None and "principal" in payload:
+            raw = [payload.get("principal")]
+        if isinstance(raw, str):
+            raw = [raw]
+        if not isinstance(raw, list):
+            raw = []
+        cleaned = []
+        for p in raw:
+            if isinstance(p, str):
+                norm = p.strip().lower()
+                if norm and norm not in cleaned:
+                    cleaned.append(norm)
+
+        if action not in {"add", "remove", "set"}:
+            self._send_json({"error": "action must be add, remove, or set"}, 400)
+            return
+        if action in {"add", "remove"} and not cleaned:
+            self._send_json({"error": "principals list cannot be empty for add/remove"}, 400)
+            return
+
+        current = _load_brd_allowlist_file()
+        if action == "add":
+            current |= set(cleaned)
+        elif action == "remove":
+            current -= set(cleaned)
+        else:
+            current = set(cleaned)
+
+        _save_brd_allowlist_file(current)
+        self._send_json({
+            "ok": True,
+            "action": action,
+            "fileOverlay": sorted(current),
+            "effective": sorted(BRD_INTAKE_ALLOWED_PRINCIPALS | current),
+        })
 
     def _handle_project_owners_list(self, query: str):
         """GET /api/admin/project-owners[?slug=...] — list owners.

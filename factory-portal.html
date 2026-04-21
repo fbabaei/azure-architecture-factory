@@ -2838,6 +2838,30 @@
                                     <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
                                 </div>
                             </details>
+
+                            <!-- Admin: BRD Intake Allowlist (who can submit BRDs) -->
+                            <details id="admin-brd-allowlist-panel" style="margin-top: 1rem; border: 1px solid #ea580c; border-radius: 6px; background: #fff7ec;"
+                                     ontoggle="if(this.open){ loadBrdAllowlist(); }">
+                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #9a3412; user-select: none;">
+                                    🛂 Admin: BRD Intake Allowlist
+                                </summary>
+                                <div style="padding: 0 1rem 1.25rem;">
+                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">
+                                        Principals (UPN, email, or object id) allowed to submit BRDs. Empty list = any signed-in user. Current allowlist members or portal admins can edit.
+                                    </p>
+                                    <div class="form-group">
+                                        <label for="brd-allow-principal">Principal (email / UPN / object id)</label>
+                                        <input type="text" id="brd-allow-principal" placeholder="user@contoso.com">
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="button" onclick="updateBrdAllowlist('add')" class="btn-primary">Add</button>
+                                        <button type="button" onclick="updateBrdAllowlist('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove</button>
+                                        <button type="button" onclick="loadBrdAllowlist()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                    </div>
+                                    <div id="brd-allow-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                    <div id="brd-allow-list" style="margin-top: 1.25rem;"></div>
+                                </div>
+                            </details>
                         </div>
                     </section>
                 </div><!-- /intake-col -->
@@ -4017,6 +4041,105 @@
             box.style.color = palette.fg;
             box.style.border = `1px solid ${palette.border}`;
             box.textContent = message;
+        }
+
+        async function loadBrdAllowlist() {
+            const listEl = document.getElementById('brd-allow-list');
+            if (listEl) listEl.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.85rem;">Loading…</p>';
+            const headers = { 'Accept': 'application/json' };
+            const apiKey = getPortalApiKey();
+            if (apiKey) headers['X-Factory-Api-Key'] = apiKey;
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/brd-allowlist`, { headers, credentials: 'include' });
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    if (listEl) listEl.innerHTML = `<p style="color:#c94a4a; font-size:0.85rem;">Error ${resp.status}: ${txt}</p>`;
+                    return;
+                }
+                const data = await resp.json();
+                renderBrdAllowlist(data);
+            } catch (err) {
+                if (listEl) listEl.innerHTML = `<p style="color:#c94a4a; font-size:0.85rem;">Failed: ${err.message}</p>`;
+            }
+        }
+
+        function renderBrdAllowlist(data) {
+            const listEl = document.getElementById('brd-allow-list');
+            if (!listEl) return;
+            const env = Array.isArray(data.envSeed) ? data.envSeed : [];
+            const file = Array.isArray(data.fileOverlay) ? data.fileOverlay : [];
+            const effective = Array.isArray(data.effective) ? data.effective : [];
+            const row = (p, source) => {
+                const removable = source === 'file';
+                return `<tr>
+                    <td style="padding:4px 8px; font-family:monospace; font-size:0.82rem;">${p}</td>
+                    <td style="padding:4px 8px; font-size:0.78rem; color:var(--text-secondary);">${source}</td>
+                    <td style="padding:4px 8px; text-align:right;">
+                        ${removable ? `<button type="button" onclick="quickRemoveBrdAllow('${p.replace(/'/g, "\\'")}')" style="padding:2px 8px; font-size:0.75rem; border:1px solid #c94a4a; background:white; color:#c94a4a; border-radius:3px; cursor:pointer;">Remove</button>` : '<span style="font-size:0.75rem; color:var(--text-secondary);">env — read-only</span>'}
+                    </td>
+                </tr>`;
+            };
+            const envRows = env.map(p => row(p, 'env')).join('');
+            const fileRows = file.map(p => row(p, 'file')).join('');
+            const empty = effective.length === 0
+                ? '<p style="color:var(--text-secondary); font-size:0.85rem;">No principals on the allowlist — any signed-in user may submit BRDs.</p>'
+                : '';
+            listEl.innerHTML = `
+                ${empty}
+                ${effective.length ? `<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                    <thead><tr style="background:#ffedd5;"><th style="padding:6px 8px; text-align:left;">Principal</th><th style="padding:6px 8px; text-align:left;">Source</th><th></th></tr></thead>
+                    <tbody>${envRows}${fileRows}</tbody>
+                </table>` : ''}
+                <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--text-secondary);">Env entries come from <code>BRD_INTAKE_ALLOWED_PRINCIPALS</code> on the Container App (read-only). File entries live in <code>${data.allowlistFile || '.brd-allowlist.json'}</code> and reset on container rebuild unless mounted.</p>
+            `;
+        }
+
+        async function updateBrdAllowlist(action) {
+            const input = document.getElementById('brd-allow-principal');
+            const val = (input?.value || '').trim();
+            if (!val) { showBrdAllowStatus('Enter a principal first.', 'error'); return; }
+            await _postBrdAllow(action, [val]);
+            if (input) input.value = '';
+        }
+
+        async function quickRemoveBrdAllow(principal) {
+            await _postBrdAllow('remove', [principal]);
+        }
+
+        async function _postBrdAllow(action, principals) {
+            const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+            const apiKey = getPortalApiKey();
+            if (apiKey) headers['X-Factory-Api-Key'] = apiKey;
+            try {
+                const resp = await fetch(`${API_BASE}/api/admin/brd-allowlist`, {
+                    method: 'POST',
+                    headers,
+                    credentials: 'include',
+                    body: JSON.stringify({ action, principals }),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    showBrdAllowStatus(`Error ${resp.status}: ${data.error || resp.statusText}`, 'error');
+                    return;
+                }
+                showBrdAllowStatus(`✅ ${action} ${principals.join(', ')}.`, 'success');
+                loadBrdAllowlist();
+            } catch (err) {
+                showBrdAllowStatus(`Failed: ${err.message}`, 'error');
+            }
+        }
+
+        function showBrdAllowStatus(message, kind) {
+            const el = document.getElementById('brd-allow-status');
+            if (!el) return;
+            el.style.display = 'block';
+            const palette = kind === 'error'
+                ? { bg: '#ffecec', fg: '#c94a4a', border: '#c94a4a' }
+                : { bg: '#e6f7ea', fg: '#1c7a33', border: '#1c7a33' };
+            el.style.background = palette.bg;
+            el.style.color = palette.fg;
+            el.style.border = `1px solid ${palette.border}`;
+            el.textContent = message;
         }
 
         async function loadProjectOwners() {
