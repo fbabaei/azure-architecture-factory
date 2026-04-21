@@ -5190,7 +5190,7 @@
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
                         <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
-                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Chat with an AI assistant grounded in this project: architecture, cost, operations, observability">💬 Ask Copilot</a>
+                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Tool-enabled Project Copilot: architecture, cost, operations, observability, deploy commands" style="color:#5b3fd4;font-weight:600;">🛠️ Ask Project Copilot</a>
                     </div>
                 </div>
             `;
@@ -6737,37 +6737,38 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
     </script>
     <!-- ========== /BRD Copilot ========== -->
 
-    <!-- ========== Project Copilot (Phase 2: per-project Q&A, cost, ops, observability) ========== -->
+    <!-- ========== Project Copilot (Phase 2+3: per-project Q&A, tool-enabled) ========== -->
     <div id="project-chat-panel" role="dialog" aria-label="Project Copilot"
          style="position: fixed; right: 1.25rem; bottom: 1.25rem; width: 480px; max-width: calc(100vw - 2.5rem);
-                height: 640px; max-height: calc(100vh - 3rem); background: white; border: 1px solid var(--border);
-                border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.28); z-index: 1050;
+                height: 640px; max-height: calc(100vh - 3rem); background: white; border: 2px solid #5b3fd4;
+                border-radius: 10px; box-shadow: 0 10px 30px rgba(91,63,212,0.35); z-index: 1050;
                 display: none; flex-direction: column; overflow: hidden;">
-        <div style="background: var(--primary); color: white; padding: 0.75rem 1rem;
+        <div style="background: linear-gradient(135deg,#5b3fd4,#8b5cf6); color: white; padding: 0.75rem 1rem;
                     display: flex; align-items: center; justify-content: space-between; font-weight: 600;">
             <div style="overflow: hidden;">
-                <div id="project-chat-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">💬 Project Copilot</div>
-                <div style="font-size: 0.72rem; font-weight: 400; opacity: 0.85;">
-                    Architecture · Cost · Operations · Observability
+                <div id="project-chat-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🛠️ Project Copilot</div>
+                <div style="font-size: 0.72rem; font-weight: 400; opacity: 0.9;">
+                    <span style="background: rgba(255,255,255,0.22); padding: 1px 6px; border-radius: 8px; font-size: 0.65rem; letter-spacing: 0.3px;">TOOL-ENABLED</span>
+                    &nbsp;Architecture · Cost · Ops · Observability
                 </div>
             </div>
             <button id="project-chat-close" type="button" onclick="closeProjectChat()" title="Close"
                     style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; line-height: 1;">✕</button>
         </div>
-        <div id="project-chat-quickstart" style="padding: 0.55rem 0.8rem; background: #f1f4fa;
-                    border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 0.35rem;">
+        <div id="project-chat-quickstart" style="padding: 0.55rem 0.8rem; background: #f3f0ff;
+                    border-bottom: 1px solid #d9d1f5; display: flex; flex-wrap: wrap; gap: 0.35rem;">
             <!-- quick-ask chips inserted by JS -->
         </div>
         <div id="project-chat-messages" aria-live="polite"
-             style="flex: 1; overflow-y: auto; padding: 0.9rem; background: #f8f9fb; font-size: 0.88rem;"></div>
-        <div style="border-top: 1px solid var(--border); padding: 0.6rem; background: white; display: flex; gap: 0.5rem;">
+             style="flex: 1; overflow-y: auto; padding: 0.9rem; background: #faf9ff; font-size: 0.88rem;"></div>
+        <div style="border-top: 1px solid #d9d1f5; padding: 0.6rem; background: white; display: flex; gap: 0.5rem;">
             <textarea id="project-chat-input" rows="2"
                 placeholder="Ask about architecture, cost, operations, or observability…"
                 onkeydown="projectChatOnKey(event)"
-                style="flex: 1; resize: none; border: 1px solid var(--border); border-radius: 4px;
+                style="flex: 1; resize: none; border: 1px solid #c7bcf0; border-radius: 4px;
                        padding: 0.5rem; font-size: 0.88rem; font-family: inherit; min-height: 44px; max-height: 120px;"></textarea>
             <button id="project-chat-send" type="button" onclick="projectChatSend()"
-                    style="background: var(--primary); color: white; border: none; border-radius: 4px;
+                    style="background: #5b3fd4; color: white; border: none; border-radius: 4px;
                            padding: 0 1rem; font-size: 0.9rem; cursor: pointer;">Send</button>
         </div>
     </div>
@@ -6887,7 +6888,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         if (Array.isArray(data.tools_used) && data.tools_used.length) {
                             const names = data.tools_used.map(t => t.name || 'tool');
                             const uniq = [...new Set(names)];
-                            toolsSuffix = `\n\n<small style="color: var(--text-muted, #666);">🔧 Used: ${uniq.join(', ')}</small>`;
+                            toolsSuffix = `\n\n<small style="color: #5b3fd4; font-weight: 500;">🛠️ Used: ${uniq.join(', ')}</small>`;
                         }
                         addMessage('assistant', reply + toolsSuffix);
                     }
@@ -6909,12 +6910,14 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     state.title = title || slug;
                     state.history = [];
                     el('project-chat-messages').innerHTML = '';
-                    el('project-chat-title').textContent = `💬 ${state.title}`;
+                    el('project-chat-title').textContent = `�️ ${state.title}`;
                     renderQuickAsks();
                     addMessage('assistant',
-                        `Hi — I'm grounded in **${state.title}**. I can answer questions about ` +
-                        `its architecture, estimate monthly Azure cost, draft an operations playbook, ` +
-                        `and audit observability. Pick a quick-ask above or type your own question.`
+                        `Hi — I'm **Project Copilot**, grounded in **${state.title}**. ` +
+                        `I'm tool-enabled: I can read files in this project, scan the infra for a cost ` +
+                        `estimate, audit observability, and generate copy-paste deploy commands. ` +
+                        `When I use a tool you'll see a 🛠️ footer on my reply. Pick a quick-ask above ` +
+                        `or type your own question.`
                     );
                 }
                 state.open = true;

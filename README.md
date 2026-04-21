@@ -13,6 +13,7 @@ Azure Architecture Factory is an AI-driven Azure delivery workspace that turns r
 Reference material:
 
 - [docs/README.md](docs/README.md) repository overview
+- [docs/COPILOT_GUIDE.md](docs/COPILOT_GUIDE.md) — the two portal AI copilots (BRD Copilot + Project Copilot), their tools, rubrics, and safety rails
 - [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) viewing `.drawio` files on Windows
 - [docs/MDR_PY_VS_DOTNET.md](docs/MDR_PY_VS_DOTNET.md) side-by-side comparison of Python vs .NET output for the same `extraction-chat` BRD
 - [docs/PRD.md](docs/PRD.md) product scope and capabilities

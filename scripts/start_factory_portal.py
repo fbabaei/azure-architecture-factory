@@ -1742,7 +1742,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         '  "suggested_slug": string | null — kebab-case project slug, or null.\n'
         '  "suggested_options": object | null — any of: implementation_language ("python"|"dotnet"), '
         'iac_tool ("bicep"|"terraform"), network_tier ("public"|"vnet-integrated"|"private"). Omit keys you cannot justify.\n'
-        "No prose outside the JSON object."
+        "No prose outside the JSON object.\n\n"
+        "SELF-AWARENESS: You are **BRD Copilot**, focused on authoring and reviewing BRDs. A separate "
+        "copilot, **Project Copilot** (🛠️ per-project, bottom-right), is tool-enabled and answers "
+        "questions about an already-generated project (architecture, cost, observability, deploy commands). "
+        "You do NOT have tools; you do NOT read project files. If the user asks about an existing project's "
+        "cost, observability, or deployment, tell them to use Project Copilot from that project's card. "
+        "Full reference: `docs/COPILOT_GUIDE.md`."
     )
 
     def _handle_brd_chat(self):
@@ -2024,6 +2030,20 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         {
             "type": "function",
             "function": {
+                "name": "describe_my_capabilities",
+                "description": (
+                    "Return a machine-readable description of THIS copilot: who it is, what tools "
+                    "it has, what it will not do, and pointers to the user-facing guide. Call this "
+                    "whenever the user asks what you can do, what tools you have, how you work, "
+                    "or what your limits are. The return value is authoritative — do not paraphrase "
+                    "from memory, summarize the fields."
+                ),
+                "parameters": {"type": "object", "properties": {}},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "read_project_file",
                 "description": (
                     "Read the contents of a single file inside the current project. "
@@ -2115,6 +2135,50 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
     _PROJECT_CHAT_TOOL_MAX_FILE_BYTES = 20_000
     _PROJECT_CHAT_TOOL_MAX_ITERATIONS = 5
+
+    def _tool_describe_my_capabilities(self, project_root: pathlib.Path, args: dict) -> str:
+        return json.dumps({
+            "name": "Project Copilot",
+            "icon": "🛠️",
+            "scope": "one specific factory-generated project",
+            "grounding": "18 KB context bundle per turn (manifest + docs/*.md + infra/**/*.bicep|tf|bicepparam + src/ tests/ file tree)",
+            "tool_calling": {
+                "enabled": True,
+                "max_iterations_per_turn": self._PROJECT_CHAT_TOOL_MAX_ITERATIONS,
+                "tools": [
+                    {"name": "describe_my_capabilities", "purpose": "self-introspection"},
+                    {"name": "read_project_file", "purpose": "read a file (up to 20 KB), path clamped to project root"},
+                    {"name": "list_project_files", "purpose": "glob the project tree (up to 200 paths)"},
+                    {"name": "scan_cost_resources", "purpose": "deterministic infra scan returning billable resources + heuristic $/month"},
+                    {"name": "scan_observability", "purpose": "deterministic 7-point observability checklist"},
+                    {"name": "prepare_deploy_commands", "purpose": "return copy-paste az/azd/terraform CLI; does NOT execute"},
+                ],
+            },
+            "safety": {
+                "read_only": True,
+                "path_traversal_blocked": True,
+                "no_writes": True,
+                "no_shell_execution": True,
+                "no_azure_api_calls": True,
+                "no_cross_project_access": True,
+                "max_file_read_bytes": self._PROJECT_CHAT_TOOL_MAX_FILE_BYTES,
+                "max_list_results": 200,
+            },
+            "cannot_do": [
+                "Edit BRD, infra, or source code",
+                "Run terraform apply, az deployment, azd up, or any shell command",
+                "Call live Azure APIs, GitHub APIs, or any external HTTP",
+                "Access files in other projects",
+                "Persist conversation history (session only, cleared on refresh)",
+            ],
+            "sibling_copilot": {
+                "name": "BRD Copilot",
+                "scope": "BRD authoring + review",
+                "how_to_reach": "bottom-left 💬 button on the portal (a separate copilot, not me)",
+            },
+            "user_guide": "docs/COPILOT_GUIDE.md",
+            "footer_shown_when_tools_used": "🛠️ Used: <tool_names>",
+        })
 
     def _tool_read_project_file(self, project_root: pathlib.Path, args: dict) -> str:
         rel = str(args.get("path", "")).strip().lstrip("/\\")
@@ -2397,6 +2461,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         args: dict,
     ) -> str:
         try:
+            if tool_name == "describe_my_capabilities":
+                return self._tool_describe_my_capabilities(project_root, args)
             if tool_name == "read_project_file":
                 return self._tool_read_project_file(project_root, args)
             if tool_name == "list_project_files":
@@ -2500,7 +2566,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "deploy commands. Prefer calling tools over guessing. Use `scan_cost_resources` before "
             "estimating cost, `scan_observability` before answering observability questions, and "
             "`prepare_deploy_commands` for any deployment request. Use `read_project_file` only when "
-            "the context bundle does not already contain what you need."
+            "the context bundle does not already contain what you need.\n\n"
+            "### SELF-AWARENESS\n\n"
+            "You are **Project Copilot**, the tool-enabled per-project assistant. A separate copilot "
+            "(**BRD Copilot**, bottom-left of the portal) handles BRD authoring and review — you do not. "
+            "When the user asks what you can do, what tools you have, how you work, what you cannot do, "
+            "or how you compare to the BRD Copilot, CALL `describe_my_capabilities` and summarize its "
+            "return value. Never invent capabilities. The canonical user guide is `docs/COPILOT_GUIDE.md`."
         )
 
         chat_messages: list = [{"role": "system", "content": system_prompt}] + cleaned

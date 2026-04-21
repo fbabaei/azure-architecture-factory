@@ -6,6 +6,8 @@ This repository supports three main workflows:
 2. Use individual agents for architecture, implementation, validation, or deployment tasks.
 3. Review the sample-project portfolio and validation evidence through the developer portal.
 
+The portal also ships two AI copilots — **💬 BRD Copilot** (bottom-left: draft or review BRDs against a 10-point readiness rubric) and **🛠️ Project Copilot** (tool-enabled, per-project: architecture Q&A, cost, observability, deploy commands). Both require Azure OpenAI env vars on the portal process. See [COPILOT_GUIDE.md](COPILOT_GUIDE.md) for the full capability reference.
+
 ## 1. Start With The Orchestrator
 
 Use `project-orchestrator` when you want the repository to create an isolated project folder from requirements.

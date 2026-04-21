@@ -79,7 +79,8 @@ python app.py
 3. [BRD.md](BRD.md)
 4. [BRD_READINESS_GATE.md](BRD_READINESS_GATE.md)
 5. [BRD_READINESS_SCORECARD.md](BRD_READINESS_SCORECARD.md)
-6. [../demo/README.md](../demo/README.md)
+6. [COPILOT_GUIDE.md](COPILOT_GUIDE.md) — the two portal AI copilots (BRD + Project), their tools, and limits
+7. [../demo/README.md](../demo/README.md)
 
 ## Current Positioning
 
