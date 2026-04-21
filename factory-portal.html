@@ -812,6 +812,153 @@
             color: var(--primary);
         }
 
+        /* ========== BRD Copilot chat panel (Phase 1 prototype) ========== */
+        #brd-chat-toggle {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            cursor: pointer;
+            z-index: 1000;
+            display: none;
+        }
+        #brd-chat-toggle:hover { transform: translateY(-2px); }
+        #brd-chat-panel {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 5.25rem;
+            width: 420px;
+            max-width: calc(100vw - 2.5rem);
+            height: 560px;
+            max-height: calc(100vh - 7rem);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #brd-chat-panel.open { display: flex; }
+        #brd-chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        #brd-chat-header .sub {
+            font-size: 0.72rem;
+            font-weight: 400;
+            opacity: 0.85;
+        }
+        #brd-chat-close {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #brd-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.9rem;
+            background: #f8f9fb;
+            font-size: 0.88rem;
+        }
+        .brd-chat-msg { margin-bottom: 0.7rem; display: flex; }
+        .brd-chat-msg.user { justify-content: flex-end; }
+        .brd-chat-bubble {
+            max-width: 85%;
+            padding: 0.55rem 0.8rem;
+            border-radius: 10px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .brd-chat-msg.user .brd-chat-bubble {
+            background: var(--primary);
+            color: white;
+        }
+        .brd-chat-msg.assistant .brd-chat-bubble {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .brd-chat-bubble code {
+            background: rgba(0,0,0,0.06);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+        .brd-chat-bubble pre {
+            background: #1e1e1e;
+            color: #e6e6e6;
+            padding: 0.6rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.78rem;
+            margin: 0.4rem 0;
+        }
+        .brd-chat-apply {
+            margin-top: 0.5rem;
+            display: inline-block;
+            background: #0f7a28;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.7rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .brd-chat-apply:hover { background: #0b5e1f; }
+        .brd-chat-apply:disabled { background: #6aa57a; cursor: default; }
+        #brd-chat-inputrow {
+            border-top: 1px solid var(--border);
+            padding: 0.6rem;
+            background: white;
+            display: flex;
+            gap: 0.5rem;
+        }
+        #brd-chat-input {
+            flex: 1;
+            resize: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.5rem;
+            font-size: 0.88rem;
+            font-family: inherit;
+            min-height: 44px;
+            max-height: 120px;
+        }
+        #brd-chat-send {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        #brd-chat-send:disabled { background: #8aa1c7; cursor: default; }
+        .brd-chat-typing {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+        /* ========== /BRD Copilot ========== */
+
         .form-group {
             margin-bottom: 0.8rem;
         }
@@ -6369,6 +6516,205 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
     <!-- /Floating Factory Helper -->
 
     <script src="assets/portal/guide_me_menu.js"></script>
+
+    <!-- ========== BRD Copilot floating chat (Phase 1 prototype) ========== -->
+    <button id="brd-chat-toggle" type="button" title="BRD Copilot (prototype)"
+            onclick="toggleBrdChat()"
+            style="left: 1.25rem; right: auto;">💬</button>
+    <div id="brd-chat-panel" role="dialog" aria-label="BRD Copilot"
+         style="left: 1.25rem; right: auto;">
+        <div id="brd-chat-header">
+            <div>
+                <div>💬 BRD Copilot</div>
+                <div class="sub">Prototype · drafts BRDs from your description</div>
+            </div>
+            <button id="brd-chat-close" type="button" onclick="toggleBrdChat()" title="Close">✕</button>
+        </div>
+        <div id="brd-chat-messages" aria-live="polite"></div>
+        <div id="brd-chat-inputrow">
+            <textarea id="brd-chat-input" rows="2"
+                placeholder="Describe what you want to build…"
+                onkeydown="brdChatOnKey(event)"></textarea>
+            <button id="brd-chat-send" type="button" onclick="brdChatSend()">Send</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            const API_BRD_CHAT = `${window.location.origin}/api/brd-chat`;
+            const state = {
+                open: false,
+                busy: false,
+                history: [],          // [{role, content}] turns sent to server
+                lastDraft: null,      // {brd_draft, suggested_slug, suggested_options}
+            };
+
+            function el(id) { return document.getElementById(id); }
+
+            function renderMarkdown(text) {
+                // Reuse marked.js which is already loaded by the portal.
+                try {
+                    if (window.marked && typeof window.marked.parse === 'function') {
+                        return window.marked.parse(text);
+                    }
+                } catch (_) { /* fall through */ }
+                // Fallback: escape HTML
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML.replace(/\n/g, '<br>');
+            }
+
+            function addMessage(role, content, draftPayload) {
+                const list = el('brd-chat-messages');
+                const wrap = document.createElement('div');
+                wrap.className = `brd-chat-msg ${role}`;
+                const bubble = document.createElement('div');
+                bubble.className = 'brd-chat-bubble';
+                bubble.innerHTML = renderMarkdown(content || '');
+                wrap.appendChild(bubble);
+
+                if (role === 'assistant' && draftPayload && draftPayload.brd_draft) {
+                    const btn = document.createElement('button');
+                    btn.className = 'brd-chat-apply';
+                    btn.type = 'button';
+                    btn.textContent = '⬆ Apply to form';
+                    btn.onclick = () => applyDraftToForm(draftPayload, btn);
+                    bubble.appendChild(document.createElement('br'));
+                    bubble.appendChild(btn);
+                }
+
+                list.appendChild(wrap);
+                list.scrollTop = list.scrollHeight;
+            }
+
+            function addTyping() {
+                const list = el('brd-chat-messages');
+                const wrap = document.createElement('div');
+                wrap.className = 'brd-chat-msg assistant';
+                wrap.id = 'brd-chat-typing-row';
+                const bubble = document.createElement('div');
+                bubble.className = 'brd-chat-bubble brd-chat-typing';
+                bubble.textContent = '…thinking';
+                wrap.appendChild(bubble);
+                list.appendChild(wrap);
+                list.scrollTop = list.scrollHeight;
+            }
+
+            function removeTyping() {
+                const row = el('brd-chat-typing-row');
+                if (row) row.remove();
+            }
+
+            function applyDraftToForm(draft, button) {
+                if (draft.brd_draft) {
+                    const ta = el('brd-content');
+                    if (ta) { ta.value = draft.brd_draft; }
+                }
+                if (draft.suggested_slug) {
+                    const name = el('brd-file-name');
+                    if (name && !name.value.trim()) { name.value = draft.suggested_slug; }
+                }
+                const opts = draft.suggested_options || {};
+                if (opts.implementation_language) {
+                    const sel = el('brd-implementation-language');
+                    if (sel) sel.value = opts.implementation_language;
+                }
+                if (opts.iac_tool) {
+                    const sel = el('brd-iac-tool');
+                    if (sel) sel.value = opts.iac_tool;
+                }
+                if (opts.network_tier) {
+                    const sel = el('brd-network-tier');
+                    if (sel) sel.value = opts.network_tier;
+                }
+                button.disabled = true;
+                button.textContent = '✓ Applied';
+                // Scroll the intake form into view so the user sees the filled fields.
+                const panel = document.querySelector('.brd-intake-panel');
+                if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            window.toggleBrdChat = function () {
+                state.open = !state.open;
+                el('brd-chat-panel').classList.toggle('open', state.open);
+                if (state.open && state.history.length === 0) {
+                    addMessage('assistant',
+                        "Hi — I'm BRD Copilot. Tell me what you want to build " +
+                        "(e.g., *\"a customer support copilot that reads our docs and cites sources\"*) " +
+                        "and I'll draft a BRD you can send straight to the factory."
+                    );
+                    el('brd-chat-input').focus();
+                }
+            };
+
+            window.brdChatOnKey = function (event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    brdChatSend();
+                }
+            };
+
+            window.brdChatSend = async function () {
+                if (state.busy) return;
+                const input = el('brd-chat-input');
+                const text = (input.value || '').trim();
+                if (!text) return;
+
+                state.busy = true;
+                el('brd-chat-send').disabled = true;
+                input.value = '';
+
+                addMessage('user', text);
+                state.history.push({ role: 'user', content: text });
+                addTyping();
+
+                let headers = { 'Content-Type': 'application/json' };
+                if (typeof buildMutationHeaders === 'function') {
+                    headers = buildMutationHeaders(headers);
+                }
+
+                try {
+                    const resp = await fetch(API_BRD_CHAT, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ messages: state.history }),
+                    });
+                    removeTyping();
+                    if (!resp.ok) {
+                        const errText = await resp.text().catch(() => resp.statusText);
+                        addMessage('assistant',
+                            `⚠️ Error ${resp.status}: ${errText || 'request failed'}`);
+                    } else {
+                        const data = await resp.json();
+                        const reply = data.reply || '(no reply)';
+                        state.history.push({ role: 'assistant', content: reply });
+                        const draftPayload = (data.brd_draft || data.suggested_slug || data.suggested_options)
+                            ? {
+                                brd_draft: data.brd_draft,
+                                suggested_slug: data.suggested_slug,
+                                suggested_options: data.suggested_options,
+                            }
+                            : null;
+                        state.lastDraft = draftPayload;
+                        addMessage('assistant', reply, draftPayload);
+                    }
+                } catch (err) {
+                    removeTyping();
+                    addMessage('assistant', `⚠️ Network error: ${err.message || err}`);
+                } finally {
+                    state.busy = false;
+                    el('brd-chat-send').disabled = false;
+                    input.focus();
+                }
+            };
+
+            // Show the toggle button once the DOM is ready.
+            document.addEventListener('DOMContentLoaded', function () {
+                const btn = el('brd-chat-toggle');
+                if (btn) btn.style.display = 'block';
+            });
+        })();
+    </script>
+    <!-- ========== /BRD Copilot ========== -->
 
 </body>
 </html>

@@ -1311,6 +1311,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_csa_copilot_ask()
+        if path == "/api/brd-chat":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_brd_chat()
         if path == "/api/guide/refresh":
             if not self._require_auth_for_mutation():
                 return
@@ -1669,6 +1673,188 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         }
         status_code, response_payload = self._call_csa_companion("POST", "/api/copilot/ask", upstream_payload)
         self._send_json(response_payload, status_code)
+
+    # ---------------------------------------------------------------------
+    # BRD Copilot (Phase 1 prototype) — grounded chat that drafts BRDs
+    # ---------------------------------------------------------------------
+    _BRD_CHAT_SYSTEM_PROMPT = (
+        "You are BRD Copilot, an assistant embedded in the Azure Architecture Factory (AAF) portal. "
+        "Your job is to help a user author a Business Requirements Document (BRD) that AAF can turn "
+        "into an Azure architecture, service code, and infrastructure-as-code.\n\n"
+        "AAF CAPABILITIES:\n"
+        "- Languages: Python 3.11 / FastAPI  OR  .NET 8 / ASP.NET Core Minimal APIs.\n"
+        "- Infrastructure-as-Code: Bicep (Azure-native) OR Terraform (azurerm ~> 4.14).\n"
+        "- Network tiers: public (default) | vnet-integrated | private.\n"
+        "- Archetypes (auto-detected from BRD content): extraction-chat (LLM extraction/chat over "
+        "customer documents), rag-qa (retrieval-augmented Q&A), api-service (generic backend).\n"
+        "- Optional toggles: generateInfra, runSecurityAudit, enableObservability.\n\n"
+        "GOOD BRD STRUCTURE:\n"
+        "# Project: <name>\n"
+        "## Business Goal\n## Key Requirements\n## Success Criteria\n## Out of Scope\n"
+        "## Timeline\n"
+        "Optional hint lines the factory understands:\n"
+        "  Implementation language: python | dotnet\n"
+        "  Infrastructure as code: bicep | terraform\n"
+        "  Network tier: public | vnet-integrated | private\n\n"
+        "INTERACTION RULES:\n"
+        "1. Ask clarifying questions only when the request is genuinely ambiguous. Otherwise draft.\n"
+        "2. Prefer concrete, narrow scope. Do not invent requirements the user did not imply.\n"
+        "3. When you have enough to draft, return a BRD in `brd_draft`. You can revise on follow-ups.\n"
+        "4. Suggest language/IaC/network based on the workload: "
+        "Python for AI/ML and RAG; .NET for heavy throughput enterprise APIs; "
+        "Terraform when the user mentions multi-cloud or existing Terraform estate; "
+        "vnet-integrated or private when they mention regulated data, HIPAA, PCI, or on-prem integration.\n"
+        "5. Slugify project name to kebab-case for `suggested_slug` (lowercase, alphanumeric + hyphens).\n\n"
+        "RESPONSE FORMAT: You MUST respond with a single JSON object with these keys:\n"
+        '  "reply": string — your chat message to the user (concise, markdown allowed).\n'
+        '  "brd_draft": string | null — full BRD markdown ready to paste, or null if not yet drafting.\n'
+        '  "suggested_slug": string | null — kebab-case project slug, or null.\n'
+        '  "suggested_options": object | null — any of: implementation_language ("python"|"dotnet"), '
+        'iac_tool ("bicep"|"terraform"), network_tier ("public"|"vnet-integrated"|"private"). Omit keys you cannot justify.\n'
+        "No prose outside the JSON object."
+    )
+
+    def _handle_brd_chat(self):
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body)
+        except Exception as e:
+            self._send_json({"error": f"Invalid request: {e}"}, 400)
+            return
+
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        raw_messages = payload.get("messages", [])
+        if not isinstance(raw_messages, list) or not raw_messages:
+            self._send_json({"error": "messages must be a non-empty list"}, 400)
+            return
+
+        # Sanitize: keep only {role, content} strings, cap length/count.
+        cleaned: list[dict] = []
+        for m in raw_messages[-20:]:  # last 20 turns max
+            if not isinstance(m, dict):
+                continue
+            role = str(m.get("role", "")).strip().lower()
+            content = str(m.get("content", "")).strip()
+            if role not in ("user", "assistant") or not content:
+                continue
+            cleaned.append({"role": role, "content": content[:4000]})
+
+        if not cleaned:
+            self._send_json({"error": "messages must contain at least one user turn"}, 400)
+            return
+
+        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
+        deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
+        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
+        api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+
+        # Graceful fallback when Azure OpenAI is not configured — prototype still visible.
+        if not (endpoint and deployment and api_key):
+            self._send_json(
+                {
+                    "reply": (
+                        "**BRD Copilot is not configured on this portal.**\n\n"
+                        "To enable it, set these environment variables on the portal server and restart:\n\n"
+                        "- `AZURE_OPENAI_ENDPOINT`\n"
+                        "- `AZURE_OPENAI_DEPLOYMENT` (e.g., `gpt-4o`, `gpt-4o-mini`)\n"
+                        "- `AZURE_OPENAI_API_KEY`\n\n"
+                        "Until then, you can still author BRDs manually in the form above. The portal "
+                        "dropdowns (language, IaC tool, network tier) already let you override anything "
+                        "the factory would auto-detect."
+                    ),
+                    "brd_draft": None,
+                    "suggested_slug": None,
+                    "suggested_options": None,
+                    "stub_mode": True,
+                },
+                200,
+            )
+            return
+
+        chat_messages = [{"role": "system", "content": self._BRD_CHAT_SYSTEM_PROMPT}] + cleaned
+
+        request_body = json.dumps(
+            {
+                "messages": chat_messages,
+                "temperature": 0.3,
+                "max_tokens": 1800,
+                "response_format": {"type": "json_object"},
+            }
+        ).encode("utf-8")
+
+        url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+        req = Request(url, data=request_body, method="POST")
+        req.add_header("Content-Type", "application/json")
+        req.add_header("api-key", api_key)
+
+        try:
+            with urlopen(req, timeout=45) as resp:
+                raw = resp.read().decode("utf-8")
+                data = json.loads(raw)
+        except URLError as e:
+            logging.warning("BRD chat upstream error: %s", e)
+            self._send_json({"error": f"Azure OpenAI call failed: {e}"}, 502)
+            return
+        except Exception as e:
+            logging.warning("BRD chat unexpected error: %s", e)
+            self._send_json({"error": f"Azure OpenAI call failed: {e}"}, 502)
+            return
+
+        try:
+            raw_content = data["choices"][0]["message"]["content"]
+            parsed = json.loads(raw_content)
+        except Exception as e:
+            logging.warning("BRD chat response parse error: %s; raw=%r", e, data)
+            self._send_json(
+                {
+                    "reply": (
+                        "I couldn't parse a structured reply this time. Could you rephrase? "
+                        "(The model returned free text instead of JSON.)"
+                    ),
+                    "brd_draft": None,
+                    "suggested_slug": None,
+                    "suggested_options": None,
+                },
+                200,
+            )
+            return
+
+        # Narrow response to the documented contract; drop anything unexpected.
+        reply = str(parsed.get("reply", "")).strip() or "(no reply)"
+        brd_draft = parsed.get("brd_draft")
+        if brd_draft is not None and not isinstance(brd_draft, str):
+            brd_draft = None
+        suggested_slug = parsed.get("suggested_slug")
+        if suggested_slug is not None and not isinstance(suggested_slug, str):
+            suggested_slug = None
+        opts = parsed.get("suggested_options")
+        clean_opts: dict = {}
+        if isinstance(opts, dict):
+            il = opts.get("implementation_language")
+            if il in ("python", "dotnet"):
+                clean_opts["implementation_language"] = il
+            iac = opts.get("iac_tool")
+            if iac in ("bicep", "terraform"):
+                clean_opts["iac_tool"] = iac
+            nt = opts.get("network_tier")
+            if nt in ("public", "vnet-integrated", "private"):
+                clean_opts["network_tier"] = nt
+
+        self._send_json(
+            {
+                "reply": reply,
+                "brd_draft": brd_draft,
+                "suggested_slug": suggested_slug,
+                "suggested_options": clean_opts or None,
+            },
+            200,
+        )
 
     def _safe_content_length(self) -> int | None:
         """Return validated content length or emit an error response."""
