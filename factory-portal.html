@@ -2614,12 +2614,21 @@
                         <div class="intake-toggle-row">
                             <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
                                 <span class="intake-toggle-copy">
-                                    <span class="intake-start-badge">Start Here</span>
+                                    <span class="intake-start-badge">Start Here — or use BRD Copilot</span>
                                     <span class="intake-toggle-title">Submit Business Requirements</span>
-                                    <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project.</span>
+                                    <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project — or use 💬 BRD Copilot below to draft or review your BRD first.</span>
                                 </span>
                                 <span class="intake-toggle-icon" aria-hidden="true">▸</span>
                             </a>
+                        </div>
+                        <div style="margin: 0.75rem 0 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+                            <button type="button" onclick="toggleBrdChat()"
+                                style="background: linear-gradient(135deg, #1c7a33, #2aa84a); color: #fff; border: none; padding: 0.55rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 6px rgba(28,122,51,0.35);">
+                                💬 Open BRD Copilot
+                            </button>
+                            <span style="font-size: 0.82rem; color: var(--text-secondary);">
+                                Draft a new BRD from a description, or paste an existing one for review.
+                            </span>
                         </div>
                         <div class="intake-panel-content">
                             <!-- User: Request Access Token -->
