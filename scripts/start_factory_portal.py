@@ -86,6 +86,14 @@ except ModuleNotFoundError:
             def upload_owners(self, *a, **k): return None
         blob_sync = _BlobSyncStub()  # type: ignore[assignment]
 
+try:
+    import copilot_runner
+except ModuleNotFoundError:
+    try:
+        from scripts import copilot_runner  # type: ignore[no-redef]
+    except ModuleNotFoundError:
+        copilot_runner = None  # type: ignore[assignment]
+
 
 def _parse_multipart_form(content_type: str, body: bytes) -> dict:
     """Parse multipart/form-data body without the removed cgi module.
@@ -1406,6 +1414,30 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_brd_allowlist_list()
 
+        # Copilot CLI runs — per-project endpoints.
+        # GET /api/projects/<slug>/copilot-runtime    -> availability + config
+        # GET /api/projects/<slug>/copilot-runs       -> list runs
+        # GET /api/projects/<slug>/copilot-runs/<id>  -> single run status
+        # GET /api/projects/<slug>/copilot-runs/<id>/log -> tail log
+        if request_path.startswith("/api/projects/") and "/copilot" in request_path:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_copilot_get(request_path)
+
+        # Repo-root Copilot CLI endpoints (not scoped to any project).
+        # GET /api/copilot-runtime
+        # GET /api/copilot-agents
+        # GET /api/copilot-runs[/<id>[/log|/diff]]
+        if (
+            request_path == "/api/copilot-runtime"
+            or request_path == "/api/copilot-agents"
+            or request_path == "/api/copilot-runs"
+            or request_path.startswith("/api/copilot-runs/")
+        ):
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_copilot_root_get(request_path)
+
         # Default file serving
         return super().do_GET()
 
@@ -1459,6 +1491,22 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_guide_refresh()
+
+        # Copilot CLI runs — per-project endpoints.
+        # POST /api/projects/<slug>/copilot-runs           -> start run
+        # POST /api/projects/<slug>/copilot-runs/<id>/cancel -> cancel
+        if path.startswith("/api/projects/") and "/copilot-runs" in path:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_copilot_post(path)
+
+        # Repo-root Copilot CLI endpoints.
+        # POST /api/copilot-runs                 -> start run at repo root
+        # POST /api/copilot-runs/<id>/cancel     -> cancel
+        if path == "/api/copilot-runs" or path.startswith("/api/copilot-runs/"):
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_copilot_root_post(path)
 
         self._send_json({"error": "Not found"}, 404)
 
@@ -1786,6 +1834,280 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "fileOverlay": sorted(current),
             "effective": sorted(BRD_INTAKE_ALLOWED_PRINCIPALS | current),
         })
+
+    # ---- Copilot CLI run handlers ---------------------------------------
+
+    def _handle_copilot_get(self, request_path: str):
+        """Route GET /api/projects/<slug>/copilot* paths."""
+        if copilot_runner is None:
+            self._send_json({"error": "Copilot CLI runner is not available on this build."}, 503)
+            return
+
+        parts = request_path.split("/")
+        # ['', 'api', 'projects', '<slug>', 'copilot-<suffix>', ...]
+        if len(parts) < 5:
+            self._send_json({"error": "Invalid copilot path"}, 400)
+            return
+        slug = parts[3]
+        action = parts[4]
+
+        project_root = self._resolve_project_root(slug)
+        if project_root is None:
+            self._send_json({"error": "Project not found"}, 404)
+            return
+
+        if action == "copilot-runtime" and len(parts) == 5:
+            info = copilot_runner.runtime_info()
+            self._send_json(info)
+            return
+
+        if action == "copilot-runs":
+            if len(parts) == 5:
+                runs = copilot_runner.list_runs(project_root)
+                self._send_json({"slug": slug, "runs": runs})
+                return
+            # /copilot-runs/<runId>[/log|/diff]
+            run_id = parts[5]
+            if len(parts) == 6:
+                run = copilot_runner.get_run(project_root, run_id)
+                if run is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self._send_json(run)
+                return
+            if len(parts) == 7 and parts[6] == "log":
+                tail = copilot_runner.read_log_tail(project_root, run_id)
+                if tail is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                body = tail.encode("utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if len(parts) == 7 and parts[6] == "diff":
+                diff = copilot_runner.diff_run(project_root, run_id)
+                if diff is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self._send_json(diff)
+                return
+
+        self._send_json({"error": "Invalid copilot path"}, 400)
+
+    def _handle_copilot_post(self, path: str):
+        """Route POST /api/projects/<slug>/copilot-runs[/<id>/cancel]."""
+        if copilot_runner is None:
+            self._send_json({"error": "Copilot CLI runner is not available on this build."}, 503)
+            return
+
+        parts = path.split("/")
+        # ['', 'api', 'projects', '<slug>', 'copilot-runs', ...]
+        if len(parts) < 5:
+            self._send_json({"error": "Invalid copilot path"}, 400)
+            return
+        slug = parts[3]
+        project_root = self._resolve_project_root(slug)
+        if project_root is None:
+            self._send_json({"error": "Project not found"}, 404)
+            return
+
+        # Cancel: /copilot-runs/<runId>/cancel
+        if len(parts) == 7 and parts[4] == "copilot-runs" and parts[6] == "cancel":
+            run_id = parts[5]
+            result = copilot_runner.cancel_run(project_root, run_id)
+            if result is None:
+                self._send_json({"error": "Run not found"}, 404)
+                return
+            self._send_json({"ok": True, "run": result})
+            return
+
+        # Start: /copilot-runs
+        if len(parts) == 5 and parts[4] == "copilot-runs":
+            content_length = self._safe_content_length()
+            if content_length is None:
+                return
+            try:
+                body = self.rfile.read(content_length).decode("utf-8")
+                payload = json.loads(body) if body else {}
+            except Exception as exc:
+                self._send_json({"error": f"Invalid request: {exc}"}, 400)
+                return
+
+            prompt = str(payload.get("prompt", "")).strip()
+            if not prompt:
+                self._send_json({"error": "prompt is required"}, 400)
+                return
+
+            model_raw = str(payload.get("model", "") or "").strip()
+            session_raw = str(payload.get("sessionId", "") or "").strip()
+            agent_raw = str(payload.get("agent", "") or "").strip()
+            # Reject obviously unsafe values — model names are alnum + .- only,
+            # session IDs are UUIDs.
+            if model_raw and not re.fullmatch(r"[A-Za-z0-9._\-]{1,64}", model_raw):
+                self._send_json({"error": "Invalid model name"}, 400)
+                return
+            if session_raw and not re.fullmatch(r"[A-Fa-f0-9\-]{8,64}", session_raw):
+                self._send_json({"error": "Invalid sessionId"}, 400)
+                return
+            if agent_raw and not re.fullmatch(r"[A-Za-z0-9._\-]{1,64}", agent_raw):
+                self._send_json({"error": "Invalid agent name"}, 400)
+                return
+
+            try:
+                metadata = copilot_runner.start_run(
+                    project_root,
+                    prompt,
+                    requested_by=self._authorized_user() or "",
+                    model=model_raw or None,
+                    session_id=session_raw or None,
+                    agent=agent_raw or None,
+                )
+            except copilot_runner.CopilotRunError as exc:
+                self._send_json({"error": str(exc)}, 400)
+                return
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Copilot run start failed for %s", slug)
+                self._send_json({"error": f"Failed to start run: {exc}"}, 500)
+                return
+
+            self._send_json({"ok": True, "run": metadata}, 202)
+            return
+
+        self._send_json({"error": "Invalid copilot path"}, 400)
+
+    # --- Repo-root Copilot CLI handlers ------------------------------------
+
+    def _handle_copilot_root_get(self, request_path: str):
+        """Route GET /api/copilot-runtime, /api/copilot-agents, /api/copilot-runs[...]."""
+        if copilot_runner is None:
+            self._send_json({"error": "Copilot CLI runner is not available on this build."}, 503)
+            return
+
+        if request_path == "/api/copilot-runtime":
+            info = copilot_runner.runtime_info()
+            info["scope"] = "repo"
+            info["repoRoot"] = str(FACTORY_REPO_ROOT)
+            self._send_json(info)
+            return
+
+        if request_path == "/api/copilot-agents":
+            try:
+                agents = copilot_runner.list_agents(FACTORY_REPO_ROOT)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Copilot agent discovery failed")
+                self._send_json({"error": f"Failed to list agents: {exc}"}, 500)
+                return
+            self._send_json({"agents": agents})
+            return
+
+        parts = request_path.split("/")
+        # ['', 'api', 'copilot-runs', ...]
+        if len(parts) >= 3 and parts[2] == "copilot-runs":
+            if len(parts) == 3:
+                runs = copilot_runner.list_runs(FACTORY_REPO_ROOT)
+                self._send_json({"scope": "repo", "runs": runs})
+                return
+            run_id = parts[3]
+            if len(parts) == 4:
+                run = copilot_runner.get_run(FACTORY_REPO_ROOT, run_id)
+                if run is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self._send_json(run)
+                return
+            if len(parts) == 5 and parts[4] == "log":
+                tail = copilot_runner.read_log_tail(FACTORY_REPO_ROOT, run_id)
+                if tail is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                body = tail.encode("utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if len(parts) == 5 and parts[4] == "diff":
+                diff = copilot_runner.diff_run(FACTORY_REPO_ROOT, run_id)
+                if diff is None:
+                    self._send_json({"error": "Run not found"}, 404)
+                    return
+                self._send_json(diff)
+                return
+
+        self._send_json({"error": "Invalid copilot path"}, 400)
+
+    def _handle_copilot_root_post(self, path: str):
+        """Route POST /api/copilot-runs[/<id>/cancel] — repo-root scope."""
+        if copilot_runner is None:
+            self._send_json({"error": "Copilot CLI runner is not available on this build."}, 503)
+            return
+
+        parts = path.split("/")
+        # Cancel: /api/copilot-runs/<runId>/cancel
+        if len(parts) == 5 and parts[2] == "copilot-runs" and parts[4] == "cancel":
+            run_id = parts[3]
+            result = copilot_runner.cancel_run(FACTORY_REPO_ROOT, run_id)
+            if result is None:
+                self._send_json({"error": "Run not found"}, 404)
+                return
+            self._send_json({"ok": True, "run": result})
+            return
+
+        # Start: /api/copilot-runs
+        if len(parts) == 3 and parts[2] == "copilot-runs":
+            content_length = self._safe_content_length()
+            if content_length is None:
+                return
+            try:
+                body = self.rfile.read(content_length).decode("utf-8")
+                payload = json.loads(body) if body else {}
+            except Exception as exc:
+                self._send_json({"error": f"Invalid request: {exc}"}, 400)
+                return
+
+            prompt = str(payload.get("prompt", "")).strip()
+            if not prompt:
+                self._send_json({"error": "prompt is required"}, 400)
+                return
+
+            model_raw = str(payload.get("model", "") or "").strip()
+            session_raw = str(payload.get("sessionId", "") or "").strip()
+            agent_raw = str(payload.get("agent", "") or "").strip()
+            if model_raw and not re.fullmatch(r"[A-Za-z0-9._\-]{1,64}", model_raw):
+                self._send_json({"error": "Invalid model name"}, 400)
+                return
+            if session_raw and not re.fullmatch(r"[A-Fa-f0-9\-]{8,64}", session_raw):
+                self._send_json({"error": "Invalid sessionId"}, 400)
+                return
+            if agent_raw and not re.fullmatch(r"[A-Za-z0-9._\-]{1,64}", agent_raw):
+                self._send_json({"error": "Invalid agent name"}, 400)
+                return
+
+            try:
+                metadata = copilot_runner.start_run(
+                    FACTORY_REPO_ROOT,
+                    prompt,
+                    requested_by=self._authorized_user() or "",
+                    model=model_raw or None,
+                    session_id=session_raw or None,
+                    agent=agent_raw or None,
+                )
+            except copilot_runner.CopilotRunError as exc:
+                self._send_json({"error": str(exc)}, 400)
+                return
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Repo-root Copilot run start failed")
+                self._send_json({"error": f"Failed to start run: {exc}"}, 500)
+                return
+
+            self._send_json({"ok": True, "run": metadata}, 202)
+            return
+
+        self._send_json({"error": "Invalid copilot path"}, 400)
 
     def _handle_project_owners_list(self, query: str):
         """GET /api/admin/project-owners[?slug=...] — list owners.

@@ -8,17 +8,24 @@
     Usage:
         .\scripts\build_and_deploy_portal.ps1
         .\scripts\build_and_deploy_portal.ps1 -SkipBuild      # re-deploy latest without rebuilding
+        .\scripts\build_and_deploy_portal.ps1 -UseAcrBuild    # build on ACR side (skips local docker push)
         .\scripts\build_and_deploy_portal.ps1 -DryRun         # print commands without running them
 
 .PARAMETER SkipBuild
     Skip the docker build + push steps and just update the Container App
     to use whatever image is already tagged :latest in ACR.
 
+.PARAMETER UseAcrBuild
+    Build and tag the image on ACR (via `az acr build`) instead of building
+    locally and pushing. Useful when Docker Desktop's proxy drops large
+    layer uploads. Bypasses the local Docker daemon entirely.
+
 .PARAMETER DryRun
     Print each command without executing it.
 #>
 param(
     [switch]$SkipBuild,
+    [switch]$UseAcrBuild,
     [switch]$DryRun
 )
 Set-StrictMode -Version Latest
@@ -51,12 +58,12 @@ function Invoke-Step {
     }
 }
 
-# ── 1. Verify Docker daemon is running ──────────────────────────────────────
-if (-not $SkipBuild) {
+# ── 1. Verify Docker daemon is running (only when building locally) ─────────
+if (-not $SkipBuild -and -not $UseAcrBuild) {
     Write-Host "Checking Docker daemon..." -ForegroundColor Gray
     $dockerInfo = & $DOCKER info --format "{{.ServerVersion}}" 2>&1
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($dockerInfo)) {
-        Write-Error "Docker daemon is not running. Start Docker Desktop and retry."
+        Write-Error "Docker daemon is not running. Start Docker Desktop and retry (or pass -UseAcrBuild)."
         exit 1
     }
     Write-Host "Docker server: $dockerInfo" -ForegroundColor Green
@@ -68,7 +75,19 @@ Invoke-Step "ACR login" {
 }
 
 # ── 3. Build image ──────────────────────────────────────────────────────────
-if (-not $SkipBuild) {
+if ($SkipBuild) {
+    Write-Host "SkipBuild set — using existing :latest in ACR" -ForegroundColor Yellow
+    $IMAGE_TAGGED = $IMAGE_LATEST
+} elseif ($UseAcrBuild) {
+    Invoke-Step "ACR build $IMAGE_TAGGED (server-side)" {
+        az acr build `
+            --registry archfactorydevacr `
+            --image "portal:${TAG}" `
+            --image "portal:latest" `
+            --file $DOCKERFILE `
+            $CONTEXT
+    }
+} else {
     Invoke-Step "Build $IMAGE_TAGGED" {
         & $DOCKER build `
             --file $DOCKERFILE `
@@ -84,9 +103,6 @@ if (-not $SkipBuild) {
     Invoke-Step "Push ${REPO}:latest" {
         & $DOCKER push $IMAGE_LATEST
     }
-} else {
-    Write-Host "SkipBuild set — using existing :latest in ACR" -ForegroundColor Yellow
-    $IMAGE_TAGGED = $IMAGE_LATEST
 }
 
 # ── 5. Update Container App ─────────────────────────────────────────────────
