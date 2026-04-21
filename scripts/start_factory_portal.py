@@ -977,6 +977,45 @@ _configure_logging()
 logger = logging.getLogger(__name__)
 
 
+# ── Azure OpenAI auth header ────────────────────────────────────────────────
+# Supports two auth modes:
+#   1. API key  (AZURE_OPENAI_API_KEY env var)
+#   2. Entra ID (DefaultAzureCredential) — used when azure-identity is importable
+#      AND no API key is set. This is how we reach Cognitive Services accounts
+#      that have `disableLocalAuth=true`.
+# Returns (header_name, header_value) or None when neither auth method works.
+
+_entra_token_cache: dict = {"token": None, "expires_at": 0.0}
+_entra_token_lock = threading.Lock()
+
+
+def _aoai_auth_header() -> tuple[str, str] | None:
+    api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
+    if api_key:
+        return ("api-key", api_key)
+
+    # Fall back to Entra ID via DefaultAzureCredential.
+    try:
+        from azure.identity import DefaultAzureCredential  # type: ignore
+    except ImportError:
+        return None
+
+    now = time.time()
+    with _entra_token_lock:
+        if (_entra_token_cache["token"]
+                and _entra_token_cache["expires_at"] - 60 > now):
+            return ("Authorization", f"Bearer {_entra_token_cache['token']}")
+        try:
+            cred = DefaultAzureCredential(exclude_interactive_browser_credential=False)
+            tok = cred.get_token("https://cognitiveservices.azure.com/.default")
+            _entra_token_cache["token"] = tok.token
+            _entra_token_cache["expires_at"] = float(tok.expires_on)
+            return ("Authorization", f"Bearer {tok.token}")
+        except Exception as e:
+            logger.warning("Entra token for AOAI failed: %s", e)
+            return None
+
+
 def _sanitize_brd_filename(raw_name: str) -> str:
     """Return a safe BRD filename constrained to a simple .md basename."""
     name = pathlib.Path((raw_name or "brd.md").strip()).name
@@ -1788,11 +1827,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
         deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
-        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
         api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+        auth = _aoai_auth_header()
 
         # Graceful fallback when Azure OpenAI is not configured — prototype still visible.
-        if not (endpoint and deployment and api_key):
+        if not (endpoint and deployment and auth):
             self._send_json(
                 {
                     "reply": (
@@ -1828,7 +1867,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
         req = Request(url, data=request_body, method="POST")
         req.add_header("Content-Type", "application/json")
-        req.add_header("api-key", api_key)
+        req.add_header(auth[0], auth[1])
 
         try:
             with urlopen(req, timeout=45) as resp:
@@ -2483,16 +2522,18 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         """Low-level AOAI call that returns the raw first-choice message dict (or error string)."""
         endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
         deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
-        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
         api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+        auth = _aoai_auth_header()
 
-        if not (endpoint and deployment and api_key):
+        if not (endpoint and deployment and auth):
             return 200, {
                 "role": "assistant",
                 "content": (
                     "**Project Copilot is not configured on this portal.**\n\n"
-                    "Set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, and "
-                    "`AZURE_OPENAI_API_KEY` on the portal server and restart."
+                    "Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT` on the portal "
+                    "server. For auth, either set `AZURE_OPENAI_API_KEY`, or install "
+                    "`azure-identity` and sign in with `az login` so the portal can use "
+                    "your Entra ID identity (works with `disableLocalAuth=true` accounts)."
                 ),
             }
 
@@ -2504,7 +2545,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
         req = Request(url, data=json.dumps(req_body).encode("utf-8"), method="POST")
         req.add_header("Content-Type", "application/json")
-        req.add_header("api-key", api_key)
+        req.add_header(auth[0], auth[1])
 
         try:
             with urlopen(req, timeout=60) as resp:
@@ -2651,16 +2692,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     ) -> tuple[int, str]:
         endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "").strip().rstrip("/")
         deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "").strip()
-        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
         api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview").strip()
+        auth = _aoai_auth_header()
 
-        if not (endpoint and deployment and api_key):
+        if not (endpoint and deployment and auth):
             return (
                 200,
                 "**Project Copilot is not configured on this portal.**\n\n"
-                "Set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, and "
-                "`AZURE_OPENAI_API_KEY` on the portal server and restart. "
-                "Until then, browse the project's `docs/` folder directly.",
+                "Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT` on the portal "
+                "server. For auth, either set `AZURE_OPENAI_API_KEY`, or install "
+                "`azure-identity` and sign in with `az login` so the portal can use "
+                "your Entra ID identity.",
             )
 
         req_body: dict = {
@@ -2674,7 +2716,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
         req = Request(url, data=json.dumps(req_body).encode("utf-8"), method="POST")
         req.add_header("Content-Type", "application/json")
-        req.add_header("api-key", api_key)
+        req.add_header(auth[0], auth[1])
 
         try:
             with urlopen(req, timeout=60) as resp:

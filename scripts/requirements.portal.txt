@@ -13,3 +13,11 @@
 azure-monitor-opentelemetry>=1.6.0,<2.0.0
 opentelemetry-api>=1.27.0
 opentelemetry-sdk>=1.27.0
+
+# Azure Identity — enables Entra ID auth for Azure OpenAI when
+# disableLocalAuth=true (no API key). Falls back gracefully when missing.
+azure-identity>=1.19.0,<2.0.0
+
+# Azure Identity — enables Entra ID auth for Azure OpenAI when
+# disableLocalAuth=true (no API key). Falls back gracefully when missing.
+azure-identity>=1.19.0,<2.0.0
