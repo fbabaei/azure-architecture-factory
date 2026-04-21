@@ -3164,6 +3164,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             reverse=True,
         )
 
+        # Drop ghost entries: persisted feed sometimes lists slugs whose
+        # projects/<slug>/ directory was deleted or never synced. If the UI
+        # links users to those slugs, every subsequent API call (chat, files,
+        # analysis) 404s. Filter them out here so the feed only ever advertises
+        # projects we can actually serve.
+        if projects_dir.is_dir():
+            merged = [p for p in merged if (projects_dir / (p.get("slug") or "")).is_dir()]
+
         # Apply per-deployment visibility allowlist (hides hidden projects on
         # the hosted/external portal). No-op when unset.
         if VISIBLE_SLUGS is not None:
