@@ -6639,12 +6639,32 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 el('brd-chat-panel').classList.toggle('open', state.open);
                 if (state.open && state.history.length === 0) {
                     addMessage('assistant',
-                        "Hi — I'm BRD Copilot. Tell me what you want to build " +
-                        "(e.g., *\"a customer support copilot that reads our docs and cites sources\"*) " +
-                        "and I'll draft a BRD you can send straight to the factory."
+                        "Hi — I'm BRD Copilot. Two things I can do:\n\n" +
+                        "**① Draft a new BRD** — tell me what you want to build " +
+                        "(e.g., *\"a customer support copilot that reads our docs and cites sources\"*).\n\n" +
+                        "**② Review an existing BRD** — paste it in and ask *\"evaluate this BRD and " +
+                        "find missing information\"*. I'll score it against a 10-point readiness rubric, " +
+                        "flag gaps as targeted questions, and return an improved draft with `TODO:` markers.\n\n" +
+                        "<button type='button' onclick='brdChatStartReview()' " +
+                        "style='margin-top:.4rem;padding:.35rem .7rem;border:1px solid var(--border);" +
+                        "background:#fff;border-radius:6px;cursor:pointer;font-size:.8rem;color:var(--primary);'>" +
+                        "📋 Review an existing BRD</button>"
                     );
                     el('brd-chat-input').focus();
                 }
+            };
+
+            window.brdChatStartReview = function () {
+                const input = el('brd-chat-input');
+                input.value = "Please evaluate this BRD against your readiness rubric and tell me what's missing. Here it is:\n\n---\n\n# <paste your BRD here>\n";
+                input.focus();
+                // Place the cursor where the user should paste.
+                try {
+                    const idx = input.value.indexOf('<paste your BRD here>');
+                    if (idx >= 0) {
+                        input.setSelectionRange(idx, idx + '<paste your BRD here>'.length);
+                    }
+                } catch (_) { /* ignore */ }
             };
 
             window.brdChatOnKey = function (event) {
