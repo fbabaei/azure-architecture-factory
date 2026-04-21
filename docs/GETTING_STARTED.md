@@ -9,12 +9,13 @@ For new users with no knowledge of integration and the factory system.
 You provide a **business or product requirement document** (BRD/PRD — a plain text description of what you want to build). The system automatically:
 
 1. Generates an **Azure architecture diagram** (.drawio)
-2. Scaffolds **Python microservice code**
-3. Creates **Bicep infrastructure** (Azure deployment templates)
-4. Validates and self-heals infrastructure files
-5. Produces a **production-readiness checklist**
-6. Optionally **deploys to Azure**
-7. Optionally **promotes to the factory portal** (shared team dashboard)
+2. Scaffolds service code in **Python 3.11 / FastAPI** or **.NET 8 / ASP.NET Core** (selectable)
+3. Creates **Bicep** or **Terraform** infrastructure (selectable; Azure deployment templates)
+4. Detects the workload **archetype** (`extraction-chat`, `rag-qa`, or generic `api-service`) and emits a scaffold shape to match
+5. Validates and self-heals infrastructure files
+6. Produces a **production-readiness checklist**
+7. Optionally **deploys to Azure**
+8. Optionally **promotes to the factory portal** (shared team dashboard)
 
 ---
 
@@ -51,11 +52,14 @@ The agent produces a complete folder at `projects/my-ecommerce-platform/`:
 | What | Where |
 |---|---|
 | Architecture diagram | `diagrams/my-ecommerce-platform.drawio` |
-| Python service code | `src/<service-name>/main.py` |
-| Azure Bicep infrastructure | `infra/main.bicep` + modules |
+| Service code (Python) | `src/<slug>/main.py` (when `implementationLanguage: python`) |
+| Service code (.NET) | `src/Program.cs` + `src/Services/*.cs` (when `implementationLanguage: dotnet`) |
+| Azure infrastructure | `infra/main.bicep` + modules, **or** `infra/main.tf` + `variables.tf` (when `iacTool: terraform`) |
 | Production checklist | `docs/production-checklist.md` |
 | Execution logs | `logs/orchestration.log` + per-phase logs |
-| Machine-readable state | `project-manifest.json` |
+| Machine-readable state | `project-manifest.json` (records `implementation_language`, `iac_tool`, `analysis.archetype`, and all generation options) |
+
+> **Tip:** Override language or IaC tool by adding `Implementation language: dotnet` / `Infrastructure as code: terraform` to the BRD, or by selecting them in the portal intake form.
 
 ---
 
