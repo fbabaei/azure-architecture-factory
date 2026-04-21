@@ -4066,31 +4066,23 @@
         function renderBrdAllowlist(data) {
             const listEl = document.getElementById('brd-allow-list');
             if (!listEl) return;
-            const env = Array.isArray(data.envSeed) ? data.envSeed : [];
             const file = Array.isArray(data.fileOverlay) ? data.fileOverlay : [];
-            const effective = Array.isArray(data.effective) ? data.effective : [];
-            const row = (p, source) => {
-                const removable = source === 'file';
-                return `<tr>
+            const row = (p) => `<tr>
                     <td style="padding:4px 8px; font-family:monospace; font-size:0.82rem;">${p}</td>
-                    <td style="padding:4px 8px; font-size:0.78rem; color:var(--text-secondary);">${source}</td>
                     <td style="padding:4px 8px; text-align:right;">
-                        ${removable ? `<button type="button" onclick="quickRemoveBrdAllow('${p.replace(/'/g, "\\'")}')" style="padding:2px 8px; font-size:0.75rem; border:1px solid #c94a4a; background:white; color:#c94a4a; border-radius:3px; cursor:pointer;">Remove</button>` : '<span style="font-size:0.75rem; color:var(--text-secondary);">env — read-only</span>'}
+                        <button type="button" onclick="quickRemoveBrdAllow('${p.replace(/'/g, "\\'")}')" style="padding:2px 8px; font-size:0.75rem; border:1px solid #c94a4a; background:white; color:#c94a4a; border-radius:3px; cursor:pointer;">Remove</button>
                     </td>
                 </tr>`;
-            };
-            const envRows = env.map(p => row(p, 'env')).join('');
-            const fileRows = file.map(p => row(p, 'file')).join('');
-            const empty = effective.length === 0
-                ? '<p style="color:var(--text-secondary); font-size:0.85rem;">No principals on the allowlist — any signed-in user may submit BRDs.</p>'
+            const fileRows = file.map(row).join('');
+            const empty = file.length === 0
+                ? '<p style="color:var(--text-secondary); font-size:0.85rem;">No user-managed entries yet. Add principals above to grant BRD submission access.</p>'
                 : '';
             listEl.innerHTML = `
                 ${empty}
-                ${effective.length ? `<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-                    <thead><tr style="background:#ffedd5;"><th style="padding:6px 8px; text-align:left;">Principal</th><th style="padding:6px 8px; text-align:left;">Source</th><th></th></tr></thead>
-                    <tbody>${envRows}${fileRows}</tbody>
+                ${file.length ? `<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                    <thead><tr style="background:#ffedd5;"><th style="padding:6px 8px; text-align:left;">Principal</th><th></th></tr></thead>
+                    <tbody>${fileRows}</tbody>
                 </table>` : ''}
-                <p style="margin-top:0.75rem; font-size:0.75rem; color:var(--text-secondary);">Env entries come from <code>BRD_INTAKE_ALLOWED_PRINCIPALS</code> on the Container App (read-only). File entries live in <code>${data.allowlistFile || '.brd-allowlist.json'}</code> and reset on container rebuild unless mounted.</p>
             `;
         }
 
