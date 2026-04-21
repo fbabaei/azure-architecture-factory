@@ -441,6 +441,17 @@ ENTRA_AUDIENCE = os.environ.get("ENTRA_AUDIENCE", "").strip() or ENTRA_CLIENT_ID
 # NEVER enable this when the portal is exposed without EasyAuth in front.
 TRUST_EASYAUTH_HEADERS = os.environ.get("TRUST_EASYAUTH_HEADERS", "").strip().lower() in ("1", "true", "yes")
 
+# Optional per-endpoint allowlist for BRD intake mutations. Comma-separated
+# list of principals (UPN/email or object id). Matches against the
+# `preferred_username` and `oid` claims on the authenticated caller.
+# When empty, any authenticated user may submit BRDs (Entra/EasyAuth still gates sign-in).
+def _parse_principal_allowlist(raw: str) -> set[str]:
+    return {p.strip().lower() for p in (raw or "").split(",") if p.strip()}
+
+BRD_INTAKE_ALLOWED_PRINCIPALS = _parse_principal_allowlist(
+    os.environ.get("BRD_INTAKE_ALLOWED_PRINCIPALS", "")
+)
+
 
 # ── Entra ID JWT validation (stdlib + minimal base64 decode) ─────────────────
 
@@ -1363,9 +1374,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if path == "/api/brd-intake":
             if not self._require_auth_for_mutation():
                 return
+            if not self._require_brd_intake_principal():
+                return
             return self._handle_brd_intake()
         if path == "/api/brd-upload":
             if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
                 return
             return self._handle_brd_upload()
         if path == "/api/admin/issue-token":
@@ -1493,6 +1508,33 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Admin access requires master API key"}, 403)
             return False
         return True
+
+    def _require_brd_intake_principal(self) -> bool:
+        """Enforce BRD_INTAKE_ALLOWED_PRINCIPALS against the authenticated caller.
+
+        Must be called AFTER `_require_auth_for_mutation`, so `self._entra_claims`
+        is populated. If the env var is empty, any authenticated user is allowed.
+        """
+        if not BRD_INTAKE_ALLOWED_PRINCIPALS:
+            return True  # No allowlist configured
+
+        claims = getattr(self, "_entra_claims", None) or {}
+        candidates = {
+            str(claims.get("preferred_username", "")).strip().lower(),
+            str(claims.get("upn", "")).strip().lower(),
+            str(claims.get("email", "")).strip().lower(),
+            str(claims.get("oid", "")).strip().lower(),
+            str(claims.get("sub", "")).strip().lower(),
+        }
+        candidates.discard("")
+        if candidates & BRD_INTAKE_ALLOWED_PRINCIPALS:
+            return True
+
+        self._send_json(
+            {"error": "BRD intake is restricted. Contact an admin to be added to the allowlist."},
+            403,
+        )
+        return False
 
     def _handle_issue_token(self):
         """POST /api/admin/issue-token — create a signed, usage-counted token."""
