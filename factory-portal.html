@@ -5190,7 +5190,7 @@
                         <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
                         ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
                         <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
-                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Tool-enabled Project Copilot: architecture, cost, operations, observability, deploy commands" style="color:#5b3fd4;font-weight:600;">🛠️ Ask Project Copilot</a>
+                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Tool-enabled Project Copilot: architecture, cost, operations, observability, deploy commands" style="background:linear-gradient(135deg,#5b3fd4,#8b5cf6);color:#fff;font-weight:600;padding:3px 10px;border-radius:12px;text-decoration:none;box-shadow:0 1px 3px rgba(91,63,212,0.35);">🛠️ Ask Project Copilot</a>
                     </div>
                 </div>
             `;
