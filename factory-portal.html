@@ -2631,8 +2631,8 @@
                             </span>
                         </div>
                         <div class="intake-panel-content">
-                            <!-- User: Request Access Token -->
-                            <details id="request-token-panel" style="margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
+                            <!-- User: Request Access Token (hidden: EasyAuth + Entra handles sign-in; tokens only needed for programmatic clients) -->
+                            <details id="request-token-panel" hidden style="display:none; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
                                 <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: var(--primary); user-select: none;">
                                     📥 Request a Portal Access Token
                                 </summary>
@@ -2660,12 +2660,11 @@
                                         <label for="brd-file-name">Project Name / BRD Filename</label>
                                         <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
                                     </div>
-                                    <div class="form-group">
+                                    <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
+                                         Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
+                                    <div class="form-group" hidden style="display:none;">
                                         <label for="portal-api-key">Portal Access Token</label>
-                                        <input type="password" id="portal-api-key" placeholder="Master key or issued token (e.g., eyJ...aGVs.3a4f...) — required when FACTORY_PORTAL_API_KEY is set">
-                                        <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
-                                            Optional for local development. Required when the portal is deployed with <code>FACTORY_PORTAL_API_KEY</code> enabled.
-                                        </p>
+                                        <input type="password" id="portal-api-key" placeholder="Legacy — leave blank">
                                     </div>
                                     <div class="form-group">
                                         <label for="brd-upload">Upload BRD File (.md or .txt)</label>
@@ -2764,8 +2763,8 @@
                                 </form>
                             </div>
 
-                            <!-- Admin: Issue Temporary Tokens -->
-                            <details id="admin-token-panel" style="margin-top: 1.5rem; border: 1px solid #c9a33a; border-radius: 6px; background: #fffdf2;"
+                            <!-- Admin: Issue Temporary Tokens (hidden: EasyAuth is canonical; re-show by removing hidden if you need programmatic tokens) -->
+                            <details id="admin-token-panel" hidden style="display:none; margin-top: 1.5rem; border: 1px solid #c9a33a; border-radius: 6px; background: #fffdf2;"
                                      ontoggle="if(this.open){ loadTokenList(); loadTokenRequests(); }">
                                 <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #7a5c00; user-select: none;">
                                     🔑 Admin: Issue Temporary Tokens
