@@ -1609,7 +1609,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if caller & _current_brd_allowlist():
                 return True
             self._send_json(
-                {"error": "Only portal admins or current BRD allowlist members can manage the allowlist."},
+                {
+                    "error": "Only portal admins or current BRD allowlist members can manage the allowlist.",
+                    "yourPrincipals": sorted(caller),
+                    "currentAllowlist": sorted(_current_brd_allowlist()),
+                    "hint": "Ask an admin to add one of 'yourPrincipals' to BRD_INTAKE_ALLOWED_PRINCIPALS env var or FACTORY_PORTAL_ADMINS.",
+                },
                 403,
             )
             return False
