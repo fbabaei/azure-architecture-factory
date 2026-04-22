@@ -1,10 +1,10 @@
 {
 	"servers": {
-		"mcp-environment-orchestrator": {
+		"factory-mcp-orchestrator": {
 			"url": "http://localhost:8000/mcp",
 			"type": "http"
 		},
-		"Draw io MCP": {
+		"draw-io-mcp": {
 			"url": "http://localhost:8080/mcp",
 			"type": "http"
 		}

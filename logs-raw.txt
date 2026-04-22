@@ -1,0 +1,31 @@
+2026-04-20T03:52:41.01446  Connecting to the container 'arch-factory-dev-portal'...
+2026-04-20T03:52:41.03801  Successfully Connected to container: 'arch-factory-dev-portal' [Revision: 'arch-factory-dev-portal--0000097', Replica: 'arch-factory-dev-portal--0000097-545c87b4bb-k24h5']
+2026-04-20T03:50:52.029313313Z [2026-04-20 03:50:52,029] WARNING: Feed download failed: HTTP Error 403: This request is not authorized to perform this operation.
+2026-04-20T03:50:52.071690326Z [2026-04-20 03:50:52,071] WARNING: Owners download failed: HTTP Error 403: This request is not authorized to perform this operation.
+2026-04-20T03:50:52.125236220Z [2026-04-20 03:50:52,125] WARNING: Projects listing failed: HTTP Error 403: This request is not authorized to perform this operation.
+2026-04-20T03:50:52.125455317Z [2026-04-20 03:50:52,125] INFO: Blob sync-down summary: {'feed': 0, 'owners': 0, 'projects_files': 0, 'skipped': 0}
+2026-04-20T03:50:54.409453916Z [2026-04-20 03:50:54,409] INFO: OpenTelemetry initialized (Azure Monitor exporter active)
+2026-04-20T03:50:54.409606396Z 
+2026-04-20T03:50:54.409707191Z ================================================================================
+2026-04-20T03:50:54.409716869Z AZURE ARCHITECTURE FACTORY - DEDICATED PORTAL
+2026-04-20T03:50:54.409719984Z ================================================================================
+2026-04-20T03:50:54.409722230Z 
+2026-04-20T03:50:54.409725414Z Factory Portal:     http://localhost:5501/factory-portal.html
+2026-04-20T03:50:54.409728074Z Friendly Alias:     http://localhost:5501/portal
+2026-04-20T03:50:54.409730654Z BRD Intake API:     http://localhost:5501/api/brd-intake
+2026-04-20T03:50:54.409733535Z CSA Companion API:  https://arch-factory-dev-csa-copilot.politebeach-70e24eed.eastus.azurecontainerapps.io
+2026-04-20T03:50:54.409739330Z Project Directory:  http://0.0.0.0:5501/projects/
+2026-04-20T03:50:54.409741986Z Listening On:       http://0.0.0.0:5501 (all interfaces)
+2026-04-20T03:50:54.409744538Z Auth:               Master API key + issued HMAC tokens (usage-counted)
+2026-04-20T03:50:54.409747101Z Token Admin:        POST http://localhost:5501/api/admin/issue-token
+2026-04-20T03:50:54.409750186Z Token Usage:        GET  http://localhost:5501/api/admin/tokens
+2026-04-20T03:50:54.409752992Z 
+2026-04-20T03:50:54.409756036Z You can now:
+2026-04-20T03:50:54.409766599Z   ò Submit BRDs via the portal
+2026-04-20T03:50:54.409769696Z   ò View generated projects in real-time
+2026-04-20T03:50:54.409772222Z   ò Monitor pipeline execution status
+2026-04-20T03:50:54.409774641Z   ò Access project documentation and architecture
+2026-04-20T03:50:54.409776949Z 
+2026-04-20T03:50:54.409780069Z Tip: Press Ctrl+C to stop the server.
+2026-04-20T03:50:54.409782950Z ================================================================================
+2026-04-20T03:50:54.409785362Z 

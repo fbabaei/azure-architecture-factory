@@ -1,0 +1,14 @@
+# Copilot run 20260421T175824Z-438a33c7
+# project: mdr-support-20260421003634
+# started: 2026-04-21T17:58:24Z
+# requestedBy: 
+# cmd: copilot -p Use project-orchestrator.
+Input: mdr-support.md
+Project name: mdr-support-20260421003634
+factory: true
+factoryPortalUrl: http://localhost:5501
+apiKey: <your-portal-api-key-or-issued-token>
+existing-diagram: projects/mdr-support-20260421003634/diagrams/mdr-support-20260421003634.drawio ... (22 args)
+# allowTools: write,shell
+# denyTools: shell(git push*),shell(rm -rf*),shell(npm publish*),shell(pnpm publish*),shell(yarn publish*),shell(gh release*),shell(az logout*)
+# --- stdout+stderr below ---

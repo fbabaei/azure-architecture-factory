@@ -94,6 +94,20 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
         copilot_runner = None  # type: ignore[assignment]
 
+try:
+    from resilience import ResilientExecutor, RetryPolicy, get_circuit_breaker
+except ModuleNotFoundError:
+    try:
+        from scripts.resilience import ResilientExecutor, RetryPolicy, get_circuit_breaker
+    except ModuleNotFoundError:
+        # Fallback: no resilience (graceful degradation)
+        class _NoOpResilientExecutor:
+            def __init__(self, *a, **kw): pass
+            def execute(self, func, *args, **kwargs): return func(*args, **kwargs)
+            def get_metrics(self): return {}
+        ResilientExecutor = _NoOpResilientExecutor  # type: ignore[assignment]
+        def get_circuit_breaker(name): return None  # type: ignore[return-value]
+
 
 def _parse_multipart_form(content_type: str, body: bytes) -> dict:
     """Parse multipart/form-data body without the removed cgi module.
@@ -795,6 +809,22 @@ if ENTRA_TENANT_ID and ENTRA_CLIENT_ID:
 RUNS = {}
 RUNS_LOCK = threading.Lock()
 
+# ── Self-healing resilience configuration ────────────────────────────────────
+# Retry policy for transient BRD processing failures (I/O, timeouts, etc.)
+_BRD_RETRY_POLICY = RetryPolicy(
+    max_attempts=int(os.environ.get("AAFACTORY_BRD_MAX_RETRIES", "3")),
+    initial_backoff_sec=float(os.environ.get("AAFACTORY_BRD_BACKOFF_SEC", "2.0")),
+    max_backoff_sec=float(os.environ.get("AAFACTORY_BRD_MAX_BACKOFF_SEC", "60.0")),
+)
+
+# Resilient executor for BRD processing with circuit breaker
+_BRD_EXECUTOR = ResilientExecutor(
+    name="brd-processor",
+    retry_policy=_BRD_RETRY_POLICY,
+    circuit_breaker=get_circuit_breaker("brd-processor"),
+    transient_errors_only=True,
+)
+
 # ── Run persistence (crash-safe) ──────────────────────────────────────────────
 # Runs are snapshotted to disk after every status transition so a container
 # restart does not orphan in-flight or recently-finished work. The file is
@@ -1292,6 +1322,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path == "/health":
             return self._handle_health()
 
+        if request_path == "/api/resilience":
+            return self._handle_resilience_metrics()
+
         if request_path == "/api/me":
             user = self._current_user()
             tenant = self._current_tenant()
@@ -1305,7 +1338,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             }, 200)
 
         # Hard-deny requests whose token 'tid' is not in the tenant allowlist.
-        # /api/me, /health, /ready, and the login/logout endpoints are exempt
+        # /api/me, /health, /ready, /api/resilience, and the login/logout endpoints are exempt
         # so probes and the user can see a friendly message and sign out.
         # Static browser assets (css/js/images) stay accessible to avoid
         # breaking the error page.
@@ -1313,7 +1346,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 and ALLOWED_TENANTS is not None
                 and not self._tenant_allowed()
                 and not request_path.startswith(("/.auth/", "/api/me", "/health",
-                                                  "/ready",
+                                                  "/ready", "/api/resilience",
                                                   "/assets/", "/favicon"))
                 and request_path != "/factory-portal.html"):
             if request_path.startswith("/api/") or request_path.endswith(".json"):
@@ -3476,7 +3509,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         )
 
     def _run_pipeline(self, run_id, brd_path, generation_options=None, owner: str | None = None):
-        """Execute the pipeline in background"""
+        """Execute the pipeline in background with resilience (retry + circuit breaker)"""
         tracer = get_tracer("aaf-portal.pipeline")
         with tracer.start_as_current_span("brd.pipeline") as span:
             span.set_attribute("aaf.run_id", run_id)
@@ -3490,7 +3523,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 _persist_runs_unlocked()
 
             try:
-                output = process_brd_document(
+                # Execute BRD processing with automatic retry + circuit breaker
+                output = _BRD_EXECUTOR.execute(
+                    process_brd_document,
                     FACTORY_REPO_ROOT,
                     pathlib.Path(brd_path),
                     run_id,
@@ -4127,6 +4162,21 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             },
             status,
         )
+
+    def _handle_resilience_metrics(self):
+        """Return circuit breaker and resilience executor metrics.
+        
+        Exposes:
+        - BRD processor executor: retry attempts, successes, failures, circuit state
+        - Circuit breaker: state (open/closed/half-open), failure count, recovery info
+        """
+        metrics = {
+            "service": "azure-architecture-factory-portal",
+            "probe": "resilience",
+            "timeUtc": _utcnow_iso(),
+            "brdProcessor": _BRD_EXECUTOR.get_metrics(),
+        }
+        return self._send_json(metrics, 200)
 
     # Extensions/paths the browser can safely cache for a few seconds.
     # Short max-age lets F5 inside the window serve from memory-cache instantly

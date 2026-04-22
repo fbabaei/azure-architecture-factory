@@ -1,0 +1,985 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "934217850683450507"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Deployment location"
+      }
+    },
+    "environment": {
+      "type": "string",
+      "defaultValue": "dev",
+      "metadata": {
+        "description": "Environment suffix (dev, test, prod)"
+      }
+    },
+    "workloadName": {
+      "type": "string",
+      "defaultValue": "mdr-support",
+      "metadata": {
+        "description": "Logical workload name used to derive resource names"
+      }
+    },
+    "enableObservability": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Wire Application Insights + Log Analytics into the workload"
+      }
+    },
+    "operationsEmail": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Operations email for action group notifications (optional)"
+      }
+    },
+    "openAiSku": {
+      "type": "string",
+      "defaultValue": "S0",
+      "metadata": {
+        "description": "Azure OpenAI SKU (e.g. S0)"
+      }
+    },
+    "aiSearchSku": {
+      "type": "string",
+      "defaultValue": "basic",
+      "metadata": {
+        "description": "Azure AI Search SKU (basic or standard)"
+      }
+    },
+    "openAiChatDeployment": {
+      "type": "string",
+      "defaultValue": "gpt-5.2",
+      "metadata": {
+        "description": "Azure OpenAI chat deployment name (e.g. gpt-5.2)"
+      }
+    },
+    "openAiChatModel": {
+      "type": "string",
+      "defaultValue": "gpt-5.2",
+      "metadata": {
+        "description": "Azure OpenAI chat model name"
+      }
+    },
+    "openAiEmbeddingsDeployment": {
+      "type": "string",
+      "defaultValue": "text-embedding-3-small",
+      "metadata": {
+        "description": "Azure OpenAI embeddings deployment name"
+      }
+    },
+    "openAiEmbeddingsModel": {
+      "type": "string",
+      "defaultValue": "text-embedding-3-small",
+      "metadata": {
+        "description": "Azure OpenAI embeddings model name"
+      }
+    },
+    "apiAudience": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional audience for APIM JWT validation. Leave empty to skip validate-jwt."
+      }
+    },
+    "containerImage": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Container image for the MDR agent API. When empty, the ACR-hosted image tag 'mdr-agent:latest' is used."
+      }
+    },
+    "provisionAcr": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Provision an Azure Container Registry in this resource group for the MDR agent image."
+      }
+    }
+  },
+  "variables": {
+    "baseName": "[toLower(replace(format('{0}-{1}', parameters('workloadName'), parameters('environment')), '_', '-'))]",
+    "acrName": "[take(format('acr{0}', uniqueString(resourceGroup().id, variables('baseName'))), 50)]",
+    "storageName": "[take(format('stg{0}', uniqueString(resourceGroup().id, variables('baseName'))), 24)]",
+    "openIdConfigUrl": "[format('{0}{1}/v2.0/.well-known/openid-configuration', environment().authentication.loginEndpoint, subscription().tenantId)]",
+    "apimPolicyXml": "[if(empty(parameters('apiAudience')), '<policies><inbound><base /><rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? context.Request.IpAddress)\" /><set-backend-service backend-id=\"mdr-agent-backend\" /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>', format('<policies><inbound><base /><validate-jwt header-name=\"Authorization\" require-scheme=\"Bearer\" failed-validation-httpcode=\"401\" failed-validation-error-message=\"Unauthorized\"><openid-config url=\"{0}\" /><audiences><audience>{1}</audience></audiences></validate-jwt><rate-limit-by-key calls=\"60\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Key ?? context.Request.IpAddress)\" /><set-backend-service backend-id=\"mdr-agent-backend\" /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>', variables('openIdConfigUrl'), parameters('apiAudience')))]",
+    "roleDefinitionIds": {
+      "openAiUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+      "cognitiveServicesUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')]",
+      "blobContributor": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+      "keyVaultSecretsUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+      "searchIndexReader": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')]",
+      "acrPull": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]"
+    },
+    "cosmosDataContributorRoleId": "00000000-0000-0000-0000-000000000002",
+    "tags": {
+      "workload": "[parameters('workloadName')]",
+      "environment": "[parameters('environment')]",
+      "purpose": "mdr-arrangement-extraction"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[format('{0}-mi', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]"
+    },
+    {
+      "condition": "[parameters('provisionAcr')]",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[variables('acrName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": false,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[take(format('{0}-kv', variables('baseName')), 24)]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "condition": "[parameters('enableObservability')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[format('{0}-law', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "retentionInDays": 30,
+        "features": {
+          "enableLogAccessUsingOnlyResourcePermissions": true
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableObservability')]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[format('{0}-appi', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', variables('baseName')))]",
+        "IngestionMode": "LogAnalytics"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', variables('baseName')))]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('enableObservability'), not(empty(parameters('operationsEmail'))))]",
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}-ag', variables('baseName'))]",
+      "location": "global",
+      "properties": {
+        "enabled": true,
+        "groupShortName": "mdrops",
+        "emailReceivers": [
+          {
+            "name": "mdr-operations",
+            "emailAddress": "[parameters('operationsEmail')]",
+            "useCommonAlertSchema": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('storageName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', variables('storageName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}/{2}', variables('storageName'), 'default', 'mdr-documents')]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}/{2}', variables('storageName'), 'default', 'knowledge-base-source')]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}-cosmos', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ],
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        },
+        "capabilities": [
+          {
+            "name": "EnableServerless"
+          }
+        ],
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": true
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}', format('{0}-cosmos', variables('baseName')), 'mdr')]",
+      "properties": {
+        "resource": {
+          "id": "mdr"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}/{2}', format('{0}-cosmos', variables('baseName')), 'mdr', 'arrangements')]",
+      "properties": {
+        "resource": {
+          "id": "arrangements",
+          "partitionKey": {
+            "paths": [
+              "/id"
+            ],
+            "kind": "Hash"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', format('{0}-cosmos', variables('baseName')), 'mdr')]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}/{2}', format('{0}-cosmos', variables('baseName')), 'mdr', 'sessions')]",
+      "properties": {
+        "resource": {
+          "id": "sessions",
+          "partitionKey": {
+            "paths": [
+              "/arrangement_id"
+            ],
+            "kind": "Hash"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', format('{0}-cosmos', variables('baseName')), 'mdr')]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}/{2}', format('{0}-cosmos', variables('baseName')), 'mdr', 'case-drafts')]",
+      "properties": {
+        "resource": {
+          "id": "case-drafts",
+          "partitionKey": {
+            "paths": [
+              "/id"
+            ],
+            "kind": "Hash"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', format('{0}-cosmos', variables('baseName')), 'mdr')]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}/{2}', format('{0}-cosmos', variables('baseName')), 'mdr', 'audit-log')]",
+      "properties": {
+        "resource": {
+          "id": "audit-log",
+          "partitionKey": {
+            "paths": [
+              "/arrangement_id"
+            ],
+            "kind": "Hash"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', format('{0}-cosmos', variables('baseName')), 'mdr')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Search/searchServices",
+      "apiVersion": "2023-11-01",
+      "name": "[format('{0}-aisearch', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "sku": {
+        "name": "[parameters('aiSearchSku')]"
+      },
+      "properties": {
+        "hostingMode": "default",
+        "publicNetworkAccess": "enabled"
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}-openai', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "OpenAI",
+      "sku": {
+        "name": "[parameters('openAiSku')]"
+      },
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": true,
+        "customSubDomainName": "[format('{0}-openai', variables('baseName'))]"
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-openai', variables('baseName')), parameters('openAiChatDeployment'))]",
+      "sku": {
+        "name": "Standard",
+        "capacity": 20
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "[parameters('openAiChatModel')]",
+          "version": "2024-08-06"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-openai', variables('baseName')), parameters('openAiEmbeddingsDeployment'))]",
+      "sku": {
+        "name": "Standard",
+        "capacity": 20
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "[parameters('openAiEmbeddingsModel')]",
+          "version": "1"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}-docintel', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "FormRecognizer",
+      "sku": {
+        "name": "S0"
+      },
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": true,
+        "customSubDomainName": "[format('{0}-docintel', variables('baseName'))]"
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-cae', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "appLogsConfiguration": "[if(parameters('enableObservability'), createObject('destination', 'log-analytics', 'logAnalyticsConfiguration', createObject('customerId', reference(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', variables('baseName'))), '2022-10-01').customerId, 'sharedKey', listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', variables('baseName'))), '2022-10-01').primarySharedKey)), null())]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-law', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-api', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))))]": {}
+        }
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-cae', variables('baseName')))]",
+        "configuration": {
+          "ingress": {
+            "external": true,
+            "targetPort": 8000,
+            "transport": "auto",
+            "allowInsecure": false
+          },
+          "registries": "[if(parameters('provisionAcr'), createArray(createObject('server', reference(resourceId('Microsoft.ContainerRegistry/registries', variables('acrName')), '2023-11-01-preview').loginServer, 'identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))))), createArray())]"
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "mdr-agent",
+              "image": "[if(not(empty(parameters('containerImage'))), parameters('containerImage'), if(parameters('provisionAcr'), format('{0}/mdr-agent:latest', reference(resourceId('Microsoft.ContainerRegistry/registries', variables('acrName')), '2023-11-01-preview').loginServer), 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'))]",
+              "resources": {
+                "cpu": "[json('0.5')]",
+                "memory": "1.0Gi"
+              },
+              "env": [
+                {
+                  "name": "AZURE_OPENAI_ENDPOINT",
+                  "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName'))), '2024-06-01-preview').endpoint]"
+                },
+                {
+                  "name": "AZURE_OPENAI_DEPLOYMENT",
+                  "value": "[parameters('openAiChatDeployment')]"
+                },
+                {
+                  "name": "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT",
+                  "value": "[parameters('openAiEmbeddingsDeployment')]"
+                },
+                {
+                  "name": "AZURE_DOC_INTEL_ENDPOINT",
+                  "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName'))), '2024-06-01-preview').endpoint]"
+                },
+                {
+                  "name": "AZURE_BLOB_ACCOUNT_URL",
+                  "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageName')), '2023-05-01').primaryEndpoints.blob]"
+                },
+                {
+                  "name": "AZURE_BLOB_CONTAINER",
+                  "value": "mdr-documents"
+                },
+                {
+                  "name": "AZURE_COSMOS_ENDPOINT",
+                  "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName'))), '2024-05-15').documentEndpoint]"
+                },
+                {
+                  "name": "AZURE_COSMOS_DATABASE",
+                  "value": "mdr"
+                },
+                {
+                  "name": "AZURE_COSMOS_ARRANGEMENTS_CONTAINER",
+                  "value": "arrangements"
+                },
+                {
+                  "name": "AZURE_COSMOS_SESSIONS_CONTAINER",
+                  "value": "sessions"
+                },
+                {
+                  "name": "AZURE_COSMOS_CASE_DRAFTS_CONTAINER",
+                  "value": "case-drafts"
+                },
+                {
+                  "name": "AZURE_COSMOS_AUDIT_CONTAINER",
+                  "value": "audit-log"
+                },
+                {
+                  "name": "AZURE_AI_SEARCH_ENDPOINT",
+                  "value": "[format('https://{0}.search.windows.net', format('{0}-aisearch', variables('baseName')))]"
+                },
+                {
+                  "name": "AZURE_AI_SEARCH_INDEX_NAME",
+                  "value": "compliance-knowledge-base"
+                },
+                {
+                  "name": "AZURE_AI_SEARCH_VECTOR_FIELD",
+                  "value": "contentVector"
+                },
+                {
+                  "name": "AZURE_AI_SEARCH_SEMANTIC_CONFIGURATION",
+                  "value": "default"
+                },
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "value": "[if(parameters('enableObservability'), reference(resourceId('Microsoft.Insights/components', format('{0}-appi', variables('baseName'))), '2020-02-02').ConnectionString, '')]"
+                },
+                {
+                  "name": "AZURE_CLIENT_ID",
+                  "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').clientId]"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": 1,
+            "maxReplicas": 3
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+        "[resourceId('Microsoft.Search/searchServices', format('{0}-aisearch', variables('baseName')))]",
+        "[resourceId('Microsoft.Insights/components', format('{0}-appi', variables('baseName')))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', format('{0}-cosmos', variables('baseName')), 'mdr', 'arrangements')]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', format('{0}-cosmos', variables('baseName')), 'mdr', 'audit-log')]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', format('{0}-cosmos', variables('baseName')), 'mdr', 'case-drafts')]",
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-cae', variables('baseName')))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName')))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', format('{0}-cosmos', variables('baseName')), 'mdr')]",
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', 'mdr-documents')]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName')))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers', format('{0}-cosmos', variables('baseName')), 'mdr', 'sessions')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}-apim', variables('baseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "sku": {
+        "name": "Developer",
+        "capacity": 1
+      },
+      "properties": {
+        "publisherName": "EY Tax MDR",
+        "publisherEmail": "[if(empty(parameters('operationsEmail')), 'opsteam@example.com', parameters('operationsEmail'))]"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/backends",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-apim', variables('baseName')), 'mdr-agent-backend')]",
+      "properties": {
+        "protocol": "http",
+        "url": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('{0}-api', variables('baseName'))), '2024-03-01').configuration.ingress.fqdn)]",
+        "title": "MDR Agent Container App",
+        "description": "Container Apps backend for the MDR support API",
+        "tls": {
+          "validateCertificateChain": true,
+          "validateCertificateName": true
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', format('{0}-apim', variables('baseName')))]",
+        "[resourceId('Microsoft.App/containerApps', format('{0}-api', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-apim', variables('baseName')), 'mdr-support-api')]",
+      "properties": {
+        "displayName": "MDR Support API",
+        "description": "Gateway facade for the MDR support two-agent runtime.",
+        "path": "mdr",
+        "protocols": [
+          "https"
+        ],
+        "apiType": "http",
+        "serviceUrl": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('{0}-api', variables('baseName'))), '2024-03-01').configuration.ingress.fqdn)]",
+        "subscriptionRequired": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', format('{0}-apim', variables('baseName')))]",
+        "[resourceId('Microsoft.App/containerApps', format('{0}-api', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'get-health')]",
+      "properties": {
+        "displayName": "Health probe",
+        "method": "GET",
+        "urlTemplate": "/health",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Healthy"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'post-api-chat')]",
+      "properties": {
+        "displayName": "Chat route",
+        "method": "POST",
+        "urlTemplate": "/api/chat",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Chat response"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'post-api-upload')]",
+      "properties": {
+        "displayName": "Upload and extract",
+        "method": "POST",
+        "urlTemplate": "/api/upload",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Extraction result"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'post-api-case-from-text')]",
+      "properties": {
+        "displayName": "Create case from text",
+        "method": "POST",
+        "urlTemplate": "/api/case/from-text",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Text extraction result"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'post-api-session')]",
+      "properties": {
+        "displayName": "Create session",
+        "method": "POST",
+        "urlTemplate": "/api/session",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Session created"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'get-api-case')]",
+      "properties": {
+        "displayName": "Get case",
+        "method": "GET",
+        "urlTemplate": "/api/case/{arrangementId}",
+        "templateParameters": [
+          {
+            "name": "arrangementId",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Case returned"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'post-api-case-confirm')]",
+      "properties": {
+        "displayName": "Confirm case",
+        "method": "POST",
+        "urlTemplate": "/api/case/{arrangementId}/confirm",
+        "templateParameters": [
+          {
+            "name": "arrangementId",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "Case confirmed"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[format('{0}/{1}/{2}', format('{0}-apim', variables('baseName')), 'mdr-support-api', 'policy')]",
+      "properties": {
+        "format": "rawxml",
+        "value": "[variables('apimPolicyXml')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', format('{0}-apim', variables('baseName')), 'mdr-support-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName')))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName'))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'openAiUser')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').openAiUser]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName')))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName'))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'cognitiveServicesUser')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').cognitiveServicesUser]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName')))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'blobContributor')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').blobContributor]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2024-05-15",
+      "name": "[format('{0}/{1}', format('{0}-cosmos', variables('baseName')), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName'))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'cosmosDataContributor'))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/{1}', resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName'))), variables('cosmosDataContributorRoleId'))]",
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName')))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', take(format('{0}-kv', variables('baseName')), 24))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', take(format('{0}-kv', variables('baseName')), 24)), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'keyVaultSecretsUser')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').keyVaultSecretsUser]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', take(format('{0}-kv', variables('baseName')), 24))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Search/searchServices', format('{0}-aisearch', variables('baseName')))]",
+      "name": "[guid(resourceId('Microsoft.Search/searchServices', format('{0}-aisearch', variables('baseName'))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'searchIndexReader')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').searchIndexReader]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Search/searchServices', format('{0}-aisearch', variables('baseName')))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]"
+      ]
+    },
+    {
+      "condition": "[parameters('provisionAcr')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+      "name": "[guid(resourceGroup().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), 'acrPull')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('roleDefinitionIds').acrPull]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', variables('acrName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName')))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "managedIdentityClientId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-mi', variables('baseName'))), '2023-01-31').clientId]"
+    },
+    "containerRegistryLoginServer": {
+      "type": "string",
+      "value": "[if(parameters('provisionAcr'), reference(resourceId('Microsoft.ContainerRegistry/registries', variables('acrName')), '2023-11-01-preview').loginServer, '')]"
+    },
+    "containerRegistryName": {
+      "type": "string",
+      "value": "[if(parameters('provisionAcr'), variables('acrName'), '')]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', take(format('{0}-kv', variables('baseName')), 24)), '2023-07-01').vaultUri]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageName')]"
+    },
+    "cosmosEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-cosmos', variables('baseName'))), '2024-05-15').documentEndpoint]"
+    },
+    "openAiEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-openai', variables('baseName'))), '2024-06-01-preview').endpoint]"
+    },
+    "documentIntelligenceEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-docintel', variables('baseName'))), '2024-06-01-preview').endpoint]"
+    },
+    "aiSearchEndpoint": {
+      "type": "string",
+      "value": "[format('https://{0}.search.windows.net', format('{0}-aisearch', variables('baseName')))]"
+    },
+    "containerAppFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.App/containerApps', format('{0}-api', variables('baseName'))), '2024-03-01').configuration.ingress.fqdn]"
+    },
+    "apimGatewayUrl": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ApiManagement/service', format('{0}-apim', variables('baseName'))), '2023-05-01-preview').gatewayUrl]"
+    },
+    "appInsightsConnectionString": {
+      "type": "string",
+      "value": "[if(parameters('enableObservability'), reference(resourceId('Microsoft.Insights/components', format('{0}-appi', variables('baseName'))), '2020-02-02').ConnectionString, '')]"
+    }
+  }
+}

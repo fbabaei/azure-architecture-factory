@@ -24,6 +24,46 @@ Your job is to:
 - ALWAYS follow left-to-right primary flow and place cross-cutting services at the bottom.
 - DO NOT draw edges between cross-cutting services or from main-flow to cross-cutting services.
 
+## Alignment Convergence Loop — Participant Role
+
+This agent is a participant in the orchestrator's **Phase 2.5 Alignment Convergence Loop**. It runs in one of three modes selected by the caller via the `mode` argument. The original `generate` mode is unchanged; two new modes support the loop.
+
+| Mode | Purpose |
+|------|---------|
+| `generate` (default) | Full first-pass diagram generation (see Diagram Generation Workflow below). |
+| `extract-inventory` | **NEW.** Parse the BRD and return a JSON inventory of every required Azure service, data store, external integration, data flow, NFR, and compliance constraint. Do NOT regenerate the diagram. Save to `projects/<slug>/docs/alignment/brd-inventory-iter-N.json`. |
+| `update` | **NEW.** Accept a delta (`components_to_add`, `components_to_remove`, `flows_to_update`) and apply it to the existing `<slug>.drawio` diagram in place. Preserve layout where possible. Log a diff of the change to `projects/<slug>/diagrams/history/`. |
+
+### `extract-inventory` output schema
+
+```json
+{
+  "iteration": N,
+  "source_brd": "projects/<slug>/docs/requirements.md",
+  "extracted_at": "<ISO>",
+  "azure_services": [
+    { "name": "Container Apps", "role": "portal-host", "justification": "BRD §3.1" }
+  ],
+  "data_stores": [
+    { "name": "Cosmos DB", "purpose": "order-state", "justification": "BRD §4" }
+  ],
+  "external_integrations": [
+    { "name": "Contoso Billing", "direction": "outbound", "justification": "BRD §6" }
+  ],
+  "primary_data_flows": [
+    { "from": "portal", "to": "orders-service", "trigger": "POST /api/orders" }
+  ],
+  "non_functional_requirements": [
+    { "id": "NFR-1", "category": "performance", "assertion": "p95 < 500ms", "justification": "BRD §7.1" }
+  ],
+  "compliance_constraints": [
+    { "id": "HIPAA-audit", "scope": "all patient data", "justification": "BRD §8" }
+  ]
+}
+```
+
+Every inventory item MUST include a `justification` citing the BRD section or line. Items without BRD evidence MUST NOT appear.
+
 ## Using an Existing Architecture File
 
 If the caller supplies `existing-diagram: <path>`, skip MCP Draw.io generation entirely and follow this short path:

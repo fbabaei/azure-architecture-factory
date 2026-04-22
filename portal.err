@@ -1,0 +1,2 @@
+[2026-04-21 10:47:28,510] INFO: OpenTelemetry not initialized (no connection string or deps missing)
+[2026-04-21 10:47:28,515] INFO: Pipeline watchdog started (interval=60s, stuck-threshold=30m)

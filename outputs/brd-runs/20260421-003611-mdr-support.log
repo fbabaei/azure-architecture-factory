@@ -1,0 +1,8 @@
+run_id=mdrnet00
+generated_at=2026-04-21T00:36:11.335756Z
+project_slug=mdr-support-20260421003611
+source_brd=mdr-support.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\mdr-support-20260421003611
+status=complete
+runner=azure_native_factory_runner

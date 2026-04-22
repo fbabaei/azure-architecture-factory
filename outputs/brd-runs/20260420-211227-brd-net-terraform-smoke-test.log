@@ -1,0 +1,8 @@
+run_id=dotnet-tf-e2e-1a058da0
+generated_at=2026-04-20T21:12:27.028342Z
+project_slug=brd-net-terraform-smoke-test-20260420211227
+source_brd=dotnet-terraform-smoke.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\brd-net-terraform-smoke-test-20260420211227
+status=complete
+runner=azure_native_factory_runner
