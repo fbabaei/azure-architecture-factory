@@ -56,6 +56,7 @@ When the project manifest declares `implementation_language`, use it to pick the
 |---------------------------|----------------|--------------------|
 | `python` (default, or absent) | 8000 | caller-provided |
 | `dotnet` | 8080 | `/health`, `/health/ready` |
+| `csharp` | 8080 | `/health`, `/health/ready` (alias of `dotnet`) |
 | `java` / `go` / `node` | not yet supported — escalate via blockers |
 
 If the wrong port is wired (e.g., 8000 on a dotnet project), rewrite the `ingress.target_port` attribute, re-run `terraform validate`, and record the swap in the fix log with category `language_port_mismatch`.

@@ -24,7 +24,7 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 ├── source-code-maintainer        Phase 2 follow-up + Phase 2.5/2.6/2.7/2.8/3.7 loops (Python)
 │                                 (modes: drift-check, inventory, error-handling-audit, scalability-audit, add-to-service, refactor, sync)
 │                                 OWNS: changes INSIDE existing services — never creates a new service
-├── lang-dotnet-implementer       Phase 2 + follow-up loops when BRD.implementation.language == "dotnet"
+├── lang-dotnet-implementer       Phase 2 + follow-up loops when BRD.implementation.language resolves to "dotnet" (includes "csharp" alias)
 │                                 (modes: scaffold, sync, add-to-service, refactor, drift-check)
 │                                 OWNS: ASP.NET Core 8 services under src/, xUnit tests, .NET Dockerfiles
 ├── [Phase 2.5] Alignment Convergence Loop — BRD↔diagram↔code 3-way diff (≥3 iterations)
@@ -39,6 +39,9 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 ├── [Phase 3.7] Test Convergence Loop — generate + run tests until green (≥3 iterations)
 ├── production-environment-advisor Phase 4: production readiness checklist (READ-ONLY)
 ├── azure-project-deployer        Phase 5: deploy to Azure (optional)
+├── repo-change-agent             Existing-repo enhancement workflow (portal repo intake)
+│                                 OWNS: repo-local analysis, change decisions, implementation, validation, change summary
+│                                 DOES NOT OWN: clone/branch/push/PR side effects
 ├── project-observability-advisor Phase 6: audit and report on observability (optional)
 ├── project-traceability-advisor  Phase 6b: requirement → code → test → infra coverage (optional)
 └── factory-handoff               Phase 7: promote project to factory portal (optional)
@@ -85,6 +88,7 @@ To eliminate overlap between agents that both touch code or infra:
 | `bicep-infrastructure-validator` | Bicep / `.bicepparam` syntax validation + auto-fix, module wiring, infra-layer scalability + security fixes dispatched by the gates. | Creating new Bicep modules (→ implementer); deploying infra (→ deployer); source-code edits (→ maintainer). |
 | `security-compliance-auditor` | Security + compliance audit only (READ-ONLY). | Applying any fix; runtime advisory (→ production-environment-advisor). |
 | `production-environment-advisor` | READ-ONLY pre-deploy prerequisites checklist. | Applying fixes of any kind (→ the gates); post-deploy analysis (→ advisor agents). |
+| `repo-change-agent` | Existing-repo analysis, architecture-aligned change selection, implementation, local validation, `AAF-change-summary.md`. | Clone/branch/commit/push/PR operations (→ portal backend / repo ops layer); greenfield factory generation (→ orchestrator). |
 
 Full protocol and troubleshooting: [`../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md`](../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md).
 
@@ -283,6 +287,17 @@ Outputs written before factory handoff:
 - `projects/<slug>/docs/modernization-assessment.md` — full assessment evidence
 - `projects/<slug>/docs/requirements.md` — generated target-state BRD
 
+### repo-change-agent
+Use this agent when AAF is operating against an existing GitHub or Azure DevOps repository supplied through the portal.
+
+Typical uses:
+- Review a real repository's docs, architecture files, source, tests, and infra before making changes.
+- Decide whether to enhance an existing component or add a minimal new one.
+- Implement the change and run focused validation inside the target repo.
+- Produce `AAF-change-summary.md` for reviewers before the backend commits and opens the PR.
+
+This agent is intentionally separated from SCM side effects. It does not create branches, push commits, or open PRs.
+
 ### factory-handoff
 Use this agent to promote a locally scaffolded `project-orchestrator` project to the shared **Azure Architecture Factory** portal.
 
@@ -299,6 +314,7 @@ Prerequisites: factory portal running (`python scripts/start_factory_portal.py`)
 ## Notes
 - **Use `modernization-to-factory` for legacy apps** — it assesses the codebase, writes the BRD, then calls `project-orchestrator` automatically.
 - **Use `project-orchestrator` for new projects** — it calls all other agents in the correct order.
+- **Use `repo-change-agent` for existing external repos under portal repo intake** — it reasons about code changes inside the cloned target repo, while the portal backend handles branch, commit, push, and PR.
 - Individual agents can still be invoked standalone for targeted tasks.
 - Projects created by the orchestrator live under `projects/` with full isolation per project.
 - Use `factory-handoff` after `project-orchestrator` to promote the project to the shared factory portal.

@@ -54,11 +54,12 @@ When the project manifest declares `implementation_language` (set by `project-or
 |---------------------------|------------------------|------------------------|---------------------|
 | `python` (default, or absent) | `infra/modules/compute/containerapp.bicep` | 8000 | caller-provided |
 | `dotnet` | `infra/modules/compute/containerapp-dotnet.bicep` | 8080 | `/health`, `/health/ready` (module built-in) |
+| `csharp` | alias of `dotnet` (same module and probes) | 8080 | `/health`, `/health/ready` (module built-in) |
 | `java` / `go` / `node` | not yet supported — escalate via the validator's `blockers` output |
 
 **Validator behavior:**
 
-1. Read `projects/<slug>/project-manifest.json` (or orchestrator-provided input). Extract `implementation_language`. Default to `python` if absent.
+1. Read `projects/<slug>/project-manifest.json` (or orchestrator-provided input). Extract `implementation_language`. Normalize `csharp` to `dotnet`. Default to `python` if absent.
 2. For each Container App module reference in `infra/`, confirm the path matches the language. If not, rewrite the `module ... './path/to/correct.bicep'` line, re-run `get_errors`, and record the swap in the fix log with category `language_module_mismatch`.
 3. Confirm `containerPort` aligns with the language default unless the BRD explicitly overrides.
 4. If a `dotnet` project references `containerapp.bicep`, the fix is: (a) swap the module path, (b) remove any caller-supplied `containerPort` that equals the Python default (8000), (c) ensure `appInsightsConnectionString` is wired when the project has an App Insights module.

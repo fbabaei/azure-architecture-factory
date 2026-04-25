@@ -408,12 +408,13 @@ Resolve the agent runtime choice before delegating. The `runtime` argument accep
 
 The factory classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) performs the same analysis and is the authoritative resolver when `auto` is passed. Record the resolved value in the manifest as `agent_runtime`.
 
-**Resolve implementation language.** Read `BRD.implementation.language` (accepts `python`, `dotnet`, `java`, `go`, `node`; default `python` when absent). Record the resolved value in the manifest as `implementation_language`. This value selects the language specialist and the Bicep compute module family for the rest of the pipeline:
+**Resolve implementation language.** Read `BRD.implementation.language` (accepts `python`, `dotnet`, `csharp`, `java`, `go`, `node`; default `python` when absent). Normalize `csharp` to `dotnet` before writing `implementation_language` into the manifest. This value selects the language specialist and the Bicep compute module family for the rest of the pipeline:
 
 | Language | Implementer agent | Compute Bicep module |
 |----------|-------------------|----------------------|
 | `python` (default) | `azure-architecture-implementer` scaffolds; `source-code-maintainer` follows up | `infra/modules/compute/containerapp.bicep` |
 | `dotnet` | `lang-dotnet-implementer` scaffolds and maintains end-to-end | `infra/modules/compute/containerapp-dotnet.bicep` |
+| `csharp` | Alias of `dotnet` (same implementer and compute module) | `infra/modules/compute/containerapp-dotnet.bicep` |
 | `java` / `go` / `node` | Not yet supported. Halt with an escalation block: "BRD requested `<lang>` but no specialist agent is registered. Add `lang-<lang>-implementer` before proceeding." |
 
 Instruct the agent (Python path):

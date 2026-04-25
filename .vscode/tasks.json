@@ -79,7 +79,7 @@
 		{
 			"label": "remote-feed-check",
 			"type": "shell",
-			"command": "az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'sh -c \"wc -c /app/factory-projects.generated.json && python -c \\\"import json; d=json.load(open(chr(47)+chr(97)+chr(112)+chr(112)+chr(47)+chr(102)+chr(97)+chr(99)+chr(116)+chr(111)+chr(114)+chr(121)+chr(45)+chr(112)+chr(114)+chr(111)+chr(106)+chr(101)+chr(99)+chr(116)+chr(115)+chr(46)+chr(103)+chr(101)+chr(110)+chr(101)+chr(114)+chr(97)+chr(116)+chr(101)+chr(100)+chr(46)+chr(106)+chr(115)+chr(111)+chr(110))); print(len(d.get(chr(112)+chr(114)+chr(111)+chr(106)+chr(101)+chr(99)+chr(116)+chr(115),[])))\\\"\"' 2>&1"
+			"command": "az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'wc -c /app/factory-projects.generated.json' ; az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'grep -c slug /app/factory-projects.generated.json'"
 		},
 		{
 			"label": "remote-feed-size",
@@ -99,7 +99,7 @@
 		{
 			"label": "html-compare",
 			"type": "shell",
-			"command": "$local=(Get-FileHash factory-portal.html -Algorithm SHA256).Hash.ToLower(); Write-Host \"local html sha: $local\"; Write-Host 'remote html sha:'; az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'sha256sum /app/factory-portal.html' 2>&1 | Select-String '[a-f0-9]{64}'"
+			"command": "$local=(Get-FileHash factory-portal.html -Algorithm SHA256).Hash.ToLower(); Write-Host \"local html sha: $local\"; $rev=az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.latestReadyRevisionName' -o tsv; Write-Host \"latest ready revision: $rev\"; Write-Host 'remote html sha: skipped (exec endpoint is unstable under current auth setup)'; Write-Host '---revision/image---'; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision $rev --query '{name:name,health:properties.healthState,running:properties.runningState,image:properties.template.containers[0].image}' -o table"
 		},
 		{
 			"label": "remote-html-sha",
@@ -214,12 +214,12 @@
 		{
 			"label": "verify-deploy",
 			"type": "shell",
-			"command": "Start-Sleep 20; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision arch-factory-dev-portal--0000105 --query '{name:name,active:properties.active,health:properties.healthState,running:properties.runningState,replicas:properties.replicas}' -o table; Write-Host '---verify projects present---'; az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'ls /app/projects' 2>&1 | Select-Object -Last 10"
+			"command": "$rev=az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.latestReadyRevisionName' -o tsv; Write-Host \"latest ready revision: $rev\"; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision $rev --query '{name:name,active:properties.active,health:properties.healthState,running:properties.runningState,replicas:properties.replicas,image:properties.template.containers[0].image}' -o table; Write-Host '---fqdn---'; az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.configuration.ingress.fqdn' -o tsv"
 		},
 		{
 			"label": "verify-mdr",
 			"type": "shell",
-			"command": "az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'ls /app/projects/mdr-support-20260416174652' 2>&1 | Select-Object -Last 15; Write-Host '---env---'; az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.template.containers[0].env[?name==`FACTORY_PORTAL_AUTH_MODE`]' -o json"
+			"command": "$rev=az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.latestReadyRevisionName' -o tsv; Write-Host \"latest ready revision: $rev\"; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision $rev --query '{name:name,health:properties.healthState,running:properties.runningState,image:properties.template.containers[0].image}' -o table; Write-Host '---mdr project check (exec optional)---'; $mdr=(az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'ls /app/projects/mdr-support-20260416174652' 2>&1 | Out-String).Trim(); if($mdr.Length -gt 0){Write-Host $mdr}else{Write-Host 'mdr check unavailable (exec endpoint issue/auth).'}; Write-Host '---env---'; az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.template.containers[0].env[?name==`FACTORY_PORTAL_AUTH_MODE`]' -o json"
 		},
 		{
 			"label": "whoami",
@@ -234,7 +234,7 @@
 		{
 			"label": "verify-owners",
 			"type": "shell",
-			"command": "Start-Sleep 15; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision arch-factory-dev-portal--owners-20260420-124312 --query '{health:properties.healthState,running:properties.runningState,active:properties.active}' -o table; Write-Host '---verify---'; az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'cat /app/.portal-owners.json' 2>&1 | Select-Object -Last 12"
+			"command": "$rev=az containerapp show -n arch-factory-dev-portal -g arch-factory-dev-rg --query 'properties.latestReadyRevisionName' -o tsv; Write-Host \"latest ready revision: $rev\"; az containerapp revision show -n arch-factory-dev-portal -g arch-factory-dev-rg --revision $rev --query '{name:name,health:properties.healthState,running:properties.runningState,active:properties.active,image:properties.template.containers[0].image}' -o table; Write-Host '---owners check (exec optional)---'; $owners=(az containerapp exec -n arch-factory-dev-portal -g arch-factory-dev-rg --command 'grep -A4 mdr-support /app/.portal-owners.json' 2>&1 | Out-String).Trim(); if($owners.Length -gt 0){Write-Host $owners}else{Write-Host 'owners check unavailable (exec endpoint issue/auth).'}"
 		},
 		{
 			"label": "verify-grep",

@@ -5,6 +5,7 @@ Serves factory projects, BRD intake API, and project management dashboard
 """
 
 import base64
+import html
 import io
 import json
 import hmac
@@ -17,6 +18,10 @@ import sys
 import threading
 import time
 import uuid
+import shutil
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
 import zipfile
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
@@ -34,7 +39,7 @@ def _utcnow_iso() -> str:
     return datetime.now(UTC).replace(tzinfo=None).isoformat() + "Z"
 from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen, Request
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 
 try:
     from telemetry import init_otel, get_tracer
@@ -101,10 +106,15 @@ except ModuleNotFoundError:
         from scripts.resilience import ResilientExecutor, RetryPolicy, get_circuit_breaker
     except ModuleNotFoundError:
         # Fallback: no resilience (graceful degradation)
+        class _NoOpRetryPolicy:
+            def __init__(self, *a, **kw):
+                pass
+
         class _NoOpResilientExecutor:
             def __init__(self, *a, **kw): pass
             def execute(self, func, *args, **kwargs): return func(*args, **kwargs)
             def get_metrics(self): return {}
+        RetryPolicy = _NoOpRetryPolicy  # type: ignore[assignment]
         ResilientExecutor = _NoOpResilientExecutor  # type: ignore[assignment]
         def get_circuit_breaker(name): return None  # type: ignore[return-value]
 
@@ -538,20 +548,9 @@ class _JwksCache:
             jwks = json.loads(urlopen(Request(jwks_uri), timeout=10).read())
             self._keys = {k["kid"]: k for k in jwks.get("keys", [])}
             self._expires_at = time.monotonic() + self._ttl
-        except (URLError, KeyError, json.JSONDecodeError) as exc:
-            logging.getLogger(__name__).warning("JWKS refresh failed: %s", exc)
-
-
-def _b64url_decode(data: str) -> bytes:
-    """Base64url decode (no padding required)."""
-    data += "=" * (-len(data) % 4)
-    return base64.urlsafe_b64decode(data)
-
-
-def _int_from_bytes(b: bytes) -> int:
-    return int.from_bytes(b, byteorder="big")
-
-
+        except Exception:
+            self._expires_at = time.monotonic() + min(300, self._ttl)
+            raise
 def _rsa_verify(n_b64: str, e_b64: str, signature: bytes, message: bytes) -> bool:
     """Verify RSA PKCS#1 v1.5 signature using stdlib only.
     Constructs the public key from JWK n/e and performs raw RSA.
@@ -1070,6 +1069,41 @@ _configure_logging()
 logger = logging.getLogger(__name__)
 
 
+def _runtime_auto_gate_violation(
+    generation_options: dict | None,
+    output: dict | None,
+) -> str | None:
+    """Return a blocking reason when runtime:auto is not eligible.
+
+    Enforcement is explicit: only block when caller requested runtime:auto.
+    """
+
+    opts = generation_options or {}
+    requested_runtime = str(
+        opts.get("runtime") or opts.get("orchestratorRuntime") or ""
+    ).strip().lower()
+    if requested_runtime != "auto":
+        return None
+
+    payload = output or {}
+    gate = payload.get("orchestratorAutoFlow")
+    if not isinstance(gate, dict):
+        project_payload = payload.get("project") or {}
+        if isinstance(project_payload, dict):
+            gate = project_payload.get("orchestratorAutoFlow")
+
+    if not isinstance(gate, dict):
+        return None
+
+    if bool(gate.get("eligible")):
+        return None
+
+    reason = str(gate.get("reason") or "").strip()
+    if reason:
+        return f"runtime:auto blocked by BRD readiness gate: {reason}"
+    return "runtime:auto blocked by BRD readiness gate."
+
+
 # ── Azure OpenAI auth header ────────────────────────────────────────────────
 # Supports two auth modes:
 #   1. API key  (AZURE_OPENAI_API_KEY env var)
@@ -1160,11 +1194,1338 @@ def _coerce_bool(value, default: bool = False) -> bool:
 
 _VALID_NETWORK_TIERS = frozenset({"public", "vnet-integrated", "private"})
 
+_IMPLEMENTATION_LANGUAGE_ALIASES = {
+    "python": "python",
+    "py": "python",
+    "dotnet": "dotnet",
+    "net": "dotnet",
+    ".net": "dotnet",
+    "csharp": "dotnet",
+    "c#": "dotnet",
+    "aspnet": "dotnet",
+    "aspnetcore": "dotnet",
+}
+
+_SOURCE_TYPE_ALIASES = {
+    "auto": "auto",
+    "detect": "auto",
+    "infer": "auto",
+    "": "brd-markdown",
+    "brd": "brd-markdown",
+    "brd-markdown": "brd-markdown",
+    "requirements": "brd-markdown",
+    "architecture-markdown": "architecture-markdown",
+    "markdown": "architecture-markdown",
+    "md": "architecture-markdown",
+    "plain-text": "plain-text",
+    "text": "plain-text",
+    "txt": "plain-text",
+    "drawio": "drawio",
+    "draw.io": "drawio",
+    "mermaid": "mermaid",
+    "mmd": "mermaid",
+    "plantuml": "plantuml",
+    "puml": "plantuml",
+    "structurizr": "structurizr",
+    "structurizr-dsl": "structurizr",
+    "json": "json",
+    "yaml": "yaml",
+    "yml": "yaml",
+    "visio": "visio",
+    "vsdx": "visio",
+    "lucidchart": "lucidchart",
+}
+
+_TEXTUAL_SOURCE_TYPES = frozenset(
+    {
+        "brd-markdown",
+        "architecture-markdown",
+        "plain-text",
+        "drawio",
+        "mermaid",
+        "plantuml",
+        "structurizr",
+        "json",
+        "yaml",
+    }
+)
+
+_REFERENCE_ONLY_SOURCE_TYPES = frozenset({"visio", "lucidchart"})
+
+_SOURCE_TYPE_FENCE_LANGUAGES = {
+    "architecture-markdown": "markdown",
+    "plain-text": "text",
+    "drawio": "xml",
+    "mermaid": "mermaid",
+    "plantuml": "plantuml",
+    "structurizr": "text",
+    "json": "json",
+    "yaml": "yaml",
+    "visio": "text",
+    "lucidchart": "text",
+}
+
 
 def _sanitize_network_tier(value) -> str:
     """Return a validated network tier string, defaulting to 'public'."""
     candidate = str(value or "").strip().lower()
     return candidate if candidate in _VALID_NETWORK_TIERS else "public"
+
+
+def _sanitize_implementation_language(value) -> str | None:
+    """Return canonical implementation language or None when unsupported."""
+    candidate = str(value or "").strip().lower().lstrip(".")
+    return _IMPLEMENTATION_LANGUAGE_ALIASES.get(candidate)
+
+
+def _sanitize_source_type(value) -> str:
+    """Return canonical architecture source type."""
+    candidate = str(value or "").strip().lower()
+    return _SOURCE_TYPE_ALIASES.get(candidate, "brd-markdown")
+
+
+def _looks_like_json(content: str) -> bool:
+    sample = (content or "").strip()
+    if not sample or sample[0] not in "[{":
+        return False
+    try:
+        json.loads(sample)
+        return True
+    except Exception:
+        return False
+
+
+def _looks_like_yaml(content: str) -> bool:
+    sample = (content or "").strip()
+    if not sample or sample.startswith(("#", "```", "<", "{", "[", "@startuml")):
+        return False
+    lines = [line for line in sample.splitlines() if line.strip()]
+    if len(lines) < 2:
+        return False
+    key_value_lines = 0
+    for line in lines[:12]:
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            key_value_lines += 1
+            continue
+        if re.match(r"^[A-Za-z0-9_.-]+\s*:\s*.+$", stripped):
+            key_value_lines += 1
+    return key_value_lines >= 2
+
+
+def _detect_source_type(
+    *,
+    file_name: str = "",
+    content: str = "",
+    uploaded_file_name: str = "",
+    raw_bytes: bytes | None = None,
+) -> str:
+    """Infer the architecture intake format from filename and content."""
+    sample_name = (uploaded_file_name or file_name or "").strip().lower()
+    suffix = pathlib.Path(sample_name).suffix.lower()
+    normalized = (content or "").strip()
+
+    if suffix == ".drawio":
+        return "drawio"
+    if suffix in {".mmd", ".mermaid"}:
+        return "mermaid"
+    if suffix in {".puml", ".plantuml"}:
+        return "plantuml"
+    if suffix == ".dsl":
+        return "structurizr"
+    if suffix == ".json":
+        return "json"
+    if suffix in {".yaml", ".yml"}:
+        return "yaml"
+    if suffix in {".vsdx", ".vsd"}:
+        return "visio"
+    if "lucidchart" in sample_name or suffix == ".lucid":
+        return "lucidchart"
+
+    lowered = normalized.lower()
+    if "<mxgraphmodel" in lowered or "<mxfile" in lowered:
+        return "drawio"
+    if re.search(r"(?m)^\s*@startuml\b", normalized):
+        return "plantuml"
+    if re.search(r"(?m)^\s*(graph|flowchart|sequencediagram|classdiagram|statediagram|erdiagram|journey|gantt|mindmap|timeline|architecture-beta)\b", lowered):
+        return "mermaid"
+    if re.search(r"(?m)^\s*workspace\s*\{", lowered) or ("views {" in lowered and "model {" in lowered):
+        return "structurizr"
+    if _looks_like_json(normalized):
+        return "json"
+    if _looks_like_yaml(normalized):
+        return "yaml"
+    if re.search(r"(?m)^\s*#\s+", normalized):
+        if re.search(r"business goal|key requirements|success criteria|out of scope|timeline", lowered):
+            return "brd-markdown"
+        return "architecture-markdown"
+
+    if raw_bytes is not None:
+        if raw_bytes.startswith(b"PK") and suffix == ".vsdx":
+            return "visio"
+        if raw_bytes.startswith(b"%PDF") and "lucid" in sample_name:
+            return "lucidchart"
+
+    return "plain-text"
+
+
+def _normalize_node_label(raw: str) -> str:
+    label = html.unescape(str(raw or ""))
+    label = re.sub(r"<[^>]+>", " ", label)
+    label = re.sub(r"\s+", " ", label).strip()
+    return label[:120]
+
+
+def _dedupe_preserve(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in values:
+        item = value.strip()
+        if not item:
+            continue
+        key = item.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(item)
+    return ordered
+
+
+def _extract_mermaid_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    nodes: list[str] = []
+    relationships: list[str] = []
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("%%"):
+            continue
+        node_matches = re.findall(r"\b([A-Za-z0-9_]+)\s*\[(.*?)\]", stripped)
+        for alias, label in node_matches:
+            nodes.append(_normalize_node_label(label or alias))
+        edge_match = re.search(
+            r"^\s*([A-Za-z0-9_]+)(?:\[(.*?)\])?\s*[-.=]+(?:>|\|[^|]*\|>)\s*([A-Za-z0-9_]+)(?:\[(.*?)\])?(?:\s*\|([^|]+)\|)?",
+            stripped,
+        )
+        if edge_match:
+            src, src_label, dst, dst_label, edge_label = edge_match.groups()
+            nodes.append(_normalize_node_label(src_label or src))
+            nodes.append(_normalize_node_label(dst_label or dst))
+            relation = f"{src} -> {dst}"
+            edge_label = edge_label or ""
+            if edge_label.strip():
+                relation += f" ({_normalize_node_label(edge_label)})"
+            relationships.append(relation)
+    signals = ["Mermaid graph parsed"] if relationships else []
+    return _dedupe_preserve(nodes), _dedupe_preserve(relationships), signals
+
+
+def _extract_plantuml_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    nodes: list[str] = []
+    relationships: list[str] = []
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("'") or stripped.startswith("@"):
+            continue
+        relation_match = re.search(r"([\w.:-]+)\s*[-=.]+(?:left|right|up|down)?[-=.]*>\s*([\w.:-]+)\s*:?[ ]*(.*)", stripped)
+        if relation_match:
+            src, dst, label = relation_match.groups()
+            relation = f"{src} -> {dst}"
+            if label.strip():
+                relation += f" ({_normalize_node_label(label)})"
+            relationships.append(relation)
+            nodes.extend([src, dst])
+            continue
+        decl_match = re.search(r"^(actor|participant|component|database|queue|rectangle|node|cloud)\s+\"?([^\"]+)\"?", stripped, re.IGNORECASE)
+        if decl_match:
+            nodes.append(_normalize_node_label(decl_match.group(2)))
+    signals = ["PlantUML diagram parsed"] if relationships else []
+    return _dedupe_preserve(nodes), _dedupe_preserve(relationships), signals
+
+
+def _extract_structurizr_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    nodes: list[str] = []
+    relationships: list[str] = []
+    alias_map: dict[str, str] = {}
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//"):
+            continue
+        decl_match = re.match(r"([A-Za-z0-9_]+)\s*=\s*(softwareSystem|container|person|deploymentNode|component)\s+\"([^\"]+)\"", stripped, re.IGNORECASE)
+        if decl_match:
+            alias, kind, label = decl_match.groups()
+            normalized = _normalize_node_label(label)
+            alias_map[alias] = normalized
+            nodes.append(f"{normalized} [{kind}]")
+            continue
+        relation_match = re.match(r"([A-Za-z0-9_]+)\s*->\s*([A-Za-z0-9_]+)\s+\"([^\"]+)\"", stripped)
+        if relation_match:
+            src, dst, label = relation_match.groups()
+            relationships.append(
+                f"{alias_map.get(src, src)} -> {alias_map.get(dst, dst)} ({_normalize_node_label(label)})"
+            )
+    signals = ["Structurizr DSL parsed"] if alias_map else []
+    return _dedupe_preserve(nodes), _dedupe_preserve(relationships), signals
+
+
+def _extract_drawio_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    """Extract components and relationships from a draw.io XML diagram.
+
+    Uses stdlib ElementTree for proper XML parsing and extracts node labels from
+    ``value``/``label`` attributes plus edge ``source``/``target`` connections.
+    Falls back to regex-based label scan when XML is malformed.
+    """
+    nodes: list[str] = []
+    relationships: list[str] = []
+    signals: list[str] = []
+
+    # draw.io XML may be wrapped in <mxGraphModel> or <mxfile>; try parsing
+    try:
+        root = ET.fromstring(content)
+    except ET.ParseError:
+        # Malformed XML: fall back to simple regex label scan
+        labels = _dedupe_preserve(
+            [
+                _normalize_node_label(m)
+                for m in re.findall(r'(?:value|label)="([^"]+)"', content, flags=re.IGNORECASE)
+                if _normalize_node_label(m)
+            ]
+        )
+        return labels[:20], [], ["draw.io labels extracted (regex fallback)"]
+
+    # Build a mapping from cell id -> human-readable label for relationship rendering
+    id_to_label: dict[str, str] = {}
+    vertex_cells: list[ET.Element] = []
+    edge_cells: list[ET.Element] = []
+
+    for cell in root.iter("mxCell"):
+        cell_id = cell.get("id", "")
+        raw_label = cell.get("value") or cell.get("label") or ""
+        label = _normalize_node_label(raw_label)
+
+        is_vertex = cell.get("vertex") == "1"
+        is_edge = cell.get("edge") == "1"
+        has_source = bool(cell.get("source"))
+        has_target = bool(cell.get("target"))
+
+        if is_vertex and label:
+            id_to_label[cell_id] = label
+            vertex_cells.append(cell)
+        elif is_edge or has_source or has_target:
+            edge_cells.append(cell)
+
+    # Collect node labels (deduplicated)
+    nodes = _dedupe_preserve([id_to_label[c.get("id", "")] for c in vertex_cells if id_to_label.get(c.get("id", ""))])
+
+    # Build relationships from edge source->target
+    for cell in edge_cells:
+        src_id = cell.get("source", "")
+        dst_id = cell.get("target", "")
+        src = id_to_label.get(src_id, src_id or "?")
+        dst = id_to_label.get(dst_id, dst_id or "?")
+        if src and dst and src != "?" and dst != "?":
+            edge_label = _normalize_node_label(cell.get("value") or cell.get("label") or "")
+            rel = f"{src} -> {dst}"
+            if edge_label:
+                rel += f" ({edge_label})"
+            relationships.append(rel)
+
+    signals.append("draw.io XML parsed")
+    if relationships:
+        signals.append(f"{len(relationships)} edge(s) extracted")
+    return nodes[:25], _dedupe_preserve(relationships)[:20], signals
+
+
+def _extract_json_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    try:
+        payload = json.loads(content)
+    except Exception:
+        return [], [], []
+    nodes: list[str] = []
+    relationships: list[str] = []
+    signals: list[str] = []
+    if isinstance(payload, dict):
+        signals.append("JSON architecture spec parsed")
+        for key in ("services", "components", "systems", "containers"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                for item in value[:12]:
+                    if isinstance(item, dict):
+                        nodes.append(_normalize_node_label(item.get("name") or item.get("id") or item.get("title") or key))
+                    else:
+                        nodes.append(_normalize_node_label(str(item)))
+        rels = payload.get("relationships") or payload.get("flows")
+        if isinstance(rels, list):
+            for item in rels[:12]:
+                if isinstance(item, dict):
+                    src = _normalize_node_label(item.get("source") or item.get("from") or "source")
+                    dst = _normalize_node_label(item.get("target") or item.get("to") or "target")
+                    label = _normalize_node_label(item.get("label") or item.get("description") or "")
+                    relationships.append(f"{src} -> {dst}" + (f" ({label})" if label else ""))
+    return _dedupe_preserve(nodes), _dedupe_preserve(relationships), signals
+
+
+def _extract_yaml_summary(content: str) -> tuple[list[str], list[str], list[str]]:
+    nodes: list[str] = []
+    relationships: list[str] = []
+    current_section = ""
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        section_match = re.match(r"^([A-Za-z0-9_.-]+):\s*$", stripped)
+        if section_match:
+            current_section = section_match.group(1)
+            continue
+        list_name_match = re.match(r"^-\s+([A-Za-z0-9_.-]+)$", stripped)
+        if current_section in {"services", "components", "systems", "containers"} and list_name_match:
+            nodes.append(_normalize_node_label(list_name_match.group(1)))
+            continue
+        relation_match = re.match(r"^(source|from):\s*(.+)$", stripped)
+        if relation_match:
+            relationships.append(_normalize_node_label(stripped))
+    signals = ["YAML architecture spec parsed"] if nodes or relationships else []
+    return _dedupe_preserve(nodes), _dedupe_preserve(relationships), signals
+
+
+def _summarize_architecture_source(source_type: str, content: str) -> dict[str, list[str]]:
+    normalized = (content or "").strip()
+    summary = {"components": [], "relationships": [], "signals": []}
+    if not normalized:
+        return summary
+
+    if source_type == "mermaid":
+        components, relationships, signals = _extract_mermaid_summary(normalized)
+    elif source_type == "plantuml":
+        components, relationships, signals = _extract_plantuml_summary(normalized)
+    elif source_type == "structurizr":
+        components, relationships, signals = _extract_structurizr_summary(normalized)
+    elif source_type == "drawio":
+        components, relationships, signals = _extract_drawio_summary(normalized)
+    elif source_type == "json":
+        components, relationships, signals = _extract_json_summary(normalized)
+    elif source_type == "yaml":
+        components, relationships, signals = _extract_yaml_summary(normalized)
+    elif source_type in {"architecture-markdown", "plain-text", "brd-markdown"}:
+        bullet_items = [re.sub(r"^[-*]\s+", "", line.strip()) for line in normalized.splitlines() if re.match(r"^\s*[-*]\s+", line)]
+        components, relationships, signals = _dedupe_preserve(bullet_items[:12]), [], []
+    else:
+        components, relationships, signals = [], [], []
+
+    summary["components"] = components[:12]
+    summary["relationships"] = relationships[:12]
+    summary["signals"] = signals[:6]
+    return summary
+
+
+def _sanitize_project_slug(value) -> str | None:
+    """Return a safe project slug or None when absent or invalid."""
+    candidate = str(value or "").strip().lower()
+    if not candidate:
+        return None
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,119}", candidate):
+        return None
+    return candidate
+
+
+# ── Repo Intake helpers ───────────────────────────────────────────────────────
+
+# Allowed git hosts for repo intake (HTTPS only)
+_ALLOWED_REPO_HOSTS: frozenset[str] = frozenset({
+    "github.com",
+    "dev.azure.com",
+})
+
+# Limits
+_MAX_REPO_BRANCH_SUFFIX_LEN = 50
+_MAX_REPO_AUTOMATION_GOAL_CHARS = 4000
+_MAX_REPO_FILE_READ_BYTES = 65_536     # max bytes read per file during analysis
+_REPO_CLONE_TIMEOUT_SECONDS = 120      # git clone hard timeout
+_AAF_ANALYSIS_REPORT_FILE = "AAF-analysis-report.md"
+_AAF_CHANGE_SUMMARY_FILE = "AAF-change-summary.md"
+_AAF_REPO_CHANGE_AGENT = "repo-change-agent"
+_REPO_WORKFLOW_MODES: frozenset[str] = frozenset({
+    "analysis-only",
+    "implement-pr",
+})
+
+# Extensions to include in the code inventory
+_CODE_EXTENSIONS: dict[str, str] = {
+    ".py": "Python", ".ts": "TypeScript", ".tsx": "TypeScript/React",
+    ".js": "JavaScript", ".jsx": "JavaScript/React",
+    ".cs": "C#", ".java": "Java", ".go": "Go", ".rs": "Rust",
+    ".rb": "Ruby", ".php": "PHP", ".kt": "Kotlin", ".swift": "Swift",
+    ".cpp": "C++", ".c": "C",
+    ".bicep": "Bicep", ".tf": "Terraform",
+    ".yaml": "YAML", ".yml": "YAML", ".json": "JSON", ".md": "Markdown",
+}
+
+# Filename keywords that indicate an architecture file
+_ARCH_KEYWORDS: frozenset[str] = frozenset({
+    "architecture", "arch", "diagram", "design", "drawio",
+    "mermaid", "plantuml", "structurizr", "system", "infrastructure", "infra",
+})
+
+# Tech-stack manifest filenames / globs to detect
+_MANIFEST_GLOBS: list[str] = [
+    "package.json", "pom.xml", "build.gradle", "build.gradle.kts",
+    "requirements.txt", "setup.py", "pyproject.toml",
+    "*.csproj", "*.fsproj",
+    "Cargo.toml", "go.mod", "Gemfile",
+]
+
+
+def _validate_repo_url(raw_url: str) -> tuple[str, str | None]:
+    """Validate and normalise an HTTPS repository URL.
+
+    Returns ``(normalised_url, None)`` on success or ``("", error_msg)``.
+    Only HTTPS URLs on known hosts are accepted; embedded credentials are
+    stripped from the returned URL.
+    """
+    raw = raw_url.strip()
+    if not raw:
+        return "", "repoUrl is required"
+    try:
+        parsed = urlparse(raw)
+    except Exception:
+        return "", "repoUrl could not be parsed"
+    if parsed.scheme != "https":
+        return "", "repoUrl must use https://"
+    hostname = (parsed.hostname or "").lower()
+    if hostname not in _ALLOWED_REPO_HOSTS:
+        allowed = ", ".join(sorted(_ALLOWED_REPO_HOSTS))
+        return "", f"repoUrl host '{hostname}' is not supported; allowed: {allowed}"
+    # Return a credential-free URL for storage / display
+    port_part = f":{parsed.port}" if parsed.port else ""
+    safe_netloc = hostname + port_part
+    safe_url = parsed._replace(netloc=safe_netloc).geturl()
+    return safe_url, None
+
+
+def _sanitize_branch_suffix(raw: str) -> tuple[str, str | None]:
+    """Return a validated branch-name suffix or an error string."""
+    candidate = raw.strip()
+    if not candidate:
+        return "", "branchSuffix is required"
+    if len(candidate) > _MAX_REPO_BRANCH_SUFFIX_LEN:
+        return "", f"branchSuffix must be at most {_MAX_REPO_BRANCH_SUFFIX_LEN} characters"
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", candidate):
+        return "", (
+            "branchSuffix must start with a letter or digit and contain only "
+            "letters, digits, hyphens, underscores, or dots"
+        )
+    return candidate, None
+
+
+def _sanitize_repo_workflow_mode(raw: object) -> tuple[str, str | None]:
+    """Validate repo intake workflow mode."""
+    candidate = str(raw or "").strip().lower() or "analysis-only"
+    if candidate not in _REPO_WORKFLOW_MODES:
+        allowed = ", ".join(sorted(_REPO_WORKFLOW_MODES))
+        return "", f"workflowMode must be one of: {allowed}"
+    return candidate, None
+
+
+def _sanitize_repo_automation_goal(raw: object) -> tuple[str, str | None]:
+    """Validate an optional freeform automation goal."""
+    if raw in (None, ""):
+        return "", None
+    goal = str(raw).strip()
+    if len(goal) > _MAX_REPO_AUTOMATION_GOAL_CHARS:
+        return "", (
+            f"automationGoal must be at most {_MAX_REPO_AUTOMATION_GOAL_CHARS} characters"
+        )
+    return goal, None
+
+
+def _make_authed_clone_url(repo_url: str, pat: str) -> str:
+    """Return a clone URL with PAT credentials embedded.  Never log the result."""
+    parsed = urlparse(repo_url)
+    hostname = (parsed.hostname or "").lower()
+    port_part = f":{parsed.port}" if parsed.port else ""
+    if hostname == "dev.azure.com":
+        # Azure DevOps: any username + PAT works; use 'pat' as username
+        authed_netloc = f"pat:{pat}@{hostname}{port_part}"
+    else:
+        # GitHub: PAT as bearer token
+        authed_netloc = f"x-oauth-basic:{pat}@{hostname}{port_part}"
+    return parsed._replace(netloc=authed_netloc).geturl()
+
+
+def _git_run(
+    args: list[str],
+    cwd: str | None = None,
+    *,
+    timeout: int = 60,
+) -> tuple[str, str, int]:
+    """Run a git sub-command and return (stdout, stderr, returncode).
+
+    Credentials must NOT appear in *args* — embed them in the remote URL.
+    """
+    cmd = ["git", *args]
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+    except subprocess.TimeoutExpired:
+        return "", f"git {args[0]} timed out after {timeout}s", -1
+    except FileNotFoundError:
+        return "", "git executable not found on PATH", -1
+    return result.stdout or "", result.stderr or "", result.returncode
+
+
+def _mask_pat_in_text(text: str) -> str:
+    """Replace any embedded PAT-looking credentials in a string before logging."""
+    return re.sub(r"https?://[^@\s]{1,200}@", "https://***@", text)
+
+
+def _clone_repo(clone_url: str, target_dir: str) -> tuple[bool, str]:
+    """Shallow-clone *clone_url* into *target_dir*.
+
+    Returns ``(success, error_msg)``.
+    """
+    _, stderr, rc = _git_run(
+        ["clone", "--depth", "1", clone_url, target_dir],
+        timeout=_REPO_CLONE_TIMEOUT_SECONDS,
+    )
+    if rc != 0:
+        return False, f"git clone failed (rc={rc}): {_mask_pat_in_text(stderr).strip()[:400]}"
+    return True, ""
+
+
+def _create_aaf_branch(repo_dir: str, branch_name: str, push_url: str) -> tuple[bool, str]:
+    """Create *branch_name* locally and push it.  Returns ``(success, error_msg)``."""
+    # Configure a minimal git identity required for commits inside the container
+    _git_run(["config", "user.email", "aaf-bot@factory.local"], cwd=repo_dir, timeout=10)
+    _git_run(["config", "user.name", "Azure Architecture Factory"], cwd=repo_dir, timeout=10)
+    _, stderr, rc = _git_run(["checkout", "-b", branch_name], cwd=repo_dir, timeout=15)
+    if rc != 0:
+        return False, f"Failed to create branch '{branch_name}': {stderr.strip()[:200]}"
+    # Push the empty branch so the remote reference exists before the commit
+    _, stderr, rc = _git_run(
+        ["push", push_url, f"{branch_name}:{branch_name}"],
+        cwd=repo_dir,
+        timeout=30,
+    )
+    if rc != 0:
+        return False, f"Failed to push branch: {_mask_pat_in_text(stderr).strip()[:400]}"
+    return True, ""
+
+
+def _detect_default_branch(repo_dir: str) -> tuple[str, str | None]:
+    """Determine the remote default branch for a cloned repository."""
+    stdout, stderr, rc = _git_run(
+        ["symbolic-ref", "refs/remotes/origin/HEAD"],
+        cwd=repo_dir,
+        timeout=15,
+    )
+    if rc == 0:
+        ref = stdout.strip()
+        prefix = "refs/remotes/origin/"
+        if ref.startswith(prefix):
+            branch = ref[len(prefix):].strip()
+            if branch:
+                return branch, None
+
+    stdout, stderr, rc = _git_run(
+        ["rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=repo_dir,
+        timeout=15,
+    )
+    if rc == 0:
+        branch = stdout.strip()
+        if branch and branch != "HEAD":
+            return branch, None
+
+    return "main", f"Failed to determine default branch: {stderr.strip()[:200]}"
+
+
+def _repo_provider(repo_url: str) -> str:
+    hostname = (urlparse(repo_url).hostname or "").lower()
+    if hostname == "github.com":
+        return "github"
+    if hostname == "dev.azure.com":
+        return "azure-devops"
+    return "unknown"
+
+
+def _parse_github_repo(repo_url: str) -> tuple[str, str]:
+    parsed = urlparse(repo_url)
+    parts = [p for p in parsed.path.split("/") if p]
+    if len(parts) < 2:
+        raise ValueError("GitHub repo URL must include owner/repo")
+    owner = parts[0]
+    repo = parts[1]
+    if repo.endswith(".git"):
+        repo = repo[:-4]
+    return owner, repo
+
+
+def _parse_azure_devops_repo(repo_url: str) -> tuple[str, str, str]:
+    parsed = urlparse(repo_url)
+    parts = [p for p in parsed.path.split("/") if p]
+    if len(parts) < 4 or parts[2] != "_git":
+        raise ValueError("Azure DevOps repo URL must look like /org/project/_git/repo")
+    org = parts[0]
+    project = parts[1]
+    repo = parts[3]
+    return org, project, repo
+
+
+def _build_remote_file_url(repo_url: str, branch_name: str, file_path: str) -> str | None:
+    provider = _repo_provider(repo_url)
+    relative_path = file_path.lstrip("/")
+    if provider == "github":
+        owner, repo = _parse_github_repo(repo_url)
+        return f"https://github.com/{owner}/{repo}/blob/{branch_name}/{relative_path}"
+    if provider == "azure-devops":
+        org, project, repo = _parse_azure_devops_repo(repo_url)
+        return (
+            f"https://dev.azure.com/{org}/{project}/_git/{repo}"
+            f"?path=%2F{relative_path.replace('/', '%2F')}&version=GB{branch_name}"
+        )
+    return None
+
+
+def _build_repo_change_prompt(
+    repo_url: str,
+    branch_name: str,
+    analysis: dict,
+    automation_goal: str = "",
+) -> str:
+    """Build a compact prompt for the dedicated repo-change agent."""
+    tech_stack = ", ".join(analysis.get("tech_stack", [])[:8]) or "not detected"
+    arch_files = [af.get("name", "") for af in analysis.get("arch_files", [])[:10] if af.get("name")]
+    arch_list = ", ".join(arch_files) or "none detected"
+    dir_tree = ", ".join(analysis.get("dir_tree", [])[:12]) or "not detected"
+
+    lines = [
+        "Operate on the already-cloned target repository using the dedicated repo-change-agent instructions.",
+        f"Repository: {repo_url}",
+        f"Working branch: {branch_name}",
+        "",
+        "Context detected before your run:",
+        f"- Tech stack manifests: {tech_stack}",
+        f"- Architecture artifacts: {arch_list}",
+        f"- Top-level structure: {dir_tree}",
+        f"- Start by reading `{_AAF_ANALYSIS_REPORT_FILE}` if present.",
+        f"- You must leave behind `{_AAF_CHANGE_SUMMARY_FILE}`.",
+        "- Do not commit, push, or open a PR.",
+    ]
+    if automation_goal:
+        lines.extend([
+            "",
+            "Explicit user goal:",
+            automation_goal,
+        ])
+    else:
+        lines.extend([
+            "",
+            "No explicit feature request was provided.",
+            "Infer the highest-value architecture-aligned enhancement from the repository's current docs, architecture, source, and infra.",
+        ])
+    return "\n".join(lines)
+
+
+def _set_run_progress(
+    run_id: str,
+    *,
+    stage: str,
+    message: str = "",
+    log_preview: str = "",
+) -> None:
+    """Persist lightweight progress for long-running repo workflows."""
+    with RUNS_LOCK:
+        run = RUNS.get(run_id)
+        if not run:
+            return
+        run["progress"] = {
+            "stage": stage,
+            "message": message,
+            "logPreview": log_preview[-6000:] if log_preview else "",
+            "updatedAt": _utcnow_iso(),
+        }
+        if log_preview:
+            run["logTail"] = log_preview[-50000:]
+        _persist_runs_unlocked()
+
+
+def _wait_for_repo_copilot_run(
+    repo_dir: pathlib.Path,
+    copilot_run_id: str,
+    portal_run_id: str,
+) -> tuple[dict | None, str | None]:
+    """Wait for a Copilot CLI run launched inside a cloned repo to finish."""
+    timeout = 1860
+    if copilot_runner is not None:
+        try:
+            timeout = int(copilot_runner.runtime_info().get("timeoutSec") or timeout) + 60
+        except Exception:
+            pass
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        run = copilot_runner.get_run(repo_dir, copilot_run_id)
+        if run is None:
+            return None, "Copilot run metadata disappeared before completion"
+        status = run.get("status") or "unknown"
+        log_tail = copilot_runner.read_log_tail(repo_dir, copilot_run_id) or ""
+        _set_run_progress(
+            portal_run_id,
+            stage="repo-change-agent",
+            message=f"Repo change agent status: {status}",
+            log_preview=log_tail,
+        )
+        if status in {"succeeded", "failed", "timeout", "cancelled", "unknown"}:
+            return run, None
+        time.sleep(2)
+    try:
+        copilot_runner.cancel_run(repo_dir, copilot_run_id)
+    except Exception:
+        pass
+    return None, "Copilot run timed out waiting for completion"
+
+
+def _remove_repo_copilot_artifacts(repo_dir: pathlib.Path, run_id: str) -> None:
+    """Remove local Copilot runner artifacts so they are not committed to the target repo."""
+    run_path = repo_dir / "outputs" / "copilot" / run_id
+    try:
+        shutil.rmtree(run_path, ignore_errors=True)
+    except Exception:
+        pass
+    for maybe_empty in [run_path.parent, (repo_dir / "outputs")]:
+        try:
+            if maybe_empty.is_dir() and not any(maybe_empty.iterdir()):
+                maybe_empty.rmdir()
+        except Exception:
+            pass
+
+
+def _git_diff_stat(repo_dir: str) -> str:
+    """Return a short git diff stat summary for the working tree."""
+    stdout, _, rc = _git_run(["diff", "--stat"], cwd=repo_dir, timeout=20)
+    if rc != 0:
+        return ""
+    return stdout.strip()
+
+
+def _ensure_change_summary(repo_dir: str, automation_goal: str, copilot_run_id: str) -> None:
+    """Ensure the implementation workflow leaves behind a change summary artifact."""
+    summary_path = pathlib.Path(repo_dir) / _AAF_CHANGE_SUMMARY_FILE
+    if summary_path.is_file():
+        return
+    diff_stat = _git_diff_stat(repo_dir) or "No diff stat available."
+    lines = [
+        f"# {_AAF_CHANGE_SUMMARY_FILE[:-3].replace('-', ' ').title()}",
+        "",
+        "This fallback summary was created by the portal because the Copilot run completed",
+        "without writing the expected summary artifact.",
+        "",
+        "## Decision",
+        "",
+        "Enhancement path completed, but rationale must be reviewed from the changed files.",
+        "",
+        "## Requested Goal",
+        "",
+        automation_goal or "No explicit goal was supplied; the run was autonomous.",
+        "",
+        "## Validation",
+        "",
+        "Review the repository diff and Copilot run log for exact commands and outcomes.",
+        "",
+        "## Diff Stat",
+        "",
+        "```text",
+        diff_stat,
+        "```",
+        "",
+        f"Copilot run id: `{copilot_run_id}`",
+        "",
+    ]
+    summary_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _commit_and_push_all_changes(
+    repo_dir: str,
+    branch_name: str,
+    push_url: str,
+    commit_message: str,
+) -> tuple[bool, str]:
+    """Commit every staged/untracked change and push the branch."""
+    _git_run(["add", "-A"], cwd=repo_dir, timeout=20)
+    stdout, stderr, rc = _git_run(["status", "--porcelain"], cwd=repo_dir, timeout=20)
+    if rc != 0:
+        return False, f"git status failed: {stderr.strip()[:300]}"
+    if not stdout.strip():
+        return False, "No file changes were produced by the AAF workflow"
+    _, stderr, rc = _git_run(["commit", "-m", commit_message], cwd=repo_dir, timeout=30)
+    if rc != 0:
+        return False, f"git commit failed: {stderr.strip()[:300]}"
+    _, stderr, rc = _git_run(["push", push_url, f"{branch_name}:{branch_name}"], cwd=repo_dir, timeout=60)
+    if rc != 0:
+        return False, f"git push failed: {_mask_pat_in_text(stderr).strip()[:400]}"
+    return True, ""
+
+
+def _http_json_request(url: str, *, method: str, headers: dict[str, str], payload: dict) -> tuple[dict | None, str | None]:
+    """POST JSON and return parsed JSON or an error string."""
+    data = json.dumps(payload).encode("utf-8")
+    request = Request(url, data=data, method=method)
+    request.add_header("Content-Type", "application/json")
+    for key, value in headers.items():
+        request.add_header(key, value)
+    try:
+        with urlopen(request, timeout=30) as response:
+            body = response.read().decode("utf-8", errors="replace")
+            return json.loads(body) if body else {}, None
+    except HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = str(exc)
+        return None, f"HTTP {exc.code}: {body[:600]}"
+    except URLError as exc:
+        return None, str(exc)
+
+
+def _build_repo_pr_title(repo_url: str, automation_goal: str) -> str:
+    """Create a concise PR title for AAF-generated repo changes."""
+    repo_name = pathlib.Path(urlparse(repo_url).path.rstrip("/")).name.replace(".git", "") or "repo"
+    if automation_goal:
+        truncated = automation_goal.strip().splitlines()[0][:72].strip()
+        return f"AAF: {truncated}"
+    return f"AAF: architecture-aligned enhancement for {repo_name}"
+
+
+def _build_repo_pr_body(branch_name: str, base_branch: str, automation_goal: str) -> str:
+    """Build a PR body that points reviewers to the generated artifacts."""
+    lines = [
+        "## Azure Architecture Factory Automation",
+        "",
+        f"- Working branch: `{branch_name}`",
+        f"- Target branch: `{base_branch}`",
+        f"- Analysis artifact: `{_AAF_ANALYSIS_REPORT_FILE}`",
+        f"- Change summary artifact: `{_AAF_CHANGE_SUMMARY_FILE}`",
+        "",
+        "The factory reviewed the repository docs, architecture artifacts, source code, and infrastructure,",
+        "then decided whether to enhance existing implementation surfaces or add minimal new code aligned to the repo's current design.",
+        "",
+        "Validation details and remaining risks are documented in the generated change summary file.",
+    ]
+    if automation_goal:
+        lines.extend([
+            "",
+            "## Requested Goal",
+            "",
+            automation_goal,
+        ])
+    return "\n".join(lines)
+
+
+def _create_pull_request(
+    repo_url: str,
+    pat: str,
+    branch_name: str,
+    base_branch: str,
+    title: str,
+    body: str,
+) -> tuple[str | None, str | None]:
+    """Open a pull request on GitHub or Azure DevOps for the AAF branch."""
+    provider = _repo_provider(repo_url)
+    if provider == "github":
+        owner, repo = _parse_github_repo(repo_url)
+        payload = {
+            "title": title,
+            "head": branch_name,
+            "base": base_branch,
+            "body": body,
+            "maintainer_can_modify": True,
+        }
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {pat}",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "Azure-Architecture-Factory",
+        }
+        response, error = _http_json_request(
+            f"https://api.github.com/repos/{owner}/{repo}/pulls",
+            method="POST",
+            headers=headers,
+            payload=payload,
+        )
+        if error:
+            return None, error
+        return str((response or {}).get("html_url") or ""), None
+
+    if provider == "azure-devops":
+        org, project, repo = _parse_azure_devops_repo(repo_url)
+        basic = base64.b64encode(f":{pat}".encode("utf-8")).decode("ascii")
+        payload = {
+            "sourceRefName": f"refs/heads/{branch_name}",
+            "targetRefName": f"refs/heads/{base_branch}",
+            "title": title,
+            "description": body,
+        }
+        headers = {
+            "Authorization": f"Basic {basic}",
+            "User-Agent": "Azure-Architecture-Factory",
+        }
+        response, error = _http_json_request(
+            f"https://dev.azure.com/{org}/{project}/_apis/git/repositories/{repo}/pullrequests?api-version=7.1",
+            method="POST",
+            headers=headers,
+            payload=payload,
+        )
+        if error:
+            return None, error
+        links = (response or {}).get("_links") or {}
+        web = links.get("web") or {}
+        return str(web.get("href") or ""), None
+
+    return None, f"Pull request creation is not supported for host: {_repo_provider(repo_url)}"
+
+
+def _walk_repo_for_analysis(repo_dir: str) -> dict:
+    """Walk a cloned repository and extract analysis data.
+
+    Returns a dict with:
+    - ``readme``:      content of the root README (truncated)
+    - ``arch_files``:  list of ``{name, content}`` dicts for architecture files
+    - ``tech_stack``:  list of manifest filenames detected
+    - ``file_counts``: dict mapping language name -> file count
+    - ``dir_tree``:    list of top-level entry names
+    """
+    root = pathlib.Path(repo_dir)
+    result: dict = {
+        "readme": "",
+        "arch_files": [],
+        "tech_stack": [],
+        "file_counts": {},
+        "dir_tree": [],
+    }
+
+    # Top-level directory tree (skip dotfiles / .git)
+    result["dir_tree"] = sorted(
+        p.name for p in root.iterdir()
+        if not p.name.startswith(".")
+    )
+
+    # README detection (case-insensitive priority order)
+    for name in ("README.md", "README.rst", "README.txt", "readme.md", "Readme.md"):
+        readme_path = root / name
+        if readme_path.is_file():
+            try:
+                result["readme"] = readme_path.read_text(encoding="utf-8", errors="replace")[:_MAX_REPO_FILE_READ_BYTES]
+            except Exception:
+                pass
+            break
+
+    # Tech-stack manifest detection (top-level only for patterns, recursive for globs)
+    seen_manifests: set[str] = set()
+    for pattern in _MANIFEST_GLOBS:
+        for match in root.glob(pattern):
+            if match.is_file() and match.name not in seen_manifests:
+                seen_manifests.add(match.name)
+                result["tech_stack"].append(match.name)
+
+    # Architecture file detection (recursive, max 10 files)
+    arch_files_found = 0
+    for p in sorted(root.rglob("*")):
+        if arch_files_found >= 10:
+            break
+        if not p.is_file():
+            continue
+        # Skip .git directory
+        if ".git" in p.parts:
+            continue
+        lower_stem = p.stem.lower()
+        lower_suffix = p.suffix.lower()
+        is_arch = (
+            any(kw in lower_stem for kw in _ARCH_KEYWORDS)
+            and lower_suffix in {".md", ".drawio", ".puml", ".plantuml", ".dsl", ".yaml", ".yml", ".json"}
+        ) or lower_suffix == ".drawio"
+        if is_arch:
+            try:
+                content = p.read_text(encoding="utf-8", errors="replace")[:_MAX_REPO_FILE_READ_BYTES]
+                result["arch_files"].append({"name": str(p.relative_to(root)), "content": content})
+                arch_files_found += 1
+            except Exception:
+                pass
+
+    # Code inventory by language
+    counts: dict[str, int] = {}
+    for p in root.rglob("*"):
+        if ".git" in p.parts:
+            continue
+        lang = _CODE_EXTENSIONS.get(p.suffix.lower())
+        if lang and p.is_file():
+            counts[lang] = counts.get(lang, 0) + 1
+    result["file_counts"] = dict(
+        sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:20]
+    )
+    return result
+
+
+def _build_repo_analysis_report(repo_url: str, branch_name: str, analysis: dict) -> str:
+    """Build a structured Markdown analysis report for a cloned repository."""
+    lines: list[str] = [
+        "# Repository Analysis Report",
+        "",
+        f"**Repository**: {repo_url}  ",
+        f"**Branch**: `{branch_name}`  ",
+        f"**Generated**: {_utcnow_iso()}  ",
+        "**Tool**: Azure Architecture Factory — automated analysis",
+        "",
+    ]
+
+    # Repository structure
+    if analysis.get("dir_tree"):
+        lines += ["## Repository Structure", ""]
+        lines += [f"- `{d}`" for d in analysis["dir_tree"][:30]]
+        lines.append("")
+
+    # Tech stack
+    if analysis.get("tech_stack"):
+        lines += ["## Tech Stack Detected", ""]
+        lines += [f"- `{name}`" for name in sorted(analysis["tech_stack"])]
+        lines.append("")
+
+    # File inventory table
+    if analysis.get("file_counts"):
+        lines += ["## Code Inventory", "", "| Language | Files |", "|----------|-------|"]
+        for lang, count in analysis["file_counts"].items():
+            lines.append(f"| {lang} | {count} |")
+        lines.append("")
+
+    # README content (collapsible)
+    if analysis.get("readme"):
+        readme_preview = analysis["readme"][:3000].strip()
+        lines += [
+            "## README Summary",
+            "",
+            "<details><summary>Click to expand</summary>",
+            "",
+            readme_preview,
+            "",
+            "</details>",
+            "",
+        ]
+
+    # Architecture files — run the existing parsers for each
+    for af in analysis.get("arch_files", []):
+        lines += [f"## Architecture: `{af['name']}`", ""]
+        ext = pathlib.Path(af["name"]).suffix.lower()
+        source_type_map = {
+            ".drawio": "drawio",
+            ".puml": "plantuml",
+            ".plantuml": "plantuml",
+            ".dsl": "structurizr",
+        }
+        source_type = source_type_map.get(ext)
+        if not source_type:
+            snippet = af["content"][:200].lower()
+            if "@startuml" in snippet:
+                source_type = "plantuml"
+            elif "graph " in snippet or "flowchart " in snippet:
+                source_type = "mermaid"
+            elif "<mxgraphmodel" in snippet or "<mxfile" in snippet:
+                source_type = "drawio"
+            elif "workspace {" in snippet:
+                source_type = "structurizr"
+            elif ext == ".md":
+                source_type = "architecture-markdown"
+            else:
+                source_type = "yaml"
+        summary = _summarize_architecture_source(source_type, af["content"])
+        if summary["components"]:
+            lines += ["**Components:**", ""]
+            lines += [f"- {c}" for c in summary["components"]]
+            lines.append("")
+        if summary["relationships"]:
+            lines += ["**Relationships:**", ""]
+            lines += [f"- {r}" for r in summary["relationships"]]
+            lines.append("")
+        if summary["signals"]:
+            lines += [f"*Parsing: {', '.join(summary['signals'])}*", ""]
+
+    lines += [
+        "---",
+        "",
+        "> This report was generated automatically by the Azure Architecture Factory.",
+        "> Review and amend before merging to your main branch.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _commit_and_push_report(
+    repo_dir: str,
+    report_content: str,
+    branch_name: str,
+    push_url: str,
+) -> tuple[bool, str]:
+    """Write the analysis report, commit it, and push.  Returns ``(success, error_msg)``."""
+    report_path = pathlib.Path(repo_dir) / _AAF_ANALYSIS_REPORT_FILE
+    try:
+        report_path.write_text(report_content, encoding="utf-8")
+    except Exception as exc:
+        return False, f"Failed to write report file: {exc}"
+    _git_run(["add", _AAF_ANALYSIS_REPORT_FILE], cwd=repo_dir, timeout=15)
+    _, stderr, rc = _git_run(
+        ["commit", "-m", "chore: add AAF automated repository analysis report"],
+        cwd=repo_dir,
+        timeout=15,
+    )
+    if rc != 0:
+        return False, f"git commit failed: {stderr.strip()[:300]}"
+    _, stderr, rc = _git_run(
+        ["push", push_url, f"{branch_name}:{branch_name}"],
+        cwd=repo_dir,
+        timeout=30,
+    )
+    if rc != 0:
+        return False, f"git push failed: {_mask_pat_in_text(stderr).strip()[:400]}"
+    return True, ""
+
+def _validate_target_project_slug(raw_slug: object) -> tuple[str | None, str | None]:
+    """Validate an optional project slug selected for iterative regeneration."""
+    if raw_slug in (None, ""):
+        return None, None
+    slug = _sanitize_project_slug(raw_slug)
+    if not slug:
+        return None, "targetProjectSlug contains invalid characters"
+    manifest_path = FACTORY_REPO_ROOT / "projects" / slug / "project-manifest.json"
+    if not manifest_path.is_file():
+        return None, f"Project slug '{slug}' was not found"
+    return slug, None
+
+
+def _build_generation_options(
+    fields: dict[str, object],
+    *,
+    file_name: str = "",
+    content: str = "",
+    uploaded_file_name: str = "",
+    raw_bytes: bytes | None = None,
+) -> tuple[dict[str, object], str | None]:
+    """Normalize intake options shared by JSON and multipart paths."""
+    requested_source_type = _sanitize_source_type(fields.get("sourceType") or "auto")
+    detected_source_type = _detect_source_type(
+        file_name=file_name,
+        content=content,
+        uploaded_file_name=uploaded_file_name,
+        raw_bytes=raw_bytes,
+    )
+    generation_options: dict[str, object] = {
+        "enableObservability": _coerce_bool(fields.get("enableObservability"), default=True),
+        "generateInfra": _coerce_bool(fields.get("generateInfra"), default=True),
+        "runSecurityAudit": _coerce_bool(fields.get("runSecurityAudit"), default=True),
+        "networkTier": _sanitize_network_tier(fields.get("networkTier", "public")),
+        "sourceType": detected_source_type if requested_source_type == "auto" else requested_source_type,
+        "sourceTypeRequested": requested_source_type,
+        "sourceTypeDetected": detected_source_type,
+    }
+    impl_lang = _sanitize_implementation_language(fields.get("implementationLanguage"))
+    if impl_lang:
+        generation_options["implementationLanguage"] = impl_lang
+    iac_tool = str(fields.get("iacTool") or "").strip().lower()
+    if iac_tool:
+        generation_options["iacTool"] = iac_tool
+    target_project_slug, slug_error = _validate_target_project_slug(fields.get("targetProjectSlug"))
+    if slug_error:
+        return {}, slug_error
+    if target_project_slug:
+        generation_options["targetProjectSlug"] = target_project_slug
+    return generation_options, None
+
+
+def _save_source_attachment(
+    intake_dir: pathlib.Path,
+    canonical_file_name: str,
+    source_type: str,
+    uploaded_file_name: str,
+    raw_bytes: bytes,
+) -> str:
+    """Persist the uploaded architecture artifact for traceability."""
+    attachments_dir = intake_dir / "attachments"
+    attachments_dir.mkdir(parents=True, exist_ok=True)
+    raw_name = pathlib.Path(uploaded_file_name or "source.bin").name
+    stem = re.sub(r"[^A-Za-z0-9._-]+", "-", pathlib.Path(canonical_file_name).stem).strip("-.") or "source"
+    suffix = pathlib.Path(raw_name).suffix or ".bin"
+    safe_name = f"{stem}-{source_type}{suffix.lower()}"
+    attachment_path = attachments_dir / safe_name
+    attachment_path.write_bytes(raw_bytes)
+    return f"docs/intake/attachments/{safe_name}"
+
+
+def _build_generation_document(file_name: str, content: str, generation_options: dict[str, object] | None = None) -> str:
+    """Wrap non-BRD sources into a canonical markdown document for the runner."""
+    generation_options = generation_options or {}
+    source_type = _sanitize_source_type(generation_options.get("sourceType"))
+    if source_type == "brd-markdown":
+        return content
+
+    title_hint = pathlib.Path(file_name).stem.replace("-", " ").replace("_", " ").strip().title() or "Architecture Intake"
+    source_file_name = str(generation_options.get("sourceFileName") or file_name)
+    source_attachment = str(generation_options.get("sourceAttachment") or "").strip()
+    target_project_slug = str(generation_options.get("targetProjectSlug") or "").strip()
+    fence_language = _SOURCE_TYPE_FENCE_LANGUAGES.get(source_type, "text")
+    parsed_summary = _summarize_architecture_source(source_type, content)
+
+    lines = [
+        f"# {title_hint}",
+        "",
+        "## Intake Mode",
+        f"- source_type: {source_type}",
+        f"- source_file: {source_file_name}",
+        f"- target_project_slug: {target_project_slug or '(new project)'}",
+    ]
+    if source_attachment:
+        lines.append(f"- source_attachment: {source_attachment}")
+    lines.extend(
+        [
+            "",
+            "## Generation Instructions",
+            "- Treat the supplied architecture artifact as the source of truth for the system design.",
+            "- Generate or update architecture docs, starter source code, tests, and Azure infrastructure from this input.",
+            "- Keep selected implementation language and infrastructure tool overrides when they were explicitly chosen.",
+            "- Surface assumptions and unresolved gaps when the source is underspecified.",
+            "- Update the existing project in place instead of creating a new one." if target_project_slug else "- Create a new project baseline from this source.",
+            "",
+            "## Parsed Architecture Summary",
+        ]
+    )
+    if parsed_summary["components"]:
+        lines.append("### Components")
+        lines.extend([f"- {item}" for item in parsed_summary["components"]])
+    if parsed_summary["relationships"]:
+        lines.append("### Relationships")
+        lines.extend([f"- {item}" for item in parsed_summary["relationships"]])
+    if parsed_summary["signals"]:
+        lines.append("### Parsing Signals")
+        lines.extend([f"- {item}" for item in parsed_summary["signals"]])
+    if not any(parsed_summary.values()):
+        lines.append("- No structured summary could be extracted; use the raw source below.")
+    lines.extend(
+        [
+            "",
+            "## Architecture Source",
+        ]
+    )
+    if source_type in _REFERENCE_ONLY_SOURCE_TYPES:
+        lines.extend(
+            [
+                "The uploaded artifact is stored as a reference attachment. Use the summary below as the working source.",
+                "",
+                content.strip(),
+            ]
+        )
+    else:
+        lines.extend([f"```{fence_language}", content.rstrip(), "```"])
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _validate_brd_content(raw: object) -> tuple[str | None, str | None]:
@@ -1368,7 +2729,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path == "/ready":
             return self._handle_ready()
 
-        if request_path == "/api/brd-runs":
+        if request_path in {"/api/brd-runs", "/api/runs"}:
             return self._handle_runs_list()
 
         if request_path == "/api/csa-copilot/tools":
@@ -1376,11 +2737,21 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_csa_copilot_tools()
 
-        if request_path.startswith("/api/brd-runs/") and request_path.endswith("/project"):
+        if (
+            request_path.startswith("/api/brd-runs/")
+            or request_path.startswith("/api/runs/")
+        ) and request_path.endswith("/project"):
             run_id = request_path.split("/")[-2]
             return self._handle_run_project(run_id)
 
-        if request_path.startswith("/api/brd-runs/"):
+        if (
+            request_path.startswith("/api/brd-runs/")
+            or request_path.startswith("/api/runs/")
+        ) and request_path.endswith("/log"):
+            run_id = request_path.split("/")[-2]
+            return self._handle_run_log(run_id)
+
+        if request_path.startswith("/api/brd-runs/") or request_path.startswith("/api/runs/"):
             run_id = request_path.split("/")[-1]
             return self._handle_run_status(run_id)
 
@@ -1489,6 +2860,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_brd_intake_principal():
                 return
             return self._handle_brd_upload()
+        if path == "/api/repo-intake":
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            return self._handle_repo_intake()
         if path == "/api/admin/issue-token":
             if not self._require_admin_key():
                 return
@@ -1699,7 +3076,6 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 403,
             )
             return False
-
         # No auth configured — local dev
         return True
 
@@ -2327,7 +3703,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         "Your job is to help a user author a Business Requirements Document (BRD) that AAF can turn "
         "into an Azure architecture, service code, and infrastructure-as-code.\n\n"
         "AAF CAPABILITIES:\n"
-        "- Languages: Python 3.11 / FastAPI  OR  .NET 8 / ASP.NET Core Minimal APIs.\n"
+        "- Languages: Python 3.11 / FastAPI  OR  .NET 8 / ASP.NET Core Minimal APIs (accepts C# aliases).\n"
         "- Infrastructure-as-Code: Bicep (Azure-native) OR Terraform (azurerm ~> 4.14).\n"
         "- Network tiers: public (default) | vnet-integrated | private.\n"
         "- Archetypes (auto-detected from BRD content): extraction-chat (LLM extraction/chat over "
@@ -2338,7 +3714,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         "## Business Goal\n## Key Requirements\n## Success Criteria\n## Out of Scope\n"
         "## Timeline\n"
         "Optional hint lines the factory understands:\n"
-        "  Implementation language: python | dotnet\n"
+        "  Implementation language: python | dotnet | csharp\n"
         "  Infrastructure as code: bicep | terraform\n"
         "  Network tier: public | vnet-integrated | private\n\n"
         "INTERACTION RULES:\n"
@@ -2376,7 +3752,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         '  "reply": string — your chat message to the user (concise, markdown allowed).\n'
         '  "brd_draft": string | null — full BRD markdown ready to paste, or null if not yet drafting.\n'
         '  "suggested_slug": string | null — kebab-case project slug, or null.\n'
-        '  "suggested_options": object | null — any of: implementation_language ("python"|"dotnet"), '
+        '  "suggested_options": object | null — any of: implementation_language ("python"|"dotnet"|"csharp"), '
         'iac_tool ("bicep"|"terraform"), network_tier ("public"|"vnet-integrated"|"private"). Omit keys you cannot justify.\n'
         "No prose outside the JSON object.\n\n"
         "SELF-AWARENESS: You are **BRD Copilot**, focused on authoring and reviewing BRDs. A separate "
@@ -2509,8 +3885,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         opts = parsed.get("suggested_options")
         clean_opts: dict = {}
         if isinstance(opts, dict):
-            il = opts.get("implementation_language")
-            if il in ("python", "dotnet"):
+            il = _sanitize_implementation_language(opts.get("implementation_language"))
+            if il:
                 clean_opts["implementation_language"] = il
             iac = opts.get("iac_tool")
             if iac in ("bicep", "terraform"):
@@ -3435,25 +4811,21 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Missing fileName or content"}, 400)
             return
 
-        generation_options = {
-            "enableObservability": _coerce_bool(payload.get("enableObservability"), default=True),
-            "generateInfra": _coerce_bool(payload.get("generateInfra"), default=True),
-            "runSecurityAudit": _coerce_bool(payload.get("runSecurityAudit"), default=True),
-            "networkTier": _sanitize_network_tier(payload.get("networkTier", "public")),
-        }
-        impl_lang = str(payload.get("implementationLanguage") or "").strip().lower()
-        if impl_lang:
-            generation_options["implementationLanguage"] = impl_lang
-        iac_tool = str(payload.get("iacTool") or "").strip().lower()
-        if iac_tool:
-            generation_options["iacTool"] = iac_tool
+        generation_options, options_error = _build_generation_options(
+            payload,
+            file_name=file_name,
+            content=content,
+        )
+        if options_error is not None:
+            self._send_json({"error": options_error}, 400)
+            return
 
         return self._save_and_start_run(
             file_name, content, generation_options, owner=self._authorized_user()
         )
 
     def _save_and_start_run(self, file_name: str, content: str, generation_options: dict | None = None, owner: str | None = None):
-        """Save BRD file and launch pipeline worker thread."""
+        """Save intake document and launch pipeline worker thread."""
         brds_dir = FACTORY_REPO_ROOT / "docs" / "intake"
         brds_dir.mkdir(parents=True, exist_ok=True)
         brd_path = (brds_dir / file_name).resolve()
@@ -3463,7 +4835,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            brd_path.write_text(content, encoding="utf-8")
+            canonical_content = _build_generation_document(file_name, content, generation_options)
+            brd_path.write_text(canonical_content, encoding="utf-8")
             logger.info(f"Saved BRD: {brd_path}")
         except Exception as e:
             self._send_json({"error": f"Failed to save BRD: {e}"}, 500)
@@ -3498,12 +4871,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             owner,
         )
 
+        opts = generation_options or {}
         self._send_json(
             {
                 "id": run_id,
                 "status": "queued",
-                "message": "BRD received and pipeline started.",
+                "message": "Architecture source received and pipeline started.",
                 "brdFile": f"docs/intake/{file_name}",
+                "sourceType": opts.get("sourceType", "brd-markdown"),
+                "sourceTypeRequested": opts.get("sourceTypeRequested"),
+                "sourceTypeDetected": opts.get("sourceTypeDetected"),
+                "targetProjectSlug": opts.get("targetProjectSlug"),
             },
             202,
         )
@@ -3531,6 +4909,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     run_id,
                     generation_options or {},
                 )
+
+                # Enforce BRD readiness gate when runtime:auto is explicitly requested.
+                gate_violation = _runtime_auto_gate_violation(generation_options, output)
+                if gate_violation:
+                    raise RuntimeError(gate_violation)
 
                 # Stamp the submitter as owner of the generated project so per-user
                 # filtering (Entra auth mode) gives them access. Best-effort only.
@@ -3601,6 +4984,292 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     )
                     _persist_runs_unlocked()
 
+    # ── Repo Intake ─────────────────────────────────────────────────────────
+
+    def _handle_repo_intake(self):
+        """Handle a repository analysis intake request.
+
+        Expected JSON body::
+
+            {
+                "repoUrl":      "https://github.com/owner/repo",
+                "token":        "<PAT>",
+                "branchSuffix": "analysis-2026-04-24"   // optional
+            }
+
+        Clones the repo, creates an ``AAF-<branchSuffix>`` branch, analyses the
+        repository content (README, architecture files, tech stack, code inventory),
+        writes ``AAF-analysis-report.md`` to the new branch, commits, and pushes.
+        All git work is done in a background thread; returns ``202 Accepted``
+        immediately with a run ID that can be polled via ``GET /api/runs/<id>``.
+        """
+        if not self._check_intake_rate_limit():
+            return
+        content_type = self.headers.get("Content-Type", "")
+        if not content_type.lower().split(";", 1)[0].strip() == "application/json":
+            self._send_json({"error": "Expected Content-Type: application/json"}, 415)
+            return
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body)
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        # Validate repoUrl
+        repo_url, url_err = _validate_repo_url(payload.get("repoUrl", ""))
+        if url_err:
+            self._send_json({"error": url_err}, 400)
+            return
+
+        # Validate PAT (non-empty string, max 500 chars)
+        raw_token = payload.get("token", "")
+        if not isinstance(raw_token, str) or not raw_token.strip():
+            self._send_json({"error": "token (PAT) is required"}, 400)
+            return
+        pat = raw_token.strip()
+        if len(pat) > 500:
+            self._send_json({"error": "token must be at most 500 characters"}, 400)
+            return
+
+        workflow_mode, mode_err = _sanitize_repo_workflow_mode(payload.get("workflowMode"))
+        if mode_err:
+            self._send_json({"error": mode_err}, 400)
+            return
+
+        automation_goal, goal_err = _sanitize_repo_automation_goal(payload.get("automationGoal"))
+        if goal_err:
+            self._send_json({"error": goal_err}, 400)
+            return
+
+        # Validate / default branchSuffix
+        raw_suffix = payload.get("branchSuffix", "").strip()
+        if not raw_suffix:
+            # Default: date-based suffix
+            raw_suffix = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+        branch_suffix, suffix_err = _sanitize_branch_suffix(raw_suffix)
+        if suffix_err:
+            self._send_json({"error": suffix_err}, 400)
+            return
+        branch_name = f"AAF-{branch_suffix}"
+
+        run_id = str(uuid.uuid4())
+        owner = self._authorized_user()
+        with RUNS_LOCK:
+            RUNS[run_id] = {
+                "id": run_id,
+                "status": "queued",
+                "createdAt": _utcnow_iso(),
+                "brdFile": None,
+                "startedAt": None,
+                "finishedAt": None,
+                "returnCode": None,
+                "stdout": None,
+                "stderr": None,
+                "command": "repo-analysis",
+                "result": None,
+                "generationOptions": {
+                    "sourceType": "repo-analysis",
+                    "repoUrl": repo_url,    # credential-free URL safe to store
+                    "branchName": branch_name,
+                    "workflowMode": workflow_mode,
+                    "automationGoal": automation_goal,
+                },
+                "owner": owner,
+            }
+        persist_runs()
+
+        _PIPELINE_POOL.submit(
+            self._run_repo_analysis,
+            run_id,
+            repo_url,
+            pat,          # PAT is passed only to the worker; never stored in RUNS
+            branch_name,
+            workflow_mode,
+            automation_goal,
+            owner,
+        )
+
+        self._send_json(
+            {
+                "id": run_id,
+                "status": "queued",
+                "message": "Repository intake accepted. Analysis running in background.",
+                "repoUrl": repo_url,
+                "branchName": branch_name,
+                "workflowMode": workflow_mode,
+            },
+            202,
+        )
+
+    def _run_repo_analysis(
+        self,
+        run_id: str,
+        repo_url: str,
+        pat: str,
+        branch_name: str,
+        workflow_mode: str = "analysis-only",
+        automation_goal: str = "",
+        requested_by: str = "",
+    ) -> None:
+        """Background worker: clone → branch → analyse → optional implement → push → PR."""
+        with RUNS_LOCK:
+            RUNS[run_id]["status"] = "running"
+            RUNS[run_id]["startedAt"] = _utcnow_iso()
+            _persist_runs_unlocked()
+        _set_run_progress(run_id, stage="queued", message="Preparing repository workflow")
+
+        tmp_dir: str | None = None
+        try:
+            tmp_dir = tempfile.mkdtemp(prefix="aaf-repo-")
+            clone_url = _make_authed_clone_url(repo_url, pat)
+
+            # 1. Clone
+            _set_run_progress(run_id, stage="clone", message="Cloning target repository")
+            ok, err = _clone_repo(clone_url, tmp_dir)
+            if not ok:
+                raise RuntimeError(err)
+
+            _set_run_progress(run_id, stage="default-branch", message="Detecting repository default branch")
+            default_branch, default_branch_err = _detect_default_branch(tmp_dir)
+            if default_branch_err:
+                logger.warning("Repo intake default branch detection warning for %s: %s", repo_url, default_branch_err)
+
+            # 2. Create AAF branch
+            _set_run_progress(run_id, stage="branch", message=f"Creating working branch {branch_name}")
+            ok, err = _create_aaf_branch(tmp_dir, branch_name, clone_url)
+            if not ok:
+                raise RuntimeError(err)
+
+            # 3. Analyse repo content
+            _set_run_progress(run_id, stage="analysis", message="Analyzing repository contents and architecture signals")
+            analysis = _walk_repo_for_analysis(tmp_dir)
+
+            # 4. Build report
+            _set_run_progress(run_id, stage="report", message="Writing repository analysis report")
+            report = _build_repo_analysis_report(repo_url, branch_name, analysis)
+
+            report_path = pathlib.Path(tmp_dir) / _AAF_ANALYSIS_REPORT_FILE
+            report_path.write_text(report, encoding="utf-8")
+
+            pr_url = ""
+            summary_url = ""
+            report_url = _build_remote_file_url(repo_url, branch_name, _AAF_ANALYSIS_REPORT_FILE) or ""
+            copilot_run_id = ""
+
+            if workflow_mode == "implement-pr":
+                if copilot_runner is None:
+                    raise RuntimeError("Copilot CLI runner is not available on this build")
+                prompt = _build_repo_change_prompt(
+                    repo_url,
+                    branch_name,
+                    analysis,
+                    automation_goal=automation_goal,
+                )
+                metadata = copilot_runner.start_run(
+                    pathlib.Path(tmp_dir),
+                    prompt,
+                    requested_by=requested_by,
+                    agent=_AAF_REPO_CHANGE_AGENT,
+                )
+                copilot_run_id = str(metadata.get("runId") or "")
+                _set_run_progress(run_id, stage="repo-change-agent", message="Repo change agent is reviewing and modifying the repository")
+                run, wait_err = _wait_for_repo_copilot_run(
+                    pathlib.Path(tmp_dir),
+                    copilot_run_id,
+                    run_id,
+                )
+                if wait_err:
+                    raise RuntimeError(wait_err)
+                if (run or {}).get("status") != "succeeded":
+                    log_tail = copilot_runner.read_log_tail(pathlib.Path(tmp_dir), copilot_run_id) or ""
+                    raise RuntimeError(
+                        "Copilot repo workflow did not finish successfully: "
+                        f"{(run or {}).get('status', 'unknown')}\n{log_tail[-1200:]}"
+                    )
+                _remove_repo_copilot_artifacts(pathlib.Path(tmp_dir), copilot_run_id)
+                _ensure_change_summary(tmp_dir, automation_goal, copilot_run_id)
+                _set_run_progress(run_id, stage="commit", message="Committing repository changes to the AAF branch")
+                ok, err = _commit_and_push_all_changes(
+                    tmp_dir,
+                    branch_name,
+                    clone_url,
+                    "feat: add AAF architecture-aligned repository enhancements",
+                )
+                if not ok:
+                    raise RuntimeError(err)
+                summary_url = _build_remote_file_url(repo_url, branch_name, _AAF_CHANGE_SUMMARY_FILE) or ""
+                pr_title = _build_repo_pr_title(repo_url, automation_goal)
+                pr_body = _build_repo_pr_body(branch_name, default_branch, automation_goal)
+                _set_run_progress(run_id, stage="pr", message="Creating pull request")
+                pr_url, pr_err = _create_pull_request(
+                    repo_url,
+                    pat,
+                    branch_name,
+                    default_branch,
+                    pr_title,
+                    pr_body,
+                )
+                if pr_err:
+                    raise RuntimeError(f"Branch was pushed but PR creation failed: {pr_err}")
+            else:
+                # 5. Commit and push report
+                _set_run_progress(run_id, stage="push-report", message="Pushing AAF analysis report to the working branch")
+                ok, err = _commit_and_push_report(tmp_dir, report, branch_name, clone_url)
+                if not ok:
+                    raise RuntimeError(err)
+
+            with RUNS_LOCK:
+                RUNS[run_id].update({
+                    "status": "completed",
+                    "finishedAt": _utcnow_iso(),
+                    "returnCode": 0,
+                    "result": {
+                        "status": "completed",
+                        "repoUrl": repo_url,
+                        "branchName": branch_name,
+                        "workflowMode": workflow_mode,
+                        "baseBranch": default_branch,
+                        "reportFile": _AAF_ANALYSIS_REPORT_FILE,
+                        "reportUrl": report_url,
+                        "summaryFile": _AAF_CHANGE_SUMMARY_FILE if workflow_mode == "implement-pr" else "",
+                        "summaryUrl": summary_url,
+                        "prUrl": pr_url,
+                        "copilotRunId": copilot_run_id,
+                        "techStack": analysis.get("tech_stack", []),
+                        "archFilesFound": len(analysis.get("arch_files", [])),
+                        "fileCountsByLanguage": analysis.get("file_counts", {}),
+                    },
+                })
+                _persist_runs_unlocked()
+            _set_run_progress(run_id, stage="completed", message="Repository workflow completed successfully")
+            logger.info("Repo analysis completed for run %s branch %s", run_id, branch_name)
+
+        except Exception as exc:
+            logger.exception("Repo analysis failed for run %s: %s", run_id, exc)
+            with RUNS_LOCK:
+                RUNS[run_id].update({
+                    "status": "failed",
+                    "finishedAt": _utcnow_iso(),
+                    "returnCode": -1,
+                    "stderr": str(exc),
+                    "result": {"status": "failed", "message": str(exc)},
+                })
+                _persist_runs_unlocked()
+        finally:
+            # Always clean up the temp clone directory
+            if tmp_dir and pathlib.Path(tmp_dir).exists():
+                try:
+                    shutil.rmtree(tmp_dir, ignore_errors=True)
+                except Exception:
+                    pass
+
     def _handle_brd_upload(self):
         """Handle multipart/form-data BRD file upload."""
         if not self._check_intake_rate_limit():
@@ -3626,23 +5295,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         generate_infra_field = (fields.get("generate_infra") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         run_security_audit_field = (fields.get("run_security_audit") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         network_tier_field = (fields.get("network_tier") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
-        implementation_language_field = (fields.get("implementation_language") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
+        implementation_language_field = _sanitize_implementation_language(
+            (fields.get("implementation_language") or {}).get("data", b"").decode("utf-8", errors="replace")
+        )
         iac_tool_field = (fields.get("iac_tool") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
+        source_type_field = (fields.get("source_type") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        target_project_slug_field = (fields.get("target_project_slug") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        inline_content_field = (fields.get("content") or {}).get("data", b"").decode("utf-8", errors="replace")
         brd_field = fields.get("brd_file")
 
         if not brd_field:
             self._send_json({"error": "Missing brd_file field"}, 400)
-            return
-
-        try:
-            raw_decoded = brd_field["data"].decode("utf-8")
-        except UnicodeDecodeError:
-            self._send_json({"error": "BRD file must be UTF-8 encoded text"}, 400)
-            return
-
-        content, err = _validate_brd_content(raw_decoded)
-        if err is not None:
-            self._send_json({"error": err}, 400)
             return
 
         uploaded_filename = brd_field.get("filename") or "brd.md"
@@ -3655,16 +5318,63 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": str(exc)}, 400)
             return
 
-        generation_options = {
-            "enableObservability": _coerce_bool(enable_observability_field, default=True),
-            "generateInfra": _coerce_bool(generate_infra_field, default=True),
-            "runSecurityAudit": _coerce_bool(run_security_audit_field, default=True),
-            "networkTier": _sanitize_network_tier(network_tier_field),
-        }
+        generation_options, options_error = _build_generation_options(
+            {
+                "enableObservability": enable_observability_field,
+                "generateInfra": generate_infra_field,
+                "runSecurityAudit": run_security_audit_field,
+                "networkTier": network_tier_field,
+                "implementationLanguage": implementation_language_field,
+                "iacTool": iac_tool_field,
+                "sourceType": source_type_field,
+                "targetProjectSlug": target_project_slug_field,
+            },
+            file_name=file_name,
+            content=inline_content_field,
+            uploaded_file_name=uploaded_filename,
+            raw_bytes=raw_uploaded_bytes,
+        )
+        if options_error is not None:
+            self._send_json({"error": options_error}, 400)
+            return
+
+        source_type = _sanitize_source_type(generation_options.get("sourceType"))
+        raw_uploaded_bytes = brd_field.get("data") or b""
+        uploaded_text = None
+        if source_type in _TEXTUAL_SOURCE_TYPES:
+            try:
+                uploaded_text = raw_uploaded_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                uploaded_text = None
+
+        source_text_candidate = uploaded_text if uploaded_text and uploaded_text.strip() else inline_content_field
+        content, err = _validate_brd_content(source_text_candidate)
+        if err is not None:
+            if source_type in _REFERENCE_ONLY_SOURCE_TYPES:
+                self._send_json(
+                    {"error": "Provide a written architecture summary when uploading Visio or Lucidchart artifacts."},
+                    400,
+                )
+                return
+            if source_type in _TEXTUAL_SOURCE_TYPES and uploaded_text is None:
+                self._send_json({"error": "Uploaded file must be UTF-8 text for the selected source type"}, 400)
+                return
+            self._send_json({"error": err}, 400)
+            return
+
         if implementation_language_field:
             generation_options["implementationLanguage"] = implementation_language_field
         if iac_tool_field:
             generation_options["iacTool"] = iac_tool_field
+        if source_type != "brd-markdown":
+            generation_options["sourceFileName"] = uploaded_filename
+            generation_options["sourceAttachment"] = _save_source_attachment(
+                FACTORY_REPO_ROOT / "docs" / "intake",
+                file_name,
+                source_type,
+                uploaded_filename,
+                raw_uploaded_bytes,
+            )
 
         return self._save_and_start_run(
             file_name, content, generation_options, owner=self._authorized_user()
@@ -3687,9 +5397,34 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "startedAt": run.get("startedAt"),
             "finishedAt": run.get("finishedAt"),
             "returnCode": run.get("returnCode"),
+            "stderr": run.get("stderr"),
+            "generationOptions": run.get("generationOptions") or {},
+            "progress": run.get("progress") or {},
             "result": run.get("result"),
         }
         self._send_json(safe_run, 200)
+
+    def _handle_run_log(self, run_id):
+        """Return the retained plain-text log tail for a tracked run."""
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+
+        if not run:
+            self._send_json({"error": "Run not found"}, 404)
+            return
+
+        log_text = str(
+            run.get("logTail")
+            or run.get("progress", {}).get("logPreview")
+            or run.get("stderr")
+            or ""
+        )
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        body = log_text.encode("utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _handle_runs_list(self):
         """Handle list of all tracked runs."""
@@ -3793,6 +5528,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     "generatedFrom": manifest.get("source_brd", ""),
                     "generatedAt": manifest.get("created_at", ""),
                     "options": manifest.get("generation_options", {}),
+                    "suggestedRuntime": manifest.get("suggested_runtime"),
+                    "brdReadiness": manifest.get("brd_readiness"),
+                    "orchestratorAutoFlow": manifest.get("orchestrator_auto_flow"),
+                    "implementationLanguage": manifest.get("implementation_language"),
+                    "iacTool": manifest.get("iac_tool"),
                     "links": {},
                 }
 

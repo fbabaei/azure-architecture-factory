@@ -31,12 +31,17 @@ publishes it.
 ## Usage
 
 ```python
-from factory_runtime import classify_brd
+from factory_runtime import assess_brd_readiness, classify_brd
 
 result = classify_brd(brd_markdown)
 print(result.runtime)       # "local" or "agent-framework"
 print(result.signals)       # evidence
 print(result.source)        # "local" or "agent-framework"
+
+readiness = assess_brd_readiness(brd_markdown)
+print(readiness.classification)          # Auto-Ready | Auto-Ready With Guardrails | Architect Review Required
+print(readiness.percentage_score)        # weighted readiness score
+print(readiness.clarification_questions) # targeted follow-up prompts
 ```
 
 To force the SDK runtime:

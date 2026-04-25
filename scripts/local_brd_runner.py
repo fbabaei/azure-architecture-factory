@@ -15,10 +15,12 @@ except ImportError:  # pragma: no cover - executed as a script
     from generate_guide_report import generate_guide_report  # type: ignore
 
 try:
+    from factory_runtime import assess_brd_readiness as _assess_brd_readiness  # type: ignore
     from factory_runtime import classify_brd as _classify_brd  # type: ignore
 except ImportError:  # pragma: no cover - executed as a script
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from factory_runtime import assess_brd_readiness as _assess_brd_readiness  # type: ignore
     from factory_runtime import classify_brd as _classify_brd  # type: ignore
 
 try:
@@ -28,6 +30,25 @@ except ImportError:  # pragma: no cover - executed as a script
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
     import language_agents  # type: ignore
     import iac_agents  # type: ignore
+
+
+def _normalize_target_slug(value: object) -> str | None:
+    candidate = str(value or "").strip().lower()
+    if not candidate:
+        return None
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,119}", candidate):
+        raise ValueError("targetProjectSlug contains invalid characters")
+    return candidate
+
+
+def _snapshot_existing_project(factory_repo_root: Path, slug: str, project_root: Path, generated_at: datetime) -> Path:
+    history_root = factory_repo_root / "projects" / "_history" / slug
+    history_root.mkdir(parents=True, exist_ok=True)
+    snapshot_path = history_root / generated_at.strftime("%Y%m%d%H%M%S")
+    if snapshot_path.exists():
+        shutil.rmtree(snapshot_path)
+    shutil.copytree(project_root, snapshot_path)
+    return snapshot_path
 
 
 def process_brd_document(
@@ -60,6 +81,8 @@ def process_brd_document(
     capabilities = _infer_capabilities(brd_text)
     archetype = _detect_archetype(requirements, brd_text)
     runtime_recommendation = _classify_runtime(brd_text)
+    readiness_assessment = _assess_readiness(brd_text)
+    auto_flow_gate = _build_auto_flow_gate(readiness_assessment)
     language_agent = language_agents.resolve_from_brd(brd_text)
     iac_agent = iac_agents.resolve_from_brd(brd_text)
     # Portal / caller override: generation_options can force a specific
@@ -71,21 +94,32 @@ def process_brd_document(
     iac_override = str(generation_options.get("iacTool") or "").strip().lower()
     if iac_override:
         iac_agent = iac_agents.get(iac_override)
-    base_slug = f"{_slugify(title)}-{timestamp}"
-    # Collision guard: two BRD runs within the same second must not overwrite
-    # each other. If the target folder already exists, append a short suffix
-    # derived from the run_id (stable across the same run, unique across runs).
-    slug = base_slug
-    if (factory_repo_root / "projects" / slug).exists():
-        suffix = (run_id or "").replace("-", "")[-6:] or generated_at.strftime("%f")[:6]
-        slug = f"{base_slug}-{suffix}"
-        # Paranoia: if that ALSO exists, walk a counter until we find a free slot.
-        counter = 1
-        while (factory_repo_root / "projects" / slug).exists():
-            slug = f"{base_slug}-{suffix}-{counter}"
-            counter += 1
+    target_slug = _normalize_target_slug(generation_options.get("targetProjectSlug"))
+    update_snapshot_path: Path | None = None
+    if target_slug:
+        slug = target_slug
+        project_root = factory_repo_root / "projects" / slug
+        manifest_path = project_root / "project-manifest.json"
+        if not manifest_path.is_file():
+            raise ValueError(f"Project slug '{slug}' was not found")
+        update_snapshot_path = _snapshot_existing_project(factory_repo_root, slug, project_root, generated_at)
+        shutil.rmtree(project_root)
+    else:
+        base_slug = f"{_slugify(title)}-{timestamp}"
+        # Collision guard: two BRD runs within the same second must not overwrite
+        # each other. If the target folder already exists, append a short suffix
+        # derived from the run_id (stable across the same run, unique across runs).
+        slug = base_slug
+        if (factory_repo_root / "projects" / slug).exists():
+            suffix = (run_id or "").replace("-", "")[-6:] or generated_at.strftime("%f")[:6]
+            slug = f"{base_slug}-{suffix}"
+            # Paranoia: if that ALSO exists, walk a counter until we find a free slot.
+            counter = 1
+            while (factory_repo_root / "projects" / slug).exists():
+                slug = f"{base_slug}-{suffix}-{counter}"
+                counter += 1
 
-    project_root = factory_repo_root / "projects" / slug
+        project_root = factory_repo_root / "projects" / slug
     diagrams_dir = project_root / "diagrams"
     docs_dir = project_root / "docs"
     tests_dir = project_root / "tests"
@@ -117,6 +151,7 @@ def process_brd_document(
         "title": title,
         "projectSlug": slug,
         "generatedFrom": brd_path.name,
+        "sourceType": str(generation_options.get("sourceType") or "brd-markdown"),
         "designChoice": "Azure-native in-repo BRD runner with generated starter deliverables.",
         "benefits": [
             "No dependency on sibling repositories for portal BRD processing.",
@@ -135,7 +170,12 @@ def process_brd_document(
         "implementationLanguage": language_agent.name,
         "iacTool": iac_agent.name if generate_infra else "disabled",
         "archetype": archetype,
+        "brdReadiness": readiness_assessment,
+        "orchestratorAutoFlow": auto_flow_gate,
     }
+    if update_snapshot_path is not None:
+        analysis["updateTargetProject"] = slug
+        analysis["updateSnapshot"] = _repo_relative(factory_repo_root, update_snapshot_path)
 
     _write_text(docs_dir / "architecture-overview.md", _build_architecture_overview(title, requirements, capabilities, enable_observability, network_tier, generate_infra))
     _write_text(docs_dir / "governance-model.md", _build_governance_model(capabilities, enable_observability))
@@ -204,6 +244,8 @@ def process_brd_document(
         "project": slug,
         "status": "complete",
         "source_brd": str(brd_path),
+        "source_type": str(generation_options.get("sourceType") or "brd-markdown"),
+        "source_file_name": str(generation_options.get("sourceFileName") or brd_path.name),
         "created_at": generated_at_iso,
         "generator": "azure_native_factory_runner",
         "title": title,
@@ -220,10 +262,20 @@ def process_brd_document(
         "implementation_language": language_agent.name,
         "iac_tool": iac_tool_recorded,
         "archetype": archetype,
+        "brd_readiness": readiness_assessment,
+        "orchestrator_auto_flow": auto_flow_gate,
         "language_files": language_result.files_written,
         "iac_files": iac_files_written,
         "user_home_copy": str(user_home_copy_path),
     }
+    if generation_options.get("sourceAttachment"):
+        manifest["source_attachment"] = str(generation_options["sourceAttachment"])
+    if update_snapshot_path is not None:
+        manifest["update"] = {
+            "mode": "replace-in-place",
+            "target_project": slug,
+            "snapshot": _repo_relative(factory_repo_root, update_snapshot_path),
+        }
     _write_json(project_root / "project-manifest.json", manifest)
 
     # Generate the deterministic guide report (heuristic, no LLM) so portal-only
@@ -271,8 +323,9 @@ def process_brd_document(
     project_record = {
         "slug": slug,
         "title": title,
-        "status": "Ready",
+        "status": "Ready" if auto_flow_gate.get("eligible") else "Ready (Architect Review Required)",
         "generatedFrom": brd_path.name,
+        "sourceType": str(generation_options.get("sourceType") or "brd-markdown"),
         "generatedAt": generated_at_iso,
         "options": {
             "enableObservability": enable_observability,
@@ -283,9 +336,16 @@ def process_brd_document(
         "links": project_links,
         "runLog": f"outputs\\brd-runs\\{run_log_name}",
         "suggestedRuntime": runtime_recommendation,
+        "brdReadiness": readiness_assessment,
+        "orchestratorAutoFlow": auto_flow_gate,
         "implementationLanguage": language_agent.name,
         "iacTool": iac_tool_recorded,
     }
+    if update_snapshot_path is not None:
+        project_record["update"] = {
+            "mode": "replace-in-place",
+            "snapshot": _repo_relative(factory_repo_root, update_snapshot_path),
+        }
     if manifest.get("guide_report"):
         project_record["guideReport"] = manifest["guide_report"]
     _update_project_feed(factory_repo_root / "factory-projects.generated.json", generated_at_iso, project_record)
@@ -293,6 +353,8 @@ def process_brd_document(
     return {
         "status": "complete",
         "project": project_record,
+        "brdReadiness": readiness_assessment,
+        "orchestratorAutoFlow": auto_flow_gate,
         "analysis": analysis,
         "manifest": _repo_relative(factory_repo_root, project_root / "project-manifest.json"),
         "orchestrationLog": _repo_relative(factory_repo_root, orchestration_log_path),
@@ -375,6 +437,42 @@ def _classify_runtime(markdown: str) -> dict[str, Any]:
         "signals": result.signals,
         "counterSignals": result.counter_signals,
         "reasoning": result.reasoning,
+    }
+
+
+def _assess_readiness(markdown: str) -> dict[str, Any]:
+    """Run deterministic BRD readiness assessment with safe fallback."""
+
+    try:
+        result = _assess_brd_readiness(markdown)
+    except Exception as exc:  # pragma: no cover - defensive
+        return {
+            "classification": "Auto-Ready With Guardrails",
+            "percentage_score": 0,
+            "blockers": [f"readiness-evaluation-error: {exc}"],
+            "guardrails": ["BRD readiness evaluation failed; require architect review before orchestration."],
+            "clarification_questions": [
+                "Please provide a clearer BRD with workload, data, integrations, security, and environment details."
+            ],
+        }
+    return result.to_dict()
+
+
+def _build_auto_flow_gate(readiness: dict[str, Any]) -> dict[str, Any]:
+    """Determine whether project-orchestrator runtime:auto should proceed."""
+
+    classification = str(readiness.get("classification") or "")
+    eligible = classification != "Architect Review Required"
+    gate_reason = (
+        "BRD readiness gate passed for runtime:auto orchestration."
+        if eligible
+        else "BRD readiness is Architect Review Required; block runtime:auto and require pre-review clarification."
+    )
+    return {
+        "mode": "auto",
+        "eligible": eligible,
+        "classification": classification,
+        "reason": gate_reason,
     }
 
 
