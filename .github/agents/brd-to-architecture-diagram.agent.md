@@ -2,6 +2,7 @@
 name: brd-to-architecture-diagram
 description: "Use when you need to read business or product requirements and generate an Azure architecture diagram using the MCP Draw.io server. Produces a .drawio file and companion notes saved to diagrams/."
 tools: [read, edit, search, mcp]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide the path to a requirements file (e.g., BRD.md, PRD.md) or paste requirements inline. Optionally specify a diagram name and output folder (default: diagrams/). To skip MCP generation and use an existing diagram, pass `existing-diagram: <path>` — the agent will copy it to the output folder and generate companion notes."
 ---

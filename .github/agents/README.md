@@ -319,3 +319,48 @@ Prerequisites: factory portal running (`python scripts/start_factory_portal.py`)
 - Projects created by the orchestrator live under `projects/` with full isolation per project.
 - Use `factory-handoff` after `project-orchestrator` to promote the project to the shared factory portal.
 - The root `QUICKSTART.md` explains how to use the orchestrator and all individual agents.
+
+---
+
+## Foundry Capabilities (Forward-Looking)
+
+Each agent's YAML front matter declares `foundry_capabilities` — the tool set the agent should be granted **if/when** it is migrated from Copilot runtime to an Azure AI Foundry agent. These tokens are advisory today; the active runtime contract is the `tools` field. The tokens map to Foundry SDK constructs:
+
+| Token | Foundry construct (.NET) | Use when... |
+|---|---|---|
+| `code_interpreter` | `ResponseTool.CreateCodeInterpreterTool(...)` | Agent must compute over data: cost analytics, coverage metrics, SARIF/CVE aggregation, large CSV/JSON, charts. |
+| `file_search` | `ResponseTool.CreateFileSearchTool(...)` (RAG) | Output quality depends on grounding in project docs (BRDs, diagrams, templates, agent contracts, WAF refs). |
+| `function_calling` | Custom function tools / MCP tools | Agent calls Azure APIs, filesystem, git, build/test runners, or sub-agents. |
+
+### Recommended capability matrix
+
+| Agent | code_interpreter | file_search | function_calling | Rationale |
+|---|---|---|---|---|
+| azure-architecture-implementer |  | ✅ | ✅ | Grounding in templates + diagrams; orchestrates sub-agents. |
+| azure-project-deployer |  |  | ✅ | Pure Azure MCP / az / azd / bicep tool calls. |
+| bicep-infrastructure-validator |  |  | ✅ | Filesystem + `bicep build` runner. |
+| brd-to-architecture-diagram |  | ✅ | ✅ | Grounding in BRD + past diagrams; calls Draw.io MCP. |
+| drawio-architecture-reader |  |  | ✅ | XML parse via filesystem tool. |
+| factory-handoff |  |  | ✅ | HTTP/REST client + filesystem. |
+| factory-workflow-guide |  | ✅ | ✅ | RAG over docs, templates, agent contracts. |
+| lang-dotnet-implementer |  | ✅ | ✅ | RAG over factory-templates/dotnet/; runs `dotnet build/test`. |
+| modernization-to-factory |  | ✅ | ✅ | Grounding in legacy repo + handoff to orchestrator. |
+| production-environment-advisor |  | ✅ | ✅ | RAG over docs + Azure WAF refs; read-only Azure MCP. |
+| project-cost-analyzer | ✅ |  | ✅ | Cost CSV/JSON crunching, charts, comparisons. |
+| project-observability-advisor |  | ✅ | ✅ | RAG over App Insights / WAF docs; KQL via tool. |
+| project-orchestrator |  |  | ✅ | Pure router (sub-agent dispatch). |
+| project-state-manager |  |  | ✅ | Deterministic JSON / log writer. |
+| project-traceability-advisor | ✅ | ✅ | ✅ | Coverage metrics + grounding in project files. |
+| repo-change-agent |  | ✅ | ✅ | Grounding in target repo; runs build/test. |
+| security-compliance-auditor |  | ✅ | ✅ | RAG over BRD compliance frameworks; Defender/azqr MCP. |
+| source-code-maintainer |  | ✅ | ✅ | Drift detection grounded in diagram + BRD + code. |
+| terraform-infrastructure-validator |  |  | ✅ | Filesystem + `terraform validate/fmt/plan`. |
+
+**Strong CI candidates today**: `project-cost-analyzer`, `project-traceability-advisor` (CVE/coverage analytics also useful for `security-compliance-auditor` and `project-observability-advisor` if Foundry-migrated).
+
+**Strong RAG candidates today**: `factory-workflow-guide`, `brd-to-architecture-diagram`, `lang-dotnet-implementer`, `source-code-maintainer`, `production-environment-advisor`.
+
+### How orchestrators should consume these tokens
+- `project-orchestrator` and `modernization-to-factory` MUST treat `foundry_capabilities` as advisory metadata — do not change runtime behavior based on the value.
+- When a sub-agent is migrated to Foundry, the implementer (`lang-dotnet-implementer` or future `lang-python-implementer`) consults `foundry_capabilities` to decide which Foundry tool(s) to wire (e.g., `code_interpreter` triggers the `factory-templates/dotnet/FoundryAgentWithCodeInterpreter.cs.template` pattern).
+- Unknown capability tokens MUST halt and surface a human-review item, identical to the rule for `BRD.implementation.agents[].tools`.

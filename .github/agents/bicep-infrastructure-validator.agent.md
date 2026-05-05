@@ -2,6 +2,7 @@
 name: bicep-infrastructure-validator
 description: "Use when you need to validate and auto-fix Bicep infrastructure modules and parameters. Reviews all Bicep files, parameter files, and module references for syntax, logic, and configuration errors—then applies fixes automatically."
 tools: [read, edit, search, execute]
+foundry_capabilities: [function_calling]
 user-invocable: true
 argument-hint: "Optionally specify a particular module folder (e.g., 'infra/modules/compute') or 'all' to validate entire infrastructure. For Phase 2.8 invocations, pass mode: scalability-review with a findings slice."
 ---

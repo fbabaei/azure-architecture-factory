@@ -2,6 +2,7 @@
 name: project-traceability-advisor
 description: "Analyze a factory-generated project to produce a full requirements traceability report: assign REQ-IDs, map each requirement to the code, tests, and Bicep modules that implement it, compute coverage metrics, and save a dated traceability report. Optionally updates project-manifest.json with requirement coverage data."
 tools: [read, execute, write, todo]
+foundry_capabilities: [code_interpreter, file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project). Optionally specify: update-manifest: true/false (default true), open-report: true/false."
 ---

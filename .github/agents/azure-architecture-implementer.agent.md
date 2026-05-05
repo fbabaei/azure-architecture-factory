@@ -2,6 +2,7 @@
 name: azure-architecture-implementer
 description: "Use when you need to read a draw.io architecture diagram, map it to Azure resources, scaffold modular Python microservices, create implementation files, or produce Azure delivery guidance from a system diagram."
 tools: [read, edit, search, execute, agent, todo, web]
+foundry_capabilities: [file_search, function_calling]
 agents: [drawio-architecture-reader, production-environment-advisor]
 argument-hint: "Provide the diagram path, target architecture, and whether you want scaffolding, Azure deployment assets, or implementation guidance."
 user-invocable: true

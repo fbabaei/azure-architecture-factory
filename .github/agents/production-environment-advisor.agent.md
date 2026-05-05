@@ -2,6 +2,7 @@
 name: production-environment-advisor
 description: "Use when you need to find the runtime, Azure, networking, identity, secret, build, deployment, monitoring, and operational prerequisites required to run this project in a real production environment."
 tools: [read, search, execute, todo]
+foundry_capabilities: [file_search, function_calling]
 argument-hint: "Provide the service or repo path and whether you need deployment prerequisites, runtime requirements, or production readiness checks."
 user-invocable: true
 ---

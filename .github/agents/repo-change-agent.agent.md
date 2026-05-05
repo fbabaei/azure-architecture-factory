@@ -2,6 +2,7 @@
 name: repo-change-agent
 description: "Use when AAF needs to inspect an existing repository, decide whether to enhance current code or add minimal new code aligned to the documented architecture, implement the change, run validation, and produce a change summary for a follow-up commit and PR."
 tools: [read, edit, search, execute, todo]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Run inside a cloned target repository. Optionally provide: goal, repository URL, working branch, and any architectural constraints already known."
 ---

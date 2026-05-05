@@ -2,6 +2,7 @@
 name: security-compliance-auditor
 description: "Audits every service, every Bicep module, and every dependency in a factory project for security and compliance gaps (secrets, identity, authZ, network boundaries, CVEs, data-in-transit, audit logging, BRD-declared compliance frameworks). Emits a severity-classified findings report that the orchestrator uses to drive targeted fixes. Called by project-orchestrator in Phase 2.6 Security Gate."
 tools: [read, search, execute]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project). Optionally specify the output path for the findings report and `fix: false` to force audit-only mode."
 ---

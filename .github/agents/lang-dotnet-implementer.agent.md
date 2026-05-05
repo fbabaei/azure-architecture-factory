@@ -2,6 +2,7 @@
 name: lang-dotnet-implementer
 description: "Use when a factory project's BRD specifies `implementation.language: dotnet` (or `csharp` alias). Scaffolds and maintains ASP.NET Core services (C#, .NET 8 LTS) under `projects/<slug>/src/`, aligned with the architecture diagram and BRD. Mirrors the Python source-code-maintainer but emits idiomatic .NET code: minimal APIs, DI, structured logging via ILogger, health endpoints, Dockerfile with multi-stage build, and xUnit test stubs."
 tools: [read, edit, search, execute, agent, todo]
+foundry_capabilities: [file_search, function_calling]
 agents: [drawio-architecture-reader, project-state-manager, source-code-maintainer]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project). Optionally specify mode (scaffold|sync|add-to-service|refactor) and dry-run: true."
@@ -100,6 +101,7 @@ ENTRYPOINT ["dotnet", "<Service>.dll"]
 | Blob trigger / event handler | `BlobServiceClient` + Event Grid webhook endpoint |
 | Scheduled job | `BackgroundService` with `PeriodicTimer` OR Azure Container Apps Jobs |
 | Internal-only API | Container App with `ingress.external=false` |
+| Azure SQL (sessions, drafts, audit log) | `Microsoft.Data.SqlClient` with AAD-auth connection string: `Server=tcp:<server>.database.windows.net,1433;Database=<db>;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;` (no SQL logins). Pair with the `infra/modules/data/sql-database.bicep` module and idempotent DDL under `infra/sql/*.sql` (see `factory-templates/sql/`). |
 
 ### Test project conventions
 
@@ -107,6 +109,20 @@ ENTRYPOINT ["dotnet", "<Service>.dll"]
 - One `WebApplicationFactory<Program>` fixture per service.
 - Fakes for Azure clients via `Azure.Core.TestFramework` or simple test doubles. Never hit real Azure in unit tests.
 - Integration tests live in a separate `<Service>.IntegrationTests.csproj` and are opt-in via a `RunIntegrationTests` environment variable.
+
+### Azure AI Foundry agents (Code Interpreter)
+
+When a service in the BRD declares an Azure AI Foundry agent under `implementation.agents[]`, copy the canonical template from `factory-templates/dotnet/` instead of writing the Foundry plumbing by hand:
+
+| BRD trigger | Templates to copy | Output filenames |
+|---|---|---|
+| `tools: [code_interpreter]` | `factory-templates/dotnet/FoundryAgentWithCodeInterpreter.cs.template` + `FoundrySettings.cs.template` | `<AgentName>Service.cs`, `FoundrySettings.cs` |
+
+Substitute the four tokens documented in `factory-templates/dotnet/README.md` (`{{NAMESPACE}}`, `{{CLASS_NAME}}`, `{{RESULT_TYPE}}`, `{{INPUT_PURPOSE_COMMENT}}`) and drop the `.template` suffix. Add the package references the README lists (`Azure.AI.Projects`, `Azure.Identity`) to the consuming `.csproj`. The agent runner is intentionally ephemeral: every call creates a new agent version and deletes it on completion — keep that pattern, do not cache agent versions across requests.
+
+`tools` is an open vocabulary. Today only `code_interpreter` has a backing template; if you encounter `file_search`, `function`, or any other token without a template, halt with an escalation block (`Foundry tool '<name>' has no .NET factory template. Add factory-templates/dotnet/<tool>.template before proceeding.`) rather than improvise.
+
+RBAC for the consuming compute identity (`Azure AI User` on the Foundry project) is the responsibility of `bicep-infrastructure-validator` working with `infra/modules/identity/`; do not emit role assignments from .NET source.
 
 ## Owns vs. Does Not Own
 
@@ -135,6 +151,12 @@ ENTRYPOINT ["dotnet", "<Service>.dll"]
 8. **Health endpoints are mandatory** — liveness at `/health`, readiness at `/health/ready`.
 9. **Explicit DI.** Don't resolve services via `IServiceProvider.GetService` in request paths; inject into constructors / endpoint handlers.
 10. **Every write to `src/` MUST be followed by `dotnet build` validation.** If the build fails, revert the change and report rather than commit a broken tree.
+11. **Solutions use the classic `.sln` format.** Generate via `dotnet new sln --format sln` (NOT `.slnx`); current SDKs' `dotnet sln add` resolves the classic file. Run from the project root and pass the explicit path: `dotnet sln .\<slug>.sln add ...`.
+12. **Database schema is idempotent SQL, not EF migrations.** Emit `infra/sql/*.sql` guarded with `IF OBJECT_ID('dbo.X','U') IS NULL` (template: `factory-templates/sql/sessions.sql`). Use EF Core only when the BRD explicitly requires it.
+13. **Validation policy by PR shape:**
+    - **DB-model / pure-helper PR** (no HTTP surface change): xUnit unit tests covering pure helpers (status state machines, validators, factory methods) and constructor guards are sufficient. Skip live SQL.
+    - **Endpoint / wiring PR**: a `WebApplicationFactory<Program>` integration test is required for every new or changed route group. Azure SDK clients are faked.
+    - Either way, `dotnet build` and `dotnet test` MUST be green before the phase is marked complete.
 
 ## Output Contract
 

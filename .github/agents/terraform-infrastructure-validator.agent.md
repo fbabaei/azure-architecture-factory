@@ -2,6 +2,7 @@
 name: terraform-infrastructure-validator
 description: "Use when you need to validate and auto-fix HashiCorp Terraform infrastructure configuration for projects whose manifest declares `iac_tool: terraform`. Reviews all .tf files and `terraform.tfvars.example` for syntax, logic, and configuration errors—then applies fixes automatically."
 tools: [read, edit, search, execute]
+foundry_capabilities: [function_calling]
 user-invocable: true
 argument-hint: "Optionally specify a particular infra path (e.g., 'projects/<slug>/infra') or 'all' to validate every Terraform-backed project. For Phase 2.8 invocations, pass mode: scalability-review with a findings slice."
 ---

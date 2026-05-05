@@ -2,6 +2,7 @@
 name: factory-workflow-guide
 description: "Interactive workflow coach for the Azure Architecture Factory. Inspects the user's current project state, detects mistakes or missing steps, explains what went wrong and why, then recommends the precise corrective action or next step. Use any time you are unsure what to do next, something seems wrong, or a previous step appears to have produced incomplete output."
 tools: [read, search, todo, execute]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide a project path (e.g., projects/my-project), OR describe what you just did or what seems wrong. If no project path is given the agent will scan the projects/ folder to find work in progress."
 ---
