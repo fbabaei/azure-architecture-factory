@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azure-architecture-factory/contracts/v1/intake-contract.schema.json",
+  "title": "AAF Intake Contract",
+  "description": "Structured, normalized output of the Intake layer. Produced from a raw BRD/PRD or guided portal questions. Consumed by the Design layer (brd-to-architecture-diagram). Captures requirements only — NO architecture, NO Azure mapping.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "project_slug",
+    "application_summary",
+    "requirements",
+    "constraints",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "project_slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$",
+      "description": "Lowercase, hyphenated slug used for projects/<slug>/."
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["brd", "prd", "portal-guided", "ghcp-wakeup", "modernization-target"]
+        },
+        "path": { "type": "string" },
+        "submitted_by": { "type": "string" },
+        "submitted_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "application_summary": {
+      "type": "string",
+      "minLength": 30,
+      "description": "One-paragraph plain-language description of what the application does and for whom."
+    },
+    "requirements": {
+      "type": "object",
+      "required": ["functional", "non_functional"],
+      "properties": {
+        "functional": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "statement"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^REQ-F-[0-9]{3,}$" },
+              "statement": { "type": "string", "minLength": 5 },
+              "priority": { "type": "string", "enum": ["must", "should", "could", "wont"] },
+              "source_section": { "type": "string" }
+            }
+          }
+        },
+        "non_functional": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "category", "statement"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^REQ-NF-[0-9]{3,}$" },
+              "category": {
+                "type": "string",
+                "enum": ["performance", "scalability", "availability", "security", "compliance", "observability", "cost", "usability", "maintainability"]
+              },
+              "statement": { "type": "string" },
+              "target": { "type": "string", "description": "Measurable target (e.g., p95<200ms, 99.9% SLA)" }
+            }
+          }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "regions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed Azure regions (e.g., ['eastus2', 'westeurope'])."
+        },
+        "compliance_frameworks": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["HIPAA", "SOC2", "PCI", "GDPR", "FedRAMP", "ISO27001", "NONE"] }
+        },
+        "budget_monthly_usd": { "type": "number", "minimum": 0 },
+        "timeline_weeks": { "type": "integer", "minimum": 0 },
+        "language_preference": {
+          "type": "string",
+          "enum": ["python", "dotnet", "csharp", "auto"]
+        },
+        "iac_tool": {
+          "type": "string",
+          "enum": ["bicep", "terraform", "auto"]
+        },
+        "data_residency": { "type": "string" },
+        "existing_systems": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["complexity", "disposition"],
+      "properties": {
+        "complexity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["greenfield", "modernization", "extension", "migration"]
+        },
+        "estimated_services": { "type": "integer", "minimum": 1 },
+        "needs_agent_runtime": {
+          "type": "boolean",
+          "description": "True if BRD requires the Microsoft Agent Framework SDK runtime."
+        },
+        "readiness_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "BRD readiness score from BRD_READINESS_SCORECARD."
+        }
+      }
+    }
+  }
+}

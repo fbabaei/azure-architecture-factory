@@ -1,5 +1,7 @@
 # Custom Agents
 
+> **Scoping model:** AAF's 20 agents are organized into three conceptual layers — **Intake → Design → Architecture** — with a separate **validation layer** (`contract-validator`) and **orchestration control plane** (`project-orchestrator`). See [`docs/AAF_AGENT_SCOPING.md`](../../docs/AAF_AGENT_SCOPING.md) for the diagram, layer responsibilities, and inter-agent contract schemas under [`factory-templates/contracts/`](../../factory-templates/contracts/).
+
 ## Agent Overview
 
 ```
@@ -59,6 +61,13 @@ factory-handoff               ← standalone bridge to Azure Architecture Factor
 ├── submits: POST /api/brd-intake on the factory portal
 ├── polls  : GET  /api/brd-runs/{runId} until completed
 └── writes : factoryHandoff block into project-manifest.json
+
+contract-validator            ← validation layer (separated from generation)
+│
+├── reads  : projects/<slug>/docs/contracts/{intake,design,architecture}.json
+├── checks : factory-templates/contracts/*.schema.json + cross-references
+├── writes : projects/<slug>/docs/contracts/<phase>-validation.json
+└── verdict: pass | fail with next_action: block | proceed | proceed_with_warnings
 ```
 
 Each project the orchestrator creates is stored under `projects/<project-slug>/` with its own diagrams, source, infra, docs, and logs — fully isolated from other projects.
@@ -89,6 +98,8 @@ To eliminate overlap between agents that both touch code or infra:
 | `security-compliance-auditor` | Security + compliance audit only (READ-ONLY). | Applying any fix; runtime advisory (→ production-environment-advisor). |
 | `production-environment-advisor` | READ-ONLY pre-deploy prerequisites checklist. | Applying fixes of any kind (→ the gates); post-deploy analysis (→ advisor agents). |
 | `repo-change-agent` | Existing-repo analysis, architecture-aligned change selection, implementation, local validation, `AAF-change-summary.md`. | Clone/branch/commit/push/PR operations (→ portal backend / repo ops layer); greenfield factory generation (→ orchestrator). |
+
+| `contract-validator` | Schema-validating inter-agent handoffs (intake / design / architecture contracts) and emitting a block/proceed verdict. READ-ONLY. | Generating or repairing contract instances (→ the producing agent in the layer above); fixing code, infra, or diagrams. |
 
 Full protocol and troubleshooting: [`../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md`](../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md).
 
