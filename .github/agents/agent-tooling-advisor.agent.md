@@ -98,6 +98,17 @@ The prompt MUST:
 - Be ≤ 1200 characters.
 - Be deterministic (no model-specific phrasing, no chain-of-thought instructions).
 
+### Step 3b — Draft 3–5 example user prompts (eval seeds)
+
+For every agent, also produce 3–5 representative **user-turn** examples that exercise the recommended capabilities. These are NOT runtime prompts — they seed eval datasets, smoke tests, and prompt-optimizer runs.
+
+Each example MUST:
+- Be a single user message string (no system / assistant turns).
+- Cover a distinct path: at minimum one happy-path, one edge case, one tool-exercising prompt per recommended capability (e.g. one that should trigger `file_search`, one that should trigger a `function` call).
+- Be grounded in the BRD's described inputs — use realistic field names, IDs, and document types from the BRD; do not invent unrelated scenarios.
+- Be PII-free (use placeholder IDs like `ORDER-12345`, never real names/emails).
+- Carry an `expected_behavior` short string (e.g. `"calls lookup_order then summarizes status"`) for eval graders.
+
 ### Step 4 — Confidence scoring
 
 Tag each recommendation with a `confidence`:
@@ -129,6 +140,11 @@ Write `projects/<slug>/docs/agents/agent-tooling.json`:
         { "type": "function", "name": "lookup_order", "signature": "lookup_order(order_id: str) -> Order", "rationale": "agent edges to Cosmos DB Orders container", "confidence": "high" }
       ],
       "baseline_prompt": "<full prompt string>",
+      "example_user_prompts": [
+        { "prompt": "What's the status of order ORDER-12345?", "expected_behavior": "calls lookup_order, returns status summary", "exercises": ["function:lookup_order"] },
+        { "prompt": "Summarize the refund policy from the latest policy doc.", "expected_behavior": "calls file_search, cites source document", "exercises": ["file_search"] },
+        { "prompt": "", "expected_behavior": "refuses gracefully, asks for clarification", "exercises": ["guardrail"] }
+      ],
       "compliance_notes": ["HIPAA: redact PHI before tool calls"],
       "confidence": "high"
     }

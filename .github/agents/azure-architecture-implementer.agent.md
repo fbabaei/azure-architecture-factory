@@ -63,6 +63,7 @@ When `projects/<slug>/docs/agents/agent-tooling.json` is present (emitted by Pha
 3. Add a pytest under `tests/unit/test_prompts.py` asserting the prompt file exists, is non-empty, and mentions every required tool name listed in `agent-tooling.json` (so prompt drift gets caught in CI).
 4. Include `prompts/*.md` in the service's package data (`pyproject.toml` `[tool.setuptools.package-data]` or equivalent) so the file is shipped with the wheel/container image.
 5. If `agent-tooling.json` is absent (Phase 1.5 was skipped), fall back to a minimal default prompt (`"You are a helpful Azure-hosted assistant. Answer concisely."`) and emit a startup log warning. Never block the build.
+6. **Materialize example user prompts as eval seeds.** When the agent entry has `example_user_prompts[]`, write `tests/agents/<agent_name>.examples.jsonl` — one JSON object per line with keys `prompt`, `expected_behavior`, `exercises`. Smoke / eval tests load the fixture via `pathlib.Path(__file__).parent / "agents" / "<agent>.examples.jsonl"`. Do NOT inline these prompts into Python code; treat the file as a fixture. If the array is empty, skip silently (do not block).
 
 The canonical reference is [`factory-templates/agent-framework/`](../../factory-templates/agent-framework/) — the template files are designed to be self-sufficient. The factory's own BRD classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) is a second worked example of the same pattern applied in-repo.
 

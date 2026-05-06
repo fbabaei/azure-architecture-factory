@@ -71,6 +71,7 @@ The flow is owned by `project-orchestrator` and delegates to two specialist agen
     - **.NET**: `src/<Service>/prompts/<AgentName>.system.md`, copied to output via `<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`, loaded once on startup and passed to `FoundryAgentWithCodeInterpreter`'s `agentInstructions` parameter. A `PromptFileTests.cs` asserts existence, non-empty content, and tool-name coverage.
     - **Python**: `src/<package>/prompts/<agent_name>.system.md`, loaded via `importlib.resources` in `foundry_agent_runtime.py` and passed as `instructions=`. Tested under `tests/unit/test_prompts.py`. Included in package data.
     - If `agent-tooling.json` is absent, both languages fall back to a minimal default prompt and emit a build/startup warning rather than blocking.
+16. **Example user prompts** (eval seeds): each agent's `example_user_prompts[]` is written to `tests/.../agents/<agent>.examples.jsonl` (one object per line: `prompt`, `expected_behavior`, `exercises`). These are NOT runtime prompts — they seed smoke tests, eval graders, and prompt-optimizer runs. The system prompt is set once at agent-create time; user prompts come from the actual caller at runtime.
 
 ## Phase 2.5+ → Onward
 
