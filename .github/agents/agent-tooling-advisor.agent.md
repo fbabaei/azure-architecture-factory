@@ -17,18 +17,29 @@ You are STRICTLY READ-ONLY. You never modify the BRD, diagrams, code, or infra. 
 
 ## When You Run
 
-Phase **1.5** of `project-orchestrator` — between Phase 1 (architecture diagram) and Phase 2 (implementation scaffolding). Skip this phase entirely if `BRD.implementation.agents[]` is empty or absent.
+Phase **1.5** of `project-orchestrator` — between Phase 1 (architecture diagram) and Phase 2 (implementation scaffolding). Run when EITHER:
+- `BRD.implementation.agents[]` is non-empty, OR
+- `projects/<slug>/docs/agents/agents-draft.json` exists (diagram-only intake path — synthesized by `brd-to-architecture-diagram` in `synthesize-agents` mode and confirmed by the user).
+
+Skip this phase entirely if neither source declares any agents.
 
 ## Inputs
 
 The orchestrator hands you:
 
 - `project_path` — `projects/<slug>/`
-- The BRD at `projects/<slug>/docs/requirements.md` (or `BRD.md`)
+- The BRD at `projects/<slug>/docs/requirements.md` (or `BRD.md`) — may be absent on diagram-only intakes
 - The architecture diagram at `projects/<slug>/diagrams/<slug>.drawio` and its companion notes `<slug>.md`
-- Optional: the design contract at `projects/<slug>/docs/contracts/design.json` (if Phase 1.5 runs after the design contract is materialized)
+- Optional: the design contract at `projects/<slug>/docs/contracts/design.json`
+- Optional: the synthesized agent draft at `projects/<slug>/docs/agents/agents-draft.json` (diagram-only intake)
 
-If `BRD.implementation.agents[]` is absent or empty, return `status: "skipped"` with `reason: "no foundry agents declared"` and exit. Do NOT invent agents.
+### Source-of-truth selection
+
+Use this resolution order to pick the authoritative agent list:
+
+1. **BRD `implementation.agents[]`** — if present and non-empty, use it. Highest fidelity.
+2. **`docs/agents/agents-draft.json`** — use when the BRD has no agent list. **Downgrade every recommendation's confidence by one step** (high→medium, medium→low, low stays low) because the source itself is inferential.
+3. **Neither** — return `status: "skipped"` with `reason: "no foundry agents declared"` and exit. Do NOT invent agents.
 
 ## Recommendation Procedure
 

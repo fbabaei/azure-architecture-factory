@@ -79,8 +79,9 @@ When the user supplies `existing-diagram: <path>`:
 3. Read the diagram XML to extract a component list (all labeled shapes/vertices).
 4. Write `projects/<slug>/diagrams/<slug>.md` using the standard companion notes template with the extracted component list.
 5. Set `diagram_source: "imported"` in the manifest.
-6. Skip MCP Draw.io generation entirely.
-7. Log: `[PHASE 1] Existing architecture imported → projects/<slug>/diagrams/`
+6. **Synthesize agent draft** — if the BRD is missing or its `implementation.agents[]` is empty/absent, delegate to `brd-to-architecture-diagram` in `synthesize-agents` mode to draft `projects/<slug>/docs/agents/agents-draft.json` from the diagram. If the draft contains any agents, surface them to the user and ask for confirmation/edits before Phase 1.5 runs. If the user confirms, treat the draft as the authoritative agent list for Phase 1.5 (the BRD on disk remains unchanged — the draft is a sidecar).
+7. Skip MCP Draw.io generation entirely.
+8. Log: `[PHASE 1] Existing architecture imported → projects/<slug>/diagrams/`
 
 ### Mode A — MCP Draw.io Contract (default)
 
@@ -399,14 +400,18 @@ After completion (either mode):
 ### Phase 1.5 — Agent Tooling Advisory (conditional)
 **Delegate to**: `agent-tooling-advisor`
 
-Run this phase ONLY if `BRD.implementation.agents[]` is non-empty (i.e., the project declares Azure AI Foundry agents). Otherwise skip and proceed to Phase 2.
+Run this phase if EITHER condition holds:
+- `BRD.implementation.agents[]` is non-empty, OR
+- `projects/<slug>/docs/agents/agents-draft.json` exists (synthesized in Mode B and confirmed by the user).
+
+Otherwise skip and proceed to Phase 2.
 
 Instruct the agent:
-> "project_path: `projects/<slug>`. strict: true. Read the BRD and the diagram. For every entry in `BRD.implementation.agents[]`, recommend Foundry `recommended_capabilities`, `recommended_tools` (with draft signatures for `function` tools), and a baseline `instructions` prompt. Write the report to `projects/<slug>/docs/agents/agent-tooling.json` plus a Markdown sibling. Do NOT modify the BRD."
+> "project_path: `projects/<slug>`. strict: true. Read the BRD and the diagram. If `docs/agents/agents-draft.json` exists, treat it as the authoritative agent list (this is the diagram-only fallback path) and downgrade all confidences by one step. For every agent, recommend Foundry `recommended_capabilities`, `recommended_tools` (with draft signatures for `function` tools), and a baseline `instructions` prompt. Write the report to `projects/<slug>/docs/agents/agent-tooling.json` plus a Markdown sibling. Do NOT modify the BRD or the draft."
 
 After completion:
 - If `next_action: "block"` → halt and surface the critical findings to the user (most common cause: a recommended tool has no factory template).
-- If `next_action: "needs_review"` → surface the low-confidence agents and ask the user to confirm before proceeding to Phase 2.
+- If `next_action: "needs_review"` → surface the low-confidence agents and ask the user to confirm before proceeding to Phase 2. **Diagram-only intake always lands here** because every agent inherits `low` confidence by default.
 - If `next_action: "proceed"` → load `agent-tooling.json` into orchestrator memory; when invoking the language specialist in Phase 2, pass each agent's `recommended_tools` as the resolved `tools[]` (overriding any missing BRD declaration) and `baseline_prompt` as the agent instructions.
 - Delegate phase logging to `project-state-manager` under `phases.1_5_agent_tooling`.
 - Log: `[PHASE 1.5] Agent tooling advisory complete → projects/<slug>/docs/agents/agent-tooling.json`

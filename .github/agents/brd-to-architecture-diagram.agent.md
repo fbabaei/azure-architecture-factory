@@ -34,6 +34,34 @@ This agent is a participant in the orchestrator's **Phase 2.5 Alignment Converge
 | `generate` (default) | Full first-pass diagram generation (see Diagram Generation Workflow below). |
 | `extract-inventory` | **NEW.** Parse the BRD and return a JSON inventory of every required Azure service, data store, external integration, data flow, NFR, and compliance constraint. Do NOT regenerate the diagram. Save to `projects/<slug>/docs/alignment/brd-inventory-iter-N.json`. |
 | `update` | **NEW.** Accept a delta (`components_to_add`, `components_to_remove`, `flows_to_update`) and apply it to the existing `<slug>.drawio` diagram in place. Preserve layout where possible. Log a diff of the change to `projects/<slug>/diagrams/history/`. |
+| `synthesize-agents` | **NEW.** Read an existing `.drawio` (and BRD if present) and emit a draft `implementation.agents[]` block for any shape that looks like an Azure AI Foundry agent (shape style contains `azure-ai-foundry`, `azure-openai`, or `cognitive-services`; or label contains `agent`, `assistant`, `copilot`, `bot`, `extractor`, `classifier`). Write the draft to `projects/<slug>/docs/agents/agents-draft.json` for human review. Mark `confidence: low` for every entry whose purpose was inferred from a label only (no BRD support). Do NOT mutate the BRD file. |
+
+### `synthesize-agents` output schema
+
+```json
+{
+  "synthesized_at": "<ISO>",
+  "source_diagram": "projects/<slug>/diagrams/<slug>.drawio",
+  "source_brd": "projects/<slug>/docs/requirements.md | null",
+  "agents": [
+    {
+      "name": "<derived from shape label>",
+      "service": "<owning microservice or 'unknown'>",
+      "description": "<one-line inferred purpose; cite diagram label and any BRD section>",
+      "inbound_edges": ["<source-component-id>"],
+      "outbound_edges": ["<target-component-id>"],
+      "confidence": "low | medium",
+      "evidence": ["diagram:<shape-id>", "brd:<section> (optional)"]
+    }
+  ],
+  "warnings": ["..."]
+}
+```
+
+Rules for `synthesize-agents`:
+- Confidence is `medium` only when both the diagram shape AND a BRD paragraph corroborate the agent. Otherwise `low`.
+- Never invent agents from rectangles with generic labels (e.g., `service-1`, `api`). Skip them and add a warning.
+- The orchestrator (not this agent) is responsible for prompting the human to confirm or edit the draft before Phase 1.5 consumes it.
 
 ### `extract-inventory` output schema
 
