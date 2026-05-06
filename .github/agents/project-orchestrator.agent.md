@@ -396,6 +396,21 @@ After completion (either mode):
 - Delegate phase logging and manifest update (including `diagram_source`) to `project-state-manager`.
 - Log: `[PHASE 1] Architecture diagram ready → projects/<slug>/diagrams/`
 
+### Phase 1.5 — Agent Tooling Advisory (conditional)
+**Delegate to**: `agent-tooling-advisor`
+
+Run this phase ONLY if `BRD.implementation.agents[]` is non-empty (i.e., the project declares Azure AI Foundry agents). Otherwise skip and proceed to Phase 2.
+
+Instruct the agent:
+> "project_path: `projects/<slug>`. strict: true. Read the BRD and the diagram. For every entry in `BRD.implementation.agents[]`, recommend Foundry `recommended_capabilities`, `recommended_tools` (with draft signatures for `function` tools), and a baseline `instructions` prompt. Write the report to `projects/<slug>/docs/agents/agent-tooling.json` plus a Markdown sibling. Do NOT modify the BRD."
+
+After completion:
+- If `next_action: "block"` → halt and surface the critical findings to the user (most common cause: a recommended tool has no factory template).
+- If `next_action: "needs_review"` → surface the low-confidence agents and ask the user to confirm before proceeding to Phase 2.
+- If `next_action: "proceed"` → load `agent-tooling.json` into orchestrator memory; when invoking the language specialist in Phase 2, pass each agent's `recommended_tools` as the resolved `tools[]` (overriding any missing BRD declaration) and `baseline_prompt` as the agent instructions.
+- Delegate phase logging to `project-state-manager` under `phases.1_5_agent_tooling`.
+- Log: `[PHASE 1.5] Agent tooling advisory complete → projects/<slug>/docs/agents/agent-tooling.json`
+
 ### Phase 2 — Implementation Scaffolding
 **Delegate to**: `azure-architecture-implementer`
 

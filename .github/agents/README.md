@@ -68,6 +68,13 @@ contract-validator            ← validation layer (separated from generation)
 ├── checks : factory-templates/contracts/*.schema.json + cross-references
 ├── writes : projects/<slug>/docs/contracts/<phase>-validation.json
 └── verdict: pass | fail with next_action: block | proceed | proceed_with_warnings
+
+agent-tooling-advisor         ← Foundry tool + prompt recommender (Phase 1.5)
+│
+├── reads  : BRD.implementation.agents[], diagram data flows
+├── infers : recommended_capabilities (file_search / code_interpreter / function_calling)
+├── drafts : function tool signatures + baseline system prompt per agent
+└── writes : projects/<slug>/docs/agents/agent-tooling.{json,md}
 ```
 
 Each project the orchestrator creates is stored under `projects/<project-slug>/` with its own diagrams, source, infra, docs, and logs — fully isolated from other projects.
@@ -100,6 +107,7 @@ To eliminate overlap between agents that both touch code or infra:
 | `repo-change-agent` | Existing-repo analysis, architecture-aligned change selection, implementation, local validation, `AAF-change-summary.md`. | Clone/branch/commit/push/PR operations (→ portal backend / repo ops layer); greenfield factory generation (→ orchestrator). |
 
 | `contract-validator` | Schema-validating inter-agent handoffs (intake / design / architecture contracts) and emitting a block/proceed verdict. READ-ONLY. | Generating or repairing contract instances (→ the producing agent in the layer above); fixing code, infra, or diagrams. |
+| `agent-tooling-advisor` | Recommending Foundry capabilities + tools + a baseline system prompt for each `BRD.implementation.agents[]` entry. READ-ONLY. | Materializing tools into source code (→ language specialist); modifying the BRD; runtime prompt optimization (→ Foundry `prompt_optimize`). |
 
 Full protocol and troubleshooting: [`../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md`](../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md).
 
