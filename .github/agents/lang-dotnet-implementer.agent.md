@@ -122,6 +122,16 @@ Substitute the four tokens documented in `factory-templates/dotnet/README.md` (`
 
 `tools` is an open vocabulary. Today only `code_interpreter` has a backing template; if you encounter `file_search`, `function`, or any other token without a template, halt with an escalation block (`Foundry tool '<name>' has no .NET factory template. Add factory-templates/dotnet/<tool>.template before proceeding.`) rather than improvise.
 
+#### Materialize the baseline prompt
+
+When the orchestrator forwards `agent-tooling.json` from Phase 1.5 (or it exists at `projects/<slug>/docs/agents/agent-tooling.json`), every agent entry has a `baseline_prompt` string. You MUST persist it as a file the application loads at runtime — do not hardcode it inline:
+
+1. Create `src/<Service>/prompts/<AgentName>.system.md` containing the verbatim `baseline_prompt`. Use `.md` so engineers can edit it without recompiling.
+2. Add a `<None Include="prompts/**/*.md"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>` item to the service `.csproj` so the file is published with the binary.
+3. In the service that wraps `FoundryAgentWithCodeInterpreter`, load the prompt once on startup (`File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "prompts", "<AgentName>.system.md"))`) and pass it to the template's `agentInstructions` parameter. Cache the loaded string — do not re-read on every request.
+4. Add a unit test under `tests/<Service>.Tests/PromptFileTests.cs` that asserts the prompt file exists, is non-empty, and contains every required tool name listed in `agent-tooling.json` (so prompt drift gets caught in CI).
+5. If `agent-tooling.json` is absent (Phase 1.5 was skipped), fall back to a minimal default prompt (`"You are a helpful Azure-hosted assistant. Answer concisely."`) and log a `BUILD_NOTE` warning. Never block the build.
+
 RBAC for the consuming compute identity (`Azure AI User` on the Foundry project) is the responsibility of `bicep-infrastructure-validator` working with `infra/modules/identity/`; do not emit role assignments from .NET source.
 
 ## Owns vs. Does Not Own

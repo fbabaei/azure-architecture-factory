@@ -67,7 +67,10 @@ The flow is owned by `project-orchestrator` and delegates to two specialist agen
     - `python` → `azure-architecture-implementer`
     - `dotnet` → `lang-dotnet-implementer`
 14. **Forwards advisor output**: each agent's `recommended_tools` becomes the resolved `tools[]` (overriding any missing BRD declaration); `baseline_prompt` becomes the agent instructions in scaffolded code.
-15. The language specialist generates Foundry agent code, registering capabilities and stub tool functions.
+15. The language specialist generates Foundry agent code, registering capabilities and stub tool functions, AND **materializes the baseline prompt** as a file the application loads at runtime:
+    - **.NET**: `src/<Service>/prompts/<AgentName>.system.md`, copied to output via `<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>`, loaded once on startup and passed to `FoundryAgentWithCodeInterpreter`'s `agentInstructions` parameter. A `PromptFileTests.cs` asserts existence, non-empty content, and tool-name coverage.
+    - **Python**: `src/<package>/prompts/<agent_name>.system.md`, loaded via `importlib.resources` in `foundry_agent_runtime.py` and passed as `instructions=`. Tested under `tests/unit/test_prompts.py`. Included in package data.
+    - If `agent-tooling.json` is absent, both languages fall back to a minimal default prompt and emit a build/startup warning rather than blocking.
 
 ## Phase 2.5+ → Onward
 

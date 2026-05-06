@@ -54,6 +54,16 @@ When the diagram contains Azure AI Foundry, Azure OpenAI, a chat agent, a docume
 6. Add the three required tests (local fallback, SDK selection, forward-progress safety net) using `importlib.util.find_spec("agent_framework")` to branch so CI passes with and without the preview SDK installed.
 7. Update the project's `README.md`, `DEPLOY.md`, and `requirements.txt` to point at the installer scripts; do not inline `pip install` commands.
 
+### Materialize the baseline prompt
+
+When `projects/<slug>/docs/agents/agent-tooling.json` is present (emitted by Phase 1.5 — see [`FOUNDRY_AGENT_TOOLING_FLOW.md`](../../docs/FOUNDRY_AGENT_TOOLING_FLOW.md)), every agent entry has a `baseline_prompt` string. You MUST persist it as a file the application loads at runtime — do not hardcode it inline:
+
+1. Write `src/<package>/prompts/<agent_name>.system.md` containing the verbatim `baseline_prompt`. Use `.md` so engineers can edit it without redeploying.
+2. In `src/<package>/services/foundry_agent_runtime.py` (or the agent factory), load the prompt once at module import via `importlib.resources.files(...).joinpath("prompts/<agent_name>.system.md").read_text(encoding="utf-8")` and pass it as the agent `instructions=` argument. Cache it — do not re-read per request.
+3. Add a pytest under `tests/unit/test_prompts.py` asserting the prompt file exists, is non-empty, and mentions every required tool name listed in `agent-tooling.json` (so prompt drift gets caught in CI).
+4. Include `prompts/*.md` in the service's package data (`pyproject.toml` `[tool.setuptools.package-data]` or equivalent) so the file is shipped with the wheel/container image.
+5. If `agent-tooling.json` is absent (Phase 1.5 was skipped), fall back to a minimal default prompt (`"You are a helpful Azure-hosted assistant. Answer concisely."`) and emit a startup log warning. Never block the build.
+
 The canonical reference is [`factory-templates/agent-framework/`](../../factory-templates/agent-framework/) — the template files are designed to be self-sufficient. The factory's own BRD classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) is a second worked example of the same pattern applied in-repo.
 
 ## Output Format
