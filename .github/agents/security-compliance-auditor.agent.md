@@ -63,6 +63,19 @@ Your job is to audit a factory project for security and compliance gaps **withou
 | `nsg_minimal_open` | NSG rules do not contain `Any/Any` allow on inbound public. |
 | `soft_delete_and_purge_protection` | Key Vault + Storage have soft delete enabled; Key Vault has purge protection when BRD declares a compliance framework. |
 
+### Foundry agent prompts (when `docs/agents/agent-tooling.json` exists)
+
+System prompts are a documented prompt-injection / data-exfiltration surface. For each `prompts/<Agent>.system.md` file in the project:
+
+| Check | Pass Criteria | Severity on fail |
+|-------|--------------|------------------|
+| `prompt_no_secrets` | Prompt body matches none of the secret regexes (connection strings, keys, JWT, PEM, SAS). | `critical` |
+| `prompt_pii_rule_present` | When BRD declares HIPAA / GDPR / PCI: prompt contains an explicit "redact" / "do not echo PII" / "do not store user data" rule. | `major` |
+| `prompt_tool_safety_rule` | When the agent has function tools, prompt contains a "never call a tool with unvalidated user input" or equivalent guardrail. | `major` |
+| `prompt_within_char_limit` | Body ≤1200 chars (matches advisor contract). | `minor` |
+| `prompt_no_chain_of_thought_leak` | Prompt does not instruct the model to expose its reasoning to end users (e.g. "explain your thought process step-by-step in the response"). | `minor` |
+| `prompt_drift_from_advisor` | When `agent-tooling.json` is present and the file's content differs AND the file has no `<!-- AAF-EDITED -->` marker / mtime older than the advisor report: emit drift finding. | `minor` |
+
 ### Compliance (only checked when BRD declares the framework)
 
 | Framework | Additional checks |

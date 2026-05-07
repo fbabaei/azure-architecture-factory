@@ -413,6 +413,8 @@ After completion:
 - If `next_action: "block"` → halt and surface the critical findings to the user (most common cause: a recommended tool has no factory template).
 - If `next_action: "needs_review"` → surface the low-confidence agents and ask the user to confirm before proceeding to Phase 2. **Diagram-only intake always lands here** because every agent inherits `low` confidence by default.
 - If `next_action: "proceed"` → load `agent-tooling.json` into orchestrator memory; when invoking the language specialist in Phase 2, pass each agent's `recommended_tools` as the resolved `tools[]` (overriding any missing BRD declaration) and `baseline_prompt` as the agent instructions.
+- **Validate the report** at the Phase 1.5 → Phase 2 boundary: invoke `contract-validator` with `contract: agent-tooling`. Treat any `critical` or `major` finding as a hard block; `minor` findings flow into the run log.
+- **On `update: true` runs**: re-invoke `agent-tooling-advisor` whenever (a) `implementation.agents[]` changed in the BRD diff, OR (b) the diagram was regenerated this run. Otherwise reuse the existing `agent-tooling.json`. Language specialists enforce the prompt-overwrite policy themselves (skip overwrite when the on-disk prompt has an `<!-- AAF-EDITED -->` marker or a newer mtime than the report) — the orchestrator only forwards the refreshed report.
 - Delegate phase logging to `project-state-manager` under `phases.1_5_agent_tooling`.
 - Log: `[PHASE 1.5] Agent tooling advisory complete → projects/<slug>/docs/agents/agent-tooling.json`
 

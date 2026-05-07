@@ -8,12 +8,27 @@ never connection strings or keys.
 | Template | Purpose | When to use |
 |---|---|---|
 | `FoundryAgentWithCodeInterpreter.cs.template` | One-shot Foundry agent runner with `CodeInterpreter` and a single uploaded file. Handles upload, agent version create, invoke, JSON validate/format, version cleanup. | BRD declares an agent that needs sandboxed Python over an attached file (PDF/CSV/XLSX extraction, chart generation, calculations). |
-| `FoundrySettings.cs.template` | DI-bindable `FoundrySettings` config object plus a generic result record. | Pair with `FoundryAgentWithCodeInterpreter.cs.template`. |
+| `FoundryAgentWithFileSearch.cs.template` | Foundry agent runner that uploads N documents into an ephemeral vector store, registers `file_search`, runs the prompt, and tears the store + agent version down. | BRD declares an agent that needs RAG/semantic lookup over a fixed corpus (policies, manuals, knowledge base). |
+| `FoundryAgentWithFunctionCalling.cs.template` | Foundry agent runner that registers one or more developer-supplied function tools and runs a bounded tool-call loop (`maxToolHops = 5`) until the model converges. | BRD declares an agent that must call backend services / repositories / external APIs as tools. |
+| `FoundrySettings.cs.template` | DI-bindable `FoundrySettings` config object plus a generic result record. | Pair with any of the agent templates above. |
 
-## BRD trigger
+## BRD trigger \u2192 template
 
-The implementer copies these templates when an entry under
-`implementation.agents[]` declares `code_interpreter` in `tools`:
+`agent-tooling-advisor` (Phase 1.5) emits the canonical `recommended_tools[]`
+list per agent. The implementer maps each entry to a template:
+
+| `recommended_tools[].type` | Template |
+|---|---|
+| `code_interpreter` | `FoundryAgentWithCodeInterpreter.cs.template` |
+| `file_search` | `FoundryAgentWithFileSearch.cs.template` |
+| `function` (any number, named) | `FoundryAgentWithFunctionCalling.cs.template` |
+
+Multiple tool entries on the same agent collapse into the single richest
+template (e.g. one `function_calling` runner that also registers a
+`file_search` tool when both are advised). Unknown tool tokens cause the
+implementer to halt with an escalation block (mirrors the
+unsupported-language guardrail). Add a new
+`factory-templates/dotnet/<tool>.template` rather than improvising in-project.
 
 ```yaml
 implementation:
@@ -23,13 +38,15 @@ implementation:
       role: "Extract structured fields from uploaded contracts."
       input: pdf
       output: json
-      tools: [code_interpreter]            # <-- triggers this template
+      tools: [code_interpreter]            # \u2192 FoundryAgentWithCodeInterpreter
       model: gpt-4.1-mini
+    - name: policy-lookup
+      role: "Answer policy questions over the corporate handbook."
+      tools: [file_search]                  # \u2192 FoundryAgentWithFileSearch
+    - name: order-router
+      role: "Look up and update orders via backend APIs."
+      tools: [function]                     # \u2192 FoundryAgentWithFunctionCalling
 ```
-
-`tools` is an open vocabulary; `code_interpreter` is the only token currently
-backed by a template. Unknown tool names cause the implementer to halt with an
-escalation block (mirrors the unsupported-language guardrail).
 
 ## Token replacement
 

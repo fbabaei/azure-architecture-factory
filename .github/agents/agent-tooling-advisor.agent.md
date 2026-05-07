@@ -121,7 +121,7 @@ In `strict: true` mode (default), any `low`-confidence recommendation is escalat
 
 ## Output
 
-Write `projects/<slug>/docs/agents/agent-tooling.json`:
+Write `projects/<slug>/docs/agents/agent-tooling.json` (schema: [`factory-templates/contracts/agent-tooling-contract.schema.json`](../../factory-templates/contracts/agent-tooling-contract.schema.json) — must validate cleanly; `contract-validator` enforces this at the Phase 1.5 → Phase 2 boundary):
 
 ```json
 {
@@ -169,6 +169,26 @@ Also write a sibling Markdown summary at `projects/<slug>/docs/agents/agent-tool
 - You do NOT modify the BRD. If the BRD is ambiguous, raise a finding and let the orchestrator escalate to the user.
 - You do NOT invent tools that aren't backed by an `factory-templates/<lang>/` template. If you'd recommend a token with no template (e.g. `bing_grounding`, `azure_ai_search`), emit a `critical` finding instructing the user to add the template first.
 - You do NOT pick the model, deployment SKU, or region — those are owned by `production-environment-advisor` and the deployment phase.
+
+## Regeneration Cadence
+
+The orchestrator MUST re-invoke this advisor when:
+
+1. The BRD is updated and `implementation.agents[]` (or any agent description / inputs / compliance line) changes.
+2. The diagram is regenerated AND the agent set was sourced from `agents-draft.json` (diagram-only intake).
+3. A user explicitly requests `re-advise` via `update: true` on the orchestrator.
+
+When re-running, write the new report to the same path (overwrite). Downstream consumers (language specialists, contract-validator) re-read it on every phase entry, so a stale report is never used silently.
+
+## Telemetry Hook
+
+Language specialists MUST emit a startup log line per agent of the form:
+
+```
+Foundry agent loaded: name=<name> service=<service> tools=[<comma-separated>] prompt_chars=<N> source=agent-tooling.json
+```
+
+This makes it possible to grep prod logs and confirm the materialized prompt + tool set actually matches what Phase 1.5 advised.
 
 ## Failure Modes
 

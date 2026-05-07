@@ -32,8 +32,14 @@ Your job is to inspect the repository and identify what a real production enviro
 1. Inspect dependency manifests, environment templates, service entry points, and documentation.
 2. Identify runtime requirements such as Python version, OS assumptions, background jobs, network access, and secret dependencies.
 3. Identify Azure requirements such as resource types, managed identities, RBAC, Key Vault, monitoring, and deployment targets.
-4. Summarize required and optional settings separately.
-5. Flag anything that blocks production readiness.
+4. **When `docs/agents/agent-tooling.json` is present**, derive Foundry model sizing per agent:
+   - Agents with `code_interpreter` → require a function-calling-capable model with ≥128k context (e.g. `gpt-4o`, `gpt-4.1`); cheaper SKUs are unfit.
+   - Agents with `file_search` over many docs → same as above; small-context models will truncate retrieved chunks.
+   - Agents with only one named `function` tool and a short prompt → `gpt-4o-mini` (or current cheapest function-calling SKU) is acceptable.
+   - Agents with no recommended capabilities (pure single-shot) → cheapest available chat-completions SKU.
+   - Surface the recommended deployment name + SKU per agent under "Azure resource prerequisites". Do NOT pick the region — that's a deploy-phase concern.
+5. Summarize required and optional settings separately.
+6. Flag anything that blocks production readiness.
 
 ## Output Format
 Return:
