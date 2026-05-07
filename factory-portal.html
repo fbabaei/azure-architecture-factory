@@ -2647,6 +2647,46 @@
             font-size: 0.85rem !important;
         }
 
+        .intake-subsections {
+            display: grid;
+            gap: 0.65rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .intake-subsection {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfdff;
+            overflow: hidden;
+        }
+
+        .intake-subsection summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.86rem;
+            padding: 0.65rem 0.85rem;
+            background: #f4f8fe;
+        }
+
+        .intake-subsection-content {
+            padding: 0.8rem 0.85rem;
+        }
+
+        .repo-source-inline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .repo-intake-source-panel {
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            padding: 0.65rem 0.75rem;
+            background: #fcfeff;
+        }
+
         .csa-toggle-row {
             display: flex;
             align-items: stretch;
@@ -2780,6 +2820,7 @@
                         <a href="#csa-companion">CSA Copilot</a>
                         <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
                         <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
+                        <a href="https://github.com/fbabaei/csa-helper" target="_blank" rel="noopener noreferrer">CSA Helper Agents ↗</a>
                         <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
                     </div>
                 </details>
@@ -3034,55 +3075,59 @@
                             <div class="brd-intake-panel">
                                 <h3>📋 Architecture Intake</h3>
                                 <form onsubmit="return submitBrd(event)">
-                                    <div class="form-group">
-                                        <label for="brd-file-name">Project Name / Intake Filename</label>
-                                        <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-architecture" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-source-type">Source Format</label>
-                                        <select id="brd-source-type" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="auto" selected>Auto detect</option>
-                                            <option value="brd-markdown">BRD Markdown</option>
-                                            <option value="architecture-markdown">Architecture Markdown</option>
-                                            <option value="plain-text">Plain Text Notes</option>
-                                            <option value="drawio">draw.io XML</option>
-                                            <option value="mermaid">Mermaid</option>
-                                            <option value="plantuml">PlantUML</option>
-                                            <option value="structurizr">Structurizr DSL</option>
-                                            <option value="json">JSON Architecture Spec</option>
-                                            <option value="yaml">YAML Architecture Spec</option>
-                                            <option value="visio">Visio / VSDX</option>
-                                            <option value="lucidchart">Lucidchart Export</option>
-                                        </select>
-                                        <p id="brd-source-type-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Auto detect uses file extension plus content sniffing. Text-based formats are normalized into the same generation pipeline. Binary formats are stored as reference attachments and use the written summary below as the working source.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-target-project-slug">Iteration Target</label>
-                                        <select id="brd-target-project-slug" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="">Create new project</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Select an existing project slug to regenerate it from the revised architecture source. The prior project snapshot is preserved under <code>projects/_history/</code>.
-                                        </p>
-                                    </div>
-                                    <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
-                                         Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
-                                    <div class="form-group" hidden style="display:none;">
-                                        <label for="portal-api-key">Portal Access Token</label>
-                                        <input type="password" id="portal-api-key" placeholder="Legacy — leave blank">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-upload">Upload Architecture Artifact</label>
-                                        <input type="file" id="brd-upload" accept=".md,.txt,.drawio,.mmd,.mermaid,.puml,.plantuml,.dsl,.json,.yaml,.yml,.vsdx,text/markdown,text/plain,application/json,text/yaml,application/xml,text/xml">
-                                        <p id="brd-upload-hint" style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
-                                            Optional. If provided, uploaded content is used as the source when the format is text-based. Visio and Lucidchart uploads still require a written summary below.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-content">Architecture Source or Summary</label>
-                                        <textarea id="brd-content" placeholder="# Project: [Name]
+                                    <div class="intake-subsections">
+                                        <details class="intake-subsection" open>
+                                            <summary>Project and Source</summary>
+                                            <div class="intake-subsection-content">
+                                                <div class="form-group">
+                                                    <label for="brd-file-name">Project Name / Intake Filename</label>
+                                                    <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-architecture" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-source-type">Source Format</label>
+                                                    <select id="brd-source-type" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                        <option value="auto" selected>Auto detect</option>
+                                                        <option value="brd-markdown">BRD Markdown</option>
+                                                        <option value="architecture-markdown">Architecture Markdown</option>
+                                                        <option value="plain-text">Plain Text Notes</option>
+                                                        <option value="drawio">draw.io XML</option>
+                                                        <option value="mermaid">Mermaid</option>
+                                                        <option value="plantuml">PlantUML</option>
+                                                        <option value="structurizr">Structurizr DSL</option>
+                                                        <option value="json">JSON Architecture Spec</option>
+                                                        <option value="yaml">YAML Architecture Spec</option>
+                                                        <option value="visio">Visio / VSDX</option>
+                                                        <option value="lucidchart">Lucidchart Export</option>
+                                                    </select>
+                                                    <p id="brd-source-type-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Auto detect uses file extension plus content sniffing. Text-based formats are normalized into the same generation pipeline. Binary formats are stored as reference attachments and use the written summary below as the working source.
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-target-project-slug">Iteration Target</label>
+                                                    <select id="brd-target-project-slug" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                        <option value="">Create new project</option>
+                                                    </select>
+                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Select an existing project slug to regenerate it from the revised architecture source. The prior project snapshot is preserved under <code>projects/_history/</code>.
+                                                    </p>
+                                                </div>
+                                                <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
+                                                     Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
+                                                <div class="form-group" hidden style="display:none;">
+                                                    <label for="portal-api-key">Portal Access Token</label>
+                                                    <input type="password" id="portal-api-key" placeholder="Legacy — leave blank">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-upload">Upload Architecture Artifact</label>
+                                                    <input type="file" id="brd-upload" accept=".md,.txt,.drawio,.mmd,.mermaid,.puml,.plantuml,.dsl,.json,.yaml,.yml,.vsdx,text/markdown,text/plain,application/json,text/yaml,application/xml,text/xml">
+                                                    <p id="brd-upload-hint" style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
+                                                        Optional. If provided, uploaded content is used as the source when the format is text-based. Visio and Lucidchart uploads still require a written summary below.
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-content">Architecture Source or Summary</label>
+                                                    <textarea id="brd-content" placeholder="# Project: [Name]
 
 ## Business Goal
 [What problem are we solving?]
@@ -3101,70 +3146,78 @@
 
 ## Timeline
 [Expected delivery]"></textarea>
-                                        <p id="brd-content-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Paste the BRD, architecture notes, or a summary of the uploaded artifact. For Visio and Lucidchart, this summary is required.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-enable-observability" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-enable-observability" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Wire the generated project for monitoring and observability</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Include starter guidance for Application Insights, Log Analytics, health checks, alerting, and operational ownership.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-generate-infra" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-generate-infra" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Generate Azure infrastructure (Bicep or Terraform)</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Emits <code>infra/</code> with the selected IaC tool. Turn off for a docs-and-code-only project; the orchestrator will skip Phase 3 infra validation.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-run-security-audit" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-run-security-audit" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Run the security &amp; compliance audit</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Runs Phase 2.6 (secrets, managed identity, RBAC, CVEs, data-in-transit, BRD-declared frameworks). Turn off only for quick scaffolding spikes — never for production work.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-network-tier">Network Isolation</label>
-                                        <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="public" selected>Public — internet-facing, no VNet (default)</option>
-                                            <option value="vnet-integrated">VNet-integrated — subnet delegation, NSG, private ingress</option>
-                                            <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Sets the generated network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code> or <code>infra/main.tf</code>.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-implementation-language">Implementation Language</label>
-                                        <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="" selected>Auto (infer from BRD, default Python)</option>
-                                            <option value="python">Python / FastAPI</option>
-                                            <option value="csharp">C# / ASP.NET Core Minimal APIs</option>
-                                            <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Overrides <code>Implementation language:</code> in the BRD. Controls which language specialist emits <code>src/</code>.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-iac-tool">Infrastructure-as-Code</label>
-                                        <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="" selected>Auto (infer from BRD, default Bicep)</option>
-                                            <option value="bicep">Bicep (Azure-native)</option>
-                                            <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Overrides <code>Infrastructure as code:</code> in the BRD. Controls whether <code>infra/</code> is emitted as Bicep or Terraform.
-                                        </p>
+                                                    <p id="brd-content-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Paste the BRD, architecture notes, or a summary of the uploaded artifact. For Visio and Lucidchart, this summary is required.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </details>
+                                        <details class="intake-subsection" open>
+                                            <summary>Generation Controls</summary>
+                                            <div class="intake-subsection-content">
+                                                <div class="form-group">
+                                                    <label for="brd-enable-observability" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-enable-observability" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Wire the generated project for monitoring and observability</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Include starter guidance for Application Insights, Log Analytics, health checks, alerting, and operational ownership.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-generate-infra" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-generate-infra" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Generate Azure infrastructure (Bicep or Terraform)</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Emits <code>infra/</code> with the selected IaC tool. Turn off for a docs-and-code-only project; the orchestrator will skip Phase 3 infra validation.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-run-security-audit" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-run-security-audit" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Run the security &amp; compliance audit</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Runs Phase 2.6 (secrets, managed identity, RBAC, CVEs, data-in-transit, BRD-declared frameworks). Turn off only for quick scaffolding spikes — never for production work.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-network-tier">Network Isolation</label>
+                                                    <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                        <option value="public" selected>Public — internet-facing, no VNet (default)</option>
+                                                        <option value="vnet-integrated">VNet-integrated — subnet delegation, NSG, private ingress</option>
+                                                        <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
+                                                    </select>
+                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Sets the generated network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code> or <code>infra/main.tf</code>.
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-implementation-language">Implementation Language</label>
+                                                    <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                        <option value="" selected>Auto (infer from BRD, default Python)</option>
+                                                        <option value="python">Python / FastAPI</option>
+                                                        <option value="csharp">C# / ASP.NET Core Minimal APIs</option>
+                                                        <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
+                                                    </select>
+                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Overrides <code>Implementation language:</code> in the BRD. Controls which language specialist emits <code>src/</code>.
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-iac-tool">Infrastructure-as-Code</label>
+                                                    <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                        <option value="" selected>Auto (infer from BRD, default Bicep)</option>
+                                                        <option value="bicep">Bicep (Azure-native)</option>
+                                                        <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
+                                                    </select>
+                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Overrides <code>Infrastructure as code:</code> in the BRD. Controls whether <code>infra/</code> is emitted as Bicep or Terraform.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </details>
                                     </div>
                                     <div class="button-group">
                                         <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate or Update Project</button>
@@ -3178,7 +3231,7 @@
                             <div class="brd-intake-panel" style="margin-top:1.5rem;">
                                 <h3>🔗 Repo Enhancement</h3>
                                 <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1rem;">
-                                    Provide a GitHub or Azure DevOps repo URL and a Personal Access Token.
+                                    Provide a GitHub/Azure DevOps URL or a local repository path.
                                     The factory will clone the repo, create an <code>AAF-*</code> branch,
                                     review docs, architecture files, source code, tests, and infra,
                                     then either enhance the existing implementation or add new code aligned
@@ -3187,27 +3240,47 @@
                                 </p>
                                 <form onsubmit="return submitRepoIntake(event)">
                                     <div class="form-group">
-                                        <label for="repo-url">Repository URL <span style="color:#c00;">*</span></label>
-                                        <input type="url" id="repo-url"
-                                               placeholder="https://github.com/owner/repo"
-                                               pattern="https://(github\.com|dev\.azure\.com)/.+"
-                                               title="Must be an https:// URL on github.com or dev.azure.com"
-                                               required
-                                               style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                        <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Supported: <code>https://github.com/…</code> and <code>https://dev.azure.com/…</code>
-                                        </p>
+                                        <label for="repo-input-source">Repository Source</label>
+                                        <select id="repo-input-source" onchange="updateRepoIntakeSourceFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <option value="remote" selected>Remote URL (GitHub / Azure DevOps)</option>
+                                            <option value="local">Local path on this machine</option>
+                                        </select>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="repo-pat">Personal Access Token <span style="color:#c00;">*</span></label>
-                                        <input type="password" id="repo-pat"
-                                               placeholder="ghp_… or Azure DevOps PAT"
-                                               required autocomplete="off"
-                                               style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                        <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Requires <strong>repo</strong> (read + write) scope on GitHub, or <strong>Code (Read &amp; Write)</strong> on Azure DevOps.
-                                            The token is sent over HTTPS and is never stored server-side.
-                                        </p>
+                                    <div id="repo-remote-fields" class="repo-intake-source-panel">
+                                        <div class="form-group">
+                                            <label for="repo-url">Repository URL <span style="color:#c00;">*</span></label>
+                                            <input type="url" id="repo-url"
+                                                   placeholder="https://github.com/owner/repo"
+                                                   pattern="https://(github\.com|dev\.azure\.com)/.+"
+                                                   title="Must be an https:// URL on github.com or dev.azure.com"
+                                                   required
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Supported: <code>https://github.com/…</code> and <code>https://dev.azure.com/…</code>
+                                            </p>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:0;">
+                                            <label for="repo-pat">Personal Access Token <span style="color:#c00;">*</span></label>
+                                            <input type="password" id="repo-pat"
+                                                   placeholder="ghp_… or Azure DevOps PAT"
+                                                   required autocomplete="off"
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Requires <strong>repo</strong> (read + write) scope on GitHub, or <strong>Code (Read &amp; Write)</strong> on Azure DevOps.
+                                                The token is sent over HTTPS and is never stored server-side.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div id="repo-local-fields" class="repo-intake-source-panel" style="display:none; margin-top:0.65rem;">
+                                        <div class="form-group" style="margin-bottom:0;">
+                                            <label for="repo-local-path">Local Repository Path <span style="color:#c00;">*</span></label>
+                                            <input type="text" id="repo-local-path"
+                                                   placeholder="C:/Users/me/source/my-repo"
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Must point to a local git repo directory (contains <code>.git</code>). Local mode creates the same <code>AAF-…</code> working branch pattern and commits there, but does <strong>not</strong> open a pull request.
+                                            </p>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label for="repo-goal">Goal or Feature Request</label>
@@ -5338,7 +5411,9 @@
 
         async function submitRepoIntake(event) {
             event.preventDefault();
+            const inputSource = (document.getElementById('repo-input-source')?.value || 'remote').trim();
             const repoUrl    = (document.getElementById('repo-url')?.value || '').trim();
+            const localRepoPath = (document.getElementById('repo-local-path')?.value || '').trim();
             const pat        = (document.getElementById('repo-pat')?.value || '').trim();
             const goal       = (document.getElementById('repo-goal')?.value || '').trim();
             const suffix     = (document.getElementById('repo-branch-suffix')?.value || '').trim();
@@ -5348,8 +5423,12 @@
             const logWrap    = document.getElementById('repo-intake-log-wrap');
             const submitBtn  = document.getElementById('submit-repo-btn');
 
-            if (!repoUrl || !pat) {
-                if (statusEl) statusEl.innerHTML = '<span style="color:#c00;">Repository URL and Personal Access Token are required.</span>';
+            if (inputSource === 'remote' && (!repoUrl || !pat)) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#c00;">Repository URL and Personal Access Token are required for remote intake.</span>';
+                return false;
+            }
+            if (inputSource === 'local' && !localRepoPath) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#c00;">Local repository path is required for local intake.</span>';
                 return false;
             }
 
@@ -5363,10 +5442,15 @@
 
             try {
                 const body = {
-                    repoUrl,
-                    token: pat,
+                    inputSource,
                     workflowMode: analysisOnly ? 'analysis-only' : 'implement-pr',
                 };
+                if (inputSource === 'remote') {
+                    body.repoUrl = repoUrl;
+                    body.token = pat;
+                } else {
+                    body.localRepoPath = localRepoPath;
+                }
                 if (suffix) body.branchSuffix = suffix;
                 if (goal) body.automationGoal = goal;
 
@@ -5387,7 +5471,7 @@
                 const workflowMode = data.workflowMode || body.workflowMode;
                 if (statusEl) statusEl.innerHTML =
                     `<span style="color:#1a7f37;">&#10003; ${workflowMode === 'implement-pr' ? 'Repo workflow queued' : 'Analysis queued'} &mdash; run <code>${escapeHtml(runId)}</code></span>` +
-                    (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code> will be created on the remote.` : '') +
+                    (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code> will be created on the ${inputSource === 'local' ? 'local repository' : 'remote repository'}.` : '') +
                     (runId ? `<br><a href="#" onclick="pollRepoRun('${escapeHtml(runId)}'); return false;">Poll for result</a>` : '');
                 if (runId) pollRepoRun(runId);
             } catch (err) {
@@ -5399,6 +5483,30 @@
                 if (patInput) patInput.value = '';
             }
             return false;
+        }
+
+        function updateRepoIntakeSourceFields() {
+            const source = (document.getElementById('repo-input-source')?.value || 'remote').trim();
+            const remoteFields = document.getElementById('repo-remote-fields');
+            const localFields = document.getElementById('repo-local-fields');
+            const repoUrlInput = document.getElementById('repo-url');
+            const patInput = document.getElementById('repo-pat');
+            const localPathInput = document.getElementById('repo-local-path');
+            const analysisOnlyCheckbox = document.getElementById('repo-analysis-only');
+
+            if (source === 'local') {
+                if (remoteFields) remoteFields.style.display = 'none';
+                if (localFields) localFields.style.display = 'block';
+                if (repoUrlInput) repoUrlInput.required = false;
+                if (patInput) patInput.required = false;
+                if (localPathInput) localPathInput.required = true;
+            } else {
+                if (remoteFields) remoteFields.style.display = 'block';
+                if (localFields) localFields.style.display = 'none';
+                if (repoUrlInput) repoUrlInput.required = true;
+                if (patInput) patInput.required = true;
+                if (localPathInput) localPathInput.required = false;
+            }
         }
 
         async function refreshRepoRunLog(runId, fallbackText) {
@@ -5414,8 +5522,10 @@
                 if (logWrap) logWrap.style.display = finalText ? 'block' : 'none';
                 logEl.textContent = finalText;
                 if (dlLink && finalText) {
+                    if (dlLink._blobUrl) { URL.revokeObjectURL(dlLink._blobUrl); }
                     const blob = new Blob([finalText], { type: 'text/plain' });
-                    dlLink.href = URL.createObjectURL(blob);
+                    dlLink._blobUrl = URL.createObjectURL(blob);
+                    dlLink.href = dlLink._blobUrl;
                     dlLink.download = `aaf-run-${encodeURIComponent(runId)}.log`;
                 }
             } catch (_) {
@@ -5429,7 +5539,6 @@
             attempts = (attempts || 0);
             if (attempts > 60) return;   // stop after ~5 min
             const statusEl = document.getElementById('repo-intake-status');
-            const logEl = document.getElementById('repo-intake-log');
             try {
                 const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`, { credentials: 'include' });
                 if (!res.ok) return;
@@ -5447,14 +5556,30 @@
                     const reportUrl = result.reportUrl || '';
                     const summaryUrl = result.summaryUrl || '';
                     const prUrl = result.prUrl || '';
+                    const branchTarget = result.branchTarget || (result.inputSource === 'local' ? 'local' : 'remote');
+                    const branchCommitted = typeof result.branchCommitted === 'boolean' ? result.branchCommitted : null;
+                    const branchCommitMode = result.branchCommitMode || '';
+                    const projectSlug = result.projectSlug || '';
+                    const projectTitle = result.projectTitle || `Imported Repo (${projectSlug || 'snapshot'})`;
+                    const projectSlugJs = JSON.stringify(projectSlug);
+                    const projectTitleJs = JSON.stringify(projectTitle);
                     const archCount = result.archFilesFound ?? '';
                     await refreshRepoRunLog(runId, logPreview);
+                    if (projectSlug) {
+                        loadProjects().catch(() => {});
+                    }
                     if (statusEl) statusEl.innerHTML =
                         `<span style="color:#1a7f37;">&#10003; ${workflowMode === 'implement-pr' ? 'Repo workflow complete!' : 'Analysis complete!'}</span>` +
-                        (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code>` : '') +
+                        (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code> (${escapeHtml(branchTarget)} repository)` : '') +
+                        (branchCommitted === true ? `<br>Committed to branch: <strong>yes</strong>${branchCommitMode ? ` (${escapeHtml(branchCommitMode)})` : ''}` : '') +
+                        (branchCommitted === false ? `<br>Committed to branch: <strong>no</strong>` : '') +
                         (reportUrl ? `<br><a href="${escapeHtml(reportUrl)}" target="_blank" rel="noopener">View analysis report &#x2197;</a>` : '') +
                         (summaryUrl ? `<br><a href="${escapeHtml(summaryUrl)}" target="_blank" rel="noopener">View change summary &#x2197;</a>` : '') +
                         (prUrl ? `<br><a href="${escapeHtml(prUrl)}" target="_blank" rel="noopener">Open PR &#x2197;</a>` : '') +
+                        (projectSlug ? `<br>Portal project: <code>${escapeHtml(projectSlug)}</code>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openCodeBrowser(${projectSlugJs}, ${projectTitleJs}); return false;'>Open imported project code</a>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openModelSelectorModal(${projectSlugJs}, ${projectTitleJs}); return false;'>Select model</a>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openCopilotCliModal(${projectSlugJs}, ${projectTitleJs}); return false;'>Run Copilot CLI</a>` : '') +
                         (archCount !== '' ? `<br>Architecture files parsed: ${escapeHtml(String(archCount))}` : '');
                 } else if (st === 'failed') {
                     const msg = run.result?.message || run.stderr || 'unknown error';
@@ -6071,13 +6196,14 @@
 
             const html = projects.map(project => {
                 const links = project.links || {};
-                const architectureOverview = links.architectureOverview || (project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
+                const isRepoIntake = String(project.options?.sourceType || '').toLowerCase() === 'repo-intake';
+                const architectureOverview = links.architectureOverview || (!isRepoIntake && project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
                 const diagram = links.diagram
                     ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
-                    : (project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
+                    : (!isRepoIntake && project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
                 const analysisId = getAnalysisId(project);
                 const safeTitle = escapeHtml(project.title || project.slug);
-                const generatedFrom = escapeHtml(project.generatedFrom || 'docs/intake/brd.md');
+                const generatedFrom = escapeHtml(project.generatedFrom || (isRepoIntake ? 'Repository intake' : 'docs/intake/brd.md'));
                 const safeDiagramPath = escapeHtml(diagram || '');
                 const observabilityEnabled = Boolean(project.options?.enableObservability);
                 const readiness = project.brdReadiness || null;
@@ -6286,6 +6412,7 @@
             openAnalysisFromHash();
             restorePortalApiKey();
             loadCsaCompanionTools();
+            updateRepoIntakeSourceFields();
         });
         window.addEventListener('hashchange', syncWorkspaceFromHash);
         window.addEventListener('hashchange', openAnalysisFromHash);

@@ -1,0 +1,46 @@
+{
+  "project": "csa-helper-runtime",
+  "display_name": "CSA Helper Agent Runtime",
+  "created_at": "2026-05-07T00:00:00Z",
+  "source_requirements": "projects/csa-helper-runtime/docs/requirements.md",
+  "target_environment": "dev",
+  "azure_region": "eastus2",
+  "deploy_requested": false,
+  "agent_runtime": "local",
+  "agent_runtime_source": "explicit",
+  "implementation_language": "python",
+  "iac_tool": "bicep",
+  "factory_handoff_requested": false,
+  "external_dependencies": {
+    "azure_openai": {
+      "account_name": "fbfoundrywestus",
+      "resource_group": "rg-fbabaei-2653",
+      "deployment": "gpt-4o",
+      "api_version": "2024-10-21",
+      "created_by_this_template": false,
+      "rbac_assigned": ["Cognitive Services OpenAI User"]
+    },
+    "source_repo": {
+      "url": "https://github.com/fbabaei/csa-helper",
+      "subpath": "agent-framework",
+      "vendor_strategy": "git clone at Docker build (multi-stage)"
+    }
+  },
+  "phases": {
+    "0_setup":                    { "status": "complete", "completed_at": "2026-05-07T00:00:02Z" },
+    "1_architecture":             { "status": "complete", "completed_at": "2026-05-07T00:01:00Z", "diagram": "projects/csa-helper-runtime/diagrams/csa-helper-runtime.drawio", "notes": "projects/csa-helper-runtime/diagrams/csa-helper-runtime.md", "diagram_source": "generated" },
+    "1_5_agent_tooling":          { "status": "skipped", "reason": "BRD.implementation.agents is empty (hosting project)" },
+    "2_implementation":           { "status": "complete", "completed_at": "2026-05-07T00:05:00Z", "services": ["api"], "infra_path": "projects/csa-helper-runtime/infra/" },
+    "2_5_alignment_convergence":  { "status": "converged", "completed_at": "2026-05-07T00:06:00Z", "iterations_run": 3, "max_iterations": 5, "final_gaps": { "missing_from_diagram": 0, "missing_from_code": 0, "orphaned_in_code": 0, "nfr_gaps": 0 }, "fixes_applied": { "diagram_updates": 0, "code_additions": 0, "infra_additions": 0 }, "report": "projects/csa-helper-runtime/docs/alignment-report.md" },
+    "2_6_security_gate":          { "status": "passed", "completed_at": "2026-05-07T00:07:00Z", "iterations_run": 1, "max_iterations": 3, "final_findings": { "critical": 0, "major": 0, "minor": 1 }, "frameworks": [], "cves_resolved": 0, "report": "projects/csa-helper-runtime/docs/security/report.md" },
+    "2_7_error_handling_gate":    { "status": "passed", "completed_at": "2026-05-07T00:08:00Z", "iterations_run": 1, "max_iterations": 3, "final_findings": { "critical": 0, "major": 0, "minor": 0 }, "services_audited": 1, "report": "projects/csa-helper-runtime/docs/error-handling/report.md" },
+    "2_8_scalability_gate":       { "status": "passed", "completed_at": "2026-05-07T00:09:00Z", "iterations_run": 1, "max_iterations": 3, "final_findings": { "critical": 0, "major": 0, "minor": 1 }, "services_audited": 1, "infra_modules_audited": 3, "cost_impact_notes": 0, "report": "projects/csa-helper-runtime/docs/scalability/report.md" },
+    "3_infra_validation":         { "status": "complete", "completed_at": "2026-05-07T00:10:00Z", "errors_found": 0, "errors_fixed": 0, "lint_warnings": 1, "tool": "az bicep build" },
+    "3_7_test_convergence":       { "status": "converged", "completed_at": "2026-05-07T00:11:00Z", "iterations_run": 1, "max_iterations": 5, "total_tests": 5, "new_tests": 5, "updated_tests": 0, "final_failures": 0, "flaky_tests": [], "pass_rate": "100.0%", "coverage_log": "projects/csa-helper-runtime/tests/test_api.py" },
+    "4_production_review":        { "status": "complete", "completed_at": "2026-05-07T00:12:00Z", "blockers": 0, "checklist": "projects/csa-helper-runtime/docs/production-checklist.md" },
+    "4_5_approval_gate":          { "status": "skipped", "reason": "deploy: false" },
+    "5_deployment":               { "status": "not_requested" },
+    "6_factory_handoff":          { "status": "not_requested" }
+  },
+  "updates": []
+}
