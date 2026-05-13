@@ -102,7 +102,6 @@
             backdrop-filter: blur(12px);
         }
 
-        header,
         .container {
             position: relative;
             z-index: 1;
@@ -2819,6 +2818,7 @@
                     <div class="nav-more-menu">
                         <a href="#analyze-workspace">Design Analysis</a>
                         <a href="#intake">BRD Intake</a>
+                        <a href="#intake" onclick="return launchAcaExpress(event)" title="Skip Bicep — deploy an HTTP container to ACA in under a minute (westcentralus / eastasia only)">⚡ ACA Express Deploy</a>
                         <a href="#csa-companion">CSA Copilot</a>
                         <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
                         <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
@@ -3220,8 +3220,10 @@
                                                 <div class="form-group">
                                                     <label for="brd-deployment-mode">Deployment Mode</label>
                                                     <select id="brd-deployment-mode" onchange="updateAcaExpressFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="standard" selected>Standard — Bicep / Terraform / azd (default)</option>
-                                                        <option value="aca-express">⚡ ACA Express (preview) — sub-minute HTTP container deploy</option>
+                                                        <option value="standard" selected
+                                                            title="Full pipeline: architecture diagram → Bicep/Terraform/azd infrastructure → source code scaffolding → production readiness review. Supports all Azure services, VNet, Managed Identity, Key Vault, Dapr, KEDA, and custom domains.">Standard — Bicep / Terraform / azd (default)</option>
+                                                        <option value="aca-express"
+                                                            title="⚡ ACA Express (preview): skips Bicep Phase 3 and deploys directly via &quot;az containerapp up&quot; in under a minute. Constraints: HTTP-only workloads · westcentralus or eastasia regions only · no VNet, Managed Identity, Key Vault, Dapr, KEDA, or custom domains.">⚡ ACA Express (preview) — sub-minute HTTP container deploy</option>
                                                     </select>
                                                     <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
                                                         <strong>ACA Express</strong> skips Bicep Phase 3 and deploys directly via <code>az containerapp up</code>.
@@ -5959,6 +5961,21 @@
                 event.stopPropagation();
             }
             return toggleWorkspaceCard(cardId, false);
+        }
+
+        function launchAcaExpress(event) {
+            if (event) event.preventDefault();
+            toggleWorkspaceCard('build-workspace', true);
+            const intakeSection = document.getElementById('intake');
+            if (!intakeSection) return false;
+            intakeSection.classList.add('expanded');
+            const modeSelect = document.getElementById('brd-deployment-mode');
+            if (modeSelect) {
+                modeSelect.value = 'aca-express';
+                updateAcaExpressFields();
+            }
+            intakeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return false;
         }
 
         function toggleIntakePanel(event, forceExpand = null) {

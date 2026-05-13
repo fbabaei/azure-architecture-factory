@@ -37,6 +37,10 @@ def test_serve_json_feed_projects_include_readiness_fields(monkeypatch):
             "source_brd": "docs/intake/sample.md",
             "created_at": "2026-04-23T00:00:00Z",
             "generation_options": {"enableObservability": True},
+            "links": {
+                "readme": "projects/sample-readiness-project/README.md",
+                "architectureOverview": "projects/sample-readiness-project/docs/architecture-overview.md",
+            },
             "suggested_runtime": {"runtime": "agent-framework"},
             "brd_readiness": {
                 "classification": "Auto-Ready With Guardrails",
@@ -76,3 +80,4 @@ def test_serve_json_feed_projects_include_readiness_fields(monkeypatch):
         assert item["orchestratorAutoFlow"]["eligible"] is False
         assert item["implementationLanguage"] == "python"
         assert item["iacTool"] == "bicep"
+        assert item["links"]["readme"].endswith("README.md")

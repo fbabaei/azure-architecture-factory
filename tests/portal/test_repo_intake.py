@@ -62,6 +62,24 @@ def test_validate_repo_url_rejects_non_url() -> None:
     assert err is not None
 
 
+def test_validate_local_repo_path_accepts_git_directory(tmp_path: pathlib.Path) -> None:
+    repo_dir = tmp_path / "local-repo"
+    repo_dir.mkdir()
+    (repo_dir / ".git").mkdir()
+    path, err = portal._validate_local_repo_path(str(repo_dir))
+    assert err is None
+    assert path == repo_dir.resolve()
+
+
+def test_validate_local_repo_path_rejects_non_git_directory(tmp_path: pathlib.Path) -> None:
+    repo_dir = tmp_path / "not-a-repo"
+    repo_dir.mkdir()
+    path, err = portal._validate_local_repo_path(str(repo_dir))
+    assert path is None
+    assert err is not None
+    assert ".git" in err
+
+
 # ── Branch suffix sanitisation ─────────────────────────────────────────────
 
 
@@ -393,6 +411,10 @@ def test_run_repo_analysis_implement_pr_with_disposable_remote(tmp_path: pathlib
     monkeypatch.setattr(portal, "copilot_runner", _FakeCopilotRunner())
     monkeypatch.setattr(portal, "_persist_runs_unlocked", lambda: None)
     monkeypatch.setattr(portal, "persist_runs", lambda: None)
+    monkeypatch.setattr(portal, "FACTORY_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(portal, "OWNERS_FILE", tmp_path / ".portal-owners.json")
+    monkeypatch.setattr(portal, "AUTH_MODE", "none")
+    monkeypatch.setattr(portal, "VISIBLE_SLUGS", None)
     monkeypatch.setattr(portal, "_make_authed_clone_url", lambda repo_url, pat: str(remote_dir))
     monkeypatch.setattr(
         portal,
@@ -451,12 +473,219 @@ def test_run_repo_analysis_implement_pr_with_disposable_remote(tmp_path: pathlib
 
     assert run["status"] == "completed"
     assert run["result"]["prUrl"] == "https://example.test/pr/1"
+    assert run["result"]["projectSlug"].startswith("repo-intake-")
     assert run["progress"]["stage"] == "completed"
     assert "validated changes" in run["logTail"]
     assert pr_calls and pr_calls[0]["branch_name"] == "AAF-sandbox"
 
+    imported_slug = run["result"]["projectSlug"]
+    imported_root = tmp_path / "projects" / imported_slug
+    assert imported_root.is_dir()
+    assert (imported_root / "project-manifest.json").is_file()
+    assert (imported_root / "docs" / "architecture-overview.md").is_file()
+    assert (imported_root / "src" / "added-by-agent.txt").is_file()
+
     inspect_dir = tmp_path / "inspect"
     _, stderr, rc = _git(["clone", "--branch", "AAF-sandbox", str(remote_dir), str(inspect_dir)])
+    assert rc == 0, stderr
+    assert (inspect_dir / portal._AAF_ANALYSIS_REPORT_FILE).is_file()
+    assert (inspect_dir / portal._AAF_CHANGE_SUMMARY_FILE).is_file()
+    assert (inspect_dir / "src" / "added-by-agent.txt").is_file()
+
+
+def test_run_repo_analysis_local_repo_analysis_only(tmp_path: pathlib.Path, monkeypatch) -> None:
+    local_repo = tmp_path / "local-repo"
+    inspect_dir = tmp_path / "inspect-local-analysis"
+
+    def _git(args: list[str], cwd: pathlib.Path | None = None) -> tuple[str, str, int]:
+        return portal._git_run(args, cwd=str(cwd) if cwd else None, timeout=30)
+
+    local_repo.mkdir()
+    _, stderr, rc = _git(["init", "-b", "main"], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["config", "user.email", "test@example.com"], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["config", "user.name", "Local Repo Test"], cwd=local_repo)
+    assert rc == 0, stderr
+    (local_repo / "README.md").write_text("# Local Repo\n\nSample content.\n", encoding="utf-8")
+    (local_repo / "src").mkdir()
+    (local_repo / "src" / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    _, stderr, rc = _git(["add", "."], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["commit", "-m", "seed local repo"], cwd=local_repo)
+    assert rc == 0, stderr
+
+    monkeypatch.setattr(portal, "_persist_runs_unlocked", lambda: None)
+    monkeypatch.setattr(portal, "persist_runs", lambda: None)
+    monkeypatch.setattr(portal, "FACTORY_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(portal, "OWNERS_FILE", tmp_path / ".portal-owners.json")
+    monkeypatch.setattr(portal, "AUTH_MODE", "none")
+    monkeypatch.setattr(portal, "VISIBLE_SLUGS", None)
+
+    run_id = "repo-local-run-1"
+    with portal.RUNS_LOCK:
+        portal.RUNS[run_id] = {
+            "id": run_id,
+            "status": "queued",
+            "createdAt": portal._utcnow_iso(),
+            "brdFile": None,
+            "startedAt": None,
+            "finishedAt": None,
+            "returnCode": None,
+            "stdout": None,
+            "stderr": None,
+            "command": "repo-analysis",
+            "result": None,
+            "generationOptions": {
+                "sourceType": "repo-analysis-local",
+                "inputSource": "local",
+                "repoUrl": "local://local-repo",
+                "branchName": "AAF-local-test",
+                "workflowMode": "analysis-only",
+                "automationGoal": "",
+            },
+            "owner": "tester@example.com",
+        }
+
+    handler = SimpleNamespace()
+    portal.FactoryPortalHandler._run_repo_analysis(
+        handler,
+        run_id,
+        "local://local-repo",
+        "",
+        "AAF-local-test",
+        "analysis-only",
+        "",
+        "tester@example.com",
+        local_repo_path=local_repo,
+        input_source="local",
+    )
+
+    with portal.RUNS_LOCK:
+        run = dict(portal.RUNS[run_id])
+
+    assert run["status"] == "completed"
+    assert run["result"]["reportUrl"] == ""
+    assert run["result"]["inputSource"] == "local"
+    assert run["result"]["branchTarget"] == "local"
+    assert run["result"]["branchCommitted"] is True
+    assert run["result"]["branchCommitMode"] == "analysis-report-only"
+    assert run["result"]["projectSlug"].startswith("repo-intake-")
+
+    imported_root = tmp_path / "projects" / run["result"]["projectSlug"]
+    assert imported_root.is_dir()
+    assert (imported_root / portal._AAF_ANALYSIS_REPORT_FILE).is_file()
+    assert (imported_root / "project-manifest.json").is_file()
+
+    _, stderr, rc = _git(["clone", "--branch", "AAF-local-test", str(local_repo), str(inspect_dir)])
+    assert rc == 0, stderr
+    assert (inspect_dir / portal._AAF_ANALYSIS_REPORT_FILE).is_file()
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required for local repo workflow integration test")
+def test_run_repo_analysis_local_repo_implement_creates_local_branch(tmp_path: pathlib.Path, monkeypatch) -> None:
+    local_repo = tmp_path / "local-repo"
+    inspect_dir = tmp_path / "inspect-local-implement"
+    local_repo.mkdir()
+
+    def _git(args: list[str], cwd: pathlib.Path | None = None) -> tuple[str, str, int]:
+        return portal._git_run(args, cwd=str(cwd) if cwd else None, timeout=30)
+
+    _, stderr, rc = _git(["init", "-b", "main"], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["config", "user.email", "test@example.com"], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["config", "user.name", "Local Repo Implement Test"], cwd=local_repo)
+    assert rc == 0, stderr
+    (local_repo / "README.md").write_text("# Local Repo\n\nSample content.\n", encoding="utf-8")
+    (local_repo / "src").mkdir()
+    (local_repo / "src" / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    _, stderr, rc = _git(["add", "."], cwd=local_repo)
+    assert rc == 0, stderr
+    _, stderr, rc = _git(["commit", "-m", "seed local repo"], cwd=local_repo)
+    assert rc == 0, stderr
+
+    class _FakeCopilotRunner:
+        def runtime_info(self):
+            return {"timeoutSec": 10}
+
+        def start_run(self, repo_dir, prompt, requested_by="", agent=None):
+            repo_path = pathlib.Path(repo_dir)
+            (repo_path / "src" / "added-by-agent.txt").write_text(
+                "created by fake repo-change-agent\n",
+                encoding="utf-8",
+            )
+            return {"runId": "copilot-run-local-1"}
+
+        def get_run(self, repo_dir, run_id):
+            return {"status": "succeeded", "runId": run_id}
+
+        def read_log_tail(self, repo_dir, run_id):
+            return "agent started\nvalidated changes\ncompleted"
+
+        def cancel_run(self, repo_dir, run_id):
+            return {"status": "cancelled"}
+
+    monkeypatch.setattr(portal, "copilot_runner", _FakeCopilotRunner())
+    monkeypatch.setattr(portal, "_persist_runs_unlocked", lambda: None)
+    monkeypatch.setattr(portal, "persist_runs", lambda: None)
+    monkeypatch.setattr(portal, "FACTORY_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(portal, "OWNERS_FILE", tmp_path / ".portal-owners.json")
+    monkeypatch.setattr(portal, "AUTH_MODE", "none")
+    monkeypatch.setattr(portal, "VISIBLE_SLUGS", None)
+
+    run_id = "repo-local-run-implement-1"
+    with portal.RUNS_LOCK:
+        portal.RUNS[run_id] = {
+            "id": run_id,
+            "status": "queued",
+            "createdAt": portal._utcnow_iso(),
+            "brdFile": None,
+            "startedAt": None,
+            "finishedAt": None,
+            "returnCode": None,
+            "stdout": None,
+            "stderr": None,
+            "command": "repo-analysis",
+            "result": None,
+            "generationOptions": {
+                "sourceType": "repo-analysis-local",
+                "inputSource": "local",
+                "repoUrl": "local://local-repo",
+                "branchName": "AAF-local-implement",
+                "workflowMode": "implement-pr",
+                "automationGoal": "Add a tiny architecture-aligned enhancement",
+            },
+            "owner": "tester@example.com",
+        }
+
+    handler = SimpleNamespace()
+    portal.FactoryPortalHandler._run_repo_analysis(
+        handler,
+        run_id,
+        "local://local-repo",
+        "",
+        "AAF-local-implement",
+        "implement-pr",
+        "Add a tiny architecture-aligned enhancement",
+        "tester@example.com",
+        local_repo_path=local_repo,
+        input_source="local",
+    )
+
+    with portal.RUNS_LOCK:
+        run = dict(portal.RUNS[run_id])
+
+    assert run["status"] == "completed"
+    assert run["result"]["inputSource"] == "local"
+    assert run["result"]["branchTarget"] == "local"
+    assert run["result"]["branchCommitted"] is True
+    assert run["result"]["branchCommitMode"] == "all-changes"
+    assert run["result"]["workflowMode"] == "implement-pr"
+    assert run["result"]["prUrl"] == ""
+    assert run["result"]["projectSlug"].startswith("repo-intake-")
+
+    _, stderr, rc = _git(["clone", "--branch", "AAF-local-implement", str(local_repo), str(inspect_dir)])
     assert rc == 0, stderr
     assert (inspect_dir / portal._AAF_ANALYSIS_REPORT_FILE).is_file()
     assert (inspect_dir / portal._AAF_CHANGE_SUMMARY_FILE).is_file()
