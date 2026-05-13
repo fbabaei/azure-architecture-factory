@@ -432,9 +432,8 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            max-width: 800px;
-            box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
+            margin-bottom: 0;
+            box-shadow: 0 4px 16px rgba(19, 50, 74, 0.08);
         }
 
         .section-divider {
@@ -2340,16 +2339,15 @@
 
         .intake-analysis-row {
             display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: flex-start;
-            gap: 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
             margin-bottom: 1.5rem;
         }
 
         .intake-col {
-            flex: 0 0 420px;
-            width: 420px;
+            flex: 1 1 auto;
+            width: 100%;
             min-width: 0;
         }
 
@@ -2358,24 +2356,18 @@
             min-width: 0;
         }
 
-        .modernize-col {
-            flex: 0 0 420px;
-            width: 420px;
-            min-width: 0;
-            margin-top: 0.85rem;
+        /* Architecture Intake + Repo Enhancement displayed side by side */
+        .build-panels-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            align-items: start;
         }
 
         @media (max-width: 900px) {
-            .intake-analysis-row {
-                flex-direction: column;
-            }
-            .intake-col {
-                width: 100%;
-                flex: none;
-            }
-            .modernize-col {
-                width: 100%;
-                margin-top: 0;
+            .build-panels-row {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -2672,6 +2664,16 @@
         .intake-subsection-content {
             padding: 0.8rem 0.85rem;
         }
+
+        .intake-field-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.25rem;
+            align-items: start;
+            margin-bottom: 0.6rem;
+        }
+        .intake-field-pair .form-group { margin-bottom: 0; }
+        @media (max-width: 700px) { .intake-field-pair { grid-template-columns: 1fr; } }
 
         .repo-source-inline {
             display: grid;
@@ -3073,7 +3075,8 @@
                                 </div>
                             </details>
 
-                            <div class="brd-intake-panel">
+                            <div class="build-panels-row">
+                            <div class="brd-intake-panel" style="border-left:4px solid #7fba00;">
                                 <h3>📋 Architecture Intake</h3>
                                 <form onsubmit="return submitBrd(event)">
                                     <div class="intake-subsections">
@@ -3084,34 +3087,34 @@
                                                     <label for="brd-file-name">Project Name / Intake Filename</label>
                                                     <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-architecture" required>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="brd-source-type">Source Format</label>
-                                                    <select id="brd-source-type" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="auto" selected>Auto detect</option>
-                                                        <option value="brd-markdown">BRD Markdown</option>
-                                                        <option value="architecture-markdown">Architecture Markdown</option>
-                                                        <option value="plain-text">Plain Text Notes</option>
-                                                        <option value="drawio">draw.io XML</option>
-                                                        <option value="mermaid">Mermaid</option>
-                                                        <option value="plantuml">PlantUML</option>
-                                                        <option value="structurizr">Structurizr DSL</option>
-                                                        <option value="json">JSON Architecture Spec</option>
-                                                        <option value="yaml">YAML Architecture Spec</option>
-                                                        <option value="visio">Visio / VSDX</option>
-                                                        <option value="lucidchart">Lucidchart Export</option>
-                                                    </select>
-                                                    <p id="brd-source-type-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        Auto detect uses file extension plus content sniffing. Text-based formats are normalized into the same generation pipeline. Binary formats are stored as reference attachments and use the written summary below as the working source.
-                                                    </p>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="brd-target-project-slug">Iteration Target</label>
-                                                    <select id="brd-target-project-slug" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="">Create new project</option>
-                                                    </select>
-                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        Select an existing project slug to regenerate it from the revised architecture source. The prior project snapshot is preserved under <code>projects/_history/</code>.
-                                                    </p>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-source-type">Source Format</label>
+                                                        <select id="brd-source-type" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="auto" selected>Auto detect</option>
+                                                            <option value="brd-markdown">BRD Markdown</option>
+                                                            <option value="architecture-markdown">Architecture Markdown</option>
+                                                            <option value="plain-text">Plain Text Notes</option>
+                                                            <option value="drawio">draw.io XML</option>
+                                                            <option value="mermaid">Mermaid</option>
+                                                            <option value="plantuml">PlantUML</option>
+                                                            <option value="structurizr">Structurizr DSL</option>
+                                                            <option value="json">JSON Architecture Spec</option>
+                                                            <option value="yaml">YAML Architecture Spec</option>
+                                                            <option value="visio">Visio / VSDX</option>
+                                                            <option value="lucidchart">Lucidchart Export</option>
+                                                        </select>
+                                                        <p id="brd-source-type-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;"></p>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-target-project-slug">Iteration Target</label>
+                                                        <select id="brd-target-project-slug" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="">Create new project</option>
+                                                        </select>
+                                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                            Select an existing slug to update it. Prior snapshot preserved under <code>projects/_history/</code>.
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
                                                      Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
@@ -3153,7 +3156,7 @@
                                                 </div>
                                             </div>
                                         </details>
-                                        <details class="intake-subsection" open>
+                                        <details class="intake-subsection">
                                             <summary>Generation Controls</summary>
                                             <div class="intake-subsection-content">
                                                 <div class="form-group">
@@ -3183,54 +3186,43 @@
                                                         </span>
                                                     </label>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="brd-network-tier">Network Isolation</label>
-                                                    <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="public" selected>Public — internet-facing, no VNet (default)</option>
-                                                        <option value="vnet-integrated">VNet-integrated — subnet delegation, NSG, private ingress</option>
-                                                        <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
-                                                    </select>
-                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        Sets the generated network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code> or <code>infra/main.tf</code>.
-                                                    </p>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-implementation-language">Implementation Language</label>
+                                                        <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="" selected>Auto (infer from BRD, default Python)</option>
+                                                            <option value="python">Python / FastAPI</option>
+                                                            <option value="csharp">C# / ASP.NET Core Minimal APIs</option>
+                                                            <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-iac-tool">Infrastructure-as-Code</label>
+                                                        <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="" selected>Auto (infer from BRD, default Bicep)</option>
+                                                            <option value="bicep">Bicep (Azure-native)</option>
+                                                            <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label for="brd-implementation-language">Implementation Language</label>
-                                                    <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="" selected>Auto (infer from BRD, default Python)</option>
-                                                        <option value="python">Python / FastAPI</option>
-                                                        <option value="csharp">C# / ASP.NET Core Minimal APIs</option>
-                                                        <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
-                                                    </select>
-                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        Overrides <code>Implementation language:</code> in the BRD. Controls which language specialist emits <code>src/</code>.
-                                                    </p>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="brd-iac-tool">Infrastructure-as-Code</label>
-                                                    <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="" selected>Auto (infer from BRD, default Bicep)</option>
-                                                        <option value="bicep">Bicep (Azure-native)</option>
-                                                        <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
-                                                    </select>
-                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        Overrides <code>Infrastructure as code:</code> in the BRD. Controls whether <code>infra/</code> is emitted as Bicep or Terraform.
-                                                    </p>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="brd-deployment-mode">Deployment Mode</label>
-                                                    <select id="brd-deployment-mode" onchange="updateAcaExpressFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                                        <option value="standard" selected
-                                                            title="Full pipeline: architecture diagram → Bicep/Terraform/azd infrastructure → source code scaffolding → production readiness review. Supports all Azure services, VNet, Managed Identity, Key Vault, Dapr, KEDA, and custom domains.">Standard — Bicep / Terraform / azd (default)</option>
-                                                        <option value="aca-express"
-                                                            title="⚡ ACA Express (preview): skips Bicep Phase 3 and deploys directly via &quot;az containerapp up&quot; in under a minute. Constraints: HTTP-only workloads · westcentralus or eastasia regions only · no VNet, Managed Identity, Key Vault, Dapr, KEDA, or custom domains.">⚡ ACA Express (preview) — sub-minute HTTP container deploy</option>
-                                                    </select>
-                                                    <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                                        <strong>ACA Express</strong> skips Bicep Phase 3 and deploys directly via <code>az containerapp up</code>.
-                                                        Preview limitations: HTTP-only workloads, <strong>westcentralus</strong> or <strong>eastasia</strong> regions only.
-                                                        No VNet, Managed Identity, Key Vault, Dapr, KEDA, or custom domains.
-                                                        <a href="https://containerapps.azure.com/" target="_blank" rel="noopener" style="color:var(--primary);">Manage at containerapps.azure.com ↗</a>
-                                                    </p>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-network-tier">Network Isolation</label>
+                                                        <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="public" selected>Public — internet-facing (default)</option>
+                                                            <option value="vnet-integrated">VNet-integrated — subnet, NSG, private ingress</option>
+                                                            <option value="private">Private — internal LB, private endpoints</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-deployment-mode">Deployment Mode</label>
+                                                        <select id="brd-deployment-mode" onchange="updateAcaExpressFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="standard" selected
+                                                                title="Full pipeline: architecture diagram → Bicep/Terraform/azd infrastructure → source code scaffolding → production readiness review. Supports all Azure services, VNet, Managed Identity, Key Vault, Dapr, KEDA, and custom domains.">Standard — Bicep / Terraform / azd</option>
+                                                            <option value="aca-express"
+                                                                title="⚡ ACA Express (preview): skips Bicep Phase 3 and deploys directly via &quot;az containerapp up&quot; in under a minute. Constraints: HTTP-only workloads · westcentralus or eastasia regions only · no VNet, Managed Identity, Key Vault, Dapr, KEDA, or custom domains.">⚡ ACA Express — sub-minute HTTP deploy</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
                                                 <!-- ACA Express sub-options (hidden unless aca-express is selected) -->
                                                 <div id="aca-express-fields" style="display:none; margin-top:0.5rem; padding:0.85rem 1rem; border:1px solid #ffe066; border-radius:6px; background:#fffde7;">
@@ -3259,8 +3251,8 @@
                                 </form>
                             </div>
 
-                            <!-- Repo Analysis Intake -->
-                            <div class="brd-intake-panel" style="margin-top:1.5rem;">
+                            <!-- Repo Enhancement -->
+                            <div class="brd-intake-panel" style="border-left:4px solid #0078d4;">
                                 <h3>🔗 Repo Enhancement</h3>
                                 <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1rem;">
                                     Provide a GitHub/Azure DevOps URL or a local repository path.
@@ -3356,6 +3348,7 @@
                                     </div>
                                 </form>
                             </div>
+                            </div><!-- /build-panels-row -->
 
                             <!-- Admin: Issue Temporary Tokens (hidden: EasyAuth is canonical; re-show by removing hidden if you need programmatic tokens) -->
                             <details id="admin-token-panel" hidden style="display:none; margin-top: 1.5rem; border: 1px solid #c9a33a; border-radius: 6px; background: #fffdf2;"
@@ -3405,62 +3398,66 @@
                                 </div>
                             </details>
 
-                            <!-- Admin: Project Access (per-user ownership) -->
-                            <details id="admin-project-access-panel" style="margin-top: 1rem; border: 1px solid #4a7ecb; border-radius: 6px; background: #f4f8ff;"
-                                     ontoggle="if(this.open){ loadProjectOwners(); }">
-                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #1b3a6b; user-select: none;">
-                                    👥 Admin: Project Access (Add / Remove Users)
+                            <!-- Admin settings (collapsed by default) -->
+                            <details id="admin-section" style="margin-top:1rem;">
+                                <summary style="padding:0.6rem 0.85rem; cursor:pointer; font-weight:600; font-size:0.86rem; color:var(--text-secondary); background:#f5f5f5; border-radius:6px; border:1px solid var(--border); user-select:none; list-style:none; display:flex; align-items:center; gap:0.4rem;">
+                                    ⚙️ Admin Settings
                                 </summary>
-                                <div style="padding: 0 1rem 1.25rem;">
-                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Only takes effect when the portal runs in Entra auth mode (<code>FACTORY_PORTAL_AUTH_MODE=entra</code>). Admins see every project regardless.</p>
-                                    <div class="form-group">
-                                        <label for="owner-slug">Project</label>
-                                        <select id="owner-slug" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
-                                            <option value="">— select a project —</option>
-                                        </select>
+                                <!-- Admin: Project Access (per-user ownership) -->
+                                <details id="admin-project-access-panel" style="margin-top: 0.75rem; border: 1px solid #4a7ecb; border-radius: 6px; background: #f4f8ff;"
+                                         ontoggle="if(this.open){ loadProjectOwners(); }">
+                                    <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #1b3a6b; user-select: none;">
+                                        👥 Admin: Project Access (Add / Remove Users)
+                                    </summary>
+                                    <div style="padding: 0 1rem 1.25rem;">
+                                        <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Only takes effect when the portal runs in Entra auth mode (<code>FACTORY_PORTAL_AUTH_MODE=entra</code>). Admins see every project regardless.</p>
+                                        <div class="form-group">
+                                            <label for="owner-slug">Project</label>
+                                            <select id="owner-slug" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                                                <option value="">— select a project —</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="owner-email">User email</label>
+                                            <input type="text" id="owner-email" placeholder="user@contoso.com">
+                                        </div>
+                                        <div class="button-group">
+                                            <button type="button" onclick="updateProjectOwner('add')" class="btn-primary">Add User</button>
+                                            <button type="button" onclick="updateProjectOwner('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove User</button>
+                                            <button type="button" onclick="loadProjectOwners()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                        </div>
+                                        <div id="admin-project-owners-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                        <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="owner-email">User email</label>
-                                        <input type="text" id="owner-email" placeholder="user@contoso.com">
+                                </details>
+                                <!-- Admin: BRD Intake Allowlist (who can submit BRDs) -->
+                                <details id="admin-brd-allowlist-panel" style="margin-top: 0.75rem; border: 1px solid #ea580c; border-radius: 6px; background: #fff7ec;"
+                                         ontoggle="if(this.open){ loadBrdAllowlist(); }">
+                                    <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #9a3412; user-select: none;">
+                                        🛂 Admin: BRD Intake Allowlist
+                                    </summary>
+                                    <div style="padding: 0 1rem 1.25rem;">
+                                        <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">
+                                            Principals (UPN, email, or object id) allowed to submit BRDs. Empty list = any signed-in user. Current allowlist members or portal admins can edit.
+                                        </p>
+                                        <div class="form-group">
+                                            <label for="brd-allow-principal">Principal (email / UPN / object id)</label>
+                                            <input type="text" id="brd-allow-principal" placeholder="user@contoso.com">
+                                        </div>
+                                        <div class="button-group">
+                                            <button type="button" onclick="updateBrdAllowlist('add')" class="btn-primary">Add</button>
+                                            <button type="button" onclick="updateBrdAllowlist('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove</button>
+                                            <button type="button" onclick="loadBrdAllowlist()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                        </div>
+                                        <div id="brd-allow-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                        <div id="brd-allow-list" style="margin-top: 1.25rem;"></div>
                                     </div>
-                                    <div class="button-group">
-                                        <button type="button" onclick="updateProjectOwner('add')" class="btn-primary">Add User</button>
-                                        <button type="button" onclick="updateProjectOwner('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove User</button>
-                                        <button type="button" onclick="loadProjectOwners()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
-                                    </div>
-                                    <div id="admin-project-owners-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
-                                    <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
-                                </div>
-                            </details>
-
-                            <!-- Admin: BRD Intake Allowlist (who can submit BRDs) -->
-                            <details id="admin-brd-allowlist-panel" style="margin-top: 1rem; border: 1px solid #ea580c; border-radius: 6px; background: #fff7ec;"
-                                     ontoggle="if(this.open){ loadBrdAllowlist(); }">
-                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #9a3412; user-select: none;">
-                                    🛂 Admin: BRD Intake Allowlist
-                                </summary>
-                                <div style="padding: 0 1rem 1.25rem;">
-                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">
-                                        Principals (UPN, email, or object id) allowed to submit BRDs. Empty list = any signed-in user. Current allowlist members or portal admins can edit.
-                                    </p>
-                                    <div class="form-group">
-                                        <label for="brd-allow-principal">Principal (email / UPN / object id)</label>
-                                        <input type="text" id="brd-allow-principal" placeholder="user@contoso.com">
-                                    </div>
-                                    <div class="button-group">
-                                        <button type="button" onclick="updateBrdAllowlist('add')" class="btn-primary">Add</button>
-                                        <button type="button" onclick="updateBrdAllowlist('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove</button>
-                                        <button type="button" onclick="loadBrdAllowlist()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
-                                    </div>
-                                    <div id="brd-allow-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
-                                    <div id="brd-allow-list" style="margin-top: 1.25rem;"></div>
-                                </div>
+                                </details>
                             </details>
                         </div>
                     </section>
-                </div><!-- /intake-col -->
-                <div class="modernize-col">
-                    <section id="modernization" class="modernization-section" aria-labelledby="modernization-title">
+                    <!-- ── Modernize a Legacy Application ─────────────────────── -->
+                    <section id="modernization" class="modernization-section" aria-labelledby="modernization-title" style="margin-top:1.25rem;">
                 <div class="modernization-toggle-row">
                     <a href="#modernization" class="modernization-toggle-link" onclick="toggleModernizationPanel(event)" aria-expanded="false" aria-controls="modernization-panel-content">
                         <span class="modernization-toggle-icon" aria-hidden="true">▸</span>
@@ -3522,7 +3519,7 @@
                     </p>
                 </div>
                     </section>
-                </div><!-- /modernize-col -->
+                </div><!-- /intake-col -->
             </div><!-- /intake-analysis-row -->
                 </div>
             </section>
@@ -5698,7 +5695,7 @@
 [Expected delivery]`;
             const defaultContentHint = 'Paste the BRD, architecture notes, or the textual source directly. Uploaded text artifacts can replace the pasted content.';
             const defaultUploadHint = 'Optional. If provided, uploaded content is used as the source when the format is text-based. Visio and Lucidchart uploads still require a written summary below.';
-            const defaultSourceHint = 'Auto detect uses file extension plus content sniffing. Text-based formats are normalized into the same generation pipeline. Binary formats are stored as reference attachments and use the written summary below as the working source.';
+            const defaultSourceHint = 'Auto-detect uses file extension + content sniffing. Binary files are stored as attachments; the written summary below becomes the working source.';
             const acceptMap = {
                 'auto': '.md,.txt,.drawio,.mmd,.mermaid,.puml,.plantuml,.dsl,.json,.yaml,.yml,.vsdx,text/markdown,text/plain,application/json,text/yaml,application/xml,text/xml',
                 'brd-markdown': '.md,.txt,text/markdown,text/plain',
