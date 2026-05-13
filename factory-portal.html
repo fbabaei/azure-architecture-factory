@@ -3040,22 +3040,16 @@
                                 <span class="intake-toggle-copy">
                                     <span style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                                         <span class="intake-toggle-title">Submit Business Requirements</span>
-                                        <span class="intake-start-badge">START HERE — or use BRD Copilot</span>
+                                        <span class="intake-start-badge">Fill the form below</span>
+                                        <span style="font-size:0.72rem; color:var(--text-secondary);">— or</span>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleBrdChat();" style="display:inline-flex; align-items:center; gap:0.3rem; background:linear-gradient(135deg,#1c7a33,#2aa84a); color:#fff; border:none; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(28,122,51,0.3);">💬 Draft with BRD Copilot</button>
                                     </span>
-                                    <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project — or use 💬 BRD Copilot below to draft or review your BRD first.</span>
+                                    <span class="intake-toggle-description">Expand the form to submit your Business Requirements and generate a new architecture project.</span>
                                 </span>
                                 <span class="intake-toggle-icon" aria-hidden="true">▸</span>
                             </a>
                         </div>
-                        <div style="margin: 0.75rem 0 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
-                            <button type="button" onclick="toggleBrdChat()"
-                                style="background: linear-gradient(135deg, #1c7a33, #2aa84a); color: #fff; border: none; padding: 0.55rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 6px rgba(28,122,51,0.35);">
-                                💬 Open BRD Copilot
-                            </button>
-                            <span style="font-size: 0.82rem; color: var(--text-secondary);">
-                                Draft a new BRD from a description, or paste an existing one for review.
-                            </span>
-                        </div>
+
                         <div class="intake-panel-content">
                             <!-- User: Request Access Token (hidden: EasyAuth + Entra handles sign-in; tokens only needed for programmatic clients) -->
                             <details id="request-token-panel" hidden style="display:none; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
