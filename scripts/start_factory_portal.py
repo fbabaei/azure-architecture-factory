@@ -341,6 +341,10 @@ def _is_slug_visible(slug: str) -> bool:
 # see everything (local dev default — the allowlist above still applies if set).
 
 AUTH_MODE = os.environ.get("FACTORY_PORTAL_AUTH_MODE", "").strip().lower()
+_allow_local_repo_default = "1" if AUTH_MODE in {"", "none"} else "0"
+ALLOW_LOCAL_REPO_INTAKE = os.environ.get(
+    "FACTORY_PORTAL_ALLOW_LOCAL_REPO_INTAKE", _allow_local_repo_default
+).strip().lower() in {"1", "true", "yes", "on"}
 # Owners data source — in order of precedence:
 #   1. FACTORY_PORTAL_OWNERS_JSON : inline JSON (e.g. mounted via Container App
 #      secret env var). Read-only; auto-stamping submitters is skipped.
@@ -1193,6 +1197,8 @@ def _coerce_bool(value, default: bool = False) -> bool:
 
 
 _VALID_NETWORK_TIERS = frozenset({"public", "vnet-integrated", "private"})
+_VALID_DEPLOYMENT_MODES = frozenset({"standard", "aca-express"})
+_VALID_ACA_EXPRESS_REGIONS = frozenset({"westcentralus", "eastasia"})
 
 _IMPLEMENTATION_LANGUAGE_ALIASES = {
     "python": "python",
@@ -1270,6 +1276,18 @@ def _sanitize_network_tier(value) -> str:
     """Return a validated network tier string, defaulting to 'public'."""
     candidate = str(value or "").strip().lower()
     return candidate if candidate in _VALID_NETWORK_TIERS else "public"
+
+
+def _sanitize_deployment_mode(value) -> str:
+    """Return a validated deployment mode string, defaulting to 'standard'."""
+    candidate = str(value or "").strip().lower()
+    return candidate if candidate in _VALID_DEPLOYMENT_MODES else "standard"
+
+
+def _sanitize_aca_express_region(value) -> str:
+    """Return a validated ACA Express region, defaulting to 'westcentralus'."""
+    candidate = str(value or "").strip().lower()
+    return candidate if candidate in _VALID_ACA_EXPRESS_REGIONS else "westcentralus"
 
 
 def _sanitize_implementation_language(value) -> str | None:
@@ -1700,6 +1718,22 @@ def _validate_repo_url(raw_url: str) -> tuple[str, str | None]:
     return safe_url, None
 
 
+def _validate_local_repo_path(raw_path: str) -> tuple[pathlib.Path | None, str | None]:
+    """Validate and resolve a local repository path for intake."""
+    candidate = str(raw_path or "").strip()
+    if not candidate:
+        return None, "localRepoPath is required when inputSource is local"
+    try:
+        resolved = pathlib.Path(candidate).expanduser().resolve()
+    except Exception:
+        return None, "localRepoPath could not be resolved"
+    if not resolved.exists() or not resolved.is_dir():
+        return None, "localRepoPath must point to an existing directory"
+    if not (resolved / ".git").exists():
+        return None, "localRepoPath must point to a git repository (missing .git)"
+    return resolved, None
+
+
 def _sanitize_branch_suffix(raw: str) -> tuple[str, str | None]:
     """Return a validated branch-name suffix or an error string."""
     candidate = raw.strip()
@@ -1796,6 +1830,17 @@ def _clone_repo(clone_url: str, target_dir: str) -> tuple[bool, str]:
     return True, ""
 
 
+def _clone_local_repo(source_dir: str, target_dir: str) -> tuple[bool, str]:
+    """Clone a local repository into *target_dir* preserving git metadata."""
+    _, stderr, rc = _git_run(
+        ["clone", source_dir, target_dir],
+        timeout=_REPO_CLONE_TIMEOUT_SECONDS,
+    )
+    if rc != 0:
+        return False, f"local git clone failed (rc={rc}): {stderr.strip()[:400]}"
+    return True, ""
+
+
 def _create_aaf_branch(repo_dir: str, branch_name: str, push_url: str) -> tuple[bool, str]:
     """Create *branch_name* locally and push it.  Returns ``(success, error_msg)``."""
     # Configure a minimal git identity required for commits inside the container
@@ -1888,6 +1933,200 @@ def _build_remote_file_url(repo_url: str, branch_name: str, file_path: str) -> s
             f"?path=%2F{relative_path.replace('/', '%2F')}&version=GB{branch_name}"
         )
     return None
+
+
+def _derive_repo_project_slug(repo_url: str, run_id: str) -> str:
+    """Create a stable, safe slug for a repo-intake project snapshot."""
+    parsed = urlparse(repo_url)
+    parts = [p for p in parsed.path.split("/") if p]
+    provider = _repo_provider(repo_url)
+
+    base = "repo"
+    if provider == "github" and len(parts) >= 2:
+        base = f"{parts[0]}-{parts[1].removesuffix('.git')}"
+    elif provider == "azure-devops" and len(parts) >= 4 and parts[2] == "_git":
+        base = f"{parts[1]}-{parts[3].removesuffix('.git')}"
+    elif parts:
+        base = parts[-1].removesuffix(".git") or "repo"
+
+    cleaned_base = re.sub(r"[^a-z0-9]+", "-", base.lower()).strip("-") or "repo"
+    timestamp = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+    candidate = f"repo-intake-{cleaned_base[:64]}-{timestamp}"
+    slug = _sanitize_project_slug(candidate)
+    if slug:
+        return slug
+    return f"repo-intake-{timestamp}-{run_id.replace('-', '')[:8].lower()}"
+
+
+def _record_project_owner(slug: str, owner: str) -> None:
+    """Best-effort owner assignment for Entra project visibility filtering."""
+    normalized_owner = (owner or "").strip().lower()
+    if not normalized_owner:
+        return
+    try:
+        data = _load_owners()
+        projects = data.setdefault("projects", {})
+        existing = projects.get(slug) or []
+        if isinstance(existing, str):
+            existing = [existing]
+        lowered = {e.strip().lower() for e in existing if isinstance(e, str)}
+        if normalized_owner not in lowered:
+            existing.append(normalized_owner)
+            projects[slug] = existing
+            _save_owners(data)
+    except Exception as exc:  # noqa: BLE001 - best-effort
+        logger.warning("Failed to persist owner for repo-intake project %s: %s", slug, exc)
+
+
+def _persist_repo_intake_project(
+    repo_dir: pathlib.Path,
+    *,
+    repo_url: str,
+    branch_name: str,
+    workflow_mode: str,
+    automation_goal: str,
+    run_id: str,
+    requested_by: str,
+    analysis: dict,
+) -> tuple[str | None, str | None, str | None]:
+    """Persist a completed repo-intake run as a local project card/workspace."""
+    try:
+        if not repo_dir.exists() or not repo_dir.is_dir():
+            return None, None, f"Repo directory does not exist: {repo_dir}"
+
+        parsed = urlparse(repo_url)
+        path_parts = [p for p in parsed.path.split("/") if p]
+        provider = _repo_provider(repo_url)
+        title_repo = parsed.netloc or "repository"
+        if provider == "github" and len(path_parts) >= 2:
+            title_repo = f"{path_parts[0]}/{path_parts[1].removesuffix('.git')}"
+        elif provider == "azure-devops" and len(path_parts) >= 4 and path_parts[2] == "_git":
+            title_repo = f"{path_parts[1]}/{path_parts[3].removesuffix('.git')}"
+        elif path_parts:
+            title_repo = path_parts[-1].removesuffix(".git")
+        project_title = f"Imported Repo: {title_repo}"
+
+        projects_root = FACTORY_REPO_ROOT / "projects"
+        projects_root.mkdir(parents=True, exist_ok=True)
+
+        base_slug = _derive_repo_project_slug(repo_url, run_id)
+        slug = base_slug
+        suffix = 2
+        while (projects_root / slug).exists():
+            tail = f"-{suffix}"
+            slug = f"{base_slug[:120 - len(tail)]}{tail}"
+            suffix += 1
+
+        project_root = projects_root / slug
+        shutil.move(str(repo_dir), str(project_root))
+
+        # Keep imported projects lightweight and avoid exposing raw git internals.
+        shutil.rmtree(project_root / ".git", ignore_errors=True)
+        shutil.rmtree(project_root / "outputs" / "copilot", ignore_errors=True)
+
+        docs_dir = project_root / "docs"
+        intake_dir = docs_dir / "intake"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        intake_dir.mkdir(parents=True, exist_ok=True)
+
+        architecture_overview = docs_dir / "architecture-overview.md"
+        if not architecture_overview.is_file():
+            tech_stack = ", ".join(analysis.get("tech_stack", [])[:8]) or "not detected"
+            top_dirs = ", ".join(analysis.get("dir_tree", [])[:12]) or "not detected"
+            arch_files = [af.get("name", "") for af in analysis.get("arch_files", []) if af.get("name")]
+            arch_text = "\n".join(f"- {name}" for name in arch_files[:10]) or "- none detected"
+            architecture_overview.write_text(
+                "\n".join([
+                    "# Architecture Overview",
+                    "",
+                    "This project was imported from a repository intake run.",
+                    "",
+                    f"- Repository: {repo_url}",
+                    f"- Branch analyzed: {branch_name}",
+                    f"- Workflow mode: {workflow_mode}",
+                    "",
+                    "## Detected Tech Stack",
+                    "",
+                    f"{tech_stack}",
+                    "",
+                    "## Top-Level Structure",
+                    "",
+                    f"{top_dirs}",
+                    "",
+                    "## Architecture Artifacts",
+                    "",
+                    arch_text,
+                    "",
+                ]),
+                encoding="utf-8",
+            )
+
+        intake_report = intake_dir / "repo-intake.md"
+        intake_report.write_text(
+            "\n".join([
+                "# Repository Intake Metadata",
+                "",
+                f"- Run ID: `{run_id}`",
+                f"- Repository URL: {repo_url}",
+                f"- Branch: `{branch_name}`",
+                f"- Workflow mode: `{workflow_mode}`",
+                f"- Requested by: `{requested_by or 'unknown'}`",
+                f"- Recorded at: `{_utcnow_iso()}`",
+                "",
+                "## Automation Goal",
+                "",
+                automation_goal or "No explicit goal was supplied.",
+                "",
+                f"## Analysis Artifact",
+                "",
+                f"- `{_AAF_ANALYSIS_REPORT_FILE}`",
+                "",
+                "## Change Summary Artifact",
+                "",
+                f"- `{_AAF_CHANGE_SUMMARY_FILE}` (present only for implement-pr)",
+                "",
+            ]),
+            encoding="utf-8",
+        )
+
+        links: dict[str, str] = {
+            "architectureOverview": f"projects/{slug}/docs/architecture-overview.md",
+        }
+        readme_path = project_root / "README.md"
+        if readme_path.is_file():
+            links["readme"] = f"projects/{slug}/README.md"
+        if (project_root / _AAF_ANALYSIS_REPORT_FILE).is_file():
+            links["analysisReport"] = f"projects/{slug}/{_AAF_ANALYSIS_REPORT_FILE}"
+        if (project_root / _AAF_CHANGE_SUMMARY_FILE).is_file():
+            links["changeSummary"] = f"projects/{slug}/{_AAF_CHANGE_SUMMARY_FILE}"
+
+        manifest = {
+            "title": project_title,
+            "status": "Ready",
+            "source_brd": repo_url,
+            "created_at": _utcnow_iso(),
+            "generation_options": {
+                "sourceType": "repo-intake",
+                "workflowMode": workflow_mode,
+                "automationGoal": automation_goal,
+            },
+            "links": links,
+            "repo_intake": {
+                "repo_url": repo_url,
+                "branch_name": branch_name,
+                "workflow_mode": workflow_mode,
+                "run_id": run_id,
+            },
+        }
+        (project_root / "project-manifest.json").write_text(
+            json.dumps(manifest, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        _record_project_owner(slug, requested_by)
+        return slug, project_title, None
+    except Exception as exc:  # noqa: BLE001
+        return None, None, str(exc)
 
 
 def _build_repo_change_prompt(
@@ -2389,6 +2628,7 @@ def _commit_and_push_report(
         return False, f"git push failed: {_mask_pat_in_text(stderr).strip()[:400]}"
     return True, ""
 
+
 def _validate_target_project_slug(raw_slug: object) -> tuple[str | None, str | None]:
     """Validate an optional project slug selected for iterative regeneration."""
     if raw_slug in (None, ""):
@@ -2433,6 +2673,13 @@ def _build_generation_options(
     iac_tool = str(fields.get("iacTool") or "").strip().lower()
     if iac_tool:
         generation_options["iacTool"] = iac_tool
+    deployment_mode = _sanitize_deployment_mode(fields.get("deploymentMode"))
+    if deployment_mode == "aca-express":
+        generation_options["deploymentMode"] = "aca-express"
+        generation_options["acaExpressRegion"] = _sanitize_aca_express_region(fields.get("acaExpressRegion"))
+        raw_image = str(fields.get("acaExpressImage") or "").strip()
+        if raw_image:
+            generation_options["acaExpressImage"] = raw_image
     target_project_slug, slug_error = _validate_target_project_slug(fields.get("targetProjectSlug"))
     if slug_error:
         return {}, slug_error
@@ -2494,6 +2741,27 @@ def _build_generation_document(file_name: str, content: str, generation_options:
             "- Surface assumptions and unresolved gaps when the source is underspecified.",
             "- Update the existing project in place instead of creating a new one." if target_project_slug else "- Create a new project baseline from this source.",
             "",
+        ]
+    )
+    if generation_options and generation_options.get("deploymentMode") == "aca-express":
+        aca_region = generation_options.get("acaExpressRegion", "westcentralus")
+        aca_image = generation_options.get("acaExpressImage", "")
+        lines.extend([
+            "## Deployment Mode",
+            "- deployment_mode: aca-express",
+            f"- aca_express_region: {aca_region}",
+        ])
+        if aca_image:
+            lines.append(f"- aca_express_image: {aca_image}")
+        lines.extend([
+            "- Skip Phase 3 Bicep/Terraform infrastructure generation (generate_infra is overridden to false).",
+            "- Invoke aca-express-deployer agent for Phase 5 deployment instead of the standard deployer.",
+            "- ACA Express preview constraints: HTTP-only workloads, westcentralus / eastasia regions only.",
+            "  No VNet, Managed Identity, Key Vault, Dapr, KEDA, custom domains, or CORS configuration.",
+            "",
+        ])
+    lines.extend(
+        [
             "## Parsed Architecture Summary",
         ]
     )
@@ -4408,7 +4676,42 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         has_tf = infra.is_dir() and any(infra.rglob("main.tf"))
         has_azure_yaml = (project_root / "azure.yaml").is_file()
 
+        # Detect ACA Express mode from project manifest
+        manifest_path = project_root / "project-manifest.json"
+        aca_express = False
+        aca_express_region = "westcentralus"
+        aca_express_image = ""
+        if manifest_path.is_file():
+            try:
+                with manifest_path.open(encoding="utf-8") as f:
+                    manifest = json.load(f)
+                gen_opts = manifest.get("generationOptions") or manifest.get("generation_options") or {}
+                if gen_opts.get("deploymentMode") == "aca-express":
+                    aca_express = True
+                    aca_express_region = gen_opts.get("acaExpressRegion", "westcentralus")
+                    aca_express_image = str(gen_opts.get("acaExpressImage") or "").strip()
+            except Exception:
+                pass
+
         blocks: list[dict] = []
+
+        if aca_express:
+            env_name = f"aca-express-env-{slug}"
+            app_name = slug
+            image_cmd = aca_express_image or "<your-container-image>  # e.g. mcr.microsoft.com/azuredocs/aca-helloworld:latest"
+            blocks.append({
+                "tool": "az containerapp",
+                "title": "⚡ Deploy with ACA Express (preview)",
+                "commands": [
+                    "az login",
+                    f"az group create --name {rg} --location {aca_express_region}",
+                    f"az containerapp env create --name {env_name} --resource-group {rg} --location {aca_express_region} --environment-mode express",
+                    f"az containerapp up --name {app_name} --resource-group {rg} --environment {env_name} --image {image_cmd} --ingress external --target-port 80",
+                    f"# Management portal: https://containerapps.azure.com/",
+                    f"az containerapp show --name {app_name} --resource-group {rg} --query properties.configuration.ingress.fqdn --output tsv",
+                ],
+                "note": "ACA Express (preview) — HTTP-only workloads, westcentralus / eastasia only. No VNet, Managed Identity, Key Vault, Dapr, or KEDA.",
+            })
 
         if has_azure_yaml:
             blocks.append({
@@ -4460,7 +4763,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         return json.dumps({
             "resource_group": rg,
-            "location": loc,
+            "location": aca_express_region if aca_express else loc,
             "blocks": blocks,
             "note": "These commands are not executed by the portal — copy-paste into a terminal.",
         })
@@ -4987,19 +5290,28 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     # ── Repo Intake ─────────────────────────────────────────────────────────
 
     def _handle_repo_intake(self):
-        """Handle a repository analysis intake request.
+        """Handle a repository analysis or enhancement intake request.
 
         Expected JSON body::
 
             {
-                "repoUrl":      "https://github.com/owner/repo",
-                "token":        "<PAT>",
-                "branchSuffix": "analysis-2026-04-24"   // optional
+                "inputSource":    "remote" | "local",                 // optional, default: remote
+                "repoUrl":        "https://github.com/owner/repo",
+                "localRepoPath":  "C:/src/my-repo",                    // required when inputSource=local
+                "token":          "<PAT>",
+                "workflowMode":   "analysis-only" | "implement-pr",   // optional, default: analysis-only
+                "automationGoal": "Add a notification workflow",       // optional
+                "branchSuffix":   "analysis-2026-04-24"                // optional
             }
 
-        Clones the repo, creates an ``AAF-<branchSuffix>`` branch, analyses the
-        repository content (README, architecture files, tech stack, code inventory),
-        writes ``AAF-analysis-report.md`` to the new branch, commits, and pushes.
+        **analysis-only** (default): Clones the repo, creates an ``AAF-<branchSuffix>``
+        branch, analyses the repository content (README, architecture files, tech stack,
+        code inventory), writes ``AAF-analysis-report.md``, commits, and pushes.
+
+        **implement-pr**: All of the above, then runs the dedicated ``repo-change-agent``
+        inside the cloned repo, commits all resulting changes, pushes the branch, and
+        opens a pull request on GitHub or Azure DevOps.
+
         All git work is done in a background thread; returns ``202 Accepted``
         immediately with a run ID that can be polled via ``GET /api/runs/<id>``.
         """
@@ -5022,26 +5334,49 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Request body must be a JSON object"}, 400)
             return
 
-        # Validate repoUrl
-        repo_url, url_err = _validate_repo_url(payload.get("repoUrl", ""))
-        if url_err:
-            self._send_json({"error": url_err}, 400)
+        input_source = str(payload.get("inputSource") or "remote").strip().lower()
+        if input_source not in {"remote", "local"}:
+            self._send_json({"error": "inputSource must be 'remote' or 'local'"}, 400)
             return
 
-        # Validate PAT (non-empty string, max 500 chars)
-        raw_token = payload.get("token", "")
-        if not isinstance(raw_token, str) or not raw_token.strip():
-            self._send_json({"error": "token (PAT) is required"}, 400)
-            return
-        pat = raw_token.strip()
-        if len(pat) > 500:
-            self._send_json({"error": "token must be at most 500 characters"}, 400)
-            return
+        local_repo_path: pathlib.Path | None = None
+        repo_url = ""
+
+        if input_source == "local":
+            if not ALLOW_LOCAL_REPO_INTAKE:
+                self._send_json(
+                    {"error": "Local repository intake is disabled on this deployment"},
+                    403,
+                )
+                return
+            local_repo_path, local_err = _validate_local_repo_path(payload.get("localRepoPath", ""))
+            if local_err:
+                self._send_json({"error": local_err}, 400)
+                return
+            repo_url = f"local://{local_repo_path.name}"
+        else:
+            # Validate repoUrl
+            repo_url, url_err = _validate_repo_url(payload.get("repoUrl", ""))
+            if url_err:
+                self._send_json({"error": url_err}, 400)
+                return
 
         workflow_mode, mode_err = _sanitize_repo_workflow_mode(payload.get("workflowMode"))
         if mode_err:
             self._send_json({"error": mode_err}, 400)
             return
+
+        pat = ""
+        if input_source == "remote":
+            # Validate PAT (non-empty string, max 500 chars)
+            raw_token = payload.get("token", "")
+            if not isinstance(raw_token, str) or not raw_token.strip():
+                self._send_json({"error": "token (PAT) is required for remote repositories"}, 400)
+                return
+            pat = raw_token.strip()
+            if len(pat) > 500:
+                self._send_json({"error": "token must be at most 500 characters"}, 400)
+                return
 
         automation_goal, goal_err = _sanitize_repo_automation_goal(payload.get("automationGoal"))
         if goal_err:
@@ -5075,8 +5410,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "command": "repo-analysis",
                 "result": None,
                 "generationOptions": {
-                    "sourceType": "repo-analysis",
+                    "sourceType": "repo-analysis-local" if input_source == "local" else "repo-analysis",
+                    "inputSource": input_source,
                     "repoUrl": repo_url,    # credential-free URL safe to store
+                    "localRepoName": local_repo_path.name if local_repo_path else "",
                     "branchName": branch_name,
                     "workflowMode": workflow_mode,
                     "automationGoal": automation_goal,
@@ -5094,6 +5431,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             workflow_mode,
             automation_goal,
             owner,
+            local_repo_path=local_repo_path,
+            input_source=input_source,
         )
 
         self._send_json(
@@ -5102,6 +5441,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "status": "queued",
                 "message": "Repository intake accepted. Analysis running in background.",
                 "repoUrl": repo_url,
+                "inputSource": input_source,
                 "branchName": branch_name,
                 "workflowMode": workflow_mode,
             },
@@ -5117,6 +5457,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         workflow_mode: str = "analysis-only",
         automation_goal: str = "",
         requested_by: str = "",
+        local_repo_path: pathlib.Path | None = None,
+        input_source: str = "remote",
     ) -> None:
         """Background worker: clone → branch → analyse → optional implement → push → PR."""
         with RUNS_LOCK:
@@ -5128,24 +5470,43 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         tmp_dir: str | None = None
         try:
             tmp_dir = tempfile.mkdtemp(prefix="aaf-repo-")
-            clone_url = _make_authed_clone_url(repo_url, pat)
+            clone_url = ""
+            if local_repo_path:
+                clone_url = str(local_repo_path)
 
-            # 1. Clone
-            _set_run_progress(run_id, stage="clone", message="Cloning target repository")
-            ok, err = _clone_repo(clone_url, tmp_dir)
-            if not ok:
-                raise RuntimeError(err)
+                _set_run_progress(run_id, stage="clone", message="Cloning local repository")
+                ok, err = _clone_local_repo(clone_url, tmp_dir)
+                if not ok:
+                    raise RuntimeError(err)
 
-            _set_run_progress(run_id, stage="default-branch", message="Detecting repository default branch")
-            default_branch, default_branch_err = _detect_default_branch(tmp_dir)
-            if default_branch_err:
-                logger.warning("Repo intake default branch detection warning for %s: %s", repo_url, default_branch_err)
+                _set_run_progress(run_id, stage="default-branch", message="Detecting repository default branch")
+                default_branch, default_branch_err = _detect_default_branch(tmp_dir)
+                if default_branch_err:
+                    logger.warning("Local repo intake default branch detection warning for %s: %s", local_repo_path, default_branch_err)
 
-            # 2. Create AAF branch
-            _set_run_progress(run_id, stage="branch", message=f"Creating working branch {branch_name}")
-            ok, err = _create_aaf_branch(tmp_dir, branch_name, clone_url)
-            if not ok:
-                raise RuntimeError(err)
+                _set_run_progress(run_id, stage="branch", message=f"Creating working branch {branch_name} in the local repository")
+                ok, err = _create_aaf_branch(tmp_dir, branch_name, clone_url)
+                if not ok:
+                    raise RuntimeError(err)
+            else:
+                clone_url = _make_authed_clone_url(repo_url, pat)
+
+                # 1. Clone
+                _set_run_progress(run_id, stage="clone", message="Cloning target repository")
+                ok, err = _clone_repo(clone_url, tmp_dir)
+                if not ok:
+                    raise RuntimeError(err)
+
+                _set_run_progress(run_id, stage="default-branch", message="Detecting repository default branch")
+                default_branch, default_branch_err = _detect_default_branch(tmp_dir)
+                if default_branch_err:
+                    logger.warning("Repo intake default branch detection warning for %s: %s", repo_url, default_branch_err)
+
+                # 2. Create AAF branch
+                _set_run_progress(run_id, stage="branch", message=f"Creating working branch {branch_name}")
+                ok, err = _create_aaf_branch(tmp_dir, branch_name, clone_url)
+                if not ok:
+                    raise RuntimeError(err)
 
             # 3. Analyse repo content
             _set_run_progress(run_id, stage="analysis", message="Analyzing repository contents and architecture signals")
@@ -5160,8 +5521,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
             pr_url = ""
             summary_url = ""
-            report_url = _build_remote_file_url(repo_url, branch_name, _AAF_ANALYSIS_REPORT_FILE) or ""
+            report_url = ""
+            if not local_repo_path:
+                report_url = _build_remote_file_url(repo_url, branch_name, _AAF_ANALYSIS_REPORT_FILE) or ""
             copilot_run_id = ""
+            project_slug = ""
+            project_title = ""
+            project_persist_error = ""
 
             if workflow_mode == "implement-pr":
                 if copilot_runner is None:
@@ -5195,7 +5561,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     )
                 _remove_repo_copilot_artifacts(pathlib.Path(tmp_dir), copilot_run_id)
                 _ensure_change_summary(tmp_dir, automation_goal, copilot_run_id)
-                _set_run_progress(run_id, stage="commit", message="Committing repository changes to the AAF branch")
+                _set_run_progress(
+                    run_id,
+                    stage="commit",
+                    message="Committing repository changes to the working branch",
+                )
                 ok, err = _commit_and_push_all_changes(
                     tmp_dir,
                     branch_name,
@@ -5204,26 +5574,68 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 )
                 if not ok:
                     raise RuntimeError(err)
-                summary_url = _build_remote_file_url(repo_url, branch_name, _AAF_CHANGE_SUMMARY_FILE) or ""
-                pr_title = _build_repo_pr_title(repo_url, automation_goal)
-                pr_body = _build_repo_pr_body(branch_name, default_branch, automation_goal)
-                _set_run_progress(run_id, stage="pr", message="Creating pull request")
-                pr_url, pr_err = _create_pull_request(
-                    repo_url,
-                    pat,
-                    branch_name,
-                    default_branch,
-                    pr_title,
-                    pr_body,
-                )
-                if pr_err:
-                    raise RuntimeError(f"Branch was pushed but PR creation failed: {pr_err}")
+                if local_repo_path:
+                    _set_run_progress(
+                        run_id,
+                        stage="report-ready",
+                        message="Repository changes committed to the local working branch",
+                    )
+                else:
+                    summary_url = _build_remote_file_url(repo_url, branch_name, _AAF_CHANGE_SUMMARY_FILE) or ""
+                    pr_title = _build_repo_pr_title(repo_url, automation_goal)
+                    pr_body = _build_repo_pr_body(branch_name, default_branch, automation_goal)
+                    _set_run_progress(run_id, stage="pr", message="Creating pull request")
+                    pr_url, pr_err = _create_pull_request(
+                        repo_url,
+                        pat,
+                        branch_name,
+                        default_branch,
+                        pr_title,
+                        pr_body,
+                    )
+                    if pr_err:
+                        raise RuntimeError(f"Branch was pushed but PR creation failed: {pr_err}")
             else:
-                # 5. Commit and push report
-                _set_run_progress(run_id, stage="push-report", message="Pushing AAF analysis report to the working branch")
-                ok, err = _commit_and_push_report(tmp_dir, report, branch_name, clone_url)
-                if not ok:
-                    raise RuntimeError(err)
+                if local_repo_path:
+                    _set_run_progress(run_id, stage="push-report", message="Committing analysis report to the local working branch")
+                    ok, err = _commit_and_push_report(tmp_dir, report, branch_name, clone_url)
+                    if not ok:
+                        raise RuntimeError(err)
+                    _set_run_progress(
+                        run_id,
+                        stage="report-ready",
+                        message="Analysis report committed to the local working branch",
+                    )
+                else:
+                    # 5. Commit and push report
+                    _set_run_progress(run_id, stage="push-report", message="Pushing AAF analysis report to the working branch")
+                    ok, err = _commit_and_push_report(tmp_dir, report, branch_name, clone_url)
+                    if not ok:
+                        raise RuntimeError(err)
+
+            _set_run_progress(
+                run_id,
+                stage="project-sync",
+                message="Persisting imported repository snapshot for portal project tools",
+            )
+            slug, title, persist_err = _persist_repo_intake_project(
+                pathlib.Path(tmp_dir),
+                repo_url=repo_url,
+                branch_name=branch_name,
+                workflow_mode=workflow_mode,
+                automation_goal=automation_goal,
+                run_id=run_id,
+                requested_by=requested_by,
+                analysis=analysis,
+            )
+            if persist_err:
+                logger.warning("Repo-intake project persistence failed for run %s: %s", run_id, persist_err)
+                project_persist_error = persist_err
+            else:
+                project_slug = slug or ""
+                project_title = title or ""
+                # Project snapshot was moved to projects/<slug>; skip temp cleanup.
+                tmp_dir = None
 
             with RUNS_LOCK:
                 RUNS[run_id].update({
@@ -5233,7 +5645,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     "result": {
                         "status": "completed",
                         "repoUrl": repo_url,
+                        "inputSource": input_source,
                         "branchName": branch_name,
+                        "branchTarget": "local" if local_repo_path else "remote",
+                        "branchCommitted": True,
+                        "branchCommitMode": "all-changes" if workflow_mode == "implement-pr" else "analysis-report-only",
                         "workflowMode": workflow_mode,
                         "baseBranch": default_branch,
                         "reportFile": _AAF_ANALYSIS_REPORT_FILE,
@@ -5242,6 +5658,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                         "summaryUrl": summary_url,
                         "prUrl": pr_url,
                         "copilotRunId": copilot_run_id,
+                        "projectSlug": project_slug,
+                        "projectTitle": project_title,
+                        "projectPersistError": project_persist_error,
                         "techStack": analysis.get("tech_stack", []),
                         "archFilesFound": len(analysis.get("arch_files", [])),
                         "fileCountsByLanguage": analysis.get("file_counts", {}),
@@ -5301,6 +5720,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         iac_tool_field = (fields.get("iac_tool") or {}).get("data", b"").decode("utf-8", errors="replace").strip().lower()
         source_type_field = (fields.get("source_type") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         target_project_slug_field = (fields.get("target_project_slug") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        deployment_mode_field = (fields.get("deployment_mode") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        aca_express_region_field = (fields.get("aca_express_region") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
+        aca_express_image_field = (fields.get("aca_express_image") or {}).get("data", b"").decode("utf-8", errors="replace").strip()
         inline_content_field = (fields.get("content") or {}).get("data", b"").decode("utf-8", errors="replace")
         brd_field = fields.get("brd_file")
 
@@ -5328,6 +5750,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "iacTool": iac_tool_field,
                 "sourceType": source_type_field,
                 "targetProjectSlug": target_project_slug_field,
+                "deploymentMode": deployment_mode_field,
+                "acaExpressRegion": aca_express_region_field,
+                "acaExpressImage": aca_express_image_field,
             },
             file_name=file_name,
             content=inline_content_field,
@@ -5528,12 +5953,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                     "generatedFrom": manifest.get("source_brd", ""),
                     "generatedAt": manifest.get("created_at", ""),
                     "options": manifest.get("generation_options", {}),
+                    "links": manifest.get("links", {}) if isinstance(manifest.get("links"), dict) else {},
                     "suggestedRuntime": manifest.get("suggested_runtime"),
                     "brdReadiness": manifest.get("brd_readiness"),
                     "orchestratorAutoFlow": manifest.get("orchestrator_auto_flow"),
                     "implementationLanguage": manifest.get("implementation_language"),
                     "iacTool": manifest.get("iac_tool"),
-                    "links": {},
                 }
 
         # Sort newest-first by generatedAt.
@@ -5666,6 +6091,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         for file_path in sorted(project_root.rglob("*")):
             if not file_path.is_file():
                 continue
+            if ".git" in file_path.parts:
+                continue
             relative = file_path.relative_to(project_root).as_posix()
             files.append(
                 {
@@ -5721,6 +6148,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         with zipfile.ZipFile(archive_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
             for file_path in sorted(project_root.rglob("*")):
                 if file_path.is_file():
+                    if ".git" in file_path.parts:
+                        continue
                     archive.write(file_path, arcname=f"{slug}/{file_path.relative_to(project_root).as_posix()}")
 
         payload = archive_buffer.getvalue()
