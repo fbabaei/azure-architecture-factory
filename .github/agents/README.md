@@ -40,8 +40,17 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 │                                 OWNS: Bicep syntax, module wiring, infra-layer security + scalability fixes
 ├── [Phase 3.7] Test Convergence Loop — generate + run tests until green (≥3 iterations)
 ├── production-environment-advisor Phase 4: production readiness checklist (READ-ONLY)
-├── azure-project-deployer        Phase 5: deploy to Azure (optional)
+├── aca-express-deployer          Phase 5 (Path A): deploy HTTP workloads via ACA Express (preview)
+│                                 NO Bicep, NO environment wait — sub-minute deploy
+│                                 Eligible: HTTP-only, no GPU/VNet/Dapr/jobs, westcentralus or eastasia
+│                                 Falls back to azure-project-deployer when not eligible
+├── azure-project-deployer        Phase 5 (Path B): standard Bicep-based Azure deploy (fallback / non-Express)
 ├── repo-change-agent             Existing-repo enhancement workflow (portal repo intake)
+│                                 OWNS: repo-local analysis, change decisions, implementation, validation, change summary
+│                                 DOES NOT OWN: clone/branch/push/PR side effects
+├── project-observability-advisor Phase 6: audit and report on observability (optional)
+├── project-traceability-advisor  Phase 6b: requirement → code → test → infra coverage (optional)
+└── factory-handoff               Phase 7: promote project to factory portal (optional)
 │                                 OWNS: repo-local analysis, change decisions, implementation, validation, change summary
 │                                 DOES NOT OWN: clone/branch/push/PR side effects
 ├── project-observability-advisor Phase 6: audit and report on observability (optional)

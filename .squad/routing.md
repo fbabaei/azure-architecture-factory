@@ -9,6 +9,7 @@ How to decide who handles what.
 | BRD/PRD analysis, architecture design | Danny / fbArchitect | Read BRD/PRD, design Azure architecture, create ADRs, draw.io diagrams |
 | Python services, code scaffolding | Rusty | Generate microservice code, API endpoints, shared libraries, models |
 | Bicep/Terraform, Azure infra | Livingston | Write Bicep modules, parameter files, deploy infrastructure |
+| ACA Express deployment | aca-express-deployer (agent) | HTTP-only workloads, rapid deploy, MCP servers, AI frontends, no-infra deploys |
 | Testing & validation | Basher | Unit tests, integration tests, validate generated services |
 | CI/CD, pipelines, deployment | Linus | GitHub Actions, deployment pipelines, monitoring setup |
 | Code review | Danny | Review PRs, check quality, architectural compliance |
@@ -47,6 +48,7 @@ How to decide who handles what.
 | Azure solution design, WAF alignment | fbArchitect | Danny |
 | Python services, code generation | Rusty | — |
 | Bicep, Azure deployment, IaC | Livingston | — |
+| ACA Express deployment (HTTP workloads) | aca-express-deployer (agent) | azure-project-deployer (fallback) |
 | Unit tests, integration, validation | Basher | — |
 | CI/CD, deploy pipelines, monitoring | Linus | — |
 

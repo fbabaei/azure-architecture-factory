@@ -3,7 +3,7 @@ name: project-orchestrator
 description: "Use when you need to orchestrate an entire project lifecycle — from a BRD, PRD, or inline prompt — through architecture design, implementation, infrastructure, production readiness review, optional Azure deployment, and post-deployment observability, while maintaining requirement traceability across all stages. Creates an isolated project folder with all files, diagrams, code, infra, logs, and docs. Uses a dedicated project state helper to keep manifests and logs consistent."
 tools: [read, edit, search, execute, agent, todo, mcp]
 foundry_capabilities: [function_calling]
-agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, lang-dotnet-implementer, security-compliance-auditor, bicep-infrastructure-validator, terraform-infrastructure-validator, production-environment-advisor, azure-project-deployer, factory-handoff]
+agents: [project-state-manager, brd-to-architecture-diagram, drawio-architecture-reader, azure-architecture-implementer, source-code-maintainer, lang-dotnet-implementer, security-compliance-auditor, bicep-infrastructure-validator, terraform-infrastructure-validator, production-environment-advisor, azure-project-deployer, aca-express-deployer, factory-handoff]
 user-invocable: true
 argument-hint: "Provide a BRD/PRD file path (e.g., BRD.md) or an inline requirements prompt. Optionally specify: project name, Azure region, whether to deploy (deploy: true/false), target environment (dev/test/prod), agent runtime (runtime: local|agent-framework|auto — default auto), optionally an existing architecture file path (existing-diagram: path/to/file.drawio) to skip MCP Draw.io generation, and factory: true to promote the finished project to the Azure Architecture Factory portal. Pre-deploy approval gate (Phase 4.5) is on by default whenever deploy: true; pass approval_gate: false to opt out. For BRD updates on an existing project, pass update: true and slug: <existing-project-slug> — the orchestrator will diff the BRD, re-read the current architecture, regenerate the diagram, and apply targeted implementation changes."
 ---
@@ -747,9 +747,33 @@ After completion:
 Never auto-approve. Never infer approval from the absence of a "no".
 
 ### Phase 5 — Azure Deployment (Optional — only if deploy: true)
-**Delegate to**: `azure-project-deployer`
 
-Instruct the agent:
+**Deployment path selection** — choose exactly ONE based on workload characteristics:
+
+#### Path A — ACA Express (delegate to `aca-express-deployer`)
+
+Use ACA Express when **all** of the following are true:
+- Workload is HTTP-based (no TCP, no GPU, no VNet, no Dapr, no jobs, no microservice service-discovery).
+- BRD specifies `deployment_mode: aca-express`, OR the workload is clearly HTTP-only and satisfies all Express eligibility criteria.
+- Target region is `westcentralus` or `eastasia` (Express preview regions).
+
+**ACA Express skips Phase 3 (Bicep validation)** — the platform provisions infrastructure automatically. If Phase 3 was run and produced Bicep artifacts, they are kept in `infra/` for reference but are not used for Express deployments.
+
+Instruct `aca-express-deployer`:
+> "Deploy the project at `projects/<slug>/`. Container image: `<image>`. Resource group: `<slug>-<environment>-rg`, region: `<region>` (must be westcentralus or eastasia). Environment: `<slug>-express-env`. Log all output to `projects/<slug>/logs/phase-5-deployment.log`. Return the deployed FQDN."
+
+After the agent returns `eligible: false`, fall back immediately to Path B.
+
+After a successful Express deployment:
+- Delegate phase logging and manifest update to `project-state-manager`.
+- Log: `[PHASE 5] ACA Express deployment complete → FQDN: <fqdn>`
+- Surface the FQDN and the management portal link `https://containerapps.azure.com/` to the user.
+
+#### Path B — Standard Bicep deployment (delegate to `azure-project-deployer`)
+
+Use for all other workloads: TCP services, GPU workloads, private VNet, Dapr, microservices requiring service discovery, jobs, or any workload where ACA Express returns `eligible: false`.
+
+Instruct `azure-project-deployer`:
 > "Deploy the project at `projects/<slug>/`. Use `projects/<slug>/infra/main.bicep` with `projects/<slug>/infra/params/<environment>.bicepparam`. Target resource group: `<slug>-<environment>-rg`, region: `<region>`. Log all output to `projects/<slug>/logs/phase-5-deployment.log`. Return deployed resource endpoints and connection strings summary."
 
 After completion:
