@@ -348,8 +348,8 @@
         }
 
         #build-workspace .workspace-card-header {
-            background: linear-gradient(180deg, #fff4e6 0%, #ffe6cc 100%);
-            border-bottom-color: #f4c58f;
+            background: linear-gradient(180deg, #fffdf8 0%, #fff5e6 100%);
+            border-bottom-color: #fad9a8;
         }
 
         #build-workspace .workspace-card-title {
@@ -363,17 +363,17 @@
         .workspace-start-pill {
             display: inline-flex;
             align-items: center;
-            align-self: flex-start;
-            margin-bottom: 0.25rem;
+            align-self: center;
+            margin-bottom: 0;
             padding: 0.16rem 0.48rem;
             border-radius: 999px;
             font-size: 0.66rem;
             letter-spacing: 0.06em;
             text-transform: uppercase;
             font-weight: 800;
-            color: #7c2d12;
-            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
-            box-shadow: 0 2px 8px rgba(251, 146, 60, 0.38);
+            color: #92400e;
+            background: linear-gradient(135deg, #fff7ed 0%, #fde8c8 100%);
+            box-shadow: 0 2px 8px rgba(251, 146, 60, 0.18);
             animation: startHerePulse 2.2s ease-in-out infinite;
         }
 
@@ -2570,14 +2570,14 @@
             align-self: flex-start;
             padding: 0.2rem 0.5rem;
             border-radius: 999px;
-            margin-bottom: 0.1rem;
+            margin-bottom: 0;
             font-size: 0.7rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             font-weight: 800;
-            color: #7c2d12;
-            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
-            box-shadow: 0 2px 8px rgba(251, 146, 60, 0.4);
+            color: #0c3a6e;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
         }
 
         .intake-toggle-copy {
@@ -3023,8 +3023,10 @@
             <section id="build-workspace" class="workspace-card" aria-label="Build workspace">
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('build-workspace', event)">
                     <div>
-                        <span class="workspace-start-pill">Start Here</span>
-                        <h3 class="workspace-card-title">Build Workspace</h3>
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <h3 class="workspace-card-title">Build Workspace</h3>
+                            <span class="workspace-start-pill">Start Here</span>
+                        </div>
                         <p class="workspace-card-subtitle">BRD intake and legacy modernization actions.</p>
                     </div>
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('build-workspace', event)">Hide</button>
@@ -3036,8 +3038,10 @@
                         <div class="intake-toggle-row">
                             <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
                                 <span class="intake-toggle-copy">
-                                    <span class="intake-start-badge">START HERE — or use BRD Copilot</span>
-                                    <span class="intake-toggle-title">Submit Business Requirements</span>
+                                    <span style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                        <span class="intake-toggle-title">Submit Business Requirements</span>
+                                        <span class="intake-start-badge">START HERE — or use BRD Copilot</span>
+                                    </span>
                                     <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project — or use 💬 BRD Copilot below to draft or review your BRD first.</span>
                                 </span>
                                 <span class="intake-toggle-icon" aria-hidden="true">▸</span>
