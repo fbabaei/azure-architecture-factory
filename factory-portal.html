@@ -217,7 +217,7 @@
         }
 
         .container > section:first-of-type {
-            order: 1;
+            order: -1;
         }
 
         #stats-container {
@@ -2834,20 +2834,24 @@
 
     <div class="container">
         <!-- Hero Section -->
-        <section>
+        <section style="text-align:center;">
             <h1>Architecture Factory</h1>
             <p class="section-subtitle hero-flow-subtitle">
                 End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment → Observability (with Traceability across all stages)
             </p>
             <hr class="section-divider">
+            <div class="factory-philosophy-panel" style="margin-top:1rem; text-align:left; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
+                <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
+                <p>
+                    The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
+                    Each project uses cloud-native patterns that align with real enterprise workloads, including
+                    service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                </p>
+            </div>
+            <div class="design-analysis-heading" style="margin-top:1.5rem;">
+                <h2>Design Analysis &amp; Rationale - <span style="font-weight:400; font-size:0.75em;">Understanding the architectural patterns and design decisions</span></h2>
+            </div>
         </section>
-
-        <div class="workspace-nav" aria-label="Portal workspaces">
-            <a class="workspace-chip workspace-chip-build" href="#build-workspace">START HERE - Build</a>
-            <a class="workspace-chip" href="#projects-workspace">Projects</a>
-            <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
-            <a class="workspace-chip" href="#assist-workspace">Assist</a>
-        </div>
 
         <section id="assist-workspace" class="workspace-card collapsed" aria-label="Assist workspace">
             <div class="workspace-card-header" onclick="expandWorkspaceCard('assist-workspace', event)">
@@ -3000,23 +3004,18 @@
             </div>
         </section>
 
+        <hr class="section-divider">
+
+        <div class="workspace-nav" aria-label="Portal workspaces">
+            <a class="workspace-chip workspace-chip-build" href="#build-workspace">START HERE - Build</a>
+            <a class="workspace-chip" href="#projects-workspace">Projects</a>
+            <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
+            <a class="workspace-chip" href="#assist-workspace">Assist</a>
+        </div>
+
         <!-- Design Analysis -->
         <section id="design-analysis">
-            <div class="design-analysis-header-row">
-                <div class="design-analysis-heading">
-                    <h2>Design Analysis &amp; Rationale</h2>
-                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
-                </div>
-            </div>
             <div class="philosophy-intake-row">
-                <div class="factory-philosophy-panel" style="margin-bottom: 1.5rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
-                    <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
-                    <p>
-                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
-                        Each project uses cloud-native patterns that align with real enterprise workloads, including
-                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
-                    </p>
-                </div>
                 <hr class="section-divider">
             </div>
 
@@ -3042,7 +3041,7 @@
                                         <span class="intake-toggle-title">Submit Business Requirements</span>
                                         <span class="intake-start-badge">Fill the form below</span>
                                         <span style="font-size:0.72rem; color:var(--text-secondary);">— or</span>
-                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleBrdChat();" style="display:inline-flex; align-items:center; gap:0.3rem; background:linear-gradient(135deg,#1c7a33,#2aa84a); color:#fff; border:none; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(28,122,51,0.3);">💬 Draft with BRD Copilot</button>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleBrdChat();" style="display:inline-flex; align-items:center; gap:0.3rem; background:linear-gradient(135deg,#1c7a33,#2aa84a); color:#fff; border:none; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(28,122,51,0.3);">💬 Draft with BRD Copilot Here</button>
                                     </span>
                                     <span class="intake-toggle-description">Expand the form to submit your Business Requirements and generate a new architecture project.</span>
                                 </span>
