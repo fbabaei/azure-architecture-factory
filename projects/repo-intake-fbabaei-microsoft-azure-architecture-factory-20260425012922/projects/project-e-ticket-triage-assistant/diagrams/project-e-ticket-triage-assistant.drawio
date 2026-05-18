@@ -1,0 +1,40 @@
+<mxfile host="app.diagrams.net" modified="2026-04-06T00:00:00Z" agent="restored-project-e" version="24.7.3">
+  <diagram id="projecte1" name="Architecture">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Project E Ticket Triage Assistant" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="900" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="Support Channels&#xa;Portal / Email / API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;" vertex="1" parent="1">
+          <mxGeometry x="80" y="220" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="Triage API Layer&#xa;Normalization + Orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;" vertex="1" parent="1">
+          <mxGeometry x="340" y="220" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="Azure OpenAI&#xa;Classification + Priority" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;" vertex="1" parent="1">
+          <mxGeometry x="620" y="220" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="Knowledge Retrieval&#xa;Runbooks + KB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;" vertex="1" parent="1">
+          <mxGeometry x="900" y="220" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="Copilot Experience&#xa;Agent Suggestions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f3ff;strokeColor=#0078d4;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="220" width="210" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="n1" target="n2" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;endFill=1;html=1;strokeColor=#2a6ea8;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="n2" target="n3" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;endFill=1;html=1;strokeColor=#2a6ea8;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="n3" target="n4" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;endFill=1;html=1;strokeColor=#2a6ea8;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="n4" target="n5" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;endFill=1;html=1;strokeColor=#2a6ea8;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

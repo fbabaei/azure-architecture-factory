@@ -1,0 +1,10 @@
+[project]
+name = "architecture_flow_test_multi_service_retail_intelligence_platform"
+version = "0.1.0"
+description = "Generated starter project for Architecture Flow Test - Multi-Service Retail Intelligence Platform"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.116.1",
+  "uvicorn[standard]==0.32.1",
+  "pydantic==2.10.3",
+]

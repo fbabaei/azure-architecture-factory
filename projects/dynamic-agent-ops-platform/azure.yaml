@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: dynamic-agent-ops-platform
+
+metadata:
+  template: dynamic-agent-ops-platform@1.0.0
+
+services:
+  meta-orchestrator:
+    project: ./src/meta_orchestrator
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/meta_orchestrator/Dockerfile
+
+  agent-factory:
+    project: ./src/agent_factory
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_factory/Dockerfile
+
+  agent-registry:
+    project: ./src/agent_registry
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_registry/Dockerfile
+
+  agent-architect:
+    project: ./src/agent_templates/architect
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_templates/architect/Dockerfile
+
+  agent-developer:
+    project: ./src/agent_templates/developer
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_templates/developer/Dockerfile
+
+  agent-ops:
+    project: ./src/agent_templates/ops
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_templates/ops/Dockerfile
+
+  agent-analyst:
+    project: ./src/agent_templates/analyst
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_templates/analyst/Dockerfile
+
+  agent-security:
+    project: ./src/agent_templates/security
+    language: python
+    host: containerapp
+    docker:
+      path: ./src/agent_templates/security/Dockerfile
+
+infra:
+  provider: bicep
+  path: ./infra
+  module: main

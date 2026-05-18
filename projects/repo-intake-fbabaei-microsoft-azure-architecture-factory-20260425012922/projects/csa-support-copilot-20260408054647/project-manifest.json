@@ -1,0 +1,47 @@
+{
+  "project": "csa-support-copilot-20260408054647",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\csa-support-copilot.md",
+  "created_at": "2026-04-08T05:46:47.825859+00:00",
+  "generator": "local_factory_stub_orchestrator",
+  "title": "**Business Requirements Document (BRD)**",
+  "requirements_detected": [
+    "Establish clear **business value**",
+    "Align stakeholders on **scope and priorities**",
+    "Provide guidance for **architecture and security reviews**",
+    "Enable conversion into **VBD-aligned delivery artifacts**",
+    "UI pixel-perfect design",
+    "Model training details",
+    "Low-level code implementation",
+    "Provide a **single CSA-facing Copilot** for daily technical and operational needs",
+    "Reduce cognitive load caused by tool and context switching",
+    "Improve **speed, accuracy, and confidence** in CSA responses",
+    "Enable reuse of CSA operational tools through MCP",
+    "Natural language Q\\&A for CSA operational and technical topics",
+    "Aggregation of CSA tools into a **single MCP**",
+    "Secure retrieval of approved internal documentation",
+    "Step-by-step operational guidance",
+    "Context-aware responses aligned to CSA scenarios",
+    "Customer-facing deployment (internal only)",
+    "External tenant access",
+    "Autonomous decision-making without human oversight",
+    "\u2705 Improves CSA efficiency and scale",
+    "\u2705 Promotes reuse and standardization",
+    "\u2705 Supports AI-first CSA tooling strategy",
+    "\u2705 Demonstrates hands-on innovation and delivery"
+  ],
+  "success_criteria_detected": [
+    "All **Must** requirements are met",
+    "Security and compliance are approved",
+    "Pilot CSAs validate usability and value",
+    "Documentation and onboarding guide are available"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": true,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": false
+  }
+}

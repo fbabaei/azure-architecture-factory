@@ -1,0 +1,30 @@
+{
+  "project": "test-app-20260410230341",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\test-app.md",
+  "created_at": "2026-04-10T23:03:41.459518Z",
+  "generator": "azure_native_factory_runner",
+  "title": "Test App",
+  "requirements_detected": [
+    "Business Requirements Document (BRD)",
+    "Testing Application",
+    "1. Executive Summary",
+    "This document defines the business requirements for a new Testing Application designed to improve the efficiency, reliability, and visibility of software testing activities across development teams.",
+    "The application will support manual testing, automated testing, and test orchestration, providing a unified platform for planning, execution, reporting, and insights. The primary objective is to reduce release risk, shorten test cycles, and increase confidence in software quality.",
+    "2. Business Objectives",
+    "The key business objectives of the Testing Application are:",
+    "Improve testing efficiency and reduce manual effort"
+  ],
+  "success_criteria_detected": [
+    "Generated starter solution is reviewed and refined before production deployment"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": true
+  },
+  "user_home_copy": "C:\\Users\\fbabaei\\app\\test-app-20260410230341"
+}

@@ -1,0 +1,8 @@
+run_id=icon-test-20260414223913
+generated_at=2026-04-15T05:39:13.033805Z
+project_slug=brd-real-time-inventory-sync-service-20260415053913
+source_brd=brd-icon-test-20260414.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\brd-real-time-inventory-sync-service-20260415053913
+status=complete
+runner=azure_native_factory_runner

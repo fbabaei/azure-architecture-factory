@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRD Readiness Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --brand: #0b3a66;
+      --brand-soft: #dbeafe;
+      --border: #d8e2ee;
+      --pass: #0f766e;
+      --warn: #b45309;
+      --fail: #b91c1c;
+    }
+    body { font-family: Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--brand); color: #fff; }
+    .topbar a { color: #dbeafe; text-decoration: none; margin-left: 16px; }
+    .topbar a:hover { text-decoration: underline; }
+    .wrap { max-width: 1240px; margin: 20px auto; padding: 0 16px; }
+    .card { background: var(--card); border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 14px; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 { margin: 0 0 12px; font-size: 20px; color: var(--brand); }
+    h3 { margin: 0 0 10px; font-size: 18px; color: var(--brand); }
+    .muted { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { background: #2563eb; color: white; text-decoration: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; border: 0; cursor: pointer; }
+    .btn.secondary { background: var(--brand-soft); color: #1d4ed8; }
+    .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .metric { background: #f8fbff; border: 1px solid var(--brand-soft); border-radius: 8px; padding: 14px; }
+    .metric .k { font-size: 12px; color: var(--muted); }
+    .metric .v { font-size: 28px; font-weight: bold; margin-top: 6px; color: var(--brand); }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+    .pill.pass { background: #ccfbf1; color: var(--pass); }
+    .pill.warn { background: #fef3c7; color: var(--warn); }
+    .pill.fail { background: #fee2e2; color: var(--fail); }
+    .section-block { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fbfdff; margin-bottom: 12px; }
+    .item-row { display: grid; grid-template-columns: minmax(260px, 1.3fr) 80px 130px 1fr; gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid #edf2f7; }
+    .item-row:first-of-type { border-top: 0; }
+    .item-label { font-size: 14px; line-height: 1.5; }
+    .item-weight, .item-score { font-size: 13px; color: var(--muted); }
+    select, input[type="text"] { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-sizing: border-box; }
+    textarea { width: 100%; min-height: 70px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; box-sizing: border-box; resize: vertical; }
+    .blockers { display: grid; gap: 8px; margin-top: 12px; }
+    .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--ink); }
+    .decision-box { border-radius: 10px; padding: 14px; border: 1px solid var(--border); background: #f8fbff; }
+    .decision-text { font-size: 22px; font-weight: 700; margin: 10px 0 6px; }
+    .decision-copy { background: #111827; color: #e5e7eb; border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .item-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>BRD Readiness Dashboard</strong></div>
+    <div>
+      <a href="/">Main Demo</a>
+      <a href="/factory-readiness">Factory Readiness</a>
+      <a href="/presentation">Leadership Brief</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Is This BRD Ready For The Factory?</h1>
+      <p class="muted">Use this scorecard before sending requirements into `project-orchestrator`. It turns the BRD readiness gate into an interactive review with weighted scoring, blocking conditions, and a final classification.</p>
+      <div class="actions">
+        <a class="btn secondary" href="/factory-readiness">Open Factory Readiness</a>
+        <a class="btn secondary" href="/">Back to Main Demo</a>
+        <button class="btn" type="button" onclick="resetScorecard()">Reset Scorecard</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>BRD Information</h2>
+      <div class="field-grid">
+        <input id="brd-name" type="text" placeholder="BRD name" />
+        <input id="brd-owner" type="text" placeholder="Owner" />
+        <input id="brd-reviewer" type="text" placeholder="Reviewer" />
+        <input id="brd-workload" type="text" placeholder="Target workload type" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div id="scorecard-sections"></div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Blocking Conditions</h2>
+          <div class="blockers">
+            <label class="check"><input id="blocker-identity" type="checkbox" />Missing identity, compliance, or network ownership</label>
+            <label class="check"><input id="blocker-contradiction" type="checkbox" />Critical compliance or delivery assumptions are contradictory</label>
+            <label class="check"><input id="blocker-nonazure" type="checkbox" />The BRD depends on a non-Azure-first runtime or vendor constraint</label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Summary</h2>
+          <div class="summary-grid">
+            <div class="metric"><div class="k">Weighted Score</div><div id="weighted-score" class="v">0</div></div>
+            <div class="metric"><div class="k">Max Score</div><div id="max-score" class="v">{{ scorecard_max }}</div></div>
+            <div class="metric"><div class="k">Percent</div><div id="percent-score" class="v">0%</div></div>
+            <div class="metric"><div class="k">Fail Count</div><div id="fail-count" class="v">0</div></div>
+          </div>
+        </div>
+
+        <div class="card decision-box">
+          <h2>Decision</h2>
+          <span id="decision-pill" class="pill warn">Auto-Ready With Guardrails</span>
+          <div id="decision-text" class="decision-text">Auto-Ready With Guardrails</div>
+          <p id="decision-reason" class="muted">Complete the scorecard to classify the BRD.</p>
+          <h3>Recommendation Text</h3>
+          <div id="decision-copy" class="decision-copy"></div>
+        </div>
+
+        <div class="card">
+          <h2>Review Notes</h2>
+          <textarea placeholder="Main blockers, assumptions, and required clarifications"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scorecardItems = {{ scorecard_items|tojson }};
+    const maxScore = {{ scorecard_max }};
+    const scoreOptions = [
+      { value: 2, label: 'Pass (2)' },
+      { value: 1, label: 'Partial (1)' },
+      { value: 0, label: 'Fail (0)' },
+    ];
+
+    function groupedItems() {
+      const groups = new Map();
+      for (const item of scorecardItems) {
+        if (!groups.has(item.section)) {
+          groups.set(item.section, []);
+        }
+        groups.get(item.section).push(item);
+      }
+      return groups;
+    }
+
+    function renderScorecard() {
+      const container = document.getElementById('scorecard-sections');
+      container.innerHTML = '';
+
+      for (const [section, items] of groupedItems()) {
+        const block = document.createElement('div');
+        block.className = 'card';
+        block.innerHTML = `<h2>${section}</h2>`;
+
+        for (const [index, item] of items.entries()) {
+          const globalIndex = scorecardItems.findIndex(candidate => candidate.section === item.section && candidate.label === item.label);
+          const row = document.createElement('div');
+          row.className = 'item-row';
+          row.innerHTML = `
+            <div class="item-label">${item.label}</div>
+            <div class="item-weight">Weight: ${item.weight}</div>
+            <div>
+              <select data-index="${globalIndex}" onchange="recalculateScorecard()">
+                ${scoreOptions.map(option => `<option value="${option.value}" ${option.value === 1 ? 'selected' : ''}>${option.label}</option>`).join('')}
+              </select>
+            </div>
+            <div class="item-score" id="weighted-${globalIndex}">Weighted: ${item.weight}</div>
+          `;
+          block.appendChild(row);
+        }
+
+        container.appendChild(block);
+      }
+    }
+
+    function recalculateScorecard() {
+      let weightedScore = 0;
+      let failCount = 0;
+      let azureFail = false;
+
+      document.querySelectorAll('select[data-index]').forEach(select => {
+        const index = Number(select.dataset.index);
+        const score = Number(select.value);
+        const item = scorecardItems[index];
+        const weighted = score * item.weight;
+        weightedScore += weighted;
+
+        if (score === 0) {
+          failCount += 1;
+          if (item.section === 'Azure Fit') {
+            azureFail = true;
+          }
+        }
+
+        const weightedEl = document.getElementById(`weighted-${index}`);
+        if (weightedEl) {
+          weightedEl.textContent = `Weighted: ${weighted}`;
+        }
+      });
+
+      const manualBlock = document.getElementById('blocker-identity').checked
+        || document.getElementById('blocker-contradiction').checked
+        || document.getElementById('blocker-nonazure').checked;
+      const percent = Math.round((weightedScore / maxScore) * 100);
+
+      let decision = 'Auto-Ready With Guardrails';
+      let reason = 'The BRD is viable for baseline generation but should be reviewed before deployment decisions.';
+      let pillClass = 'warn';
+
+      if (azureFail || manualBlock || failCount > 2 || percent < 60) {
+        decision = 'Architect Review Required';
+        reason = 'Blocking conditions or low score indicate that the BRD should be clarified before orchestration.';
+        pillClass = 'fail';
+      } else if (percent >= 80 && failCount === 0) {
+        decision = 'Auto-Ready';
+        reason = 'The BRD contains enough Azure-aligned detail to proceed directly to project orchestration.';
+        pillClass = 'pass';
+      }
+
+      document.getElementById('weighted-score').textContent = String(weightedScore);
+      document.getElementById('percent-score').textContent = `${percent}%`;
+      document.getElementById('fail-count').textContent = String(failCount);
+      document.getElementById('decision-text').textContent = decision;
+      document.getElementById('decision-reason').textContent = reason;
+
+      const pill = document.getElementById('decision-pill');
+      pill.textContent = decision;
+      pill.className = `pill ${pillClass}`;
+
+      const recommendation = {
+        'Auto-Ready': 'This BRD is Auto-Ready for Azure Architecture Factory and can proceed directly to project orchestration.',
+        'Auto-Ready With Guardrails': 'This BRD is Auto-Ready With Guardrails. Generate the baseline, but require architecture review before deployment approval.',
+        'Architect Review Required': 'This BRD requires architect review before Azure Architecture Factory should be used as the implementation engine.',
+      };
+      document.getElementById('decision-copy').textContent = recommendation[decision];
+    }
+
+    function resetScorecard() {
+      document.querySelectorAll('select[data-index]').forEach(select => {
+        select.value = '1';
+      });
+      document.getElementById('blocker-identity').checked = false;
+      document.getElementById('blocker-contradiction').checked = false;
+      document.getElementById('blocker-nonazure').checked = false;
+      recalculateScorecard();
+    }
+
+    renderScorecard();
+    recalculateScorecard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechGear Architecture - Azure AI Foundry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='architecture.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <span class="logo-icon">⚡</span>
+                <h1>TechGear</h1>
+                <span class="badge">Azure Powered</span>
+            </div>
+            <div class="navbar-menu">
+                <a href="/" class="nav-link">← Back to Store</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="architecture-page">
+        <!-- Hero -->
+        <section class="arch-hero">
+            <div class="container">
+                <h1>TechGear Cloud Architecture</h1>
+                <p>Enterprise-grade ecommerce platform built on Azure AI Foundry</p>
+            </div>
+        </section>
+
+        <!-- Architecture Diagram Section -->
+        <section class="diagram-section">
+            <div class="container">
+                <h2>Reference Architecture</h2>
+                <div class="diagram-container">
+                    <svg viewBox="0 0 1600 940" class="architecture-diagram" role="img" aria-label="Clear TechGear Azure ecommerce reference architecture using Azure icons">
+                        <defs>
+                            <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0078D4"></path>
+                            </marker>
+                            <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#7A52A1"></path>
+                            </marker>
+                            <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#107C10"></path>
+                            </marker>
+                            <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#E81123"></path>
+                            </marker>
+                        </defs>
+
+                        <text x="50" y="44" class="diagram-title">TechGear eCommerce - Clear Azure Reference Architecture</text>
+                        <text x="50" y="68" class="diagram-subtitle">Redrawn with the ICON_SOURCES.md standard using Microsoft Azure Architecture Icons CDN URLs.</text>
+
+                        <rect x="50" y="100" width="330" height="560" rx="22" class="column-panel column-experience"></rect>
+                        <rect x="430" y="100" width="330" height="560" rx="22" class="column-panel column-app"></rect>
+                        <rect x="810" y="100" width="330" height="560" rx="22" class="column-panel column-ai"></rect>
+                        <rect x="1190" y="100" width="360" height="560" rx="22" class="column-panel column-data"></rect>
+
+                        <text x="80" y="132" class="column-title">1. Experience &amp; Edge</text>
+                        <text x="460" y="132" class="column-title">2. Commerce APIs</text>
+                        <text x="840" y="132" class="column-title">3. AI &amp; Intelligence</text>
+                        <text x="1220" y="132" class="column-title">4. Data &amp; Events</text>
+
+                        <rect x="90" y="170" width="250" height="70" rx="14" class="user-box"></rect>
+                        <text x="215" y="198" class="user-box-text">Customers, mobile users, admins</text>
+                        <text x="215" y="220" class="user-box-subtext">Browser traffic and authenticated sessions</text>
+
+                        <g class="diagram-card">
+                            <rect x="90" y="275" width="250" height="110" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/App-Services/azure-static-web-apps.svg" x="110" y="294" width="62" height="62"></image>
+                            <text x="190" y="320" class="card-title">Azure Static Web Apps</text>
+                            <text x="190" y="340" class="card-copy">Storefront UI, product pages, cart UX</text>
+                            <text x="190" y="358" class="card-copy">Hosts the customer web experience</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="90" y="415" width="250" height="110" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Networking/front-doors-and-cdn-profiles.svg" x="110" y="434" width="62" height="62"></image>
+                            <text x="190" y="460" class="card-title">Azure Front Door</text>
+                            <text x="190" y="480" class="card-copy">Global routing, CDN, TLS, WAF</text>
+                            <text x="190" y="498" class="card-copy">Accelerates and protects traffic</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="90" y="555" width="250" height="80" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Identity-Access/azure-active-directory.svg" x="110" y="565" width="52" height="52"></image>
+                            <text x="190" y="590" class="card-title">Microsoft Entra ID</text>
+                            <text x="190" y="610" class="card-copy">Sign-in, customer identity, RBAC</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="470" y="170" width="250" height="110" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/api-management.svg" x="490" y="189" width="62" height="62"></image>
+                            <text x="570" y="215" class="card-title">API Management</text>
+                            <text x="570" y="235" class="card-copy">Single gateway for web and mobile clients</text>
+                            <text x="570" y="253" class="card-copy">Policies, auth, throttling, versioning</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="470" y="310" width="250" height="95" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg" x="490" y="327" width="56" height="56"></image>
+                            <text x="570" y="350" class="card-title">Product Catalog Service</text>
+                            <text x="570" y="370" class="card-copy">Products, pricing, inventory, search API</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="470" y="430" width="250" height="95" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg" x="490" y="447" width="56" height="56"></image>
+                            <text x="570" y="470" class="card-title">Checkout &amp; Order Service</text>
+                            <text x="570" y="490" class="card-copy">Cart, payment flow, order orchestration</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="470" y="550" width="250" height="95" rx="18" class="card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Compute/azure-container-apps.svg" x="490" y="567" width="56" height="56"></image>
+                            <text x="570" y="590" class="card-title">Recommendation Service</text>
+                            <text x="570" y="610" class="card-copy">Personalization, ranking, upsell logic</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="850" y="170" width="250" height="110" rx="18" class="card-shell ai-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/AI/azure-ai-studio.svg" x="870" y="189" width="62" height="62"></image>
+                            <text x="950" y="215" class="card-title">Azure AI Foundry</text>
+                            <text x="950" y="235" class="card-copy">Coordinates prompts, models, eval flows</text>
+                            <text x="950" y="253" class="card-copy">Central AI control plane</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="850" y="310" width="250" height="95" rx="18" class="card-shell ai-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/AI/cognitive-services.svg" x="870" y="327" width="56" height="56"></image>
+                            <text x="950" y="350" class="card-title">Azure OpenAI</text>
+                            <text x="950" y="370" class="card-copy">Personalized recommendations and copy</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="850" y="430" width="250" height="95" rx="18" class="card-shell ai-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/AI/cognitive-services.svg" x="870" y="447" width="56" height="56"></image>
+                            <text x="950" y="470" class="card-title">Azure AI Search</text>
+                            <text x="950" y="490" class="card-copy">Semantic search and product discovery</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="850" y="550" width="250" height="95" rx="18" class="card-shell ai-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/AI/cognitive-services.svg" x="870" y="567" width="56" height="56"></image>
+                            <text x="950" y="590" class="card-title">Document Intelligence</text>
+                            <text x="950" y="610" class="card-copy">Invoice extraction and support docs</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="1230" y="170" width="280" height="95" rx="18" class="card-shell data-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Databases/cosmos-db.svg" x="1250" y="187" width="56" height="56"></image>
+                            <text x="1335" y="210" class="card-title">Azure Cosmos DB</text>
+                            <text x="1335" y="230" class="card-copy">Customer profiles, carts, orders, sessions</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="1230" y="290" width="280" height="95" rx="18" class="card-shell data-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Storage/azure-storage.svg" x="1250" y="307" width="56" height="56"></image>
+                            <text x="1335" y="330" class="card-title">Blob Storage</text>
+                            <text x="1335" y="350" class="card-copy">Product images, invoices, exported content</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="1230" y="410" width="280" height="95" rx="18" class="card-shell data-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Integration/service-bus.svg" x="1250" y="427" width="56" height="56"></image>
+                            <text x="1335" y="450" class="card-title">Service Bus</text>
+                            <text x="1335" y="470" class="card-copy">Order events and async fulfillment workflows</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="1230" y="530" width="280" height="95" rx="18" class="card-shell data-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Databases/azure-cache-redis.svg" x="1250" y="547" width="56" height="56"></image>
+                            <text x="1335" y="570" class="card-title">Azure Cache for Redis</text>
+                            <text x="1335" y="590" class="card-copy">Hot catalog reads and low-latency session cache</text>
+                        </g>
+
+                        <rect x="50" y="705" width="1500" height="180" rx="22" class="ops-panel"></rect>
+                        <text x="80" y="738" class="column-title">Platform Operations &amp; Security</text>
+
+                        <g class="diagram-card">
+                            <rect x="110" y="765" width="280" height="90" rx="18" class="ops-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/application-insights.svg" x="130" y="782" width="54" height="54"></image>
+                            <text x="220" y="805" class="card-title">Application Insights</text>
+                            <text x="220" y="825" class="card-copy">Telemetry, traces, performance monitoring</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="450" y="765" width="280" height="90" rx="18" class="ops-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Security/key-vault.svg" x="470" y="782" width="54" height="54"></image>
+                            <text x="560" y="805" class="card-title">Key Vault</text>
+                            <text x="560" y="825" class="card-copy">Secrets, certificates, connection material</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="790" y="765" width="280" height="90" rx="18" class="ops-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Identity-Access/managed-identities.svg" x="810" y="782" width="54" height="54"></image>
+                            <text x="900" y="805" class="card-title">Managed Identity</text>
+                            <text x="900" y="825" class="card-copy">Service-to-service auth without embedded secrets</text>
+                        </g>
+
+                        <g class="diagram-card">
+                            <rect x="1130" y="765" width="280" height="90" rx="18" class="ops-card-shell"></rect>
+                            <image href="https://learn.microsoft.com/en-us/azure/architecture/media/icons/Monitoring/azure-monitor.svg" x="1150" y="782" width="54" height="54"></image>
+                            <text x="1240" y="805" class="card-title">Azure Monitor</text>
+                            <text x="1240" y="825" class="card-copy">Dashboards, alerts, operational visibility</text>
+                        </g>
+
+                        <line x1="340" y1="330" x2="470" y2="225" class="diagram-line-blue"></line>
+                        <line x1="720" y1="225" x2="850" y2="225" class="diagram-line-blue"></line>
+                        <line x1="1100" y1="225" x2="1230" y2="217" class="diagram-line-blue"></line>
+
+                        <line x1="720" y1="357" x2="850" y2="357" class="diagram-line-purple"></line>
+                        <line x1="720" y1="477" x2="850" y2="477" class="diagram-line-purple"></line>
+                        <line x1="720" y1="597" x2="850" y2="597" class="diagram-line-purple"></line>
+
+                        <line x1="1100" y1="357" x2="1230" y2="337" class="diagram-line-green"></line>
+                        <line x1="720" y1="357" x2="1230" y2="577" class="diagram-line-green"></line>
+                        <line x1="720" y1="477" x2="1230" y2="457" class="diagram-line-orange"></line>
+
+                        <polyline points="595,280 595,740 250,740 250,765" class="diagram-line-red"></polyline>
+                        <polyline points="595,280 595,740 590,740 590,765" class="diagram-line-red"></polyline>
+                        <polyline points="595,280 595,740 930,740 930,765" class="diagram-line-red"></polyline>
+                        <polyline points="595,280 595,740 1270,740 1270,765" class="diagram-line-red"></polyline>
+                    </svg>
+                </div>
+                <p class="diagram-note">This version emphasizes the main flow first and uses the icon source conventions from ICON_SOURCES.md: official Azure Architecture Icons delivered from the Microsoft docs CDN.</p>
+            </div>
+        </section>
+
+        <!-- Components Details -->
+        <section class="components-section">
+            <div class="container">
+                <h2>Architecture Components</h2>
+                <div class="components-grid" id="components-grid">
+                    <!-- Components will be loaded by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="features-section">
+            <div class="container">
+                <h2>Key Characteristics</h2>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <h4>🌍 Global Scale</h4>
+                        <p>Multi-region deployment across Azure regions with automatic failover</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>🤖 AI-First Design</h4>
+                        <p>Azure OpenAI for recommendations, AI Search for discovery, Document AI for content</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>⚡ High Performance</h4>
+                        <p>Sub-100ms API response, global CDN edge caching, Redis in-memory store</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>📈 Auto-Scaling</h4>
+                        <p>Container Apps auto-scale from 0 to 1M concurrent users based on demand</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>🔒 Enterprise Security</h4>
+                        <p>Managed identities, Key Vault secrets, end-to-end encryption, compliance-ready</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>📊 Real-Time Observability</h4>
+                        <p>Application Insights telemetry, distributed tracing, KQL analytics, alerts</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment Model -->
+        <section class="deployment-section">
+            <div class="container">
+                <h2>Deployment Model</h2>
+                <div class="deployment-grid">
+                    <div class="deployment-card">
+                        <h4>Infrastructure as Code</h4>
+                        <p class="tech-stack">Bicep templates for repeatability and version control</p>
+                    </div>
+                    <div class="deployment-card">
+                        <h4>Containerization</h4>
+                        <p class="tech-stack">Docker containers in Azure Container Registry</p>
+                    </div>
+                    <div class="deployment-card">
+                        <h4>CI/CD Pipeline</h4>
+                        <p class="tech-stack">Automated build, test, and deployment</p>
+                    </div>
+                    <div class="deployment-card">
+                        <h4>Multi-Region</h4>
+                        <p class="tech-stack">Primary + secondary regions for HA/DR</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Infrastructure Benefits -->
+        <section class="benefits-section">
+            <div class="container">
+                <h2>Platform Benefits</h2>
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">📈</div>
+                        <h4>25% Higher Conversion</h4>
+                        <p>AI-powered recommendations increase average order value</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⚡</div>
+                        <h4>50% Faster Load Times</h4>
+                        <p>CDN + Redis cache delivers pages in &lt;2 seconds globally</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">💰</div>
+                        <h4>60% Cost Savings</h4>
+                        <p>Serverless/managed services eliminate infrastructure overhead</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🔄</div>
+                        <h4>99.95% Uptime</h4>
+                        <p>Multi-region redundancy and auto-failover</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🔍</div>
+                        <h4>98% Search Accuracy</h4>
+                        <p>Semantic search understands user intent better than keyword matching</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎯</div>
+                        <h4>8x Better CTR</h4>
+                        <p>Personalized AI recommendations drive engagement</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>TechGear</h5>
+                    <p>Premium tech accessories powered by Azure AI Foundry</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Azure Services Used</h5>
+                    <ul>
+                        <li>Static Web Apps</li>
+                        <li>Container Apps</li>
+                        <li>Azure OpenAI</li>
+                        <li>AI Search</li>
+                        <li>Cosmos DB</li>
+                        <li>Application Insights</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TechGear Inc. | Powered by Microsoft Azure</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='architecture.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "title": "Imported Repo: fbabaei_microsoft/azure-architecture-factory",
+  "status": "Ready",
+  "source_brd": "https://github.com/fbabaei_microsoft/azure-architecture-factory.git",
+  "created_at": "2026-04-25T01:29:22.150570Z",
+  "generation_options": {
+    "sourceType": "repo-intake",
+    "workflowMode": "analysis-only",
+    "automationGoal": "Validate repo-intake project-card end-to-end visibility in portal"
+  },
+  "links": {
+    "architectureOverview": "projects/repo-intake-fbabaei-microsoft-azure-architecture-factory-20260425012922/docs/architecture-overview.md",
+    "readme": "projects/repo-intake-fbabaei-microsoft-azure-architecture-factory-20260425012922/README.md",
+    "analysisReport": "projects/repo-intake-fbabaei-microsoft-azure-architecture-factory-20260425012922/AAF-analysis-report.md"
+  },
+  "repo_intake": {
+    "repo_url": "https://github.com/fbabaei_microsoft/azure-architecture-factory.git",
+    "branch_name": "AAF-live-0424182911",
+    "workflow_mode": "analysis-only",
+    "run_id": "846b29fd-27e2-4c2e-8750-fcc665c566ed"
+  }
+}

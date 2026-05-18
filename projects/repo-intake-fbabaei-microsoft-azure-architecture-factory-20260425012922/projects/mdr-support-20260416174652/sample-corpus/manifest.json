@@ -1,0 +1,19 @@
+{
+  "documents": [
+    {
+      "path": "dac6-hallmarks-overview.md",
+      "title": "DAC6 Hallmarks Overview",
+      "category": "dac6-guidance"
+    },
+    {
+      "path": "reporting-deadlines.txt",
+      "title": "MDR Reporting Deadlines",
+      "category": "reporting-obligations"
+    },
+    {
+      "path": "clarification-playbook.md",
+      "title": "MDR Clarification Playbook",
+      "category": "analyst-playbook"
+    }
+  ]
+}

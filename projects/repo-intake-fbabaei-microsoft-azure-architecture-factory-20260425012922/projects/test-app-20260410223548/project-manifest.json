@@ -1,0 +1,18 @@
+{
+  "project": "test-app-20260410223548",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\Test App.md",
+  "created_at": "2026-04-10T22:35:48.247178+00:00",
+  "generator": "local_factory_stub_orchestrator",
+  "title": "Test App",
+  "requirements_detected": [],
+  "success_criteria_detected": [],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": false,
+    "governance": true,
+    "workflow": false,
+    "api": true
+  }
+}

@@ -1,0 +1,10 @@
+[project]
+name = "brd_real_time_inventory_sync_service"
+version = "0.1.0"
+description = "Generated starter project for BRD: Real-Time Inventory Sync Service"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.116.1",
+  "uvicorn[standard]==0.32.1",
+  "pydantic==2.10.3",
+]

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Architecture Factory - Leadership Brief</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='presentation.css') }}">
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Navigation -->
+        <div class="presentation-nav">
+            <button id="prev-btn" onclick="previousSlide()" class="nav-btn">← Previous</button>
+            <div class="slide-counter">
+                <span id="current-slide">1</span> / <span id="total-slides">10</span>
+            </div>
+            <button id="next-btn" onclick="nextSlide()" class="nav-btn">Next →</button>
+            <a href="/" class="nav-link">Back to Demo</a>
+        </div>
+
+        <!-- Slide Container -->
+        <div class="slides-container">
+            <div class="slides" id="slides"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="presentation-controls">
+            <button onclick="toggleFullscreen()" class="control-btn" title="Toggle Fullscreen">⛶</button>
+            <button onclick="downloadSlide()" class="control-btn" title="Download as PDF">⬇️</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='presentation.js') }}"></script>
+</body>
+</html>

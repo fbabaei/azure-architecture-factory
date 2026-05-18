@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AKS Storefront Demo</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; color: #1f2937; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; }
+    .hero { background: linear-gradient(135deg, #0b3a66, #2563eb); color: white; border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+    .hero p { margin: 8px 0 0; opacity: 0.92; }
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+    .card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08); }
+    .products { display: grid; gap: 12px; }
+    .product { border: 1px solid #dbeafe; border-radius: 10px; padding: 14px; display: grid; gap: 8px; }
+    .product-top { display: flex; justify-content: space-between; gap: 10px; }
+    .pill { display: inline-flex; background: #e0f2fe; color: #075985; border-radius: 999px; padding: 4px 8px; font-size: 12px; font-weight: 700; }
+    .price { font-size: 22px; font-weight: 700; color: #0b3a66; }
+    .controls { display: flex; align-items: center; gap: 10px; }
+    input, button { font: inherit; }
+    input[type='number'], input[type='text'] { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    button { border: 0; border-radius: 10px; padding: 10px 14px; background: #2563eb; color: white; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .summary-row { display: flex; justify-content: space-between; margin: 8px 0; }
+    .mono { font-family: Consolas, monospace; font-size: 12px; }
+    .muted { color: #64748b; }
+    .checkout-result { margin-top: 16px; padding: 12px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="pill">Environment: {{ environment }}</div>
+      <h1>AKS Storefront Demo</h1>
+      <p>A real sample application for the AKS microservices demo. The API gateway serves this UI and coordinates catalog, order, and payment services.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Catalog</h2>
+        <div id="products" class="products"><div class="muted">Loading products...</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Checkout</h2>
+        <div class="muted">Customer ID</div>
+        <input id="customerId" type="text" value="cust-aks-demo" />
+        <div class="muted" style="margin-top: 12px;">Cardholder Name</div>
+        <input id="cardholderName" type="text" value="Azure Demo User" />
+        <div class="muted" style="margin-top: 12px;">Card Last 4</div>
+        <input id="cardLast4" type="text" value="4242" maxlength="4" />
+
+        <div style="margin-top: 16px;">
+          <div class="summary-row"><span>Items</span><strong id="itemCount">0</strong></div>
+          <div class="summary-row"><span>Estimated Total</span><strong id="estimatedTotal">$0.00</strong></div>
+        </div>
+
+        <button id="checkoutBtn" style="margin-top: 14px; width: 100%;" onclick="checkout()">Place Order</button>
+        <div id="result" class="checkout-result" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cart = new Map();
+    let products = [];
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    }
+
+    function refreshSummary() {
+      const itemCount = [...cart.values()].reduce((sum, qty) => sum + qty, 0);
+      const total = products.reduce((sum, product) => sum + ((cart.get(product.sku) || 0) * product.price), 0);
+      document.getElementById('itemCount').textContent = itemCount;
+      document.getElementById('estimatedTotal').textContent = formatMoney(total * 1.08);
+    }
+
+    function updateQuantity(sku, nextQty) {
+      const qty = Math.max(0, Number(nextQty) || 0);
+      if (qty === 0) {
+        cart.delete(sku);
+      } else {
+        cart.set(sku, qty);
+      }
+      refreshSummary();
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+      for (const product of products) {
+        const qty = cart.get(product.sku) || 0;
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <div class="product-top">
+            <div>
+              <div class="pill">${product.category}</div>
+              <h3>${product.name}</h3>
+              <div class="muted">${product.description}</div>
+            </div>
+            <div class="price">${formatMoney(product.price)}</div>
+          </div>
+          <div class="controls">
+            <label for="qty-${product.sku}" class="muted">Qty</label>
+            <input id="qty-${product.sku}" type="number" min="0" value="${qty}" style="max-width:100px;" />
+          </div>
+          <div class="mono">SKU: ${product.sku}</div>
+        `;
+        container.appendChild(div);
+        div.querySelector('input').addEventListener('input', (event) => updateQuantity(product.sku, event.target.value));
+      }
+      refreshSummary();
+    }
+
+    async function loadProducts() {
+      const response = await fetch('/products');
+      const data = await response.json();
+      products = data.products || [];
+      renderProducts();
+    }
+
+    async function checkout() {
+      const lines = [...cart.entries()].filter(([, quantity]) => quantity > 0).map(([sku, quantity]) => ({ sku, quantity }));
+      const resultEl = document.getElementById('result');
+      if (!lines.length) {
+        resultEl.style.display = 'block';
+        resultEl.textContent = 'Add at least one product before checkout.';
+        return;
+      }
+
+      const payload = {
+        customer_id: document.getElementById('customerId').value,
+        lines,
+        payment: {
+          cardholder_name: document.getElementById('cardholderName').value,
+          card_last4: document.getElementById('cardLast4').value,
+          method: 'credit_card'
+        }
+      };
+
+      const btn = document.getElementById('checkoutBtn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        const response = await fetch('/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || 'Checkout failed');
+        }
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `
+          <strong>Order ${data.order.order_id}</strong><br>
+          Status: ${data.status}<br>
+          Total: ${formatMoney(data.order.total)}<br>
+          Payment: ${data.payment.status} (${data.payment.transaction_id})
+        `;
+      } catch (error) {
+        resultEl.style.display = 'block';
+        resultEl.textContent = `Checkout failed: ${error.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>

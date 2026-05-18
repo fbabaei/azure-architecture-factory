@@ -1,0 +1,412 @@
+/* ============================================
+   PRESENTATION STYLES
+   ============================================ */
+
+:root {
+    --primary-color: #0078d4;
+    --primary-dark: #005a9e;
+    --secondary-color: #50e6ff;
+    --accent-color: #ff8c00;
+    --success-color: #107c10;
+    --warning-color: #ffb900;
+    --text-color: #333333;
+    --bg-color: #f3f2f1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #000;
+}
+
+.presentation-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #1a1a1a;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.presentation-nav {
+    background: linear-gradient(90deg, #222 0%, #2a2a2a 100%);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+    z-index: 100;
+}
+
+.nav-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.nav-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.slide-counter {
+    color: white;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+}
+
+.nav-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-size: 14px;
+    transition: opacity 0.3s;
+}
+
+.nav-link:hover {
+    opacity: 0.8;
+}
+
+/* ============================================
+   SLIDES CONTAINER
+   ============================================ */
+
+.slides-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+}
+
+.slides {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.slide {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.slide.active {
+    opacity: 1;
+    position: relative;
+}
+
+.slide-content {
+    width: 100%;
+    height: 100%;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(80, 230, 255, 0.05) 100%);
+}
+
+.slide-number {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 14px;
+    color: #999;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--secondary-color);
+}
+
+.slide-subtitle {
+    font-size: 28px;
+    color: white;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.slide-description {
+    font-size: 18px;
+    color: #ccc;
+    margin-bottom: 150px;
+    opacity: 0.8;
+}
+
+.slide-metrics {
+    list-style: none;
+}
+
+.slide-metrics li {
+    font-size: 18px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+    padding-left: 30px;
+    position: relative;
+    color: #ddd;
+}
+
+.slide-metrics li:before {
+    content: "▸";
+    position: absolute;
+    left: 8px;
+    color: var(--secondary-color);
+    font-size: 20px;
+}
+
+/* ============================================
+   ALTERNATE SLIDE DESIGNS
+   ============================================ */
+
+.slide:nth-child(1) .slide-content {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(255, 140, 0, 0.1) 100%);
+}
+
+.slide:nth-child(2) .slide-content {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(255, 188, 0, 0.1) 100%);
+}
+
+.slide:nth-child(3) .slide-content {
+    background: linear-gradient(135deg, rgba(0, 200, 16, 0.1) 0%, rgba(80, 230, 255, 0.1) 100%);
+}
+
+.slide:nth-child(4) .slide-content {
+    background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(0, 200, 16, 0.1) 100%);
+}
+
+.slide:nth-child(5) .slide-content {
+    background: linear-gradient(135deg, rgba(80, 230, 255, 0.1) 0%, rgba(0, 120, 212, 0.1) 100%);
+}
+
+.slide:nth-child(6) .slide-content {
+    background: linear-gradient(135deg, rgba(255, 185, 0, 0.1) 0%, rgba(255, 140, 0, 0.1) 100%);
+}
+
+.slide:nth-child(7) .slide-content {
+    background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, rgba(80, 230, 255, 0.1) 100%);
+}
+
+.slide:nth-child(8) .slide-content {
+    background: linear-gradient(135deg, rgba(16, 124, 16, 0.1) 0%, rgba(80, 184, 255, 0.1) 100%);
+}
+
+.slide:nth-child(9) .slide-content {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(0, 120, 212, 0.1) 100%);
+}
+
+.slide:nth-child(10) .slide-content {
+    background: linear-gradient(135deg, rgba(80, 230, 255, 0.1) 0%, rgba(255, 185, 0, 0.1) 100%);
+}
+
+/* ============================================
+   METRICS STYLING
+   ============================================ */
+
+.metric-badge {
+    display: inline-block;
+    background: rgba(0, 120, 212, 0.2);
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   CONTROLS
+   ============================================ */
+
+.presentation-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 15px 30px;
+    background: #222;
+    border-top: 1px solid #444;
+}
+
+.control-btn {
+    background: none;
+    border: 1px solid #666;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+}
+
+.control-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+
+.progress-bar {
+    height: 4px;
+    background: #444;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 0.3s ease;
+}
+
+/* ============================================
+   KEYBOARD NAVIGATION
+   ============================================ */
+
+:global(body.fullscreen) {
+    overflow: hidden;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .presentation-nav,
+    .presentation-controls,
+    .progress-bar {
+        display: none;
+    }
+
+    .slides-container {
+        flex: 1;
+    }
+
+    .slide {
+        page-break-after: always;
+        opacity: 1 !important;
+        position: relative !important;
+    }
+
+    .slide-content {
+        height: auto;
+        min-height: 100%;
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .slide-content {
+        padding: 40px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+
+    .slide-subtitle {
+        font-size: 24px;
+    }
+
+    .slide-metrics li {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .slide-content {
+        padding: 30px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .slide-subtitle {
+        font-size: 20px;
+        margin-bottom: 30px;
+    }
+
+    .slide-description {
+        font-size: 16px;
+        margin-bottom: 80px;
+    }
+
+    .slide-metrics li {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slide-content {
+        padding: 20px;
+    }
+
+    .slide-title {
+        font-size: 22px;
+    }
+
+    .slide-subtitle {
+        font-size: 16px;
+    }
+
+    .slide-metrics li {
+        font-size: 13px;
+    }
+
+    .presentation-nav {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .slide-number {
+        top: 10px;
+        right: 15px;
+        font-size: 12px;
+    }
+}

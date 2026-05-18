@@ -37,3 +37,10 @@ logs/*.err
 logs/*.out
 logs/*.log
 portal.err
+
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# Temporary working directory
+/tmp/
