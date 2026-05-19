@@ -1,0 +1,11 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
+# csa-helper agent-framework deps (mirror of the upstream requirements.txt;
+# pinned >= so a drift-check in Phase 2.5 can compare).
+openai>=1.40.0
+azure-identity>=1.17.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+# Telemetry
+opencensus-ext-azure>=1.1.13

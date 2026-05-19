@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+node_modules
+tmp/
+logs/
+projects/repo-intake-*/
+projects/mdr-support-*/src/obj/
+projects/mdr-support-*/tests/bin/
+projects/mdr-support-*/tests/obj/
+**/bin/
+**/obj/
+*.log

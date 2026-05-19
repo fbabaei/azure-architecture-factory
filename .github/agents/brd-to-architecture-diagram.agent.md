@@ -2,6 +2,7 @@
 name: brd-to-architecture-diagram
 description: "Use when you need to read business or product requirements and generate an Azure architecture diagram using the MCP Draw.io server. Produces a .drawio file and companion notes saved to diagrams/."
 tools: [read, edit, search, mcp]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide the path to a requirements file (e.g., BRD.md, PRD.md) or paste requirements inline. Optionally specify a diagram name and output folder (default: diagrams/). To skip MCP generation and use an existing diagram, pass `existing-diagram: <path>` — the agent will copy it to the output folder and generate companion notes."
 ---
@@ -18,10 +19,79 @@ Your job is to:
 - DO NOT guess Azure services; derive every component from stated requirements.
 - DO NOT create overly complex diagrams; include only what the requirements justify.
 - ALWAYS use the transactional workflow for diagrams with more than 3 components.
-- ALWAYS call `search-shapes` before adding Azure icons — never hard-code shape names.
+- ALWAYS call `search-shapes` BEFORE calling `add-cells` — use returned `shape_name` values for all Azure service vertices.
+- **REQUIRE Azure icons**: Every vertex representing an Azure service MUST use a `shape_name` from `search-shapes` (e.g., `Container Apps`, `Cosmos DB`, `Key Vault`). DO NOT use generic rectangles (`rounded=1;whiteSpace=wrap`).
 - ALWAYS save the exported XML to `diagrams/<name>.drawio` and notes to `diagrams/<name>.md`.
 - ALWAYS follow left-to-right primary flow and place cross-cutting services at the bottom.
 - DO NOT draw edges between cross-cutting services or from main-flow to cross-cutting services.
+
+## Alignment Convergence Loop — Participant Role
+
+This agent is a participant in the orchestrator's **Phase 2.5 Alignment Convergence Loop**. It runs in one of three modes selected by the caller via the `mode` argument. The original `generate` mode is unchanged; two new modes support the loop.
+
+| Mode | Purpose |
+|------|---------|
+| `generate` (default) | Full first-pass diagram generation (see Diagram Generation Workflow below). |
+| `extract-inventory` | **NEW.** Parse the BRD and return a JSON inventory of every required Azure service, data store, external integration, data flow, NFR, and compliance constraint. Do NOT regenerate the diagram. Save to `projects/<slug>/docs/alignment/brd-inventory-iter-N.json`. |
+| `update` | **NEW.** Accept a delta (`components_to_add`, `components_to_remove`, `flows_to_update`) and apply it to the existing `<slug>.drawio` diagram in place. Preserve layout where possible. Log a diff of the change to `projects/<slug>/diagrams/history/`. |
+| `synthesize-agents` | **NEW.** Read an existing `.drawio` (and BRD if present) and emit a draft `implementation.agents[]` block for any shape that looks like an Azure AI Foundry agent (shape style contains `azure-ai-foundry`, `azure-openai`, or `cognitive-services`; or label contains `agent`, `assistant`, `copilot`, `bot`, `extractor`, `classifier`). Write the draft to `projects/<slug>/docs/agents/agents-draft.json` for human review. Mark `confidence: low` for every entry whose purpose was inferred from a label only (no BRD support). Do NOT mutate the BRD file. |
+
+### `synthesize-agents` output schema
+
+```json
+{
+  "synthesized_at": "<ISO>",
+  "source_diagram": "projects/<slug>/diagrams/<slug>.drawio",
+  "source_brd": "projects/<slug>/docs/requirements.md | null",
+  "agents": [
+    {
+      "name": "<derived from shape label>",
+      "service": "<owning microservice or 'unknown'>",
+      "description": "<one-line inferred purpose; cite diagram label and any BRD section>",
+      "inbound_edges": ["<source-component-id>"],
+      "outbound_edges": ["<target-component-id>"],
+      "confidence": "low | medium",
+      "evidence": ["diagram:<shape-id>", "brd:<section> (optional)"]
+    }
+  ],
+  "warnings": ["..."]
+}
+```
+
+Rules for `synthesize-agents`:
+- Confidence is `medium` only when both the diagram shape AND a BRD paragraph corroborate the agent. Otherwise `low`.
+- Never invent agents from rectangles with generic labels (e.g., `service-1`, `api`). Skip them and add a warning.
+- The orchestrator (not this agent) is responsible for prompting the human to confirm or edit the draft before Phase 1.5 consumes it.
+
+### `extract-inventory` output schema
+
+```json
+{
+  "iteration": N,
+  "source_brd": "projects/<slug>/docs/requirements.md",
+  "extracted_at": "<ISO>",
+  "azure_services": [
+    { "name": "Container Apps", "role": "portal-host", "justification": "BRD §3.1" }
+  ],
+  "data_stores": [
+    { "name": "Cosmos DB", "purpose": "order-state", "justification": "BRD §4" }
+  ],
+  "external_integrations": [
+    { "name": "Contoso Billing", "direction": "outbound", "justification": "BRD §6" }
+  ],
+  "primary_data_flows": [
+    { "from": "portal", "to": "orders-service", "trigger": "POST /api/orders" }
+  ],
+  "non_functional_requirements": [
+    { "id": "NFR-1", "category": "performance", "assertion": "p95 < 500ms", "justification": "BRD §7.1" }
+  ],
+  "compliance_constraints": [
+    { "id": "HIPAA-audit", "scope": "all patient data", "justification": "BRD §8" }
+  ]
+}
+```
+
+Every inventory item MUST include a `justification` citing the BRD section or line. Items without BRD evidence MUST NOT appear.
 
 ## Using an Existing Architecture File
 
@@ -117,8 +187,9 @@ Pass `text: ""` for all groups. Create a separate text vertex label above each g
 ```
 mcp_draw_io_mcp_add-cells({ cells: [...all vertices and edges...], transactional: true })
 ```
-- Vertices first, edges after.
-- Shaped vertices: only `x`, `y`, `shape_name`, `text`, `temp_id` — no `width`, `height`, or `style`.
+- Vertices first (all using shape_name from search-shapes), edges after.
+- **CRITICAL: Use `shape_name` for ALL Azure service vertices** — e.g., `shape_name: "Container Apps"`, `shape_name: "Cosmos DB"`, `shape_name: "Azure Key Vault"`. 
+- Each shaped vertex: `{ x, y, shape_name, text, temp_id }` — NO generic `rounded=1;whiteSpace=wrap` rectangles.
 - Edges: only `source_id`, `target_id`, `text` — no anchor points.
 
 **3e. Assign cells to groups**

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azure-architecture-factory/contracts/v1/agent-tooling-contract.schema.json",
+  "title": "AAF Agent Tooling Advisory",
+  "description": "Phase 1.5 advisory output produced by agent-tooling-advisor. Resolves Foundry capabilities, tools, baseline system prompt, and example user prompts for every Azure AI Foundry agent declared (or synthesized) for a project. Read by project-orchestrator (Phase 2 routing), language specialists (materialization), and contract-validator (cross-reference).",
+  "type": "object",
+  "required": [
+    "advised_at",
+    "advisor_version",
+    "project_slug",
+    "status",
+    "next_action",
+    "agents",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "advised_at": { "type": "string", "format": "date-time" },
+    "advisor_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "project_slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}$" },
+    "status": { "type": "string", "enum": ["ok", "skipped", "needs_review", "fail"] },
+    "next_action": { "type": "string", "enum": ["proceed", "needs_review", "block"] },
+    "source_of_truth": { "type": "string", "enum": ["brd", "agents-draft", "none"] },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "service",
+          "recommended_capabilities",
+          "recommended_tools",
+          "baseline_prompt",
+          "confidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "service": { "type": "string", "minLength": 1 },
+          "recommended_capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["code_interpreter", "file_search", "function_calling"]
+            },
+            "uniqueItems": true
+          },
+          "recommended_tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "rationale", "confidence"],
+              "properties": {
+                "type": { "type": "string", "enum": ["code_interpreter", "file_search", "function"] },
+                "name": { "type": "string" },
+                "signature": { "type": "string" },
+                "rationale": { "type": "string", "minLength": 1 },
+                "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+              },
+              "allOf": [
+                {
+                  "if": { "properties": { "type": { "const": "function" } } },
+                  "then": { "required": ["name", "signature"] }
+                }
+              ]
+            }
+          },
+          "baseline_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1200,
+            "description": "System prompt baked into the agent at create time (Instructions). Hard cap 1200 chars per advisor contract."
+          },
+          "example_user_prompts": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "required": ["prompt", "expected_behavior", "exercises"],
+              "additionalProperties": false,
+              "properties": {
+                "prompt": { "type": "string" },
+                "expected_behavior": { "type": "string", "minLength": 1 },
+                "exercises": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "uniqueItems": true
+                }
+              }
+            }
+          },
+          "compliance_notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["minor", "major", "critical"] },
+          "agent": { "type": "string" },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

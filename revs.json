@@ -1,0 +1,118 @@
+[
+  {
+    "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/arch-factory-dev-rg/providers/Microsoft.App/containerApps/arch-factory-dev-portal/revisions/arch-factory-dev-portal--0000097",
+    "name": "arch-factory-dev-portal--0000097",
+    "properties": {
+      "active": true,
+      "createdTime": "2026-04-14T18:13:06+00:00",
+      "fqdn": "arch-factory-dev-portal--0000097.politebeach-70e24eed.eastus.azurecontainerapps.io",
+      "healthState": "Healthy",
+      "provisioningState": "Provisioned",
+      "replicas": 1,
+      "runningState": "Running",
+      "template": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "ENVIRONMENT",
+                "value": "dev"
+              },
+              {
+                "name": "FACTORY_PORTAL_ALLOWED_ORIGIN",
+                "value": "*"
+              },
+              {
+                "name": "FACTORY_PORTAL_BIND",
+                "value": "0.0.0.0"
+              },
+              {
+                "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                "value": "InstrumentationKey=c933d776-c145-4c2e-b795-a5a6b4b8d6d8;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=1af8e5d2-9a9e-40b8-8b7c-3e386c7af44e"
+              },
+              {
+                "name": "ENTRA_TENANT_ID",
+                "value": ""
+              },
+              {
+                "name": "ENTRA_CLIENT_ID",
+                "value": ""
+              },
+              {
+                "name": "FACTORY_PORTAL_API_KEY",
+                "secretRef": "portal-api-key"
+              },
+              {
+                "name": "CSA_COPILOT_API_BASE",
+                "value": "https://arch-factory-dev-csa-copilot.politebeach-70e24eed.eastus.azurecontainerapps.io"
+              },
+              {
+                "name": "CSA_COPILOT_API_KEY",
+                "secretRef": "csa-copilot-api-key"
+              },
+              {
+                "name": "CSA_COPILOT_TIMEOUT_SECONDS",
+                "value": "25"
+              },
+              {
+                "name": "DEPLOY_TS",
+                "value": "20260413"
+              },
+              {
+                "name": "FACTORY_PORTAL_AUTH_MODE",
+                "value": "entra"
+              },
+              {
+                "name": "FACTORY_PORTAL_ADMINS",
+                "value": "admin@MngEnvMCAP688316.onmicrosoft.com,fbabaei@microsoft.com"
+              },
+              {
+                "name": "FACTORY_PORTAL_ALLOWED_TENANTS",
+                "value": "72f988bf-86f1-41af-91ab-2d7cd011db47,f5d3b574-19e1-4815-a4a7-468c285b8769"
+              },
+              {
+                "name": "FACTORY_PORTAL_BLOB_ACCOUNT",
+                "value": "archfactblob9187"
+              },
+              {
+                "name": "FACTORY_PORTAL_BLOB_CONTAINER",
+                "value": "portal-data"
+              }
+            ],
+            "image": "archfactorydevacr.azurecr.io/portal:portal-20260419204902",
+            "name": "arch-factory-dev-portal",
+            "probes": [],
+            "resources": {
+              "cpu": 0.25,
+              "memory": "0.5Gi"
+            }
+          }
+        ],
+        "initContainers": null,
+        "revisionSuffix": null,
+        "scale": {
+          "cooldownPeriod": null,
+          "maxReplicas": 2,
+          "minReplicas": 0,
+          "pollingInterval": null,
+          "rules": [
+            {
+              "http": {
+                "metadata": {
+                  "concurrentRequests": "10"
+                }
+              },
+              "name": "http-requests"
+            }
+          ]
+        },
+        "serviceBinds": null,
+        "terminationGracePeriodSeconds": null,
+        "volumes": null
+      },
+      "trafficWeight": 100
+    },
+    "resourceGroup": "arch-factory-dev-rg",
+    "type": "Microsoft.App/containerapps/revisions"
+  }
+]

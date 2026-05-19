@@ -1,0 +1,83 @@
+# OrderManagement Platform - Docker Compose for Local Development
+
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ../src/api-gateway
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8000:8000"
+    environment:
+      SERVICE_NAME: api-gateway
+      ENVIRONMENT: dev
+      ORDER_SERVICE_URL: http://order-service:8001
+      INVENTORY_SERVICE_URL: http://inventory-service:8002
+      PAYMENT_SERVICE_URL: http://payment-service:8003
+      ANALYTICS_SERVICE_URL: http://analytics-service:8005
+    depends_on:
+      - order-service
+      - inventory-service
+      - payment-service
+
+  order-service:
+    build:
+      context: ../src/order-service
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8001:8001"
+    environment:
+      SERVICE_NAME: order-service
+      ENVIRONMENT: dev
+      PORT: 8001
+    depends_on:
+      - inventory-service
+
+  inventory-service:
+    build:
+      context: ../src/inventory-service
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8002:8002"
+    environment:
+      SERVICE_NAME: inventory-service
+      ENVIRONMENT: dev
+      PORT: 8002
+
+  payment-service:
+    build:
+      context: ../src/payment-service
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8003:8003"
+    environment:
+      SERVICE_NAME: payment-service
+      ENVIRONMENT: dev
+      PORT: 8003
+
+  notification-service:
+    build:
+      context: ../src/notification-service
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8004:8004"
+    environment:
+      SERVICE_NAME: notification-service
+      ENVIRONMENT: dev
+      PORT: 8004
+
+  analytics-service:
+    build:
+      context: ../src/analytics-service
+      dockerfile: ../../docker/Dockerfile.service
+    ports:
+      - "8005:8005"
+    environment:
+      SERVICE_NAME: analytics-service
+      ENVIRONMENT: dev
+      PORT: 8005
+
+networks:
+  default:
+    name: order-management-network

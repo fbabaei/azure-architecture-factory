@@ -1,0 +1,44 @@
+{
+  "project": "azure-icons-validation-claims-processing-assistant-20260415053413",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\scripts\\docs\\intake\\brd-azure-icons-validation-20260414.md",
+  "created_at": "2026-04-15T05:34:13.074706Z",
+  "generator": "azure_native_factory_runner",
+  "title": "Azure Icons Validation - Claims Processing Assistant",
+  "requirements_detected": [
+    "Intake claims documents from partner systems",
+    "Classify and route claims for review",
+    "Expose an operations API and dashboard",
+    "Enable AI-assisted reviewer copilot experience",
+    "Ingest claims payloads via API",
+    "Persist claim records and attachments",
+    "Provide reviewer workflows and status tracking",
+    "Surface AI assistance for claim summarization and next-best-action",
+    "Support operational reporting endpoints",
+    "99.9% service availability",
+    "Secure identity and secret handling",
+    "Centralized observability and tracing",
+    "Infrastructure as code with Bicep",
+    "Use managed identities wherever possible",
+    "Use Key Vault for secrets and keys",
+    "Enforce RBAC with least privilege"
+  ],
+  "success_criteria_detected": [
+    "A new project is generated end-to-end",
+    "The new drawio diagram contains Azure icon image styles",
+    "Generated tests pass in the scaffolded project"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": true,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": true
+  },
+  "generation_options": {
+    "enableObservability": true,
+    "networkTier": "private"
+  },
+  "user_home_copy": "C:\\Users\\fbabaei\\app\\azure-icons-validation-claims-processing-assistant-20260415053413"
+}

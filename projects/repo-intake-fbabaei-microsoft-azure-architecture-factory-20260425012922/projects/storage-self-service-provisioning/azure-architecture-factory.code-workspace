@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../aks-microservices-demo"
+		},
+		{
+			"path": "../ecommerce-demo"
+		},
+		{
+			"path": "../order-management-platform"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

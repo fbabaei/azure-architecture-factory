@@ -6,6 +6,8 @@ This repository supports three main workflows:
 2. Use individual agents for architecture, implementation, validation, or deployment tasks.
 3. Review the sample-project portfolio and validation evidence through the developer portal.
 
+The portal also ships two AI copilots — **💬 BRD Copilot** (bottom-left: draft or review BRDs against a 10-point readiness rubric) and **🛠️ Project Copilot** (tool-enabled, per-project: architecture Q&A, cost, observability, deploy commands). Both require Azure OpenAI env vars on the portal process. See [COPILOT_GUIDE.md](COPILOT_GUIDE.md) for the full capability reference.
+
 ## 1. Start With The Orchestrator
 
 Use `project-orchestrator` when you want the repository to create an isolated project folder from requirements.
@@ -22,7 +24,41 @@ Project name: customer-portal
 Environment: dev
 Region: eastus
 Deploy: false
+Runtime: auto
 ```
+
+### The `Runtime` argument
+
+`Runtime` controls which agent runtime the generated project ships. Pick one:
+
+| Value | Ship | Use when |
+| --- | --- | --- |
+| `local` | Deterministic Python only | Pure ETL, reporting, infra automation. No LLM. |
+| `agent-framework` | Both runtimes (SDK + local fallback) | Chat UX, document extraction, multi-turn clarification, Azure AI Foundry / Azure OpenAI. |
+| `auto` *(default)* | Factory decides | You are not sure. The factory classifier in [`scripts/factory_runtime/`](../scripts/factory_runtime/) reads the BRD and picks one for you. |
+
+The choice is recorded as `agent_runtime` in the project's `project-manifest.json`. The `agent-framework` option follows the pattern codified in [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md): the SDK runtime is preferred when configured, the deterministic runtime is always the fallback, so the service stays online even without Foundry.
+
+For the full decision flow — what signals the classifier looks for, where it runs, what the manifest looks like afterwards — see [BRD_CLASSIFICATION_FLOW.md](BRD_CLASSIFICATION_FLOW.md).
+
+### Generation options (language, IaC tool, opt-outs)
+
+Beyond `Runtime`, the BRD intake (portal or CLI) accepts these generation options — all optional with sensible defaults:
+
+| Option | Values | Default | What it controls |
+| --- | --- | --- | --- |
+| `implementationLanguage` | `python`, `dotnet` | `python` (or inferred from BRD) | Which language agent emits the service scaffold. `dotnet` produces an ASP.NET Core 8 minimal API with xUnit tests and a multi-stage Dockerfile; `python` produces FastAPI + pytest. |
+| `iacTool` | `bicep`, `terraform` | `bicep` (or inferred from BRD) | Which IaC agent generates `infra/`. Both paths produce equivalent resource shapes (Container Apps + managed identity + Key Vault + optional App Insights). |
+| `networkTier` | `public`, `vnet-integrated`, `private` | `public` | See "Network Isolation Option" below. |
+| `generateInfra` | `true`, `false` | `true` | Set to `false` to skip `infra/` generation for docs-only spikes. Phase 3 infra validation is skipped cleanly. |
+| `runSecurityAudit` | `true`, `false` | `true` | Set to `false` to bypass the Phase 2.6 Security Gate (audit-only mode). |
+| `enableObservability` | `true`, `false` | `true` | When on, scaffolds wire Application Insights via `APPLICATIONINSIGHTS_CONNECTION_STRING` (both Python and .NET paths). |
+
+The factory also detects a workload **archetype** from the BRD — `extraction-chat` (document upload + clarification loop), `rag-qa` (corpus-grounded Q&A), or `api-service` (generic). The selected archetype drives the language agent's emission shape (e.g., extraction-chat produces 5 domain services and 6 endpoints instead of a single starter endpoint) and is recorded under `analysis.archetype` in `project-manifest.json`. See [docs/MDR_PY_VS_DOTNET.md](MDR_PY_VS_DOTNET.md) for a side-by-side of Python vs .NET output for the same `extraction-chat` BRD.
+
+### Azure AI Foundry agents (Phase 1.5)
+
+If your BRD declares `implementation.agents[]`, OR you import a diagram that contains Azure AI Foundry / OpenAI shapes (or labels matching `agent|assistant|copilot|bot|extractor|classifier`), the orchestrator runs **Phase 1.5 Agent Tooling Advisory** between architecture and implementation. It recommends Foundry capabilities (`code_interpreter`, `file_search`, `function_calling`), tool signatures, and a baseline system prompt per agent, and writes them to `projects/<slug>/docs/agents/agent-tooling.{json,md}`. Diagram-only intakes always land at `next_action: needs_review` for human confirmation. Full walkthrough: [FOUNDRY_AGENT_TOOLING_FLOW.md](FOUNDRY_AGENT_TOOLING_FLOW.md).
 
 Expected output shape:
 
@@ -45,9 +81,13 @@ Use these when you only need one part of the workflow.
 
 | Agent | Use Case |
 | --- | --- |
-| `brd-to-architecture-diagram` | Generate or import an Azure architecture diagram |
-| `azure-architecture-implementer` | Convert diagram intent into code and Azure resources |
+| `brd-to-architecture-diagram` | Generate or import an Azure architecture diagram (also runs `synthesize-agents` mode for diagram-only Foundry agent drafts) |
+| `agent-tooling-advisor` | Phase 1.5: recommend Foundry capabilities, tools, and baseline prompts per agent (read-only) |
+| `contract-validator` | Validate inter-agent handoffs against intake / design / architecture JSON Schema contracts |
+| `azure-architecture-implementer` | Convert diagram intent into Python services + Bicep scaffolding |
+| `lang-dotnet-implementer` | Same as above but emits ASP.NET Core 8 services when `implementationLanguage` is `dotnet` |
 | `bicep-infrastructure-validator` | Validate and repair Bicep modules and params |
+| `terraform-infrastructure-validator` | Validate and repair Terraform configuration when `iacTool` is `terraform` |
 | `production-environment-advisor` | Produce runtime and deployment prerequisites |
 | `azure-project-deployer` | Execute deployment for a prepared project |
 
@@ -61,6 +101,18 @@ python -m unittest discover .\projects\storage-self-service-provisioning\tests
 ```
 
 These two suites are the current validation baseline surfaced by the demo portal because they exercise the strongest sample implementations in the repository.
+
+## 3a. What the portal classifier tells you
+
+Every BRD submitted through the portal is scored by the factory classifier before the project is generated. The result appears on the project record as `suggestedRuntime` and inside `project-manifest.json` as `suggested_runtime`. It tells you whether the BRD looks LLM-driven (signals like *chat agent*, *RAG*, *document extraction*, *Azure AI Foundry*) or whether deterministic Python is enough. You do not need to install the preview Agent Framework SDK for this to work — the deterministic classifier is always active inside the portal container.
+
+To opt the portal classifier into its SDK path, set on the Container App:
+
+- `FACTORY_AGENT_FRAMEWORK_ENABLED=1`
+- `FOUNDRY_PROJECT_ENDPOINT=https://<project>.services.ai.azure.com/api/projects/<name>`
+- `FOUNDRY_MODEL_DEPLOYMENT_NAME=<deployment>`
+
+If any of those are missing, or if the preview SDK is not installed, the portal silently falls back to the deterministic classifier. See [`scripts/factory_runtime/README.md`](../scripts/factory_runtime/README.md).
 
 ## 4. Launch The Developer Portal
 
@@ -76,6 +128,12 @@ Portal endpoints:
 - `http://localhost:5000/brd-readiness` BRD readiness dashboard
 - `http://localhost:5000/order-monitoring-dashboard` order-management monitoring view
 - `http://localhost:5000/presentation` leadership brief
+
+When submitting a BRD from the portal intake form, set **Network Isolation**:
+
+- `Public` for internet-facing baseline generation
+- `VNet-integrated` to include starter VNet + NSG + delegated app subnet resources
+- `Private` to include starter VNet + NSG + private endpoint subnet resources
 
 ## 5. Use The Sample Portfolio
 
@@ -107,3 +165,5 @@ This repository is strong for many Azure-first BRDs, but this gate should be use
 - `infra/` shared Bicep modules and parameter files
 - `demo/` developer-facing portal and dashboards
 - `docs/` repository guidance and positioning
+
+If you are new to Draw.io files, see [VIEW_DETAILED_ARCHITECTURE.md](VIEW_DETAILED_ARCHITECTURE.md).

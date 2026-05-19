@@ -1,0 +1,8 @@
+run_id=override-smoke-001
+generated_at=2026-04-20T21:27:50.815547Z
+project_slug=override-test-20260420212750
+source_brd=brd.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\override-test-20260420212750
+status=complete
+runner=azure_native_factory_runner

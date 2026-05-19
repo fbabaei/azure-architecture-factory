@@ -1,0 +1,33 @@
+namespace {{NAMESPACE}};
+
+/// <summary>
+/// FACTORY TEMPLATE — Foundry / Azure AI Projects connection settings.
+///
+/// Bind from configuration:
+///   builder.Services.Configure&lt;FoundrySettings&gt;(builder.Configuration.GetSection("Foundry"));
+///
+/// Production values come from Key Vault references in App Configuration / Container Apps env;
+/// never check real endpoints into appsettings.json.
+/// </summary>
+public class FoundrySettings
+{
+    /// <summary>Full Azure AI Projects endpoint, e.g. https://&lt;project&gt;.services.ai.azure.com/api/projects/&lt;project&gt;.</summary>
+    public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>Foundry deployment / model name, e.g. "gpt-4.1-mini".</summary>
+    public string Model { get; set; } = string.Empty;
+
+    /// <summary>Logical agent name. The runner creates a new version per call and deletes it on completion.</summary>
+    public string AgentName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// FACTORY TEMPLATE — generic agent run result.
+/// Rename to a domain-specific type (e.g. ExtractionResult) when scaffolding into a project.
+/// </summary>
+public class {{RESULT_TYPE}}
+{
+    public bool Success { get; set; }
+    public string Json { get; set; } = string.Empty;
+    public string? Error { get; set; }
+}

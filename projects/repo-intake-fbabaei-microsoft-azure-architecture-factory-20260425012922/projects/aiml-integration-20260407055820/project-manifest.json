@@ -1,0 +1,18 @@
+{
+  "project": "aiml-integration-20260407055820",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\AIML Integration.md",
+  "created_at": "2026-04-07T05:58:20.115059+00:00",
+  "generator": "local_factory_stub_orchestrator",
+  "title": "Aiml Integration",
+  "requirements_detected": [],
+  "success_criteria_detected": [],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": true,
+    "governance": false,
+    "workflow": false,
+    "api": true
+  }
+}

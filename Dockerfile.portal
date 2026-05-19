@@ -1,0 +1,64 @@
+# Azure Architecture Factory Portal Server
+# Stdlib-only Python HTTP server + optional OpenTelemetry / Azure Monitor
+
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install OpenTelemetry + Azure Monitor exporter. Telemetry is gated at
+# runtime by APPLICATIONINSIGHTS_CONNECTION_STRING, so building with these
+# deps is always safe — they simply lie dormant if the env var isn't set.
+COPY scripts/requirements.portal.txt /tmp/requirements.portal.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.portal.txt && \
+    rm /tmp/requirements.portal.txt
+
+# Install Node.js 22 + GitHub Copilot CLI so the portal can spawn
+# `copilot -p` as a per-project background task. When INSTALL_COPILOT_CLI=0
+# is passed as a build arg, this step is skipped (smaller image, the
+# /api/projects/<slug>/copilot-runtime endpoint will report available=false).
+ARG INSTALL_COPILOT_CLI=1
+RUN if [ "$INSTALL_COPILOT_CLI" = "1" ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
+        curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+        apt-get install -y --no-install-recommends nodejs && \
+        npm install -g @github/copilot && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Create non-root user
+RUN useradd -m -u 1000 portal && \
+    mkdir -p /app/docs/intake /app/projects /app/outputs/brd-runs /app/logs && \
+    chown -R portal:portal /app
+
+# Copy application code
+COPY scripts/start_factory_portal.py scripts/local_brd_runner.py scripts/generate_guide_report.py scripts/blob_sync.py scripts/telemetry.py scripts/copilot_runner.py scripts/
+COPY scripts/factory_runtime/ scripts/factory_runtime/
+COPY scripts/language_agents/ scripts/language_agents/
+COPY scripts/iac_agents/ scripts/iac_agents/
+COPY factory-portal.html ./
+COPY README.md ./
+COPY docs/ docs/
+COPY assets/ assets/
+# Bake generated project folders into the image so detail pages work
+# (README, diagrams, /api/projects/*/files). Per-user visibility is enforced
+# at request time via .portal-owners.json + Easy Auth principal headers.
+COPY projects/ projects/
+# Snapshot of the project feed baked into the image at build time
+COPY factory-projects.generated.json ./
+# Per-user ownership allowlist (slug → UPNs). Consumed when
+# FACTORY_PORTAL_AUTH_MODE=entra. Safe to include empty / missing.
+COPY .portal-owners.json ./
+
+RUN chown -R portal:portal /app
+
+# The portal serves static files and generated starter assets directly from
+# the factory repository root inside the container.
+
+USER portal
+
+EXPOSE 5501
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "scripts/start_factory_portal.py"]

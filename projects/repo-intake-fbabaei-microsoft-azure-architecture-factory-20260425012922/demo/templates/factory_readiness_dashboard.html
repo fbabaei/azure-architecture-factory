@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factory Readiness Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f7fb; color: #1f2937; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #0b3a66; color: #fff; }
+    .topbar a { color: #dbeafe; text-decoration: none; margin-left: 16px; }
+    .topbar a:hover { text-decoration: underline; }
+    .wrap { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin-bottom: 14px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 0 0 12px; font-size: 20px; color: #0b3a66; }
+    .muted { color: #6b7280; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .metric { background: #f8fbff; border: 1px solid #dbeafe; border-radius: 8px; padding: 14px; }
+    .metric .k { font-size: 12px; color: #6b7280; }
+    .metric .v { font-size: 28px; font-weight: bold; margin-top: 6px; color: #0b3a66; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { background: #2563eb; color: white; text-decoration: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; border: 0; cursor: pointer; }
+    .btn.secondary { background: #dbeafe; color: #1d4ed8; }
+    .status { margin-top: 10px; font-size: 13px; color: #475569; }
+    .project-list { display: grid; gap: 12px; }
+    .project-item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; background: #f8fbff; }
+    .project-item h3 { margin: 0 0 6px; font-size: 18px; }
+    .pill { display: inline-flex; margin-right: 8px; margin-bottom: 8px; background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 700; }
+    .evidence { font-size: 13px; color: #475569; line-height: 1.6; }
+    pre { margin: 0; max-height: 340px; overflow: auto; background: #111827; color: #e5e7eb; border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><strong>📋 Factory Readiness Dashboard</strong></div>
+    <div>
+      <a href="/">Main Demo</a>
+      <a href="/brd-readiness">BRD Readiness</a>
+      <a href="/fabric-medallion-pipeline">Fabric Medallion</a>
+      <a href="/presentation">Leadership Brief</a>
+      <a href="/order-monitoring-dashboard">Order Monitoring</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Can This Repo Really Generate Production-Style Projects?</h1>
+      <p class="muted">This dashboard summarizes current evidence from the repository's sample outputs and runs representative test suites directly from the demo backend.</p>
+      <div class="actions">
+        <button class="btn" id="runValidationBtn" onclick="runValidation()">Run Validation Suite</button>
+        <a class="btn secondary" href="/">Back to Main Demo</a>
+      </div>
+      <div id="status" class="status">Loading readiness data...</div>
+    </div>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <div class="grid">
+        <div class="metric"><div class="k">Projects Reviewed</div><div id="projectCount" class="v">-</div></div>
+        <div class="metric"><div class="k">Full Lifecycle Evidence</div><div id="fullLifecycleCount" class="v">-</div></div>
+        <div class="metric"><div class="k">Production-Like Outputs</div><div id="productionCount" class="v">-</div></div>
+        <div class="metric"><div class="k">Runnable Test Suites</div><div id="testableCount" class="v">-</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Project Evidence</h2>
+      <div id="projectList" class="project-list"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Assessment</h2>
+        <div id="assessment" class="evidence">No assessment loaded.</div>
+      </div>
+      <div class="card">
+        <h2>Validation Results</h2>
+        <div id="validationSummary" class="evidence">No validation run yet.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Validation Output</h2>
+      <pre id="validationOutput">Run the validation suite to capture output.</pre>
+    </div>
+  </div>
+
+  <script>
+    async function loadReadiness() {
+      const response = await fetch('/api/factory-readiness');
+      const data = await response.json();
+      const summary = data.summary || {};
+
+      document.getElementById('projectCount').textContent = summary.project_count ?? 0;
+      document.getElementById('fullLifecycleCount').textContent = summary.full_lifecycle_count ?? 0;
+      document.getElementById('productionCount').textContent = summary.production_like_count ?? 0;
+      document.getElementById('testableCount').textContent = summary.testable_project_count ?? 0;
+      document.getElementById('status').textContent = `Readiness evidence refreshed at ${new Date(data.updated_at).toLocaleString()}`;
+      document.getElementById('assessment').textContent = `${summary.assessment} Strongest evidence: ${summary.strongest_evidence}.`;
+
+      const list = document.getElementById('projectList');
+      list.innerHTML = (data.projects || []).map(project => `
+        <div class="project-item">
+          <h3>${project.name}</h3>
+          <div>
+            <span class="pill">${project.kind}</span>
+            <span class="pill">${project.path}</span>
+            ${project.readiness_status ? `<span class="pill">${project.readiness_status}</span>` : ''}
+          </div>
+          <p class="evidence">${project.description}</p>
+          <p class="evidence">${project.evidence.join(' • ')}</p>
+          ${project.test_command ? `<p class="evidence"><strong>Test command:</strong> ${project.test_command}</p>` : '<p class="evidence"><strong>Test command:</strong> none declared for this sample.</p>'}
+        </div>
+      `).join('');
+    }
+
+    async function runValidation() {
+      const status = document.getElementById('status');
+      const button = document.getElementById('runValidationBtn');
+      button.disabled = true;
+      button.textContent = 'Running...';
+      status.textContent = 'Running representative validation suites...';
+
+      try {
+        const response = await fetch('/api/run-factory-validation', { method: 'POST' });
+        const data = await response.json();
+
+        document.getElementById('validationSummary').innerHTML = (data.suites || []).map(suite => `
+          <p><strong>${suite.project}</strong>: ${suite.status} — ${suite.summary || suite.message || 'No summary available.'}</p>
+        `).join('');
+
+        document.getElementById('validationOutput').textContent = (data.suites || [])
+          .map(suite => `${suite.project}\n${suite.output || suite.message || 'No output available.'}`)
+          .join('\n\n------------------------------\n\n');
+
+        status.textContent = data.status === 'success'
+          ? `Validation complete: ${data.passing_suites}/${data.total_suites} suites passed.`
+          : `Validation complete with failures: ${data.passing_suites}/${data.total_suites} suites passed.`;
+      } catch (error) {
+        status.textContent = `Validation failed: ${error.message}`;
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Run Validation Suite';
+      }
+    }
+
+    loadReadiness();
+  </script>
+</body>
+</html>

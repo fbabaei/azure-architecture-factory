@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aks-micro-config
+  namespace: aks-micro-demo
+data:
+  AKS_DEMO_ENVIRONMENT: dev
+  AKS_DEMO_CATALOG_URL: http://catalog-service
+  AKS_DEMO_ORDER_URL: http://order-service
+  AKS_DEMO_PAYMENT_URL: http://payment-service

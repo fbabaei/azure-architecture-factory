@@ -1,0 +1,70 @@
+name: aks-microservices-demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: Image tag to publish and deploy
+        required: true
+        default: dev
+      environment:
+        description: Kustomize overlay to deploy
+        required: true
+        default: dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_PATH: projects/aks-microservices-demo
+      ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AKS_CLUSTER_NAME: ${{ vars.AKS_CLUSTER_NAME }}
+      IMAGE_TAG: ${{ github.event.inputs.imageTag }}
+      DEPLOY_ENV: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: ACR login
+        run: az acr login --name $(echo "$ACR_LOGIN_SERVER" | cut -d'.' -f1)
+
+      - name: Build and push images
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: |
+          docker build -f src/api_gateway/Dockerfile -t $ACR_LOGIN_SERVER/api-gateway:$IMAGE_TAG .
+          docker build -f src/catalog_service/Dockerfile -t $ACR_LOGIN_SERVER/catalog-service:$IMAGE_TAG .
+          docker build -f src/order_service/Dockerfile -t $ACR_LOGIN_SERVER/order-service:$IMAGE_TAG .
+          docker build -f src/payment_service/Dockerfile -t $ACR_LOGIN_SERVER/payment-service:$IMAGE_TAG .
+          docker push $ACR_LOGIN_SERVER/api-gateway:$IMAGE_TAG
+          docker push $ACR_LOGIN_SERVER/catalog-service:$IMAGE_TAG
+          docker push $ACR_LOGIN_SERVER/order-service:$IMAGE_TAG
+          docker push $ACR_LOGIN_SERVER/payment-service:$IMAGE_TAG
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.AZURE_RESOURCE_GROUP }}
+          cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+      - name: Render manifests with ACR images
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: |
+          sed -i "s#REPLACE_WITH_ACR#$ACR_LOGIN_SERVER#g" k8s/overlays/$DEPLOY_ENV/kustomization.yaml
+
+      - name: Deploy manifests to AKS
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: |
+          kubectl apply -k k8s/overlays/$DEPLOY_ENV
+          kubectl rollout status deployment/api-gateway -n aks-micro-demo --timeout=180s
+          kubectl rollout status deployment/catalog-service -n aks-micro-demo --timeout=180s
+          kubectl rollout status deployment/order-service -n aks-micro-demo --timeout=180s
+          kubectl rollout status deployment/payment-service -n aks-micro-demo --timeout=180s

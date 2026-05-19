@@ -1,0 +1,5 @@
+{"event_type": "purchase", "total_amount": 120.5, "count": 1, "avg_amount": 120.5, "computed_at": "2026-03-23T19:11:14.298497"}
+{"event_type": "refund", "total_amount": 20.0, "count": 1, "avg_amount": 20.0, "computed_at": "2026-03-23T19:11:14.298505"}
+{"event_type": "view", "total_amount": 0.0, "count": 1, "avg_amount": 0.0, "computed_at": "2026-03-23T19:11:14.298510"}
+{"event_type": "subscription", "total_amount": 49.99, "count": 1, "avg_amount": 49.99, "computed_at": "2026-03-23T19:11:14.298513"}
+{"event_type": "click", "total_amount": 0.0, "count": 1, "avg_amount": 0.0, "computed_at": "2026-03-23T19:11:14.298516"}

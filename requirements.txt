@@ -1,0 +1,16 @@
+# AAF MCP Server — Python dependencies
+# Installed by the Dockerfile during the container build.
+# Pin minor versions for reproducible builds; update with `pip-compile`.
+
+# MCP SDK — FastMCP + Streamable HTTP transport
+mcp[cli]>=1.9.0
+
+# ASGI server + framework (matches Dockerfile comment: "Starlette + Uvicorn")
+starlette>=0.46.0
+uvicorn[standard]>=0.34.0
+
+# Async I/O primitives used by MCP SDK internals
+anyio>=4.9.0
+
+# HTTP client (available to tool modules for optional outbound calls)
+httpx>=0.28.0

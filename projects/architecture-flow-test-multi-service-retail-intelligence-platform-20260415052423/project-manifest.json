@@ -1,0 +1,48 @@
+{
+  "project": "architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423",
+  "status": "complete",
+  "source_brd": "c:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\scripts\\docs\\intake\\brd-architecture-flow-test-20260414.md",
+  "created_at": "2026-04-15T05:24:23.474641Z",
+  "generator": "azure_native_factory_runner",
+  "title": "Architecture Flow Test - Multi-Service Retail Intelligence Platform",
+  "requirements_detected": [
+    "Build an event-driven ingestion and processing pipeline",
+    "Provide an API layer for inventory, pricing, and replenishment recommendations",
+    "Support a web dashboard for operations users",
+    "Include observability, security, and governance controls by default",
+    "Generate architecture diagram, implementation scaffolding, and deployment assets",
+    "The system shall ingest store transaction events near real time",
+    "The system shall persist transactional and aggregated data",
+    "The system shall provide REST APIs for inventory and pricing insights",
+    "The system shall integrate an AI-assisted operations copilot experience",
+    "The system shall support role-based access for platform engineers and operations users",
+    "Availability target: 99.9%",
+    "P95 API response time under 300ms for read endpoints",
+    "Centralized logging, metrics, and tracing for all services",
+    "Secrets must be stored in Azure Key Vault",
+    "Infrastructure must be defined as code using Bicep",
+    "Use managed identities for service-to-service authentication",
+    "Use least-privilege RBAC assignments",
+    "Enforce baseline policy compliance checks before deployment",
+    "Include auditability and operational traceability"
+  ],
+  "success_criteria_detected": [
+    "Architecture diagram and companion notes are generated",
+    "A project folder is created with source, tests, docs, and infra",
+    "Generated artifacts are suitable as a starting point for implementation sprints",
+    "The flow completes without manual intervention"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": true,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": true
+  },
+  "generation_options": {
+    "enableObservability": true,
+    "networkTier": "public"
+  },
+  "user_home_copy": "C:\\Users\\fbabaei\\app\\architecture-flow-test-multi-service-retail-intelligence-platform-20260415052423"
+}

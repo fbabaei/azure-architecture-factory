@@ -2,6 +2,7 @@
 name: azure-project-deployer
 description: "Use when you need to deploy a project's Bicep infrastructure and application services to Azure. Handles resource group creation, Bicep deployment, output capture, and deployment logging. Called by project-orchestrator for Phase 5, or directly for standalone deployment."
 tools: [read, execute, todo]
+foundry_capabilities: [function_calling]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project), target environment (dev/test/prod), Azure region, and optionally the subscription ID and resource group name."
 ---

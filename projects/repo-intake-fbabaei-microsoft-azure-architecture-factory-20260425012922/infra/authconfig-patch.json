@@ -1,0 +1,34 @@
+{
+  "properties": {
+    "encryptionSettings": {},
+    "globalValidation": {
+      "redirectToProvider": "azureactivedirectory",
+      "unauthenticatedClientAction": "RedirectToLoginPage",
+      "excludedPaths": ["/health", "/ready"]
+    },
+    "httpSettings": {
+      "requireHttps": true
+    },
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "isAutoProvisioned": false,
+        "registration": {
+          "clientId": "9d3eb9be-a429-4935-98a9-a696ea7ab406",
+          "clientSecretSettingName": "aad-client-secret",
+          "openIdIssuer": "https://login.microsoftonline.com/organizations/v2.0"
+        },
+        "validation": {
+          "defaultAuthorizationPolicy": {
+            "allowedApplications": []
+          }
+        }
+      }
+    },
+    "login": {
+      "preserveUrlFragmentsForLogins": false
+    },
+    "platform": {
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechGear - Premium Tech Accessories | Azure Powered</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <span class="logo-icon">⚡</span>
+                <h1>TechGear</h1>
+                <span class="badge">Azure Powered</span>
+            </div>
+            <div class="navbar-menu">
+                <a href="#products" class="nav-link">Shop</a>
+                <a href="#recommendations" class="nav-link">Trending</a>
+                <a href="/architecture" class="nav-link">Architecture</a>
+                <a href="#" onclick="toggleCart()" class="nav-link cart-link">
+                    🛒 Cart <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Premium Tech Accessories Powered by Azure AI Foundry</h2>
+            <p>Discover the perfect gear with AI-powered recommendations and semantic search</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">50K+</span>
+                    <span class="stat-label">Products</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">99.95%</span>
+                    <span class="stat-label">Uptime SLA</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number"><50ms</span>
+                    <span class="stat-label">Response Time</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search & Filter Section -->
+    <section class="search-section">
+        <div class="container">
+            <h3>Find Your Perfect Tech</h3>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="🔍 Powered by Azure AI Search... try 'wireless', 'fast', 'gaming'" class="search-input">
+                <button onclick="performSearch()" class="search-btn">Search</button>
+            </div>
+            <div class="filter-tags">
+                <button class="filter-tag" onclick="filterByCategory('All')">All</button>
+                <button class="filter-tag" onclick="filterByCategory('Audio')">Audio</button>
+                <button class="filter-tag" onclick="filterByCategory('Peripherals')">Peripherals</button>
+                <button class="filter-tag" onclick="filterByCategory('Storage')">Storage</button>
+                <button class="filter-tag" onclick="filterByCategory('Power')">Power</button>
+                <button class="filter-tag" onclick="filterByCategory('Video')">Video</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section id="products" class="products-section">
+        <div class="container">
+            <h3>Featured Products</h3>
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Recommendations Section -->
+    <section id="recommendations" class="recommendations-section">
+        <div class="container">
+            <h3>🤖 AI-Powered Recommendations</h3>
+            <p class="section-subtitle">Personalized suggestions powered by Azure OpenAI</p>
+            <div class="products-grid" id="recommendations-grid">
+                <!-- Recommendations will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Showcase -->
+    <section class="architecture-showcase">
+        <div class="container">
+            <h3>🏗️ Built on Azure AI Foundry</h3>
+            <p class="section-subtitle">Enterprise-grade infrastructure with AI/ML capabilities</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h4>Global CDN</h4>
+                    <p>Served from 50+ edge locations worldwide with <100ms latency</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h4>AI Search</h4>
+                    <p>Semantic search understanding user intent with 98% accuracy</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h4>Smart Recommendations</h4>
+                    <p>GPT-4 powered product suggestions with 8x higher CTR</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h4>Multi-Region Data</h4>
+                    <p>Distributed Cosmos DB with <10ms global latency</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>Auto-Scaling</h4>
+                    <p>Scales from 0 to 1M concurrent users automatically</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h4>Real-Time Analytics</h4>
+                    <p>Live insights powered by Application Insights & KQL</p>
+                </div>
+            </div>
+            <a href="/architecture" class="view-architecture-btn">View Detailed Architecture</a>
+        </div>
+    </section>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="close-cart" onclick="toggleCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items will be loaded here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (8%):</span>
+                    <span id="cart-tax">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span id="cart-shipping">$9.99</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal for Product Details -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div class="modal-body" id="modal-body">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>TechGear</h5>
+                    <p>Premium tech accessories powered by Azure AI Foundry</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Azure Services</h5>
+                    <ul>
+                        <li>Static Web Apps</li>
+                        <li>Container Apps</li>
+                        <li>Azure OpenAI</li>
+                        <li>AI Search</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h5>Company</h5>
+                    <ul>
+                        <li><a href="/architecture">Architecture</a></li>
+                        <li>About Us</li>
+                        <li>Contact</li>
+                        <li>Privacy</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TechGear Inc. | Powered by Microsoft Azure | Built with ❤️ and AI</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

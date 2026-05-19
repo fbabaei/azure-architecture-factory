@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram name="Azure AI Foundry Architecture" id="azure-arch">
+        <mxGraphModel dx="888" dy="1703" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Azure AI Foundry - Agentic Application Architecture" style="text;fontSize=18;fontStyle=bold;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="-60" width="750" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="main-container" value="Azure AI Foundry Solution Architecture" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=3;fillColor=#f5f5f5;fontSize=13;fontStyle=bold;" parent="1" vertex="1">
+                    <mxGeometry x="30" y="-10" width="770" height="620" as="geometry"/>
+                </mxCell>
+                <mxCell id="compute-label" value="COMPUTE" style="text;fontSize=11;fontStyle=bold;align=left;verticalAlign=top;fontColor=#107c10;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="85" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="agent" value="Agent Service&#xa;(Python - Port 8000)" style="rounded=1;whiteSpace=wrap;strokeColor=#107c10;strokeWidth=2;fillColor=#c3e6cb;fontSize=10;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="110" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="data-label" value="AI &amp; DATA SERVICES" style="text;fontSize=11;fontStyle=bold;align=left;verticalAlign=top;fontColor=#0078d4;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="200" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="search" value="AI Search" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="230" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="blob" value="Blob Storage" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="230" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos" value="Cosmos DB" style="rounded=1;whiteSpace=wrap;strokeColor=#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="230" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="vault" value="Key Vault" style="rounded=1;whiteSpace=wrap;strokeColor:#0078d4;strokeWidth=2;fillColor:#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="435" y="230" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="foundry" value="Azure AI Foundry" style="rounded=1;whiteSpace=wrap;strokeColor:#0078d4;strokeWidth=2;fillColor=#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="560" y="230" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="insights" value="App Insights" style="rounded=1;whiteSpace=wrap;strokeColor:#0078d4;strokeWidth=2;fillColor:#cce5ff;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="685" y="230" width="95" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="security-label" value="SECURITY &amp; IDENTITY" style="text;fontSize=11;fontStyle=bold;align=left;verticalAlign=top;fontColor=#dd3236;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="330" width="250" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="identity" value="Managed Identity" style="rounded=1;whiteSpace=wrap;strokeColor=#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="360" width="130" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="rbac" value="RBAC" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="205" y="360" width="130" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="audit" value="Audit Logging" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor:#ffbaba;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="360" width="130" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="policy" value="Azure Policy" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor:#ffbaba;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="495" y="360" width="130" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="network" value="Network Security" style="rounded=1;whiteSpace=wrap;strokeColor:#dd3236;strokeWidth=2;fillColor=#ffbaba;fontSize=9;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="360" width="130" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="search" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="blob" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="cosmos" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="vault" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="foundry" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078d4;strokeWidth=2;" parent="1" source="agent" target="insights" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="All connections use System-Assigned Managed Identity (Zero-Trust Security)" style="text;fontSize=9;align=center;italic;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="700" width="750" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="waf-header" value="Azure Well-Architected Framework Principles" style="text;fontSize=11;fontStyle=bold;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="730" width="750" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="waf-content" value="Reliability: Auto-scaling &amp; failover  |  Security: Managed identities &amp; RBAC  |  Cost: Consumption-based  |  Operations: IaC &amp; monitoring  |  Performance: Horizontal scaling" style="text;fontSize=8;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="750" width="750" height="35" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

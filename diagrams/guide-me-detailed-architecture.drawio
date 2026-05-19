@@ -1,0 +1,289 @@
+<mxfile host="65bd71144e">
+  <diagram id="guide-logical" name="Guide Me - Logical Architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title1" value="Guide Me Detailed Architecture - Logical Components" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="880" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="laneUsers" value="User Interaction Layer" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="240" height="780" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="lanePortal" value="Portal Frontend Layer" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="520" height="780" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="laneApi" value="Portal API Layer" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="80" width="300" height="780" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="laneData" value="Project Data Layer" style="swimlane;startSize=28;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="80" width="330" height="780" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="u1" value="Portal-Only User" style="rounded=1;whiteSpace=wrap;fillColor=#fff;strokeColor=#d6b656;" vertex="1" parent="laneUsers">
+          <mxGeometry x="20" y="50" width="190" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="u2" value="Browser User\nvscode.dev + Copilot" style="rounded=1;whiteSpace=wrap;fillColor=#fff;strokeColor=#d6b656;" vertex="1" parent="laneUsers">
+          <mxGeometry x="20" y="150" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="u3" value="Desktop User\nVS Code + Copilot" style="rounded=1;whiteSpace=wrap;fillColor=#fff;strokeColor=#d6b656;" vertex="1" parent="laneUsers">
+          <mxGeometry x="20" y="260" width="190" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p1" value="Project Card\nGuide Me Link" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="20" y="60" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="openWorkflowGuideInCopilot\nDelegation Shim" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="270" y="60" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="guide_me_menu.js\nModal Controller" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="lanePortal">
+          <mxGeometry x="145" y="180" width="230" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="window.allProjects\nFeed Cache" style="shape=cylinder3;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="20" y="310" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="openDocumentationPreview\nMarkdown Renderer" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="270" y="310" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="Clipboard Prompt Builder\n+ Launch Actions" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="145" y="450" width="230" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p7" value="Refresh Button Handler\nPOST /api/guide/refresh" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lanePortal">
+          <mxGeometry x="145" y="580" width="230" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p8" value="vscode.dev" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="lanePortal">
+          <mxGeometry x="20" y="720" width="220" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="p9" value="vscode://GitHub.copilot-chat" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="lanePortal">
+          <mxGeometry x="270" y="720" width="220" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="start_factory_portal.py\nRoute Dispatcher" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneApi">
+          <mxGeometry x="30" y="130" width="240" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="_require_auth_for_mutation()\nAuth Gate" style="rhombus;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneApi">
+          <mxGeometry x="60" y="260" width="180" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="_handle_guide_refresh\nSlug Validation" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="laneApi">
+          <mxGeometry x="30" y="420" width="240" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="generate_guide_report.py\nDeterministic Analyzer" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="laneApi">
+          <mxGeometry x="30" y="560" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d1" value="projects/&lt;slug&gt;/docs/guide-report.md" style="shape=document;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="30" y="140" width="270" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2" value="projects/&lt;slug&gt;/project-manifest.json\nguide_report block" style="shape=document;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="30" y="300" width="270" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3" value="factory-projects.generated.json\nguideReport + links.guideReport" style="shape=document;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#b85450;" vertex="1" parent="laneData">
+          <mxGeometry x="30" y="470" width="270" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="1 click" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="u1" target="p1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="1 click" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="u2" target="p1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="1 click" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="u3" target="p1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="2 delegate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p1" target="p2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="3 open menu" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p2" target="p3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="4 read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p3" target="p4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="A view" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p3" target="p5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="load markdown" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p5" target="d1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="B/C launch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p3" target="p6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" value="vscode.dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p6" target="p8"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e11" value="vscode://" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="p6" target="p9"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" value="D refresh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="p3" target="p7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" value="POST" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="p7" target="a1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e14" value="auth" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="a1" target="a2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e15" value="ok" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="a2" target="a3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e16" value="run analyzer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="a3" target="a4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e17" value="write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a4" target="d1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e18" value="patch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a3" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e19" value="patch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="a3" target="d3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e20" value="return guideReport" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="a3" target="p3"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="guide-seq" name="Guide Me - Sequence Flows">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title2" value="Guide Me Detailed Architecture - Flow Sequences" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="880" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1" value="User" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="220" height="1020" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="Portal UI" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="90" width="380" height="1020" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="Portal API" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="90" width="380" height="1020" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="Project Files" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="90" width="400" height="1020" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="hA" value="Flow A - Report-only path" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="1500" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="aStep1" value="A1 Click Guide Me" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s1"><mxGeometry x="20" y="60" width="170" height="44" as="geometry"/></mxCell>
+        <mxCell id="aStep2" value="A2 Build modal + resolve report" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="60" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="aStep3" value="A3 Click View report" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s1"><mxGeometry x="20" y="130" width="170" height="44" as="geometry"/></mxCell>
+        <mxCell id="aStep4" value="A4 openDocumentationPreview" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="130" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="aStep5" value="A5 GET guide-report.md" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s3"><mxGeometry x="40" y="130" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="aStep6" value="A6 Return markdown + render HTML" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s4"><mxGeometry x="40" y="130" width="320" height="44" as="geometry"/></mxCell>
+
+        <mxCell id="hB" value="Flow B/C - Live guidance launch" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="1500" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="bStep1" value="B1/C1 Click live option" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s1"><mxGeometry x="20" y="330" width="170" height="44" as="geometry"/></mxCell>
+        <mxCell id="bStep2" value="B2/C2 Build prompt + copy clipboard" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="330" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="bStep3" value="B3 open vscode.dev OR\nC3 open vscode:// URI" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="400" width="300" height="56" as="geometry"/></mxCell>
+        <mxCell id="bStep4" value="B4/C4 User runs factory-workflow-guide prompt" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s1"><mxGeometry x="20" y="420" width="170" height="56" as="geometry"/></mxCell>
+
+        <mxCell id="hD" value="Flow D - Refresh report mutation" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="1500" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="dStep1" value="D1 Click Refresh report" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s1"><mxGeometry x="20" y="620" width="170" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep2" value="D2 POST /api/guide/refresh {slug}" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="620" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep3" value="D3 Auth check + slug validation" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s3"><mxGeometry x="40" y="620" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep4" value="D4 Run generate_guide_report" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s3"><mxGeometry x="40" y="690" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep5" value="D5 Write docs/guide-report.md" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s4"><mxGeometry x="40" y="690" width="320" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep6" value="D6 Patch project-manifest.json" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s4"><mxGeometry x="40" y="760" width="320" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep7" value="D7 Patch factory-projects.generated.json" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s4"><mxGeometry x="40" y="830" width="320" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep8" value="D8 Return guideReport payload" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s3"><mxGeometry x="40" y="900" width="300" height="44" as="geometry"/></mxCell>
+        <mxCell id="dStep9" value="D9 Update local cache + reopen modal" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="s2"><mxGeometry x="40" y="900" width="300" height="44" as="geometry"/></mxCell>
+
+        <mxCell id="se1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="aStep1" target="aStep2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="aStep3" target="aStep4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="aStep4" target="aStep5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="aStep5" target="aStep6"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="se5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="bStep1" target="bStep2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="bStep2" target="bStep3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="bStep3" target="bStep4"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="se8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="dStep1" target="dStep2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="dStep2" target="dStep3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="dStep3" target="dStep4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="dStep4" target="dStep5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="dStep4" target="dStep6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="dStep4" target="dStep7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="se14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="dStep8" target="dStep9"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="guide-failures" name="Guide Me - Failure Paths">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="ftitle" value="Guide Me Failure Paths and Fallback Behavior" style="text;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="320" y="20" width="960" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fuser" value="User" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="200" height="940" as="geometry"/>
+        </mxCell>
+        <mxCell id="fui" value="Portal UI" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="430" height="940" as="geometry"/>
+        </mxCell>
+        <mxCell id="fapi" value="Portal API" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="80" width="370" height="940" as="geometry"/>
+        </mxCell>
+        <mxCell id="fdata" value="Project Files" style="swimlane;startSize=26;horizontal=0;rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="80" width="390" height="940" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fstart" value="User opens Guide Me" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fuser">
+          <mxGeometry x="15" y="40" width="165" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="fmenu" value="Build modal and resolve report" style="rounded=1;whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="40" width="360" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fmissing" value="Report metadata missing?" style="rhombus;whiteSpace=wrap;" vertex="1" parent="fui">
+          <mxGeometry x="120" y="130" width="180" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="fhead" value="HEAD projects/&lt;slug&gt;/docs/guide-report.md" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fapi">
+          <mxGeometry x="30" y="145" width="300" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="fhead404" value="404 report not found\nDisable View report option" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="260" width="360" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="fhead200" value="200 report exists\nEnable View report option" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="340" width="360" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="frefresh" value="User clicks Refresh report" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fuser">
+          <mxGeometry x="15" y="450" width="165" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="fpost" value="POST /api/guide/refresh {slug}" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="445" width="360" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="fauth" value="_require_auth_for_mutation" style="rhombus;whiteSpace=wrap;" vertex="1" parent="fapi">
+          <mxGeometry x="95" y="440" width="180" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f401" value="401/403 auth failure\nNotify: Refresh failed" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="540" width="360" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="fslug" value="Resolve project root from slug" style="rounded=1;whiteSpace=wrap;" vertex="1" parent="fapi">
+          <mxGeometry x="30" y="560" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="f404" value="404 invalid slug/project\nNotify: Project not found" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="620" width="360" height="64" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fgen" value="Run generate_guide_report(project_root)" style="rounded=1;whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="fapi">
+          <mxGeometry x="30" y="700" width="300" height="62" as="geometry"/>
+        </mxCell>
+        <mxCell id="f500" value="500 generation failure\nNotify: Refresh failed" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="700" width="360" height="64" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fwrite1" value="Write docs/guide-report.md" style="shape=document;whiteSpace=wrap;" vertex="1" parent="fdata">
+          <mxGeometry x="35" y="700" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="fwrite2" value="Patch project-manifest.json\nguide_report" style="shape=document;whiteSpace=wrap;" vertex="1" parent="fdata">
+          <mxGeometry x="35" y="775" width="320" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="fwrite3" value="Patch factory-projects.generated.json\nguideReport + links.guideReport" style="shape=document;whiteSpace=wrap;" vertex="1" parent="fdata">
+          <mxGeometry x="35" y="865" width="320" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="fok" value="200 success\nUpdate local cache + reopen modal" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="fui">
+          <mxGeometry x="30" y="860" width="360" height="74" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="fstart" target="fmenu"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="fmenu" target="fmissing"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe3" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="fmissing" target="fhead"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe4" value="404" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="fhead" target="fhead404"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe5" value="200" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fhead" target="fhead200"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="fe6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="frefresh" target="fpost"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;" edge="1" parent="1" source="fpost" target="fauth"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe8" value="deny" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="fauth" target="f401"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe9" value="allow" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fauth" target="fslug"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe10" value="invalid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="fslug" target="f404"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe11" value="valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fslug" target="fgen"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe12" value="exception" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="fgen" target="f500"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe13" value="success" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fgen" target="fwrite1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fgen" target="fwrite2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fgen" target="fwrite3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="fgen" target="fok"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

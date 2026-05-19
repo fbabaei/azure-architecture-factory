@@ -1,0 +1,23 @@
+{
+  "title": "Imported Repo: local-intake-live",
+  "status": "Ready",
+  "source_brd": "local://local-intake-live",
+  "created_at": "2026-04-25T05:03:41.027576Z",
+  "generation_options": {
+    "sourceType": "repo-intake",
+    "workflowMode": "implement-pr",
+    "automationGoal": ""
+  },
+  "links": {
+    "architectureOverview": "projects/repo-intake-repo-20260425050340/docs/architecture-overview.md",
+    "readme": "projects/repo-intake-repo-20260425050340/README.md",
+    "analysisReport": "projects/repo-intake-repo-20260425050340/AAF-analysis-report.md",
+    "changeSummary": "projects/repo-intake-repo-20260425050340/AAF-change-summary.md"
+  },
+  "repo_intake": {
+    "repo_url": "local://local-intake-live",
+    "branch_name": "AAF-locallivee220260424",
+    "workflow_mode": "implement-pr",
+    "run_id": "95d70093-651a-4dc4-b7de-f2c93639793d"
+  }
+}

@@ -1,0 +1,7 @@
+MDR reporting deadlines are driven by the first relevant trigger date.
+
+Typical trigger events include when the arrangement is made available for implementation, is ready for implementation, or when the first implementation step occurs.
+
+Where an intermediary has a reporting exemption, the relevant taxpayer may inherit the reporting obligation.
+
+Every indexed note should preserve the jurisdiction context and the reason the deadline was triggered.
