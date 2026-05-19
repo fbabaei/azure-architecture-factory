@@ -9,6 +9,24 @@
       "env": {
         "GITHUB_TOKEN": "${GITHUB_TOKEN}"
       }
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "factory-mcp-orchestrator": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
     }
   }
 }
