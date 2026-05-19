@@ -19,12 +19,22 @@ Cross-cutting:
 - **Orchestration (control plane)** — `project-orchestrator`, `project-state-manager`, `factory-workflow-guide`
 - **Validation (separated from generation)** — `contract-validator` (NEW)
 - **Post-deploy** — `project-cost-analyzer`, `project-observability-advisor`, `factory-handoff`
+- **GitHub ↔ AAF bridge** — `github-aaf-pipeline` (reads GitHub issues/PRs via GitHub MCP Server, submits BRDs to AAF MCP Server, pushes artifacts back to GitHub)
+- **GitHub Actions automation** — `.github/workflows/aaf-generate-from-issue.yml` (label-triggered; fires when `aaf:generate` is applied to an issue)
 
 ## Pipeline diagram
 
 ```mermaid
 flowchart TB
     User([User Input<br/>BRD / PRD / Portal Q&A])
+    GitHubIssue([GitHub Issue<br/>labeled aaf:generate])
+    GitHubPR([GitHub PR<br/>security / IaC review])
+
+    subgraph ExternalTrigger["External Trigger Layer (GitHub MCP Bridge)"]
+        direction LR
+        GHPipeline["github-aaf-pipeline\n• Reads GitHub issue/PR via GitHub MCP\n• Submits BRD to AAF MCP Server\n• Pushes artifacts to GitHub\n• Opens PRs / posts review comments"]
+        GHAction["aaf-generate-from-issue.yml\n(GitHub Actions)\n• Triggers on aaf:generate label\n• Creates branch + commits BRD\n• Opens draft PR + assigns @copilot"]
+    end
 
     subgraph Control["Orchestration Layer (Control Plane)"]
         direction LR
@@ -54,6 +64,11 @@ flowchart TB
     Output([Final Output<br/>projects/&lt;slug&gt;/])
 
     User --> Intake
+    GitHubIssue --> GHAction
+    GitHubIssue --> GHPipeline
+    GitHubPR --> GHPipeline
+    GHAction -->|"BRD committed to branch"| Intake
+    GHPipeline -->|"submit_brd"| Intake
     Intake -->|"intake-contract.json"| ContractVal
     ContractVal -->|"pass"| Design
     Design -->|"design-contract.json"| ContractVal
@@ -66,6 +81,8 @@ flowchart TB
     Orch -.->|invoke| Arch
     State -.-> Orch
     Guide -.-> Orch
+    GHPipeline -.->|"get_project_artifacts"| Output
+    GHPipeline -.->|"create_pull_request"| Output
 
     IacVal -.->|gates Phase 3| Arch
     SecVal -.->|gates Phase 2.6| Arch
@@ -75,11 +92,13 @@ flowchart TB
     classDef control fill:#5C2D91,stroke:#3B1F66,color:#fff,stroke-width:2px
     classDef val fill:#C2185B,stroke:#7B1336,color:#fff,stroke-width:2px
     classDef io fill:#107C10,stroke:#0B5A0B,color:#fff,stroke-width:2px
+    classDef ext fill:#E3008C,stroke:#A40062,color:#fff,stroke-width:2px
 
     class Intake,Design,Arch agent
     class Orch,State,Guide control
     class ContractVal,IacVal,SecVal,ProdVal val
-    class User,Output io
+    class User,Output,GitHubIssue,GitHubPR io
+    class GHPipeline,GHAction ext
 ```
 
 ## Layer details
@@ -126,6 +145,41 @@ flowchart TB
 | Implicit contracts between agents | JSON Schemas in [`factory-templates/contracts/`](../factory-templates/contracts/), referenced by name from each agent. |
 | No separation of generation and validation | New [`contract-validator`](../.github/agents/contract-validator.agent.md) agent — read-only, schema-gated. |
 | Orchestrator boundary unclear | This doc + `project-orchestrator` Phase 0 now persists `intake.json`, Phase 1 persists `design.json`, Phase 3 persists `architecture.json`, each followed by a `contract-validator` call. |
+| No GitHub ↔ AAF automation path | New [`github-aaf-pipeline`](../.github/agents/github-aaf-pipeline.agent.md) agent (VS Code Copilot) + [`aaf-generate-from-issue.yml`](../.github/workflows/aaf-generate-from-issue.yml) GitHub Actions workflow bridge GitHub issues/PRs to AAF projects and back. |
+
+## External Trigger Layer — *GitHub ↔ AAF Bridge*
+
+This layer represents the two entry points from GitHub into the AAF pipeline. It was introduced alongside the GitHub MCP Server integration (`feat/agent-foundry-capabilities`).
+
+### `github-aaf-pipeline` agent
+
+| Property | Value |
+|----------|-------|
+| **File** | `.github/agents/github-aaf-pipeline.agent.md` |
+| **Runtime** | VS Code Copilot (manual invocation) |
+| **Tools** | `read`, `edit`, `github` (GitHub MCP Server), `factory-mcp-orchestrator` (AAF MCP Server) |
+| **Workflows** | (1) Issue → BRD → AAF project → PR; (2) PR security gate; (3) Bicep/Terraform IaC validation; (4) Traceability on merge |
+| **Handoff out** | Draft PR with project artifacts committed; issue comment with project status |
+| **Ontology dependency** | LOW — routes externally; uses project slug lookup only |
+
+### `aaf-generate-from-issue.yml` GitHub Actions Workflow
+
+| Property | Value |
+|----------|-------|
+| **File** | `.github/workflows/aaf-generate-from-issue.yml` |
+| **Trigger** | `on: issues: types: [labeled]` — fires when `aaf:generate` label is applied |
+| **Actions** | Creates feature branch, commits BRD from issue body, opens draft PR, assigns `@copilot` |
+| **Permissions** | `contents: write`, `issues: write`, `pull-requests: write` |
+| **Relationship to agent** | Automates the branch + PR setup that `github-aaf-pipeline` would otherwise do manually |
+
+### MCP Server endpoints
+
+| Server | Config | Key tools |
+|--------|--------|-----------|
+| **GitHub MCP Server** | `.vscode/mcp.json` → `github` entry; Docker stdio (`ghcr.io/github/github-mcp-server`) | `get_issue`, `create_branch`, `push_files`, `create_pull_request`, `add_issue_comment` |
+| **AAF MCP Server** | `.vscode/mcp.json` → `factory-mcp-orchestrator` entry; HTTP `http://localhost:8000/mcp` | `submit_brd`, `get_project_status`, `get_project_artifacts`, `invoke_agent`, `list_projects` |
+
+See [`docs/GITHUB_MCP_INTEGRATION.md`](./GITHUB_MCP_INTEGRATION.md) for full integration guide, quick-start, and workflow examples.
 
 ## Maturity
 
@@ -135,3 +189,4 @@ flowchart TB
 | Validation | inline in generators | separate agent |
 | Orchestration | ad hoc | `project-orchestrator` + `project-state-manager` |
 | Audit trail | log-only | manifest + per-phase contract instance + validation report |
+| GitHub integration | none | `github-aaf-pipeline` agent + GHA workflow + GitHub/AAF MCP servers |

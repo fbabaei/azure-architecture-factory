@@ -15,6 +15,7 @@ graph TD
         A5["📄 Documentation"]
         A6["⚙️ IaC /\nProvisioning"]
         A7["📡 Observability /\nOperations"]
+        A8["🐙 GitHub-AAF\nPipeline Agent"]
     end
 
     subgraph SharedContext["Shared Context Layer"]
@@ -28,6 +29,8 @@ graph TD
 
     subgraph ToolLayer["Tool Layer"]
         Tools["🔧 Tools / APIs\n(Deployment · Validation\nOpenAPI / MCP · Runtime)"]
+        GitHubMCP["🐙 GitHub MCP Server\n(get_issue · create_branch\npush_files · create_pull_request\nadd_issue_comment)"]
+        AAFMCP["🔌 AAF MCP Server\n(submit_brd · get_project_status\nget_project_artifacts · invoke_agent\nlist_projects)"]
     end
 
     User --> Orchestrator
@@ -46,23 +49,28 @@ graph TD
     A7 -->|HIGH| Ontology
     A5 -.->|MEDIUM| Ontology
     A6 -.->|MEDIUM| Ontology
+    A8 -.->|LOW| Ontology
 
     A5 --> RAG
     A5 --> Templates
     A4 --> Tools
     A6 --> Tools
+    A8 --> GitHubMCP
+    A8 --> AAFMCP
 
     classDef agentBox fill:#0078d4,color:#fff,stroke:#005a9e
     classDef ontoBox fill:#107c10,color:#fff,stroke:#004b00
     classDef ragBox fill:#8764b8,color:#fff,stroke:#5c2d91
     classDef toolBox fill:#d83b01,color:#fff,stroke:#a80000
+    classDef mcpBox fill:#e3008c,color:#fff,stroke:#a40062
     classDef userBox fill:#323130,color:#fff,stroke:#000
     classDef orchBox fill:#004e8c,color:#fff,stroke:#003966
 
-    class A1,A2,A3,A4,A5,A6,A7 agentBox
+    class A1,A2,A3,A4,A5,A6,A7,A8 agentBox
     class Ontology ontoBox
     class RAG,Templates ragBox
     class Tools toolBox
+    class GitHubMCP,AAFMCP mcpBox
     class User userBox
     class Orchestrator orchBox
 ```
@@ -109,6 +117,13 @@ classDiagram
         +url : string
     }
 
+    class MCPTool {
+        +id : string
+        +server : GitHubMCP|AAFMCP
+        +name : string
+        +description : string
+    }
+
     Requirement --> Constraint : hasConstraint
     Requirement --> Pattern : satisfiedBy
     Constraint --> Pattern : limits
@@ -117,6 +132,8 @@ classDiagram
     Decision --> AzureService : selects
     Artifact --> Decision : documents
     Artifact --> Requirement : traces
+    MCPTool --> Artifact : produces
+    MCPTool --> Requirement : ingests
 ```
 
 ---
@@ -197,6 +214,17 @@ classDiagram
         +protocol : REST|AMQP|gRPC|Event
         +authPattern : string
     }
+    class ExternalTrigger {
+        +id : string
+        +source : GitHubIssue|GitHubPR|Webhook|Label
+        +payload : string
+    }
+    class MCPTool {
+        +id : string
+        +server : GitHubMCP|AAFMCP
+        +name : string
+        +description : string
+    }
 
     CustomerScenario --> BusinessGoal : has
     BusinessGoal --> Requirement : requires
@@ -215,6 +243,9 @@ classDiagram
     Workload --> Integration : exposes
     DeploymentTarget --> AzureService : hosts
     DeploymentTarget --> Workload : runs
+    ExternalTrigger --> Requirement : spawns
+    MCPTool --> ExternalTrigger : reads
+    MCPTool --> Artifact : pushes
 ```
 
 ---
@@ -295,6 +326,9 @@ graph TB
         AG5["Documentation Agent\n▸ structured facts from ontology\n▸ prose from RAG + templates"]
         AG6["IaC / Provisioning Agent\n▸ service/resource mapping\n▸ implementation from repos/templates"]
     end
+    subgraph LW["⚪ LOW — MCP orchestration"]
+        AG8["GitHub-AAF Pipeline Agent\n▸ bridges GitHub issues → AAF BRDs\n▸ pushes artifacts to GitHub\n▸ routes to specialist agents via AAF MCP"]
+    end
 
     Ontology(["🗂️ Shared\nOntology\nLayer"])
 
@@ -305,6 +339,7 @@ graph TB
     AG7 -->|dependency + signal query| Ontology
     AG5 -.->|structured facts| Ontology
     AG6 -.->|service metadata| Ontology
+    AG8 -.->|project slug lookup| Ontology
 ```
 
 ---
@@ -338,6 +373,8 @@ graph TD
         T4["OpenAPI / MCP integrations"]
         T5["Cost estimation APIs"]
         T6["Runtime health checks"]
+        T7["GitHub MCP tools\n(get_issue · create_branch\npush_files · create_pull_request)"]
+        T8["AAF MCP tools\n(submit_brd · invoke_agent\nget_project_artifacts · list_projects)"]
     end
 
     Orchestrator["🧠 AAF Orchestrator"] --> Ontology
