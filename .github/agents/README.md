@@ -22,6 +22,10 @@ project-orchestrator          ← START HERE for greenfield / BRD-first delivery
 │   │                             (+ Phase 2.5/3.7 modes: incremental, generate-tests, fix-tests)
 │   │                             OWNS: new services, new Bicep modules, tests, initial docs
 │   └── drawio-architecture-reader      helper: reads diagram, returns inventory
+├── knowledge-retrieval-architect Phase 2 (conditional): designs + scaffolds the RAG/search pipeline
+│                                 (modes: design, scaffold, audit) — runs only when retrieval is required
+│                                 OWNS: data source + index + skillset + indexer, chunking, embeddings,
+│                                       semantic reranker + min_reranker_score, agentic retrieval
 │                                       (+ Phase 2.5 mode: inventory → canonical JSON)
 ├── source-code-maintainer        Phase 2 follow-up + Phase 2.5/2.6/2.7/2.8/3.7 loops (Python)
 │                                 (modes: drift-check, inventory, error-handling-audit, scalability-audit, add-to-service, refactor, sync)
@@ -82,8 +86,19 @@ agent-tooling-advisor         ← Foundry tool + prompt recommender (Phase 1.5)
 │
 ├── reads  : BRD.implementation.agents[], diagram data flows
 ├── infers : recommended_capabilities (file_search / code_interpreter / function_calling)
+├── splits : file_search (Foundry-managed) vs azure_ai_search (BYO enterprise index)
 ├── drafts : function tool signatures + baseline system prompt per agent
 └── writes : projects/<slug>/docs/agents/agent-tooling.{json,md}
+                (hands off to knowledge-retrieval-architect when azure_ai_search is recommended)
+
+knowledge-retrieval-architect ← retrieval (RAG) pipeline designer (Phase 2, conditional)
+│
+├── reads  : BRD, diagram, agent-tooling.json
+├── decides: file_search vs azure_ai_search (deterministic rule)
+├── designs: data source + index schema + skillset + indexer, chunking, embeddings,
+│            semantic reranker + min_reranker_score, index projections, knowledge store,
+│            optional agentic retrieval, MI-first role assignments
+└── writes : projects/<slug>/docs/retrieval/retrieval-design.{json,md} (+ scaffolded code/infra)
 ```
 
 Each project the orchestrator creates is stored under `projects/<project-slug>/` with its own diagrams, source, infra, docs, and logs — fully isolated from other projects.
@@ -116,7 +131,8 @@ To eliminate overlap between agents that both touch code or infra:
 | `repo-change-agent` | Existing-repo analysis, architecture-aligned change selection, implementation, local validation, `AAF-change-summary.md`. | Clone/branch/commit/push/PR operations (→ portal backend / repo ops layer); greenfield factory generation (→ orchestrator). |
 
 | `contract-validator` | Schema-validating inter-agent handoffs (intake / design / architecture contracts) and emitting a block/proceed verdict. READ-ONLY. | Generating or repairing contract instances (→ the producing agent in the layer above); fixing code, infra, or diagrams. |
-| `agent-tooling-advisor` | Recommending Foundry capabilities + tools + a baseline system prompt for each `BRD.implementation.agents[]` entry. READ-ONLY. | Materializing tools into source code (→ language specialist); modifying the BRD; runtime prompt optimization (→ Foundry `prompt_optimize`). |
+| `agent-tooling-advisor` | Recommending Foundry capabilities + tools + a baseline system prompt for each `BRD.implementation.agents[]` entry; distinguishing `file_search` from `azure_ai_search`. READ-ONLY. | Materializing tools into source code (→ language specialist); designing the retrieval pipeline (→ knowledge-retrieval-architect); modifying the BRD; runtime prompt optimization (→ Foundry `prompt_optimize`). |
+| `knowledge-retrieval-architect` | Designing + scaffolding the retrieval (RAG) subsystem when required: `file_search` vs `azure_ai_search` choice, data source + index + skillset + indexer, chunking, embedding model + dimensions, semantic reranker + `min_reranker_score`, index projections, knowledge store, optional agentic retrieval, and the MI-first role assignments it declares. | Creating the owning microservice (→ implementer); editing already-scaffolded service code (→ maintainer); Bicep syntax validation (→ validator); applying data-plane RBAC (→ deployment phase); security audit (→ auditor). |
 
 Full protocol and troubleshooting: [`../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md`](../../docs/ALIGNMENT_CONVERGENCE_GUIDE.md).
 
@@ -246,6 +262,17 @@ Typical uses:
 - Implement a diagram under `diagrams/`.
 - Generate service structure and Azure mappings.
 - Update supporting documentation after implementation.
+
+### knowledge-retrieval-architect
+Use this agent in Phase 2 — **only when the project needs retrieval** (a knowledge base, grounded answers, document/semantic search, or an `azure_ai_search` tool recommended by `agent-tooling-advisor`). It designs and scaffolds the retrieval (RAG) subsystem that `azure-architecture-implementer` cannot build on its own.
+
+Typical uses:
+- Decide `file_search` (Foundry-managed) vs `azure_ai_search` (bring-your-own enterprise index).
+- Design the Azure AI Search pull pipeline: data source + index schema + skillset + indexer.
+- Set chunking (size/overlap), embedding model + dimensions, semantic reranking + `min_reranker_score`, index projections, knowledge store, and the optional agentic-retrieval (knowledge base) path.
+- Emit a retrieval design contract (`docs/retrieval/retrieval-design.json`) plus scaffolded ingestion + query code and Search Bicep with MI-first role assignments.
+
+It skips cleanly when no retrieval signal is present, and hands its query module to the language specialist for service wiring.
 
 ### source-code-maintainer
 Use this agent to keep a project's source code in sync with its architecture over time. Complements `azure-architecture-implementer` — the implementer scaffolds, the maintainer maintains.

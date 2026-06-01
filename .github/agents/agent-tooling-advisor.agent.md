@@ -51,17 +51,40 @@ Read the agent's `name`, `description`, and any inline notes. Classify into one 
 
 | Intent signal in BRD/diagram | Recommend capability | Recommend tool token |
 |---|---|---|
-| "reads", "searches", "grounds answers in", "extracts from", "uploaded documents", "knowledge base", "PDF", "manual" | `file_search` | `file_search` |
+| Small, static set of documents uploaded *with* the agent; no enrichment, no metadata filtering, no incremental sync | `file_search` | `file_search` |
+| Corpus in an enterprise system (SharePoint, Data Lake, an existing Search service), large/growing corpus, OR needs metadata/source filtering, provenance citations, incremental sync, or multimodal (image/table) enrichment | `file_search` (Foundry exposes the result as a search tool) | `azure_ai_search` |
 | "computes", "analyzes a CSV", "generates a chart", "runs Python", "performs calculations", "statistical", "tabular analysis", "produces a plot" | `code_interpreter` | `code_interpreter` |
 | "calls an external API", "looks up", "queries a database", "invokes a service", "triggers a workflow", agent edge to a non-Foundry Azure resource (Cosmos DB, Service Bus, external HTTPS) | `function_calling` | one or more named `function` tools |
 | "multi-turn clarification", "asks the user", "decides next step" | `function_calling` (orchestration) | none required |
 | pure single-shot prompt completion with no external data | none beyond default | none |
 
+**Distinguish the two retrieval tokens explicitly** — do not collapse all grounding into `file_search`:
+
+- **`file_search`** = Foundry-managed storage. Foundry chunks, embeds, and stores the uploaded files; zero retrieval infrastructure to design. Use only for a small static corpus with no metadata filtering or incremental sync.
+- **`azure_ai_search`** = bring-your-own enterprise index. Requires a real retrieval pipeline (data source + index + skillset + indexer, embeddings, semantic ranking). When you recommend this token, **emit a `retrieval_hint` block** (see below) and **hand off to `knowledge-retrieval-architect`** — do NOT treat the missing template as a hard block.
+
+When the token is `azure_ai_search`, attach a `retrieval_hint` to that tool entry with your best first-pass parameters (the architect refines them):
+
+```json
+"retrieval_hint": {
+  "pattern": "azure_ai_search",
+  "corpus_source": "sharepoint | blob | adlsgen2 | existing_search",
+  "multimodal": false,
+  "chunk_size": 3000,
+  "chunk_overlap": 500,
+  "embedding": "from project settings (model + dimensions) — do not hardcode",
+  "semantic_reranker": true,
+  "min_reranker_score": 2.0,
+  "agentic_retrieval": false,
+  "handoff": "knowledge-retrieval-architect"
+}
+```
+
 ### Step 2 — Cross-check against the diagram
 
 Read the diagram inventory (via `drawio-architecture-reader` style parsing or the design contract's `data_flow[]`).
 
-- If the agent has an inbound edge from a Storage / Blob / SharePoint / Knowledge Index node → require `file_search`.
+- If the agent has an inbound edge from a Storage / Blob / SharePoint / Knowledge Index node → require retrieval. Choose `azure_ai_search` when the source is SharePoint / Data Lake / an existing Search service, when the corpus is large or grows over time, or when the BRD asks for source filtering, citations, incremental sync, or multimodal enrichment; otherwise `file_search`.
 - If the agent has an outbound edge to Cosmos DB, SQL, Service Bus, an HTTP API, or another microservice → require at least one `function` tool, and draft its signature from the target resource (e.g. `lookup_order(order_id: str) -> Order`).
 - If the agent has an outbound edge labelled with "report", "chart", "csv", "pdf-out" → require `code_interpreter`.
 
@@ -137,6 +160,7 @@ Write `projects/<slug>/docs/agents/agent-tooling.json` (schema: [`factory-templa
       "recommended_capabilities": ["function_calling", "file_search"],
       "recommended_tools": [
         { "type": "file_search", "rationale": "...", "confidence": "high" },
+        { "type": "azure_ai_search", "rationale": "grounds answers in the SharePoint policy library with source citations", "confidence": "high", "retrieval_hint": { "pattern": "azure_ai_search", "corpus_source": "sharepoint", "multimodal": false, "chunk_size": 3000, "chunk_overlap": 500, "semantic_reranker": true, "min_reranker_score": 2.0, "agentic_retrieval": false, "handoff": "knowledge-retrieval-architect" } },
         { "type": "function", "name": "lookup_order", "signature": "lookup_order(order_id: str) -> Order", "rationale": "agent edges to Cosmos DB Orders container", "confidence": "high" }
       ],
       "baseline_prompt": "<full prompt string>",
@@ -161,13 +185,14 @@ Also write a sibling Markdown summary at `projects/<slug>/docs/agents/agent-tool
 
 - **`project-orchestrator`** uses `recommended_capabilities` and `recommended_tools` to populate `BRD.implementation.agents[].tools` *in memory* before invoking the language specialist (it does NOT rewrite the BRD on disk — the BRD remains the human-authored source of truth, the report is the resolved view).
 - **`lang-dotnet-implementer`** (and future Python equivalent) reads `agent-tooling.json` to materialize the right factory templates without halting on missing `tools[]`.
+- **`knowledge-retrieval-architect`** consumes any tool entry of type `azure_ai_search`: its `retrieval_hint` is the first-pass design the architect refines into a full retrieval contract and scaffolded pipeline. Recommending `azure_ai_search` is the trigger for that Phase 2 agent — you hand off rather than dead-end.
 - **`contract-validator`** consumes `agent-tooling.json` only for cross-reference: every recommended `function` tool with `confidence: "high"` SHOULD appear as a backing function in the generated source. (Soft check — minor finding if missing.)
 
 ## What You Do NOT Do
 
 - You do NOT call Foundry's `prompt_optimize` — that runs at deployment time on a live agent. You only emit a *baseline*.
 - You do NOT modify the BRD. If the BRD is ambiguous, raise a finding and let the orchestrator escalate to the user.
-- You do NOT invent tools that aren't backed by an `factory-templates/<lang>/` template. If you'd recommend a token with no template (e.g. `bing_grounding`, `azure_ai_search`), emit a `critical` finding instructing the user to add the template first.
+- You do NOT invent tools that aren't backed by an `factory-templates/<lang>/` template. If you'd recommend a token with no template (e.g. `bing_grounding`), emit a `critical` finding instructing the user to add the template first. **Exception:** `azure_ai_search` is NOT a hard block — recommend it with a `retrieval_hint` and hand off to `knowledge-retrieval-architect`, which owns building the pipeline (and authors any template it needs).
 - You do NOT pick the model, deployment SKU, or region — those are owned by `production-environment-advisor` and the deployment phase.
 
 ## Regeneration Cadence
@@ -197,5 +222,6 @@ This makes it possible to grep prod logs and confirm the materialized prompt + t
 | BRD missing or unparseable | `status: "fail"`, finding `critical: "brd_unreadable"` |
 | `implementation.agents[]` absent | `status: "skipped"`, exit cleanly |
 | Diagram missing | Continue with BRD-only signals; downgrade all confidences by one step |
-| Recommended tool has no factory template | `status: "needs_review"`, `critical` finding per missing template |
+| Recommended tool has no factory template (except `azure_ai_search`) | `status: "needs_review"`, `critical` finding per missing template |
+| Recommended `azure_ai_search` | not a block: emit `retrieval_hint` + `minor` finding "hand off to knowledge-retrieval-architect" |
 | `strict: true` and any `low` confidence | `next_action: "needs_review"` |

@@ -458,6 +458,27 @@ After completion:
 - Delegate phase logging and manifest update to `project-state-manager`.
 - Log: `[PHASE 2] Implementation scaffolded (<implementation_language>) → projects/<slug>/src/, projects/<slug>/infra/`
 
+### Phase 2r — Retrieval Pipeline Design (conditional)
+**Delegate to**: `knowledge-retrieval-architect`
+
+Run this phase **in Phase 2**, immediately after the implementer returns, if ANY retrieval signal is present:
+- `agent-tooling.json` recommends a tool of type `azure_ai_search` or `file_search` for any agent, OR
+- the BRD describes a "knowledge base", "document search", "grounded answers", "retrieval-augmented"/"RAG", "search over documents", "cite sources", or "semantic search", OR
+- the diagram contains an Azure AI Search node, an embedding/vectorizer node, or a data flow from Blob / SharePoint / Data Lake into a search or index node.
+
+Otherwise skip (the architect also self-skips and returns `status: "skipped"`).
+
+Instruct the agent:
+> "project_path: `projects/<slug>`. mode: `scaffold`. Read the BRD, the diagram + notes, and `docs/agents/agent-tooling.json` if present. Apply the file_search-vs-azure_ai_search decision rule, design the retrieval pipeline (data source + index + skillset + indexer, chunking, embedding model + dimensions, semantic reranker + min_reranker_score, index projections, knowledge store, optional agentic retrieval), and write `docs/retrieval/retrieval-design.json` plus a Markdown sibling. Scaffold ingestion + query code under `src/` and Search Bicep under `infra/modules/search/` with managed-identity role assignments. Source embedding model/dimensions from project Settings — do not hardcode. Do not edit the BRD, the diagram, or another agent's service internals."
+
+After completion:
+- If `status: "skipped"` → proceed; record nothing further.
+- If `next_action: "block"` → halt and surface the critical findings (most common: an unsupported corpus source, or an unresolved embedding deployment).
+- If `next_action: "needs_review"` → surface the low-confidence design choices and ask the user to confirm before continuing.
+- If `next_action: "proceed"` → forward the `required_role_assignments` to the deployment phase and ensure the language specialist wires the architect's `query` module into the owning service during the Phase 2 drift-check rather than inventing its own search call.
+- Delegate phase logging to `project-state-manager` under `phases.2_retrieval`.
+- Log: `[PHASE 2r] Retrieval pipeline designed (<pattern>) → projects/<slug>/docs/retrieval/retrieval-design.json`
+
 **Phase 2 follow-up — code/architecture drift check** (delegated to the language specialist)
 
 After the implementer returns, invoke the language specialist in `drift-check` mode to confirm every diagram component is represented in `src/` and vice versa. Choose the specialist based on `implementation_language`:

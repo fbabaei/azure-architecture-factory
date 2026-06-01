@@ -12,7 +12,7 @@ Your job is to audit a factory project for security and compliance gaps **withou
 
 ## Owns
 - Secret-management audit (no secrets in source; Key Vault + Managed Identity wiring).
-- Identity & authZ audit (Managed Identity vs connection strings; RBAC scope; AuthN/AuthZ middleware on every route).
+- Identity & authZ audit (Managed Identity vs connection strings/keys; control-plane AND data-plane RBAC scope; AuthN/AuthZ middleware on every route).
 - Network boundary audit (NSG, CORS, private endpoints where the BRD requires them, public surface minimization).
 - Data-in-transit audit (HTTPS only, TLS version, cert-pinning where required).
 - Audit-logging audit (Activity Log, Diagnostic Settings, App Insights audit events on mutation paths).
@@ -43,6 +43,7 @@ Your job is to audit a factory project for security and compliance gaps **withou
 | `no_hardcoded_secrets` | No connection strings, access keys, passwords, SAS tokens, or private keys in source (regex + common patterns). |
 | `secrets_from_keyvault` | Service reads secrets via Key Vault references or `DefaultAzureCredential` — never environment variables containing raw secret values. |
 | `managed_identity_only` | All Azure SDK clients authenticate via `DefaultAzureCredential` / `ManagedIdentityCredential`. No `AzureKeyCredential` or connection strings on the request path. |
+| `search_openai_no_account_keys` | Azure AI Search and Azure OpenAI / Foundry clients authenticate with AAD (`DefaultAzureCredential` / token provider), NOT admin keys, query keys, or `api-key` headers. Any `AZURE_SEARCH_API_KEY` / `AZURE_OPENAI_API_KEY` usage on the request path is a `critical` finding. |
 | `auth_middleware_on_routes` | Every non-public HTTP route is protected by an authN/authZ middleware; public routes are explicitly whitelisted in code or config. |
 | `input_sanitization` | User-supplied input reaches SQL / Cosmos / Blob paths through parameterized queries or sanitizer helpers — no f-string interpolation into queries. |
 | `tls_enforcement` | Outbound HTTP clients use HTTPS; TLS version is not pinned below 1.2. |
@@ -57,6 +58,8 @@ Your job is to audit a factory project for security and compliance gaps **withou
 | `keyvault_wired` | Every secret referenced by a service has a matching Key Vault secret resource and an access role assignment. |
 | `managed_identity_assigned` | Every Container App / Function / App Service / AKS workload has `identity.type = 'SystemAssigned'` or a User-Assigned identity wired. |
 | `rbac_least_privilege` | Role assignments use built-in roles (Reader, Key Vault Secrets User, etc.), not Owner or Contributor on scoped resources. |
+| `data_plane_rbac_assigned` | Every workload identity that reads/writes a data-plane store has the matching **data-plane** role assignment, not just a control-plane (ARM) role. Examples: Cosmos DB SQL data-plane role (`Cosmos DB Built-in Data Contributor`, assigned via `sqlRoleAssignments`), `Search Index Data Reader/Contributor` for Azure AI Search, `Storage Blob Data Reader/Contributor` for Blob, `Cognitive Services OpenAI User` for Azure OpenAI. A control-plane role (Reader/Contributor) without the data-plane role is a `critical` finding — the app authenticates but is denied at runtime. |
+| `key_based_auth_disabled` | Data-plane services support AAD-only auth where the BRD allows it: Azure AI Search `disableLocalAuth: true` (or `authOptions` not set to apiKey), Cosmos DB `disableKeyBasedMetadataWriteAccess` / local-auth disabled, Storage `allowSharedKeyAccess: false`, Azure OpenAI `disableLocalAuth: true`. If a key is still required, it MUST come from Key Vault, never inline. |
 | `private_endpoint_when_required` | If BRD declares "private network only" or names HIPAA/PCI, data-tier resources (Storage, Cosmos, SQL, Key Vault) have `publicNetworkAccess: 'Disabled'` and a private endpoint. |
 | `https_only` | App Service / Container Apps / Functions set `httpsOnly: true` (or ingress.allowInsecure: false). |
 | `diagnostic_settings_enabled` | Every data-tier + compute resource has a `diagnosticSettings` child sending logs to Log Analytics. |
@@ -108,7 +111,8 @@ Write to the path specified by the caller (default `projects/<slug>/docs/securit
       "name": "<service>",
       "checks": {
         "no_hardcoded_secrets": { "status": "pass|fail", "evidence": "redacted @ src/<service>/db.py:42" },
-        "managed_identity_only": { "status": "pass|fail", "evidence": "..." }
+        "managed_identity_only": { "status": "pass|fail", "evidence": "..." },
+        "search_openai_no_account_keys": { "status": "pass|fail", "evidence": "AZURE_SEARCH_API_KEY used @ src/<service>/search.py:18" }
       },
       "findings": [
         {
@@ -128,7 +132,8 @@ Write to the path specified by the caller (default `projects/<slug>/docs/securit
     {
       "module": "infra/modules/storage.bicep",
       "checks": {
-        "private_endpoint_when_required": { "status": "pass|fail", "evidence": "publicNetworkAccess: 'Enabled'" }
+        "private_endpoint_when_required": { "status": "pass|fail", "evidence": "publicNetworkAccess: 'Enabled'" },
+        "data_plane_rbac_assigned": { "status": "pass|fail", "evidence": "identity has Cosmos control-plane Contributor but no sqlRoleAssignment" }
       },
       "findings": [ { "severity": "critical", "check": "private_endpoint_when_required", "file": "infra/modules/storage.bicep", "line": 18, "message": "Storage account is publicly reachable; BRD requires HIPAA private network.", "remediation": "Set publicNetworkAccess: 'Disabled' and add a private endpoint.", "layer": "infra", "fixer": "bicep-infrastructure-validator" } ]
     }
@@ -141,7 +146,7 @@ Write to the path specified by the caller (default `projects/<slug>/docs/securit
 
 ## Severity Rules
 
-- `critical` → exploitable security issue (hardcoded secret, public data tier when compliance requires private, `Owner` role at subscription scope, CVE with public exploit, TLS disabled).
+- `critical` → exploitable security issue (hardcoded secret, public data tier when compliance requires private, `Owner` role at subscription scope, CVE with public exploit, TLS disabled, account/admin keys for Search/OpenAI on the request path, or a workload missing the data-plane RBAC role it needs at runtime).
 - `major` → security posture gap that will fail a real audit (missing Managed Identity, missing Diagnostic Settings, CORS `*` on authenticated API, missing private endpoint when BRD requires it).
 - `minor` → documentation or hardening gap (missing `docs/compliance/` entry, Key Vault without purge protection when no framework declared).
 
