@@ -1,0 +1,4 @@
+azure-identity>=1.15.0
+azure-storage-file-datalake>=12.14.0
+azure-keyvault-secrets>=4.7.0
+python-dotenv>=1.0.0

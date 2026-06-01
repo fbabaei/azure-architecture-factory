@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "project": "azure-architecture-factory",
+  "mission": "Creating architecture from a BRD or PRD and generates codes, testing and deploying if approved.",
+  "created": "2026-04-16"
+}

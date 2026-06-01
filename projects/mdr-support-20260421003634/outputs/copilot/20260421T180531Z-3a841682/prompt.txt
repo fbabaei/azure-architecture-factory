@@ -1,0 +1,1 @@
+Read docs/BRD.md and diagrams/*.md. Propose 3 concrete improvements to the architecture for scalability and cost. Output as a numbered list with tradeoffs.

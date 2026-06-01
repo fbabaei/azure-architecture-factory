@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azure-architecture-factory/contracts/v1/architecture-contract.schema.json",
+  "title": "AAF Architecture Contract",
+  "description": "Production-ready architecture. Aggregates outputs of Phase 2 (implementation), Phases 2.5–2.8 (alignment + security + error-handling + scalability gates), and Phase 3 (infra validation). Consumed by deployment, traceability, and factory-handoff. This is the deploy-gate contract.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "project_slug",
+    "design_ref",
+    "azure_architecture",
+    "diagrams",
+    "adrs",
+    "risks",
+    "deployment_guidance",
+    "gate_results"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": { "type": "string", "const": "1.0.0" },
+    "project_slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}$" },
+    "design_ref": {
+      "type": "object",
+      "required": ["contract_version", "checksum"],
+      "properties": {
+        "contract_version": { "type": "string" },
+        "checksum": { "type": "string" }
+      }
+    },
+    "azure_architecture": {
+      "type": "object",
+      "required": ["resources", "iac_tool", "iac_root"],
+      "properties": {
+        "iac_tool": { "type": "string", "enum": ["bicep", "terraform"] },
+        "iac_root": { "type": "string", "description": "Path to infra root (e.g., projects/<slug>/infra)." },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["logical_id", "azure_resource_type", "module_path"],
+            "properties": {
+              "logical_id": { "type": "string" },
+              "azure_resource_type": { "type": "string", "description": "e.g., Microsoft.App/containerApps" },
+              "module_path": { "type": "string" },
+              "implements_components": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^C-[0-9]{2,}$" }
+              },
+              "managed_identity": { "type": "boolean" },
+              "private_endpoint": { "type": "boolean" }
+            }
+          }
+        },
+        "networking": {
+          "type": "object",
+          "properties": {
+            "topology": { "type": "string", "enum": ["public", "vnet-injected", "hub-spoke", "private-only"] },
+            "private_dns": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "diagrams": {
+      "type": "object",
+      "required": ["c1_path"],
+      "properties": {
+        "c1_path": { "type": "string" },
+        "c2_path": { "type": "string" },
+        "c3_path": { "type": "string" },
+        "c4_path": { "type": "string" }
+      }
+    },
+    "adrs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "decision"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ADR-[0-9]{3,}$" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["proposed", "accepted", "deprecated", "superseded"] },
+          "decision": { "type": "string" },
+          "context": { "type": "string" },
+          "consequences": { "type": "string" }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "severity", "mitigation"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^RISK-[0-9]{3,}$" },
+          "description": { "type": "string" },
+          "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+          "likelihood": { "type": "string", "enum": ["low", "medium", "high"] },
+          "mitigation": { "type": "string" },
+          "owner": { "type": "string" }
+        }
+      }
+    },
+    "deployment_guidance": {
+      "type": "object",
+      "required": ["environments", "prerequisites"],
+      "properties": {
+        "environments": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "enum": ["dev", "test", "prod"] }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "deploy_command": { "type": "string" },
+        "rollback_strategy": { "type": "string" }
+      }
+    },
+    "gate_results": {
+      "type": "object",
+      "required": [
+        "phase_2_5_alignment",
+        "phase_2_6_security",
+        "phase_2_7_error_handling",
+        "phase_2_8_scalability",
+        "phase_3_infra_validation",
+        "phase_3_7_test_convergence"
+      ],
+      "properties": {
+        "phase_2_5_alignment":      { "$ref": "#/$defs/gateResult" },
+        "phase_2_6_security":       { "$ref": "#/$defs/gateResult" },
+        "phase_2_7_error_handling": { "$ref": "#/$defs/gateResult" },
+        "phase_2_8_scalability":    { "$ref": "#/$defs/gateResult" },
+        "phase_3_infra_validation": { "$ref": "#/$defs/gateResult" },
+        "phase_3_7_test_convergence": { "$ref": "#/$defs/gateResult" }
+      }
+    },
+    "traceability": {
+      "type": "object",
+      "description": "Optional — populated by project-traceability-advisor.",
+      "properties": {
+        "coverage_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "report_path": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "gateResult": {
+      "type": "object",
+      "required": ["status", "iterations", "critical", "major"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pass", "fail", "skipped", "n/a"] },
+        "iterations": { "type": "integer", "minimum": 0 },
+        "critical": { "type": "integer", "minimum": 0 },
+        "major": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 },
+        "report_path": { "type": "string" },
+        "skip_reason": { "type": "string" }
+      }
+    }
+  }
+}

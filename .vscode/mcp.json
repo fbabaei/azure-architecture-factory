@@ -1,13 +1,35 @@
 {
 	"servers": {
-		"mcp-environment-orchestrator": {
+		"factory-mcp-orchestrator": {
 			"url": "http://localhost:8000/mcp",
 			"type": "http"
 		},
-		"Draw io MCP": {
+		"draw-io-mcp": {
 			"url": "http://localhost:8080/mcp",
 			"type": "http"
+		},
+		"github": {
+			"type": "stdio",
+			"command": "docker",
+			"args": [
+				"run",
+				"-i",
+				"--rm",
+				"-e",
+				"GITHUB_PERSONAL_ACCESS_TOKEN",
+				"ghcr.io/github/github-mcp-server"
+			],
+			"env": {
+				"GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_pat}"
+			}
 		}
 	},
-	"inputs": []
+	"inputs": [
+		{
+			"id": "github_pat",
+			"type": "promptString",
+			"description": "GitHub Personal Access Token  (scopes: repo, issues, pull_requests, contents, metadata)",
+			"password": true
+		}
+	]
 }

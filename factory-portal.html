@@ -102,7 +102,6 @@
             backdrop-filter: blur(12px);
         }
 
-        header,
         .container {
             position: relative;
             z-index: 1;
@@ -133,20 +132,80 @@
 
         nav {
             display: flex;
-            gap: 1.25rem;
+            gap: 0.7rem;
             align-items: center;
         }
 
         nav a {
             color: rgba(255,255,255,0.85);
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.28rem 0.55rem;
+            border-radius: 999px;
             transition: color 0.2s;
         }
 
         nav a:hover, nav a.active {
             color: #ffffff;
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .nav-more {
+            position: relative;
+            z-index: 1300;
+        }
+
+        .nav-more summary {
+            list-style: none;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.28rem 0.6rem;
+            border-radius: 999px;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+        }
+
+        .nav-more summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .nav-more[open] summary,
+        .nav-more summary:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+        }
+
+        .nav-more-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 0.35rem);
+            min-width: 210px;
+            background: #ffffff;
+            border: 1px solid #c8dff2;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(15, 45, 68, 0.18);
+            padding: 0.35rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            z-index: 1300;
+        }
+
+        .nav-more-menu a {
+            color: #0f3d63;
+            background: transparent;
+            border-radius: 6px;
+            padding: 0.42rem 0.55rem;
+            font-size: 0.78rem;
+            text-align: left;
+        }
+
+        .nav-more-menu a:hover {
+            color: #0f3d63;
+            background: #eef6ff;
         }
 
         .container {
@@ -158,7 +217,7 @@
         }
 
         .container > section:first-of-type {
-            order: 1;
+            order: -1;
         }
 
         #stats-container {
@@ -175,6 +234,160 @@
 
         section {
             margin-bottom: 2rem;
+        }
+
+        .workspace-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .workspace-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid #b8d2ea;
+            background: #f3f9ff;
+            color: #0e3a5f;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .workspace-chip:hover {
+            background: #e8f2ff;
+            border-color: #8eb8de;
+        }
+
+        .workspace-chip-build {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            border-color: #ea580c;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+            font-size: 0.84rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            padding: 0.42rem 0.95rem;
+            animation: startHerePulse 2.2s ease-in-out infinite;
+        }
+
+        .workspace-chip-build:hover {
+            background: linear-gradient(135deg, #d97706, #ea580c);
+            border-color: #c2410c;
+            color: #ffffff;
+        }
+
+        .workspace-chip-build:focus-visible {
+            outline: 3px solid rgba(251, 146, 60, 0.35);
+            outline-offset: 2px;
+        }
+
+        .workspace-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 24px rgba(18, 50, 74, 0.06);
+            margin-bottom: 1.35rem;
+            overflow: hidden;
+        }
+
+        .workspace-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+            border-bottom: 1px solid #d6e5f3;
+            cursor: pointer;
+        }
+
+        .workspace-card-title {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: #124267;
+            margin: 0;
+        }
+
+        .workspace-card-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin: 0.15rem 0 0;
+        }
+
+        .workspace-card-toggle {
+            border: 1px solid #9cc1e2;
+            background: #ffffff;
+            color: #124267;
+            border-radius: 999px;
+            padding: 0.28rem 0.7rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .workspace-card.collapsed .workspace-card-toggle {
+            display: none;
+        }
+
+        .workspace-card-body {
+            padding: 0.95rem 1rem 1rem;
+        }
+
+        .workspace-card.collapsed .workspace-card-body {
+            display: none;
+        }
+
+        #build-workspace {
+            border-color: #f2c084;
+            box-shadow: 0 14px 30px rgba(249, 115, 22, 0.16);
+        }
+
+        #build-workspace .workspace-card-header {
+            background: linear-gradient(180deg, #fffdf8 0%, #fff5e6 100%);
+            border-bottom-color: #fad9a8;
+        }
+
+        #build-workspace .workspace-card-title {
+            color: #7c2d12;
+        }
+
+        #build-workspace .workspace-card-subtitle {
+            color: #9a3412;
+        }
+
+        .workspace-start-pill {
+            display: inline-flex;
+            align-items: center;
+            align-self: center;
+            margin-bottom: 0;
+            padding: 0.16rem 0.48rem;
+            border-radius: 999px;
+            font-size: 0.66rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #92400e;
+            background: linear-gradient(135deg, #fff7ed 0%, #fde8c8 100%);
+            box-shadow: 0 2px 8px rgba(251, 146, 60, 0.18);
+            animation: startHerePulse 2.2s ease-in-out infinite;
+        }
+
+        @keyframes startHerePulse {
+            0%,
+            100% {
+                box-shadow: 0 2px 8px rgba(251, 146, 60, 0.32);
+                transform: translateY(0);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(251, 146, 60, 0.14), 0 4px 12px rgba(251, 146, 60, 0.4);
+                transform: translateY(-1px);
+            }
         }
 
         h1 {
@@ -219,9 +432,8 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            max-width: 800px;
-            box-shadow: 0 18px 40px rgba(19, 50, 74, 0.08);
+            margin-bottom: 0;
+            box-shadow: 0 4px 16px rgba(19, 50, 74, 0.08);
         }
 
         .section-divider {
@@ -1651,6 +1863,12 @@
                 gap: 0.75rem;
             }
 
+            .nav-more-menu {
+                position: static;
+                min-width: 100%;
+                width: 100%;
+            }
+
             .projects-grid {
                 grid-template-columns: 1fr;
             }
@@ -2121,16 +2339,15 @@
 
         .intake-analysis-row {
             display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: flex-start;
-            gap: 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
             margin-bottom: 1.5rem;
         }
 
         .intake-col {
-            flex: 0 0 420px;
-            width: 420px;
+            flex: 1 1 auto;
+            width: 100%;
             min-width: 0;
         }
 
@@ -2139,24 +2356,18 @@
             min-width: 0;
         }
 
-        .modernize-col {
-            flex: 0 0 420px;
-            width: 420px;
-            min-width: 0;
-            margin-top: 0.85rem;
+        /* Architecture Intake + Repo Enhancement displayed side by side */
+        .build-panels-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            align-items: start;
         }
 
         @media (max-width: 900px) {
-            .intake-analysis-row {
-                flex-direction: column;
-            }
-            .intake-col {
-                width: 100%;
-                flex: none;
-            }
-            .modernize-col {
-                width: 100%;
-                margin-top: 0;
+            .build-panels-row {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -2183,33 +2394,138 @@
         }
 
         #projects .projects-grid {
-            gap: 0.45rem;
-            margin-top: 0.45rem;
+            gap: 0.62rem;
+            margin-top: 0.55rem;
         }
 
         #projects .project-card {
-            padding: 0.45rem;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(18, 50, 74, 0.06);
+            padding: 0.62rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(18, 50, 74, 0.07);
         }
 
         #projects .project-header {
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.4rem;
         }
 
         #projects .project-title {
-            font-size: 0.8rem;
+            font-size: 0.84rem;
         }
 
         #projects .project-status {
-            font-size: 0.58rem;
-            padding: 0.1rem 0.35rem;
+            font-size: 0.6rem;
+            padding: 0.12rem 0.4rem;
+        }
+
+        #projects .project-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+            gap: 0.34rem;
+            width: 100%;
+        }
+
+        #projects .project-actions-shell {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.5rem;
+            align-items: start;
+        }
+
+        #projects .project-actions-shell > .project-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.34rem;
+            width: 100%;
+            align-self: start;
+            min-width: 0;
+            padding-left: 0.32rem;
+            border-left: 1px solid rgba(0, 120, 212, 0.14);
+        }
+
+        #projects .project-actions-shell > .project-links:first-child {
+            padding-left: 0;
+            border-left: 0;
+        }
+
+        #projects .project-links-rest-stack {
+            gap: 0.3rem;
         }
 
         #projects .project-link {
-            min-width: 58px;
-            font-size: 0.62rem;
-            padding: 0.22rem 0.35rem;
+            min-width: 0;
+            font-size: 0.67rem;
+            padding: 0.3rem 0.42rem;
+            line-height: 1.22;
+            flex: unset;
+        }
+
+        #projects .project-links-rest-stack .project-link {
+            width: 100%;
+        }
+
+        #projects .project-link-ask {
+            background: linear-gradient(135deg, #ea580c, #fb923c);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(234, 88, 12, 0.4);
+            border-color: transparent;
+        }
+
+        #projects .project-link-ask:hover {
+            background: linear-gradient(135deg, #c2410c, #f97316);
+            color: #fff;
+        }
+
+        #projects .project-link-cli {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.4);
+            border-color: transparent;
+        }
+
+        #projects .project-link-cli:hover {
+            background: linear-gradient(135deg, #047857, #059669);
+            color: #fff;
+        }
+
+        #projects .project-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.32rem;
+            margin-bottom: 0.45rem;
+        }
+
+        #projects .readiness-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.64rem;
+            border: 1px solid transparent;
+            background: #eef7ff;
+            color: #0e3a5f;
+            line-height: 1;
+        }
+
+        #projects .readiness-auto {
+            background: #e8f7ee;
+            border-color: #8fd3a7;
+            color: #145c2f;
+        }
+
+        #projects .readiness-guardrail {
+            background: #fff7e6;
+            border-color: #f0ca7a;
+            color: #8a5a00;
+        }
+
+        #projects .readiness-review {
+            background: #fdeaea;
+            border-color: #e1a2a2;
+            color: #8a1c1c;
         }
 
         .projects-intake-wrapper section {
@@ -2254,14 +2570,14 @@
             align-self: flex-start;
             padding: 0.2rem 0.5rem;
             border-radius: 999px;
-            margin-bottom: 0.1rem;
+            margin-bottom: 0;
             font-size: 0.7rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             font-weight: 800;
-            color: #7c2d12;
-            background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%);
-            box-shadow: 0 2px 8px rgba(251, 146, 60, 0.4);
+            color: #0c3a6e;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
         }
 
         .intake-toggle-copy {
@@ -2321,6 +2637,56 @@
         .intake-panel-content select,
         .intake-panel-content button {
             font-size: 0.85rem !important;
+        }
+
+        .intake-subsections {
+            display: grid;
+            gap: 0.65rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .intake-subsection {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfdff;
+            overflow: hidden;
+        }
+
+        .intake-subsection summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.86rem;
+            padding: 0.65rem 0.85rem;
+            background: #f4f8fe;
+        }
+
+        .intake-subsection-content {
+            padding: 0.8rem 0.85rem;
+        }
+
+        .intake-field-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.25rem;
+            align-items: start;
+            margin-bottom: 0.6rem;
+        }
+        .intake-field-pair .form-group { margin-bottom: 0; }
+        @media (max-width: 700px) { .intake-field-pair { grid-template-columns: 1fr; } }
+
+        .repo-source-inline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .repo-intake-source-panel {
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            padding: 0.65rem 0.75rem;
+            background: #fcfeff;
         }
 
         .csa-toggle-row {
@@ -2418,6 +2784,22 @@
             .intake-toggle-link {
                 text-align: left;
             }
+
+            #projects .project-actions-shell {
+                grid-template-columns: 1fr;
+            }
+
+            #projects .project-actions-shell > .project-links {
+                border-left: 0;
+                padding-left: 0;
+                border-top: 1px solid rgba(0, 120, 212, 0.14);
+                padding-top: 0.32rem;
+            }
+
+            #projects .project-actions-shell > .project-links:first-child {
+                border-top: 0;
+                padding-top: 0;
+            }
         }
     </style>
 </head>
@@ -2430,12 +2812,21 @@
             </div>
             <nav>
                 <a href="#projects" class="active">Projects</a>
-                <a href="#csa-companion">CSA Copilot</a>
-                <a href="#intake">BRD Intake</a>
-                <a href="#design-analysis">Design Analysis</a>
-                <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
-                <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
-                <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
+                <a href="#build-workspace">Build</a>
+                <a href="#assist-workspace">Assist</a>
+                <a href="https://github.com/fbabaei/csa-helper" target="_blank" rel="noopener noreferrer" title="Open the CSA Helper agents repo on GitHub">CSA Helper ↗</a>
+                <details class="nav-more">
+                    <summary>More</summary>
+                    <div class="nav-more-menu">
+                        <a href="#analyze-workspace">Design Analysis</a>
+                        <a href="#intake">BRD Intake</a>
+                        <a href="#intake" onclick="return launchAcaExpress(event)" title="Skip Bicep — deploy an HTTP container to ACA in under a minute (westcentralus / eastasia only)">⚡ ACA Express Deploy</a>
+                        <a href="#csa-companion">CSA Copilot</a>
+                        <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
+                        <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
+                        <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
+                    </div>
+                </details>
                 <span id="user-badge" class="user-badge" style="display:none;margin-left:0.5rem"></span>
             </nav>
         </div>
@@ -2443,13 +2834,34 @@
 
     <div class="container">
         <!-- Hero Section -->
-        <section>
+        <section style="text-align:center;">
             <h1>Architecture Factory</h1>
             <p class="section-subtitle hero-flow-subtitle">
                 End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment → Observability (with Traceability across all stages)
             </p>
             <hr class="section-divider">
+            <div class="factory-philosophy-panel" style="margin-top:1rem; text-align:left; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
+                <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
+                <p>
+                    The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
+                    Each project uses cloud-native patterns that align with real enterprise workloads, including
+                    service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                </p>
+            </div>
+            <div class="design-analysis-heading" style="margin-top:1.5rem;">
+                <h2>Design Analysis &amp; Rationale - <span style="font-weight:400; font-size:0.75em;">Understanding the architectural patterns and design decisions</span></h2>
+            </div>
         </section>
+
+        <section id="assist-workspace" class="workspace-card collapsed" aria-label="Assist workspace">
+            <div class="workspace-card-header" onclick="expandWorkspaceCard('assist-workspace', event)">
+                <div>
+                    <h3 class="workspace-card-title">Assist Workspace</h3>
+                    <p class="workspace-card-subtitle">Factory helper, docs shortcuts, and CSA companion in one place.</p>
+                </div>
+                <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('assist-workspace', event)">Hide</button>
+            </div>
+            <div class="workspace-card-body">
 
         <!-- Executive Summary + Factory Helper side by side -->
         <div class="exec-helper-row">
@@ -2589,47 +3001,54 @@
         </section>
         </div>
 
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <div class="workspace-nav" aria-label="Portal workspaces">
+            <a class="workspace-chip workspace-chip-build" href="#build-workspace">Build Here</a>
+            <a class="workspace-chip" href="#projects-workspace">Projects</a>
+            <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
+            <a class="workspace-chip" href="#assist-workspace">Assist</a>
+        </div>
+
         <!-- Design Analysis -->
         <section id="design-analysis">
-            <div class="design-analysis-header-row">
-                <div class="design-analysis-heading">
-                    <h2>Design Analysis &amp; Rationale</h2>
-                    <p class="section-subtitle">Understanding the architectural patterns and design decisions</p>
-                </div>
-            </div>
             <div class="philosophy-intake-row">
-                <div class="factory-philosophy-panel" style="margin-bottom: 1.5rem; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
-                    <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
-                    <p>
-                        The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
-                        Each project uses cloud-native patterns that align with real enterprise workloads, including
-                        service isolation, asynchronous processing, audit trails, and observability built-in from the start.
-                    </p>
-                </div>
                 <hr class="section-divider">
             </div>
+
+            <section id="build-workspace" class="workspace-card" aria-label="Build workspace">
+                <div class="workspace-card-header" onclick="expandWorkspaceCard('build-workspace', event)">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <h3 class="workspace-card-title">Build Workspace</h3>
+                            <span class="workspace-start-pill">Here</span>
+                        </div>
+                        <p class="workspace-card-subtitle">BRD intake and legacy modernization actions.</p>
+                    </div>
+                    <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('build-workspace', event)">Hide</button>
+                </div>
+                <div class="workspace-card-body">
             <div class="intake-analysis-row">
                 <div class="intake-col">
                     <section id="intake" class="intake-section">
                         <div class="intake-toggle-row">
                             <a href="#intake" class="intake-toggle-link" onclick="toggleIntakePanel(event)">
                                 <span class="intake-toggle-copy">
-                                    <span class="intake-start-badge">Start Here — or use BRD Copilot</span>
-                                    <span class="intake-toggle-title">Submit Business Requirements</span>
-                                    <span class="intake-toggle-description">Click here to expand the BRD intake form and generate a new architecture project — or use 💬 BRD Copilot below to draft or review your BRD first.</span>
+                                    <span style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                        <span class="intake-toggle-title">Submit Business Requirements</span>
+                                        <span class="intake-start-badge">Fill the form below</span>
+                                        <span style="font-size:0.72rem; color:var(--text-secondary);">— or</span>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleBrdChat();" style="display:inline-flex; align-items:center; gap:0.3rem; background:linear-gradient(135deg,#1c7a33,#2aa84a); color:#fff; border:none; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(28,122,51,0.3);">💬 Draft with BRD Copilot Here</button>
+                                    </span>
+                                    <span class="intake-toggle-description">Expand the form to submit your Business Requirements and generate a new architecture project.</span>
                                 </span>
                                 <span class="intake-toggle-icon" aria-hidden="true">▸</span>
                             </a>
                         </div>
-                        <div style="margin: 0.75rem 0 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
-                            <button type="button" onclick="toggleBrdChat()"
-                                style="background: linear-gradient(135deg, #1c7a33, #2aa84a); color: #fff; border: none; padding: 0.55rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 6px rgba(28,122,51,0.35);">
-                                💬 Open BRD Copilot
-                            </button>
-                            <span style="font-size: 0.82rem; color: var(--text-secondary);">
-                                Draft a new BRD from a description, or paste an existing one for review.
-                            </span>
-                        </div>
+
                         <div class="intake-panel-content">
                             <!-- User: Request Access Token (hidden: EasyAuth + Entra handles sign-in; tokens only needed for programmatic clients) -->
                             <details id="request-token-panel" hidden style="display:none; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 6px; background: #f8f8ff;">
@@ -2653,29 +3072,63 @@
                                 </div>
                             </details>
 
-                            <div class="brd-intake-panel">
-                                <h3>📋 New BRD Input</h3>
+                            <div class="build-panels-row">
+                            <div class="brd-intake-panel" style="border-left:4px solid #7fba00;">
+                                <h3>📋 Architecture Intake</h3>
                                 <form onsubmit="return submitBrd(event)">
-                                    <div class="form-group">
-                                        <label for="brd-file-name">Project Name / BRD Filename</label>
-                                        <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-brd" required>
-                                    </div>
-                                    <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
-                                         Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
-                                    <div class="form-group" hidden style="display:none;">
-                                        <label for="portal-api-key">Portal Access Token</label>
-                                        <input type="password" id="portal-api-key" placeholder="Legacy — leave blank">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-upload">Upload BRD File (.md or .txt)</label>
-                                        <input type="file" id="brd-upload" accept=".md,.txt,text/markdown,text/plain">
-                                        <p style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
-                                            Optional. If provided, file content is used instead of pasted markdown.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-content">Business Requirements Document (Markdown)</label>
-                                        <textarea id="brd-content" placeholder="# Project: [Name]
+                                    <div class="intake-subsections">
+                                        <details class="intake-subsection" open>
+                                            <summary>Project and Source</summary>
+                                            <div class="intake-subsection-content">
+                                                <div class="form-group">
+                                                    <label for="brd-file-name">Project Name / Intake Filename</label>
+                                                    <input type="text" id="brd-file-name" placeholder="e.g., customer-portal-architecture" required>
+                                                </div>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-source-type">Source Format</label>
+                                                        <select id="brd-source-type" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="auto" selected>Auto detect</option>
+                                                            <option value="brd-markdown">BRD Markdown</option>
+                                                            <option value="architecture-markdown">Architecture Markdown</option>
+                                                            <option value="plain-text">Plain Text Notes</option>
+                                                            <option value="drawio">draw.io XML</option>
+                                                            <option value="mermaid">Mermaid</option>
+                                                            <option value="plantuml">PlantUML</option>
+                                                            <option value="structurizr">Structurizr DSL</option>
+                                                            <option value="json">JSON Architecture Spec</option>
+                                                            <option value="yaml">YAML Architecture Spec</option>
+                                                            <option value="visio">Visio / VSDX</option>
+                                                            <option value="lucidchart">Lucidchart Export</option>
+                                                        </select>
+                                                        <p id="brd-source-type-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;"></p>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-target-project-slug">Iteration Target</label>
+                                                        <select id="brd-target-project-slug" onchange="updateArchitectureIntakeHints()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="">Create new project</option>
+                                                        </select>
+                                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                            Select an existing slug to update it. Prior snapshot preserved under <code>projects/_history/</code>.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <!-- Portal Access Token field hidden: EasyAuth session cookie is the canonical auth.
+                                                     Element retained (hidden) so legacy JS helpers (getPortalApiKey) remain safe. -->
+                                                <div class="form-group" hidden style="display:none;">
+                                                    <label for="portal-api-key">Portal Access Token</label>
+                                                    <input type="password" id="portal-api-key" placeholder="Legacy — leave blank">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-upload">Upload Architecture Artifact</label>
+                                                    <input type="file" id="brd-upload" accept=".md,.txt,.drawio,.mmd,.mermaid,.puml,.plantuml,.dsl,.json,.yaml,.yml,.vsdx,text/markdown,text/plain,application/json,text/yaml,application/xml,text/xml">
+                                                    <p id="brd-upload-hint" style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.8rem;">
+                                                        Optional. If provided, uploaded content is used as the source when the format is text-based. Visio and Lucidchart uploads still require a written summary below.
+                                                    </p>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-content">Architecture Source or Summary</label>
+                                                    <textarea id="brd-content" placeholder="# Project: [Name]
 
 ## Business Goal
 [What problem are we solving?]
@@ -2694,74 +3147,205 @@
 
 ## Timeline
 [Expected delivery]"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-enable-observability" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-enable-observability" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Wire the generated project for monitoring and observability</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Include starter guidance for Application Insights, Log Analytics, health checks, alerting, and operational ownership.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-generate-infra" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-generate-infra" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Generate Azure infrastructure (Bicep or Terraform)</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Emits <code>infra/</code> with the selected IaC tool. Turn off for a docs-and-code-only project; the orchestrator will skip Phase 3 infra validation.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-run-security-audit" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
-                                            <input type="checkbox" id="brd-run-security-audit" checked style="margin-top:0.25rem;">
-                                            <span>
-                                                <strong>Run the security &amp; compliance audit</strong><br>
-                                                <span style="color: var(--text-secondary); font-size: 0.82rem;">Runs Phase 2.6 (secrets, managed identity, RBAC, CVEs, data-in-transit, BRD-declared frameworks). Turn off only for quick scaffolding spikes — never for production work.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-network-tier">Network Isolation</label>
-                                        <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="public" selected>Public — internet-facing, no VNet (default)</option>
-                                            <option value="vnet-integrated">VNet-integrated — subnet delegation, NSG, private ingress</option>
-                                            <option value="private">Private — internal load balancer, private endpoints, no public ingress</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Sets the generated network topology. VNet-integrated and Private tiers add a virtual network, NSG, and subnet resources to <code>infra/main.bicep</code> or <code>infra/main.tf</code>.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-implementation-language">Implementation Language</label>
-                                        <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="" selected>Auto (infer from BRD, default Python)</option>
-                                            <option value="python">Python / FastAPI</option>
-                                            <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Overrides <code>Implementation language:</code> in the BRD. Controls which language specialist emits <code>src/</code>.
-                                        </p>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="brd-iac-tool">Infrastructure-as-Code</label>
-                                        <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
-                                            <option value="" selected>Auto (infer from BRD, default Bicep)</option>
-                                            <option value="bicep">Bicep (Azure-native)</option>
-                                            <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
-                                        </select>
-                                        <p style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
-                                            Overrides <code>Infrastructure as code:</code> in the BRD. Controls whether <code>infra/</code> is emitted as Bicep or Terraform.
-                                        </p>
+                                                    <p id="brd-content-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                        Paste the BRD, architecture notes, or a summary of the uploaded artifact. For Visio and Lucidchart, this summary is required.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </details>
+                                        <details class="intake-subsection">
+                                            <summary>Generation Controls</summary>
+                                            <div class="intake-subsection-content">
+                                                <div class="form-group">
+                                                    <label for="brd-enable-observability" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-enable-observability" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Wire the generated project for monitoring and observability</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Include starter guidance for Application Insights, Log Analytics, health checks, alerting, and operational ownership.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-generate-infra" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-generate-infra" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Generate Azure infrastructure (Bicep or Terraform)</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Emits <code>infra/</code> with the selected IaC tool. Turn off for a docs-and-code-only project; the orchestrator will skip Phase 3 infra validation.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="brd-run-security-audit" style="display:flex; align-items:flex-start; gap:0.65rem; cursor:pointer;">
+                                                        <input type="checkbox" id="brd-run-security-audit" checked style="margin-top:0.25rem;">
+                                                        <span>
+                                                            <strong>Run the security &amp; compliance audit</strong><br>
+                                                            <span style="color: var(--text-secondary); font-size: 0.82rem;">Runs Phase 2.6 (secrets, managed identity, RBAC, CVEs, data-in-transit, BRD-declared frameworks). Turn off only for quick scaffolding spikes — never for production work.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-implementation-language">Implementation Language</label>
+                                                        <select id="brd-implementation-language" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="" selected>Auto (infer from BRD, default Python)</option>
+                                                            <option value="python">Python / FastAPI</option>
+                                                            <option value="csharp">C# / ASP.NET Core Minimal APIs</option>
+                                                            <option value="dotnet">.NET 8 / ASP.NET Core Minimal APIs</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-iac-tool">Infrastructure-as-Code</label>
+                                                        <select id="brd-iac-tool" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="" selected>Auto (infer from BRD, default Bicep)</option>
+                                                            <option value="bicep">Bicep (Azure-native)</option>
+                                                            <option value="terraform">Terraform (HashiCorp azurerm ~&gt; 4.14)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="intake-field-pair">
+                                                    <div class="form-group">
+                                                        <label for="brd-network-tier">Network Isolation</label>
+                                                        <select id="brd-network-tier" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="public" selected>Public — internet-facing (default)</option>
+                                                            <option value="vnet-integrated">VNet-integrated — subnet, NSG, private ingress</option>
+                                                            <option value="private">Private — internal LB, private endpoints</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="brd-deployment-mode">Deployment Mode</label>
+                                                        <select id="brd-deployment-mode" onchange="updateAcaExpressFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                                            <option value="standard" selected
+                                                                title="Full pipeline: architecture diagram → Bicep/Terraform/azd infrastructure → source code scaffolding → production readiness review. Supports all Azure services, VNet, Managed Identity, Key Vault, Dapr, KEDA, and custom domains.">Standard — Bicep / Terraform / azd</option>
+                                                            <option value="aca-express"
+                                                                title="⚡ ACA Express (preview): skips Bicep Phase 3 and deploys directly via &quot;az containerapp up&quot; in under a minute. Constraints: HTTP-only workloads · westcentralus or eastasia regions only · no VNet, Managed Identity, Key Vault, Dapr, KEDA, or custom domains.">⚡ ACA Express — sub-minute HTTP deploy</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <!-- ACA Express sub-options (hidden unless aca-express is selected) -->
+                                                <div id="aca-express-fields" style="display:none; margin-top:0.5rem; padding:0.85rem 1rem; border:1px solid #ffe066; border-radius:6px; background:#fffde7;">
+                                                    <p style="margin:0 0 0.65rem; font-size:0.82rem; color:#7a6000;">⚡ <strong>ACA Express preview</strong> — fill in the target container image and region. Leave image blank to use the generated <code>Dockerfile</code> after a local <code>docker build</code>.</p>
+                                                    <div class="form-group" style="margin-bottom:0.65rem;">
+                                                        <label for="aca-express-image" style="font-size:0.85rem;">Container Image <span style="color:var(--text-secondary); font-weight:400;">(optional)</span></label>
+                                                        <input type="text" id="aca-express-image" placeholder="e.g. mcr.microsoft.com/azuredocs/aca-helloworld:latest"
+                                                               style="width:100%; padding:0.45rem 0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.88rem;">
+                                                    </div>
+                                                    <div class="form-group" style="margin-bottom:0;">
+                                                        <label for="aca-express-region" style="font-size:0.85rem;">Region <span style="color:#c00;">*</span></label>
+                                                        <select id="aca-express-region" style="width:100%; padding:0.45rem 0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.88rem;">
+                                                            <option value="westcentralus" selected>West Central US (westcentralus)</option>
+                                                            <option value="eastasia">East Asia (eastasia)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </details>
                                     </div>
                                     <div class="button-group">
-                                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate Project</button>
+                                        <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate or Update Project</button>
                                     </div>
-                                    <p class="brd-submit-hint">After the project is generated, use <strong>&#9655; Open in GitHub Copilot</strong> on the project card to continue in VS Code.</p>
+                                    <p class="brd-submit-hint">After generation completes, use <strong>&#9655; Open in GitHub Copilot</strong> on the project card to continue in VS Code or iterate on the refreshed architecture.</p>
                                     <div class="status-message" id="brd-intake-status"></div>
                                 </form>
                             </div>
+
+                            <!-- Repo Enhancement -->
+                            <div class="brd-intake-panel" style="border-left:4px solid #0078d4;">
+                                <h3>🔗 Repo Enhancement</h3>
+                                <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1rem;">
+                                    Provide a GitHub/Azure DevOps URL or a local repository path.
+                                    The factory will clone the repo, create an <code>AAF-*</code> branch,
+                                    review docs, architecture files, source code, tests, and infra,
+                                    then either enhance the existing implementation or add new code aligned
+                                    to the repo's architecture. It will run validation, commit the results,
+                                    and open a pull request back to the default branch.
+                                </p>
+                                <form onsubmit="return submitRepoIntake(event)">
+                                    <div class="form-group">
+                                        <label for="repo-input-source">Repository Source</label>
+                                        <select id="repo-input-source" onchange="updateRepoIntakeSourceFields()" style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <option value="remote" selected>Remote URL (GitHub / Azure DevOps)</option>
+                                            <option value="local">Local path on this machine</option>
+                                        </select>
+                                    </div>
+                                    <div id="repo-remote-fields" class="repo-intake-source-panel">
+                                        <div class="form-group">
+                                            <label for="repo-url">Repository URL <span style="color:#c00;">*</span></label>
+                                            <input type="url" id="repo-url"
+                                                   placeholder="https://github.com/owner/repo"
+                                                   pattern="https://(github\.com|dev\.azure\.com)/.+"
+                                                   title="Must be an https:// URL on github.com or dev.azure.com"
+                                                   required
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Supported: <code>https://github.com/…</code> and <code>https://dev.azure.com/…</code>
+                                            </p>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:0;">
+                                            <label for="repo-pat">Personal Access Token <span style="color:#c00;">*</span></label>
+                                            <input type="password" id="repo-pat"
+                                                   placeholder="ghp_… or Azure DevOps PAT"
+                                                   required autocomplete="off"
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Requires <strong>repo</strong> (read + write) scope on GitHub, or <strong>Code (Read &amp; Write)</strong> on Azure DevOps.
+                                                The token is sent over HTTPS and is never stored server-side.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div id="repo-local-fields" class="repo-intake-source-panel" style="display:none; margin-top:0.65rem;">
+                                        <div class="form-group" style="margin-bottom:0;">
+                                            <label for="repo-local-path">Local Repository Path <span style="color:#c00;">*</span></label>
+                                            <input type="text" id="repo-local-path"
+                                                   placeholder="C:/Users/me/source/my-repo"
+                                                   style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                            <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                                Must point to a local git repo directory (contains <code>.git</code>). Local mode creates the same <code>AAF-…</code> working branch pattern and commits there, but does <strong>not</strong> open a pull request.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="repo-goal">Goal or Feature Request</label>
+                                        <textarea id="repo-goal"
+                                                  rows="5"
+                                                  placeholder="Optional: describe the feature or business outcome. Leave blank to let AAF infer the best architecture-aligned enhancement from the repo."
+                                                  style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem; resize:vertical;"></textarea>
+                                        <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                            If blank, AAF will inspect the repo and choose the highest-value enhancement it can justify from the existing docs, architecture, source, and infrastructure.
+                                        </p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="repo-branch-suffix">Branch Suffix</label>
+                                        <input type="text" id="repo-branch-suffix"
+                                               placeholder="auto-generated if blank (e.g. 20260424-153000)"
+                                               pattern="[A-Za-z0-9][A-Za-z0-9._-]*"
+                                               maxlength="50"
+                                               style="width:100%; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem;">
+                                        <p style="margin-top:0.3rem; color:var(--text-secondary); font-size:0.8rem;">
+                                            The new branch will be named <code>AAF-&lt;suffix&gt;</code>. Leave blank to use a timestamp.
+                                        </p>
+                                    </div>
+                                    <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem;">
+                                        <input type="checkbox" id="repo-analysis-only" style="margin-top:0.25rem;">
+                                        <label for="repo-analysis-only" style="margin:0; font-weight:400; line-height:1.5;">
+                                            Analysis only. Skip code changes, validation, commit of implementation changes, and PR creation; just push <code>AAF-analysis-report.md</code>.
+                                        </label>
+                                    </div>
+                                    <div class="button-group">
+                                        <button type="submit" class="btn-primary" id="submit-repo-btn">🚀 Run Repo Workflow</button>
+                                    </div>
+                                    <div class="status-message" id="repo-intake-status"></div>
+                                    <div id="repo-intake-log-wrap" style="display:none; margin-top:0.85rem;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                                            <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Workflow log</span>
+                                            <a id="repo-intake-log-download" href="#" download="aaf-run.log"
+                                               style="font-size:0.78rem; color:var(--link); text-decoration:none;">⬇ download log</a>
+                                        </div>
+                                        <pre id="repo-intake-log"
+                                             style="margin:0; max-height:18rem; overflow:auto; background:#0f172a; color:#dbeafe; padding:0.85rem; border-radius:6px; font-size:0.78rem; line-height:1.45; white-space:pre-wrap;"></pre>
+                                    </div>
+                                </form>
+                            </div>
+                            </div><!-- /build-panels-row -->
 
                             <!-- Admin: Issue Temporary Tokens (hidden: EasyAuth is canonical; re-show by removing hidden if you need programmatic tokens) -->
                             <details id="admin-token-panel" hidden style="display:none; margin-top: 1.5rem; border: 1px solid #c9a33a; border-radius: 6px; background: #fffdf2;"
@@ -2811,62 +3395,10 @@
                                 </div>
                             </details>
 
-                            <!-- Admin: Project Access (per-user ownership) -->
-                            <details id="admin-project-access-panel" style="margin-top: 1rem; border: 1px solid #4a7ecb; border-radius: 6px; background: #f4f8ff;"
-                                     ontoggle="if(this.open){ loadProjectOwners(); }">
-                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #1b3a6b; user-select: none;">
-                                    👥 Admin: Project Access (Add / Remove Users)
-                                </summary>
-                                <div style="padding: 0 1rem 1.25rem;">
-                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Only takes effect when the portal runs in Entra auth mode (<code>FACTORY_PORTAL_AUTH_MODE=entra</code>). Admins see every project regardless.</p>
-                                    <div class="form-group">
-                                        <label for="owner-slug">Project</label>
-                                        <select id="owner-slug" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
-                                            <option value="">— select a project —</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="owner-email">User email</label>
-                                        <input type="text" id="owner-email" placeholder="user@contoso.com">
-                                    </div>
-                                    <div class="button-group">
-                                        <button type="button" onclick="updateProjectOwner('add')" class="btn-primary">Add User</button>
-                                        <button type="button" onclick="updateProjectOwner('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove User</button>
-                                        <button type="button" onclick="loadProjectOwners()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
-                                    </div>
-                                    <div id="admin-project-owners-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
-                                    <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
-                                </div>
-                            </details>
-
-                            <!-- Admin: BRD Intake Allowlist (who can submit BRDs) -->
-                            <details id="admin-brd-allowlist-panel" style="margin-top: 1rem; border: 1px solid #ea580c; border-radius: 6px; background: #fff7ec;"
-                                     ontoggle="if(this.open){ loadBrdAllowlist(); }">
-                                <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #9a3412; user-select: none;">
-                                    🛂 Admin: BRD Intake Allowlist
-                                </summary>
-                                <div style="padding: 0 1rem 1.25rem;">
-                                    <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">
-                                        Principals (UPN, email, or object id) allowed to submit BRDs. Empty list = any signed-in user. Current allowlist members or portal admins can edit.
-                                    </p>
-                                    <div class="form-group">
-                                        <label for="brd-allow-principal">Principal (email / UPN / object id)</label>
-                                        <input type="text" id="brd-allow-principal" placeholder="user@contoso.com">
-                                    </div>
-                                    <div class="button-group">
-                                        <button type="button" onclick="updateBrdAllowlist('add')" class="btn-primary">Add</button>
-                                        <button type="button" onclick="updateBrdAllowlist('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove</button>
-                                        <button type="button" onclick="loadBrdAllowlist()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
-                                    </div>
-                                    <div id="brd-allow-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
-                                    <div id="brd-allow-list" style="margin-top: 1.25rem;"></div>
-                                </div>
-                            </details>
                         </div>
                     </section>
-                </div><!-- /intake-col -->
-                <div class="modernize-col">
-                    <section id="modernization" class="modernization-section" aria-labelledby="modernization-title">
+                    <!-- ── Modernize a Legacy Application ─────────────────────── -->
+                    <section id="modernization" class="modernization-section" aria-labelledby="modernization-title" style="margin-top:1.25rem;">
                 <div class="modernization-toggle-row">
                     <a href="#modernization" class="modernization-toggle-link" onclick="toggleModernizationPanel(event)" aria-expanded="false" aria-controls="modernization-panel-content">
                         <span class="modernization-toggle-icon" aria-hidden="true">▸</span>
@@ -2928,9 +3460,76 @@
                     </p>
                 </div>
                     </section>
-                </div><!-- /modernize-col -->
+                    <!-- Admin settings (collapsed by default) -->
+                    <details id="admin-section" style="margin-top:1.25rem;">
+                        <summary style="padding:0.6rem 0.85rem; cursor:pointer; font-weight:600; font-size:0.86rem; color:var(--text-secondary); background:#f5f5f5; border-radius:6px; border:1px solid var(--border); user-select:none; list-style:none; display:flex; align-items:center; gap:0.4rem;">
+                            ⚙️ Admin Settings
+                        </summary>
+                        <!-- Admin: Project Access (per-user ownership) -->
+                        <details id="admin-project-access-panel" style="margin-top: 0.75rem; border: 1px solid #4a7ecb; border-radius: 6px; background: #f4f8ff;"
+                                 ontoggle="if(this.open){ loadProjectOwners(); }">
+                            <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #1b3a6b; user-select: none;">
+                                👥 Admin: Project Access (Add / Remove Users)
+                            </summary>
+                            <div style="padding: 0 1rem 1.25rem;">
+                                <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">Requires master API key. Only takes effect when the portal runs in Entra auth mode (<code>FACTORY_PORTAL_AUTH_MODE=entra</code>). Admins see every project regardless.</p>
+                                <div class="form-group">
+                                    <label for="owner-slug">Project</label>
+                                    <select id="owner-slug" style="width:100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                                        <option value="">— select a project —</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="owner-email">User email</label>
+                                    <input type="text" id="owner-email" placeholder="user@contoso.com">
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" onclick="updateProjectOwner('add')" class="btn-primary">Add User</button>
+                                    <button type="button" onclick="updateProjectOwner('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove User</button>
+                                    <button type="button" onclick="loadProjectOwners()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                </div>
+                                <div id="admin-project-owners-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                <div id="admin-project-owners-list" style="margin-top: 1.25rem;"></div>
+                            </div>
+                        </details>
+                        <!-- Admin: BRD Intake Allowlist (who can submit BRDs) -->
+                        <details id="admin-brd-allowlist-panel" style="margin-top: 0.75rem; border: 1px solid #ea580c; border-radius: 6px; background: #fff7ec;"
+                                 ontoggle="if(this.open){ loadBrdAllowlist(); }">
+                            <summary style="padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; color: #9a3412; user-select: none;">
+                                🛂 Admin: BRD Intake Allowlist
+                            </summary>
+                            <div style="padding: 0 1rem 1.25rem;">
+                                <p style="color: var(--text-secondary); font-size: 0.82rem; margin-top: 0.75rem;">
+                                    Principals (UPN, email, or object id) allowed to submit BRDs. Empty list = any signed-in user. Current allowlist members or portal admins can edit.
+                                </p>
+                                <div class="form-group">
+                                    <label for="brd-allow-principal">Principal (email / UPN / object id)</label>
+                                    <input type="text" id="brd-allow-principal" placeholder="user@contoso.com">
+                                </div>
+                                <div class="button-group">
+                                    <button type="button" onclick="updateBrdAllowlist('add')" class="btn-primary">Add</button>
+                                    <button type="button" onclick="updateBrdAllowlist('remove')" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid #c94a4a; background: white; color: #c94a4a; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Remove</button>
+                                    <button type="button" onclick="loadBrdAllowlist()" style="margin-left: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Refresh</button>
+                                </div>
+                                <div id="brd-allow-status" style="display:none; margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.85rem;"></div>
+                                <div id="brd-allow-list" style="margin-top: 1.25rem;"></div>
+                            </div>
+                        </details>
+                    </details>
+                </div><!-- /intake-col -->
             </div><!-- /intake-analysis-row -->
+                </div>
+            </section>
 
+            <section id="projects-workspace" class="workspace-card" aria-label="Projects workspace">
+                <div class="workspace-card-header" onclick="expandWorkspaceCard('projects-workspace', event)">
+                    <div>
+                        <h3 class="workspace-card-title">Projects Workspace</h3>
+                        <p class="workspace-card-subtitle">Generated projects and per-project actions.</p>
+                    </div>
+                    <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('projects-workspace', event)">Hide</button>
+                </div>
+                <div class="workspace-card-body">
             <div class="projects-intake-wrapper">
                 <section id="projects">
                     <hr class="section-divider">
@@ -2950,7 +3549,18 @@
                     </div>
                 </section>
             </div>
+                </div>
+            </section>
 
+            <section id="analyze-workspace" class="workspace-card collapsed" aria-label="Analyze workspace">
+                <div class="workspace-card-header" onclick="expandWorkspaceCard('analyze-workspace', event)">
+                    <div>
+                        <h3 class="workspace-card-title">Analyze Workspace</h3>
+                        <p class="workspace-card-subtitle">Architectural rationale and pattern deep-dive.</p>
+                    </div>
+                    <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('analyze-workspace', event)">Hide</button>
+                </div>
+                <div class="workspace-card-body">
             <hr class="section-divider">
             <div class="analysis-top-grid">
                 <div class="analysis-top-block">
@@ -3261,6 +3871,8 @@
                     <li><strong>Synchronous request-response at scale:</strong> Service Bus queues add latency. For low-latency RPC, use direct HTTP/gRPC.</li>
                 </ul>
             </div>
+                </div>
+            </section>
         </section>
 
     </div>
@@ -4724,12 +5336,17 @@
 
             const fileNameInput = document.getElementById('brd-file-name').value.trim();
             const contentInput = document.getElementById('brd-content').value.trim();
+            const sourceType = document.getElementById('brd-source-type')?.value || 'auto';
+            const targetProjectSlug = document.getElementById('brd-target-project-slug')?.value || '';
             const enableObservability = document.getElementById('brd-enable-observability')?.checked ?? true;
             const generateInfra = document.getElementById('brd-generate-infra')?.checked ?? true;
             const runSecurityAudit = document.getElementById('brd-run-security-audit')?.checked ?? true;
             const networkTier = document.getElementById('brd-network-tier')?.value || 'public';
             const implementationLanguage = document.getElementById('brd-implementation-language')?.value || '';
             const iacTool = document.getElementById('brd-iac-tool')?.value || '';
+            const deploymentMode = document.getElementById('brd-deployment-mode')?.value || 'standard';
+            const acaExpressImage = document.getElementById('aca-express-image')?.value.trim() || '';
+            const acaExpressRegion = document.getElementById('aca-express-region')?.value || 'westcentralus';
             const uploadInput = document.getElementById('brd-upload');
             const uploadedFile = uploadInput?.files?.[0] || null;
             const button = document.getElementById('submit-brd-btn');
@@ -4740,12 +5357,22 @@
             }
 
             if (!contentInput && !uploadedFile) {
-                setBrdStatus('Provide BRD markdown text or upload a BRD file.', true);
+                setBrdStatus('Provide architecture text or upload an architecture artifact.', true);
+                return false;
+            }
+
+            if ((sourceType === 'visio' || sourceType === 'lucidchart') && !contentInput) {
+                setBrdStatus('Provide a written architecture summary when using Visio or Lucidchart inputs.', true);
+                return false;
+            }
+
+            if (deploymentMode === 'aca-express' && networkTier !== 'public') {
+                setBrdStatus('ACA Express (preview) only supports the Public network tier. Change Network Isolation to Public.', true);
                 return false;
             }
 
             button.disabled = true;
-            setBrdStatus(`<span class="loading"></span> Submitting BRD...`, false);
+            setBrdStatus(`<span class="loading"></span> Submitting architecture source...`, false);
 
             try {
                 let response;
@@ -4760,7 +5387,15 @@
                     form.append('network_tier', networkTier);
                     if (implementationLanguage) form.append('implementation_language', implementationLanguage);
                     if (iacTool) form.append('iac_tool', iacTool);
+                    form.append('source_type', sourceType);
+                    if (targetProjectSlug) form.append('target_project_slug', targetProjectSlug);
+                    if (contentInput) form.append('content', contentInput);
                     form.append('brd_file', uploadedFile, uploadedFile.name);
+                    if (deploymentMode && deploymentMode !== 'standard') form.append('deployment_mode', deploymentMode);
+                    if (deploymentMode === 'aca-express') {
+                        form.append('aca_express_region', acaExpressRegion);
+                        if (acaExpressImage) form.append('aca_express_image', acaExpressImage);
+                    }
                     response = await fetch(API_BRD_UPLOAD, {
                         method: 'POST',
                         headers: buildMutationHeaders(),
@@ -4778,8 +5413,13 @@
                             generateInfra,
                             runSecurityAudit,
                             networkTier,
+                            sourceType,
+                            targetProjectSlug: targetProjectSlug || undefined,
                             implementationLanguage: implementationLanguage || undefined,
-                            iacTool: iacTool || undefined
+                            iacTool: iacTool || undefined,
+                            deploymentMode: deploymentMode !== 'standard' ? deploymentMode : undefined,
+                            acaExpressRegion: deploymentMode === 'aca-express' ? acaExpressRegion : undefined,
+                            acaExpressImage: (deploymentMode === 'aca-express' && acaExpressImage) ? acaExpressImage : undefined
                         })
                     });
                 }
@@ -4809,6 +5449,294 @@
             }
 
             return false;
+        }
+
+        async function submitRepoIntake(event) {
+            event.preventDefault();
+            const inputSource = (document.getElementById('repo-input-source')?.value || 'remote').trim();
+            const repoUrl    = (document.getElementById('repo-url')?.value || '').trim();
+            const localRepoPath = (document.getElementById('repo-local-path')?.value || '').trim();
+            const pat        = (document.getElementById('repo-pat')?.value || '').trim();
+            const goal       = (document.getElementById('repo-goal')?.value || '').trim();
+            const suffix     = (document.getElementById('repo-branch-suffix')?.value || '').trim();
+            const analysisOnly = !!document.getElementById('repo-analysis-only')?.checked;
+            const statusEl   = document.getElementById('repo-intake-status');
+            const logEl      = document.getElementById('repo-intake-log');
+            const logWrap    = document.getElementById('repo-intake-log-wrap');
+            const submitBtn  = document.getElementById('submit-repo-btn');
+
+            if (inputSource === 'remote' && (!repoUrl || !pat)) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#c00;">Repository URL and Personal Access Token are required for remote intake.</span>';
+                return false;
+            }
+            if (inputSource === 'local' && !localRepoPath) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#c00;">Local repository path is required for local intake.</span>';
+                return false;
+            }
+
+            if (logWrap) logWrap.style.display = 'none';
+            if (logEl) { logEl.textContent = ''; }
+
+            if (statusEl) statusEl.innerHTML = analysisOnly
+                ? '<span class="loading"></span> Submitting repository for analysis&hellip;'
+                : '<span class="loading"></span> Submitting repository for analysis, implementation, validation, and PR creation&hellip;';
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const body = {
+                    inputSource,
+                    workflowMode: analysisOnly ? 'analysis-only' : 'implement-pr',
+                };
+                if (inputSource === 'remote') {
+                    body.repoUrl = repoUrl;
+                    body.token = pat;
+                } else {
+                    body.localRepoPath = localRepoPath;
+                }
+                if (suffix) body.branchSuffix = suffix;
+                if (goal) body.automationGoal = goal;
+
+                const res = await fetch('/api/repo-intake', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    const msg = data.error || `HTTP ${res.status}`;
+                    if (statusEl) statusEl.innerHTML = `<span style="color:#c00;">Error: ${escapeHtml(msg)}</span>`;
+                    return false;
+                }
+                const runId  = data.id || '';
+                const branch = data.branchName || '';
+                const workflowMode = data.workflowMode || body.workflowMode;
+                if (statusEl) statusEl.innerHTML =
+                    `<span style="color:#1a7f37;">&#10003; ${workflowMode === 'implement-pr' ? 'Repo workflow queued' : 'Analysis queued'} &mdash; run <code>${escapeHtml(runId)}</code></span>` +
+                    (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code> will be created on the ${inputSource === 'local' ? 'local repository' : 'remote repository'}.` : '') +
+                    (runId ? `<br><a href="#" onclick="pollRepoRun('${escapeHtml(runId)}'); return false;">Poll for result</a>` : '');
+                if (runId) pollRepoRun(runId);
+            } catch (err) {
+                if (statusEl) statusEl.innerHTML = `<span style="color:#c00;">Network error: ${escapeHtml(String(err))}</span>`;
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+                // Clear the PAT from the DOM immediately after submission
+                const patInput = document.getElementById('repo-pat');
+                if (patInput) patInput.value = '';
+            }
+            return false;
+        }
+
+        function updateRepoIntakeSourceFields() {
+            const source = (document.getElementById('repo-input-source')?.value || 'remote').trim();
+            const remoteFields = document.getElementById('repo-remote-fields');
+            const localFields = document.getElementById('repo-local-fields');
+            const repoUrlInput = document.getElementById('repo-url');
+            const patInput = document.getElementById('repo-pat');
+            const localPathInput = document.getElementById('repo-local-path');
+            const analysisOnlyCheckbox = document.getElementById('repo-analysis-only');
+
+            if (source === 'local') {
+                if (remoteFields) remoteFields.style.display = 'none';
+                if (localFields) localFields.style.display = 'block';
+                if (repoUrlInput) repoUrlInput.required = false;
+                if (patInput) patInput.required = false;
+                if (localPathInput) localPathInput.required = true;
+            } else {
+                if (remoteFields) remoteFields.style.display = 'block';
+                if (localFields) localFields.style.display = 'none';
+                if (repoUrlInput) repoUrlInput.required = true;
+                if (patInput) patInput.required = true;
+                if (localPathInput) localPathInput.required = false;
+            }
+        }
+
+        async function refreshRepoRunLog(runId, fallbackText) {
+            const logEl   = document.getElementById('repo-intake-log');
+            const logWrap = document.getElementById('repo-intake-log-wrap');
+            const dlLink  = document.getElementById('repo-intake-log-download');
+            if (!logEl) return;
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(runId)}/log`, { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const text = await res.text();
+                const finalText = text || fallbackText || '';
+                if (logWrap) logWrap.style.display = finalText ? 'block' : 'none';
+                logEl.textContent = finalText;
+                if (dlLink && finalText) {
+                    if (dlLink._blobUrl) { URL.revokeObjectURL(dlLink._blobUrl); }
+                    const blob = new Blob([finalText], { type: 'text/plain' });
+                    dlLink._blobUrl = URL.createObjectURL(blob);
+                    dlLink.href = dlLink._blobUrl;
+                    dlLink.download = `aaf-run-${encodeURIComponent(runId)}.log`;
+                }
+            } catch (_) {
+                const finalText = fallbackText || '';
+                if (logWrap) logWrap.style.display = finalText ? 'block' : 'none';
+                logEl.textContent = finalText;
+            }
+        }
+
+        async function pollRepoRun(runId, attempts) {
+            attempts = (attempts || 0);
+            if (attempts > 60) return;   // stop after ~5 min
+            const statusEl = document.getElementById('repo-intake-status');
+            try {
+                const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`, { credentials: 'include' });
+                if (!res.ok) return;
+                const run = await res.json().catch(() => ({}));
+                const st = run.status || 'unknown';
+                const progress = run.progress || {};
+                const stage = progress.stage || '';
+                const message = progress.message || '';
+                const logPreview = progress.logPreview || '';
+                if (st === 'completed') {
+                    const result = run.result || {};
+                    const branch = result.branchName || run.generationOptions?.branchName || '';
+                    const repoUrl = result.repoUrl || run.generationOptions?.repoUrl || '';
+                    const workflowMode = result.workflowMode || run.generationOptions?.workflowMode || 'analysis-only';
+                    const reportUrl = result.reportUrl || '';
+                    const summaryUrl = result.summaryUrl || '';
+                    const prUrl = result.prUrl || '';
+                    const branchTarget = result.branchTarget || (result.inputSource === 'local' ? 'local' : 'remote');
+                    const branchCommitted = typeof result.branchCommitted === 'boolean' ? result.branchCommitted : null;
+                    const branchCommitMode = result.branchCommitMode || '';
+                    const projectSlug = result.projectSlug || '';
+                    const projectTitle = result.projectTitle || `Imported Repo (${projectSlug || 'snapshot'})`;
+                    const projectSlugJs = JSON.stringify(projectSlug);
+                    const projectTitleJs = JSON.stringify(projectTitle);
+                    const archCount = result.archFilesFound ?? '';
+                    await refreshRepoRunLog(runId, logPreview);
+                    if (projectSlug) {
+                        loadProjects().catch(() => {});
+                    }
+                    if (statusEl) statusEl.innerHTML =
+                        `<span style="color:#1a7f37;">&#10003; ${workflowMode === 'implement-pr' ? 'Repo workflow complete!' : 'Analysis complete!'}</span>` +
+                        (branch ? `<br>Branch: <code>${escapeHtml(branch)}</code> (${escapeHtml(branchTarget)} repository)` : '') +
+                        (branchCommitted === true ? `<br>Committed to branch: <strong>yes</strong>${branchCommitMode ? ` (${escapeHtml(branchCommitMode)})` : ''}` : '') +
+                        (branchCommitted === false ? `<br>Committed to branch: <strong>no</strong>` : '') +
+                        (reportUrl ? `<br><a href="${escapeHtml(reportUrl)}" target="_blank" rel="noopener">View analysis report &#x2197;</a>` : '') +
+                        (summaryUrl ? `<br><a href="${escapeHtml(summaryUrl)}" target="_blank" rel="noopener">View change summary &#x2197;</a>` : '') +
+                        (prUrl ? `<br><a href="${escapeHtml(prUrl)}" target="_blank" rel="noopener">Open PR &#x2197;</a>` : '') +
+                        (projectSlug ? `<br>Portal project: <code>${escapeHtml(projectSlug)}</code>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openCodeBrowser(${projectSlugJs}, ${projectTitleJs}); return false;'>Open imported project code</a>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openModelSelectorModal(${projectSlugJs}, ${projectTitleJs}); return false;'>Select model</a>` : '') +
+                        (projectSlug ? `<br><a href="#" onclick='openCopilotCliModal(${projectSlugJs}, ${projectTitleJs}); return false;'>Run Copilot CLI</a>` : '') +
+                        (archCount !== '' ? `<br>Architecture files parsed: ${escapeHtml(String(archCount))}` : '');
+                } else if (st === 'failed') {
+                    const msg = run.result?.message || run.stderr || 'unknown error';
+                    await refreshRepoRunLog(runId, logPreview || msg);
+                    if (statusEl) statusEl.innerHTML = `<span style="color:#c00;">&#x2717; Repo workflow failed: ${escapeHtml(msg)}</span>`;
+                } else {
+                    await refreshRepoRunLog(runId, logPreview);
+                    if (statusEl) statusEl.innerHTML =
+                        `<span class="loading"></span> Status: <em>${escapeHtml(st)}</em>&hellip;` +
+                        (stage ? `<br>Stage: <code>${escapeHtml(stage)}</code>` : '') +
+                        (message ? `<br>${escapeHtml(message)}` : '');
+                    setTimeout(() => pollRepoRun(runId, attempts + 1), 5000);
+                }
+            } catch (_) {
+                setTimeout(() => pollRepoRun(runId, attempts + 1), 8000);
+            }
+        }
+
+        function populateProjectSelect(selectId, emptyLabel) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const slugs = Array.isArray(window._portalProjectSlugs) ? window._portalProjectSlugs.slice().sort() : [];
+            const current = select.value;
+            select.innerHTML = `<option value="">${escapeHtml(emptyLabel)}</option>` +
+                slugs.map(slug => `<option value="${escapeHtml(slug)}">${escapeHtml(slug)}</option>`).join('');
+            if (current && slugs.includes(current)) {
+                select.value = current;
+            }
+        }
+
+        function updateAcaExpressFields() {
+            const mode = document.getElementById('brd-deployment-mode')?.value || 'standard';
+            const fields = document.getElementById('aca-express-fields');
+            if (fields) fields.style.display = mode === 'aca-express' ? 'block' : 'none';
+        }
+
+        function updateArchitectureIntakeHints() {
+            const sourceType = document.getElementById('brd-source-type')?.value || 'auto';
+            const targetProjectSlug = document.getElementById('brd-target-project-slug')?.value || '';
+            const contentLabel = document.querySelector('label[for="brd-content"]');
+            const contentHint = document.getElementById('brd-content-hint');
+            const contentBox = document.getElementById('brd-content');
+            const uploadInput = document.getElementById('brd-upload');
+            const uploadHint = document.getElementById('brd-upload-hint');
+            const sourceHint = document.getElementById('brd-source-type-hint');
+            const submitButton = document.getElementById('submit-brd-btn');
+
+            const binaryReference = sourceType === 'visio' || sourceType === 'lucidchart';
+            const autoDetect = sourceType === 'auto';
+            const defaultPlaceholder = `# Project: [Name]
+
+## Business Goal
+[What problem are we solving?]
+
+## Key Requirements
+- [Requirement 1]
+- [Requirement 2]
+
+## Out of Scope / What Not to Include
+- [Not included 1]
+- [Not included 2]
+
+## Success Criteria
+- [Metric 1]
+- [Metric 2]
+
+## Timeline
+[Expected delivery]`;
+            const defaultContentHint = 'Paste the BRD, architecture notes, or the textual source directly. Uploaded text artifacts can replace the pasted content.';
+            const defaultUploadHint = 'Optional. If provided, uploaded content is used as the source when the format is text-based. Visio and Lucidchart uploads still require a written summary below.';
+            const defaultSourceHint = 'Auto-detect uses file extension + content sniffing. Binary files are stored as attachments; the written summary below becomes the working source.';
+            const acceptMap = {
+                'auto': '.md,.txt,.drawio,.mmd,.mermaid,.puml,.plantuml,.dsl,.json,.yaml,.yml,.vsdx,text/markdown,text/plain,application/json,text/yaml,application/xml,text/xml',
+                'brd-markdown': '.md,.txt,text/markdown,text/plain',
+                'architecture-markdown': '.md,.txt,text/markdown,text/plain',
+                'plain-text': '.txt,.md,text/plain,text/markdown',
+                'drawio': '.drawio,.xml,text/xml,application/xml',
+                'mermaid': '.mmd,.mermaid,.md,.txt,text/plain,text/markdown',
+                'plantuml': '.puml,.plantuml,.txt,text/plain',
+                'structurizr': '.dsl,.txt,text/plain',
+                'json': '.json,application/json,text/plain',
+                'yaml': '.yaml,.yml,text/yaml,text/plain',
+                'visio': '.vsdx,.vsd,.pdf,application/octet-stream',
+                'lucidchart': '.json,.png,.pdf,application/json,image/png,application/pdf',
+            };
+
+            if (uploadInput && acceptMap[sourceType]) {
+                uploadInput.setAttribute('accept', acceptMap[sourceType]);
+            }
+            if (contentLabel) {
+                contentLabel.textContent = binaryReference ? 'Architecture Summary (required)' : 'Architecture Source or Summary';
+            }
+            if (contentHint) {
+                contentHint.textContent = binaryReference
+                    ? 'Summarize the architecture, intended services, integrations, and constraints. The uploaded binary artifact is stored as reference material.'
+                    : (autoDetect ? 'Paste the source directly or leave this as a summary while auto detection infers the format from the upload.' : defaultContentHint);
+            }
+            if (contentBox) {
+                contentBox.placeholder = binaryReference
+                    ? 'Summarize the architecture represented by the uploaded artifact. Include components, integrations, security boundaries, and required changes.'
+                    : defaultPlaceholder;
+            }
+            if (uploadHint) {
+                uploadHint.textContent = binaryReference
+                    ? 'Upload the reference artifact. The written summary remains required because these formats are not parsed directly in the portal.'
+                    : (autoDetect ? 'Optional. Auto detect uses file extension and content signatures from the upload. If there is no upload, pasted content is inspected instead.' : defaultUploadHint);
+            }
+            if (sourceHint) {
+                sourceHint.textContent = targetProjectSlug
+                    ? 'The selected source will be normalized and applied to the existing project slug. A prior snapshot is stored before regeneration.'
+                    : defaultSourceHint;
+            }
+            if (submitButton) {
+                submitButton.textContent = targetProjectSlug ? '🔁 Update Project' : '🚀 Generate or Update Project';
+            }
         }
 
         async function pollRunStatus(runId) {
@@ -4892,9 +5820,17 @@
                 const runLog = status.result.runLog
                     ? `<br/><small>Run log: ${escapeHtml(status.result.runLog)}</small>`
                     : '';
+                const readiness = status.result?.brdReadiness;
+                const autoFlow = status.result?.orchestratorAutoFlow;
+                const readinessLine = readiness?.classification
+                    ? `<br/><small>BRD readiness: <strong>${escapeHtml(readiness.classification)}</strong>${Number.isFinite(readiness.percentage_score) ? ` (${readiness.percentage_score}%)` : ''}</small>`
+                    : '';
+                const autoFlowLine = autoFlow && Object.prototype.hasOwnProperty.call(autoFlow, 'eligible')
+                    ? `<br/><small>${autoFlow.eligible ? 'runtime:auto allowed' : 'runtime:auto blocked'}${autoFlow.reason ? ` — ${escapeHtml(autoFlow.reason)}` : ''}</small>`
+                    : '';
 
                 setBrdStatus(
-                    `✅ Success! Project generated: ${projectName}. Refreshing...${runLog}`,
+                    `✅ Success! Project generated: ${projectName}. Refreshing...${runLog}${readinessLine}${autoFlowLine}`,
                     false
                 );
                 setTimeout(() => {
@@ -4991,10 +5927,57 @@
             toast._hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 5000);
         }
 
+        function toggleWorkspaceCard(cardId, forceExpand = null) {
+            const card = document.getElementById(cardId);
+            if (!card) return false;
+
+            const shouldExpand = forceExpand === null
+                ? card.classList.contains('collapsed')
+                : Boolean(forceExpand);
+
+            card.classList.toggle('collapsed', !shouldExpand);
+            if (shouldExpand) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return false;
+        }
+
+        function expandWorkspaceCard(cardId, event = null) {
+            if (event) {
+                event.preventDefault();
+            }
+            return toggleWorkspaceCard(cardId, true);
+        }
+
+        function collapseWorkspaceCard(cardId, event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            return toggleWorkspaceCard(cardId, false);
+        }
+
+        function launchAcaExpress(event) {
+            if (event) event.preventDefault();
+            toggleWorkspaceCard('build-workspace', true);
+            const intakeSection = document.getElementById('intake');
+            if (!intakeSection) return false;
+            intakeSection.classList.add('expanded');
+            const modeSelect = document.getElementById('brd-deployment-mode');
+            if (modeSelect) {
+                modeSelect.value = 'aca-express';
+                updateAcaExpressFields();
+            }
+            intakeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return false;
+        }
+
         function toggleIntakePanel(event, forceExpand = null) {
             if (event) {
                 event.preventDefault();
             }
+
+            toggleWorkspaceCard('build-workspace', true);
 
             const intakeSection = document.getElementById('intake');
             if (!intakeSection) return false;
@@ -5014,6 +5997,7 @@
 
         function toggleDocsPanel(event, forceExpand = null) {
             if (event) event.preventDefault();
+            toggleWorkspaceCard('assist-workspace', true);
             const docsSection = document.getElementById('docs-quick-links');
             if (!docsSection) return false;
             const shouldExpand = forceExpand === null
@@ -5027,6 +6011,8 @@
             if (event) {
                 event.preventDefault();
             }
+
+            toggleWorkspaceCard('assist-workspace', true);
 
             const csaSection = document.getElementById('csa-companion');
             if (!csaSection) return false;
@@ -5046,6 +6032,7 @@
 
         function syncIntakeFromHash() {
             if (window.location.hash === '#intake') {
+                toggleWorkspaceCard('build-workspace', true);
                 toggleIntakePanel(null, true);
             }
         }
@@ -5133,6 +6120,8 @@
                 updateProjectViewToggle(allProjects);
                 updateMainCopilotButton(allProjects);
                 window._portalProjectSlugs = allProjects.map(p => p.slug).filter(Boolean);
+                populateProjectSelect('brd-target-project-slug', 'Create new project');
+                updateArchitectureIntakeHints();
                 // If the admin Project Access panel is open, refresh its dropdown
                 // now that the public project list is available.
                 if (document.getElementById('admin-project-access-panel')?.open &&
@@ -5270,15 +6259,19 @@
 
             const html = projects.map(project => {
                 const links = project.links || {};
-                const architectureOverview = links.architectureOverview || (project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
+                const isRepoIntake = String(project.options?.sourceType || '').toLowerCase() === 'repo-intake';
+                const architectureOverview = links.architectureOverview || (!isRepoIntake && project.slug ? `projects/${project.slug}/docs/architecture-overview.md` : '');
                 const diagram = links.diagram
                     ? (links.diagram.endsWith('.md') ? links.diagram.replace(/\.md$/, '.drawio') : links.diagram)
-                    : (project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
+                    : (!isRepoIntake && project.slug ? `projects/${project.slug}/diagrams/${project.slug}.drawio` : '');
                 const analysisId = getAnalysisId(project);
                 const safeTitle = escapeHtml(project.title || project.slug);
-                const generatedFrom = escapeHtml(project.generatedFrom || 'docs/intake/brd.md');
+                const generatedFrom = escapeHtml(project.generatedFrom || (isRepoIntake ? 'Repository intake' : 'docs/intake/brd.md'));
                 const safeDiagramPath = escapeHtml(diagram || '');
                 const observabilityEnabled = Boolean(project.options?.enableObservability);
+                const readiness = project.brdReadiness || null;
+                const autoFlow = project.orchestratorAutoFlow || null;
+                const readinessBadges = renderReadinessBadges(readiness, autoFlow);
 
                 return `
                 <div class="project-card">
@@ -5292,29 +6285,38 @@
                     <div class="project-meta">
                         <span class="meta-tag">📅 ${new Date(project.generatedAt).toLocaleDateString()}</span>
                         <span class="meta-tag">${observabilityEnabled ? '📡 Observability Wired' : '⚪ Observability Not Requested'}</span>
+                        ${readinessBadges}
                     </div>
-                    <div class="project-links">
-                        ${links.readme ? `<a href="${links.readme}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview(\'${links.readme}\', \'${safeTitle} — README\'); return false;">📖 README</a>` : ''}
-                        ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
-                        ${architectureOverview ? `<a href="${architectureOverview}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview('${architectureOverview}', '${safeTitle} — Architecture Overview'); return false;">🧭 Architecture Overview</a>` : ''}
-                                <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
-                        <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
-                                <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}'); return false;" title="Open this project in GitHub Copilot to run or extend it locally in VS Code">&#9655; Open in GitHub Copilot</a>
-                        <a href="#" class="project-link" onclick="openCostModal('${project.slug}', '${safeTitle}'); return false;" title="Estimate cost using Azure Retail Prices API, Pricing Calculator deep-link, and What-If CLI guide">💰 Cost Tools</a>
-                        <a href="${analysisId ? `#${analysisId}` : '#'}" 
-                           class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
-                           data-project-slug="${project.slug || ''}"
-                           ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
-                           🧠 View Analysis</a>
-                        <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
-                        <a href="#" class="project-link" onclick="openModelSelectorModal('${project.slug}', '${safeTitle}'); return false;" title="Pick an Azure OpenAI chat model with price and trade-off info. Recommended before deploying.">🤖 Select Model</a>
-                        <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
-                        <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
-                        <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
-                        ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
-                        <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
-                        <a href="#" class="project-link" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Tool-enabled Project Copilot: architecture, cost, operations, observability, deploy commands" style="background:linear-gradient(135deg,#ea580c,#fb923c);color:#fff;font-weight:600;padding:3px 10px;border-radius:12px;text-decoration:none;box-shadow:0 1px 3px rgba(234,88,12,0.4);">🛠️ Ask Project Copilot</a>
-                        <a href="#" class="project-link" onclick="openCopilotCliModal('${project.slug}', '${safeTitle}'); return false;" title="Run a Copilot CLI task against this project on the portal server. Results stream to a log." style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:600;padding:3px 10px;border-radius:12px;text-decoration:none;box-shadow:0 1px 3px rgba(5,150,105,0.4);">🤖 Copilot CLI</a>
+                    <div class="project-actions-shell">
+                        <div class="project-links project-links-docs-stack">
+                            ${links.readme ? `<a href="${links.readme}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview(\'${links.readme}\', \'${safeTitle} — README\'); return false;">📖 README</a>` : ''}
+                            ${diagram ? `<a href="${diagram}" data-diagram-path="${diagram}" class="project-link diagram-inline-link">🏗️ Draw.io Diagram</a>` : ''}
+                            ${architectureOverview ? `<a href="${architectureOverview}" class="project-link" onclick="event.preventDefault(); openDocumentationPreview('${architectureOverview}', '${safeTitle} — Architecture Overview'); return false;">🧭 Architecture Overview</a>` : ''}
+                            <a href="#" class="project-link" onclick="openCodeBrowser('${project.slug}', '${safeTitle}'); return false;">💻 View Code</a>
+                            <a href="#" class="project-link" onclick="downloadProjectArchive('${project.slug}'); return false;">⬇️ Download ZIP</a>
+                        </div>
+                        <div class="project-links project-links-info-stack">
+                            <a href="${analysisId ? `#${analysisId}` : '#'}" 
+                               class="project-link ${!analysisId ? 'dynamic-analysis-link' : ''}" 
+                               data-project-slug="${project.slug || ''}"
+                               ${!analysisId ? `onclick="openDynamicAnalysis(event, '${project.slug}')"` : ''}>
+                               🧠 View Analysis</a>
+                            <a href="#" class="project-link" onclick="openObservabilityInCopilot('${project.slug}', event); return false;" title="Audit observability and monitoring for this project using GitHub Copilot">📡 Observability</a>
+                            <a href="#" class="project-link" onclick="openTraceabilityInCopilot('${project.slug}', event); return false;" title="Analyze requirement traceability for this project using GitHub Copilot">🔗 Traceability</a>
+                            ${links.traceability ? `<a href="${links.traceability}" class="project-link" title="Open the generated traceability matrix">📊 Matrix</a>` : ''}
+                        </div>
+                        <div class="project-links project-links-ops-stack">
+                            <a href="#" class="project-link" onclick="openCostModal('${project.slug}', '${safeTitle}'); return false;" title="Estimate cost using Azure Retail Prices API, Pricing Calculator deep-link, and What-If CLI guide">💰 Cost Tools</a>
+                            <a href="#" class="project-link" onclick="openModelSelectorModal('${project.slug}', '${safeTitle}'); return false;" title="Pick an Azure OpenAI chat model with price and trade-off info. Recommended before deploying.">🤖 Select Model</a>
+                            <a href="#" class="project-link" onclick="openDeployModal('${project.slug}', '${safeTitle}'); return false;" title="Generate Azure CLI commands to deploy this project to Azure">🚀 Deploy</a>
+                            <a href="#" class="project-link" onclick="openProjectOperations(event, '${project.slug}')">🛠 Operations</a>
+                        </div>
+                        <div class="project-links project-links-rest-stack">
+                            <a href="#" class="project-link project-link-copilot" onclick="runWithCopilot('${project.slug}', '${safeTitle}', '${generatedFrom}', '${safeDiagramPath}', '${encodeURIComponent(JSON.stringify(autoFlow || {}))}'); return false;" title="Open this project in GitHub Copilot to run or extend it locally in VS Code">&#9655; Open in GitHub Copilot</a>
+                            <a href="#" class="project-link project-link-ask" onclick="openProjectChat('${project.slug}', '${safeTitle}'); return false;" title="Tool-enabled Project Copilot: architecture, cost, operations, observability, deploy commands">🛠️ Ask Project Copilot</a>
+                            <a href="#" class="project-link project-link-guide" onclick="openWorkflowGuideInCopilot('${project.slug}', event); return false;" title="Get guided help: check project state, identify mistakes, and get next-step recommendations">🧭 Guide Me</a>
+                            <a href="#" class="project-link project-link-cli" onclick="openCopilotCliModal('${project.slug}', '${safeTitle}'); return false;" title="Run a Copilot CLI task against this project on the portal server. Results stream to a log.">🤖 Copilot CLI</a>
+                        </div>
                     </div>
                 </div>
             `;
@@ -5328,6 +6330,43 @@
             if (status.includes('Ready')) return 'status-ready';
             if (status.includes('Processing')) return 'status-processing';
             return 'status-failed';
+        }
+
+        function readinessClassName(classification) {
+            const value = String(classification || '').toLowerCase();
+            if (value.includes('auto-ready with guardrails')) return 'readiness-guardrail';
+            if (value.includes('architect review required')) return 'readiness-review';
+            if (value.includes('auto-ready')) return 'readiness-auto';
+            return '';
+        }
+
+        function renderReadinessBadges(readiness, autoFlow) {
+            if (!readiness && !autoFlow) return '';
+
+            const parts = [];
+            if (readiness?.classification) {
+                const cls = readinessClassName(readiness.classification);
+                const pct = Number.isFinite(readiness.percentage_score)
+                    ? ` · ${readiness.percentage_score}%`
+                    : '';
+                parts.push(
+                    `<span class="readiness-badge ${cls}" title="BRD readiness classification from deterministic scorecard checks">` +
+                    `BRD: ${escapeHtml(readiness.classification)}${escapeHtml(pct)}` +
+                    `</span>`
+                );
+            }
+
+            if (autoFlow && Object.prototype.hasOwnProperty.call(autoFlow, 'eligible')) {
+                const eligible = Boolean(autoFlow.eligible);
+                parts.push(
+                    `<span class="readiness-badge ${eligible ? 'readiness-auto' : 'readiness-review'}" ` +
+                    `title="${escapeHtml(autoFlow.reason || '')}">` +
+                    `${eligible ? '▶ runtime:auto allowed' : '⛔ runtime:auto blocked'}` +
+                    `</span>`
+                );
+            }
+
+            return parts.join('');
         }
 
         function normalizeProjectText(value) {
@@ -5364,6 +6403,61 @@
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        function syncWorkspaceFromHash() {
+            const hash = (window.location.hash || '').toLowerCase();
+            if (!hash) return;
+
+            if (hash === '#intake' || hash === '#modernization' || hash === '#build-workspace') {
+                toggleWorkspaceCard('build-workspace', true);
+                return;
+            }
+
+            if (hash === '#csa-companion' || hash === '#docs-quick-links' || hash === '#assist-workspace') {
+                toggleWorkspaceCard('assist-workspace', true);
+                return;
+            }
+
+            if (hash === '#projects' || hash === '#projects-workspace') {
+                toggleWorkspaceCard('projects-workspace', true);
+                return;
+            }
+
+            if (hash === '#design-analysis' || hash.startsWith('#analysis-') || hash === '#analyze-workspace') {
+                toggleWorkspaceCard('analyze-workspace', true);
+            }
+        }
+
+        function initHeaderMoreMenu() {
+            const navMore = document.querySelector('.nav-more');
+            if (!navMore) return;
+
+            const closeMenu = () => {
+                if (navMore.open) navMore.removeAttribute('open');
+            };
+
+            navMore.addEventListener('click', (event) => {
+                const target = event.target;
+                if (!(target instanceof Element)) return;
+                if (target.closest('.nav-more-menu a')) {
+                    closeMenu();
+                }
+            });
+
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                if (!(target instanceof Node)) return;
+                if (!navMore.contains(target)) {
+                    closeMenu();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+        }
+
         function escapeHtml(text) {
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
@@ -5375,11 +6469,15 @@
             const intakeSection = document.getElementById('intake');
             if (intakeSection) intakeSection.classList.remove('expanded');
 
+            initHeaderMoreMenu();
+            syncWorkspaceFromHash();
             loadProjects();
             openAnalysisFromHash();
             restorePortalApiKey();
             loadCsaCompanionTools();
+            updateRepoIntakeSourceFields();
         });
+        window.addEventListener('hashchange', syncWorkspaceFromHash);
         window.addEventListener('hashchange', openAnalysisFromHash);
         window.addEventListener('hashchange', syncIntakeFromHash);
 
@@ -5529,6 +6627,17 @@
             modal.classList.remove('show');
         }
 
+        function parseAutoFlowGate(encodedGate) {
+            if (!encodedGate) return null;
+            try {
+                const decoded = decodeURIComponent(String(encodedGate));
+                const parsed = JSON.parse(decoded);
+                return parsed && typeof parsed === 'object' ? parsed : null;
+            } catch {
+                return null;
+            }
+        }
+
         function buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath) {
             const normalizedProject = String(projectSlug || projectTitle || 'my-project').trim() || 'my-project';
             const sourceRef = String(generatedFrom || 'docs/intake/brd.md').trim() || 'docs/intake/brd.md';
@@ -5541,6 +6650,7 @@
                 'Use project-orchestrator.',
                 `Input: ${sourceRef}`,
                 `Project name: ${normalizedProject}`,
+                'runtime: auto',
                 'factory: true',
                 `factoryPortalUrl: ${window.location.origin}`,
                 'apiKey: <your-portal-api-key-or-issued-token>',
@@ -6535,7 +7645,20 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 }
         // ...existing code...
 
-        async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath) {
+        async function runWithCopilot(projectSlug, projectTitle, generatedFrom, diagramPath, encodedAutoFlowGate) {
+            const autoFlowGate = parseAutoFlowGate(encodedAutoFlowGate);
+            if (autoFlowGate && Object.prototype.hasOwnProperty.call(autoFlowGate, 'eligible') && !Boolean(autoFlowGate.eligible)) {
+                const reason = autoFlowGate.reason
+                    ? ` ${escapeHtml(autoFlowGate.reason)}`
+                    : ' Project requires architect review first.';
+                toggleIntakePanel(null, true);
+                setBrdStatus(
+                    `⛔ runtime:auto blocked for this project.${reason}`,
+                    true
+                );
+                return;
+            }
+
             const prompt = buildOrchestratorPrompt(projectSlug, projectTitle, generatedFrom, diagramPath);
             try {
                 await copyTextToClipboard(prompt);

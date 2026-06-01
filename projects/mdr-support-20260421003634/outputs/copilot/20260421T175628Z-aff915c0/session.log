@@ -1,0 +1,8 @@
+# Copilot run 20260421T175628Z-aff915c0
+# project: mdr-support-20260421003634
+# started: 2026-04-21T17:56:28Z
+# requestedBy: 
+# cmd: copilot -p Help me understand what you can do ... (22 args)
+# allowTools: write,shell
+# denyTools: shell(git push*),shell(rm -rf*),shell(npm publish*),shell(pnpm publish*),shell(yarn publish*),shell(gh release*),shell(az logout*)
+# --- stdout+stderr below ---

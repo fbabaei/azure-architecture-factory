@@ -1,0 +1,8 @@
+run_id=optout-68d026cb
+generated_at=2026-04-20T22:22:40.918646Z
+project_slug=docs-only-spike-20260420222240
+source_brd=docs-only-spike.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\docs-only-spike-20260420222240
+status=complete
+runner=azure_native_factory_runner

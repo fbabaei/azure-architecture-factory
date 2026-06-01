@@ -1,0 +1,118 @@
+using System.Text.Json;
+using Azure.AI.Projects;
+using Azure.AI.Projects.Agents;
+using Azure.Identity;
+using OpenAI.Files;
+using OpenAI.Responses;
+
+namespace {{NAMESPACE}};
+
+/// <summary>
+/// Reusable Foundry agent runner with Code Interpreter and a single uploaded file.
+///
+/// FACTORY TEMPLATE — replace the {{TOKENS}} below when scaffolding into a project:
+///   {{NAMESPACE}}              e.g. "OrdersApi.Services"
+///   {{CLASS_NAME}}             e.g. "ExtractionService"
+///   {{RESULT_TYPE}}            e.g. "ExtractionResult"
+///   {{INPUT_PURPOSE_COMMENT}}  short description of what the file is and why CI is needed
+///
+/// Pairs with: factory-templates/dotnet/FoundrySettings.cs.template
+/// BRD trigger: implementation.agents[].tools includes "code_interpreter".
+/// </summary>
+public class {{CLASS_NAME}}
+{
+    private readonly FoundrySettings _settings;
+
+    public {{CLASS_NAME}}(FoundrySettings settings)
+    {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    }
+
+    /// <summary>
+    /// Runs the agent against <paramref name="inputFilePath"/> and returns the raw model
+    /// response. {{INPUT_PURPOSE_COMMENT}}
+    /// </summary>
+    public async Task<{{RESULT_TYPE}}> RunAsync(
+        string inputFilePath,
+        string agentInstructions,
+        string userPrompt,
+        CancellationToken cancellationToken = default)
+    {
+        AIProjectClient projectClient = new(
+            new Uri(_settings.Endpoint),
+            new DefaultAzureCredential());
+
+        // 1. Upload the file via the OpenAI Files API so Code Interpreter can read it.
+        OpenAIFileClient fileClient = projectClient.ProjectOpenAIClient.GetOpenAIFileClient();
+        OpenAIFile uploadedFile = fileClient.UploadFile(
+            filePath: inputFilePath,
+            purpose: FileUploadPurpose.Assistants);
+
+        // 2. Build a one-shot agent definition with Code Interpreter referencing the file.
+        DeclarativeAgentDefinition agentDefinition = new(model: _settings.Model)
+        {
+            Instructions = agentInstructions,
+            Tools =
+            {
+                ResponseTool.CreateCodeInterpreterTool(
+                    new CodeInterpreterToolContainer(
+                        CodeInterpreterToolContainerConfiguration.CreateAutomaticContainerConfiguration(
+                            fileIds: [uploadedFile.Id]
+                        )
+                    )
+                ),
+            }
+        };
+
+        ProjectsAgentVersion agentVersion = projectClient.AgentAdministrationClient.CreateAgentVersion(
+            agentName: _settings.AgentName,
+            options: new(agentDefinition));
+
+        try
+        {
+            // 3. Invoke the agent.
+            AgentReference agentReference = new(name: agentVersion.Name, version: agentVersion.Version);
+            ProjectResponsesClient responsesClient = projectClient.ProjectOpenAIClient
+                .GetProjectResponsesClientForAgent(agentReference);
+
+            ResponseResult response = responsesClient.CreateResponse(userPrompt);
+            string responseText = response.GetOutputText()?.Trim() ?? string.Empty;
+
+            // 4. Strip ```fences``` if the model wrapped the JSON.
+            if (responseText.StartsWith("```"))
+            {
+                int firstNewline = responseText.IndexOf('\n');
+                int lastFence = responseText.LastIndexOf("```");
+                if (firstNewline > 0 && lastFence > firstNewline)
+                {
+                    responseText = responseText[(firstNewline + 1)..lastFence].Trim();
+                }
+            }
+
+            // 5. Validate as JSON when the prompt declares JSON output; otherwise return raw text.
+            try
+            {
+                JsonElement parsed = JsonSerializer.Deserialize<JsonElement>(responseText);
+                string formatted = JsonSerializer.Serialize(parsed,
+                    new JsonSerializerOptions { WriteIndented = true });
+                return new {{RESULT_TYPE}} { Success = true, Json = formatted };
+            }
+            catch (JsonException ex)
+            {
+                return new {{RESULT_TYPE}}
+                {
+                    Success = false,
+                    Json = responseText,
+                    Error = $"Agent response was not valid JSON: {ex.Message}"
+                };
+            }
+        }
+        finally
+        {
+            // 6. Always tear down the agent version. Foundry retains versions otherwise.
+            projectClient.AgentAdministrationClient.DeleteAgentVersion(
+                agentName: agentVersion.Name,
+                agentVersion: agentVersion.Version);
+        }
+    }
+}

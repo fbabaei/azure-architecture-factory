@@ -1,0 +1,7 @@
+Use project-orchestrator.
+Input: mdr-support.md
+Project name: mdr-support-20260421003634
+factory: true
+factoryPortalUrl: http://localhost:5501
+apiKey: <your-portal-api-key-or-issued-token>
+existing-diagram: projects/mdr-support-20260421003634/diagrams/mdr-support-20260421003634.drawio

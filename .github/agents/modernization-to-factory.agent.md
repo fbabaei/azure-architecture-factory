@@ -2,6 +2,7 @@
 name: modernization-to-factory
 description: "Use when you need to assess a legacy application and generate an Azure modernization target baseline. Inspects the existing codebase, produces a structured BRD describing the Azure target state, then hands off to project-orchestrator to generate architecture, code scaffolding, Bicep infrastructure, and a full project folder."
 tools: [read, edit, search, execute, agent, todo]
+foundry_capabilities: [file_search, function_calling]
 agents: [project-orchestrator]
 user-invocable: true
 argument-hint: "Provide the path to the legacy codebase (e.g., src/, legacy-app/) and optionally: technology context (java/dotnet/python/lambda), target Azure services or constraints, project name, Azure region, and whether to deploy after generation (deploy: true/false)."

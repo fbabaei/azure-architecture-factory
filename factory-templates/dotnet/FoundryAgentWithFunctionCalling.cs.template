@@ -1,0 +1,144 @@
+using System.Text.Json;
+using Azure.AI.Projects;
+using Azure.AI.Projects.Agents;
+using Azure.Identity;
+using OpenAI.Responses;
+
+namespace {{NAMESPACE}};
+
+/// <summary>
+/// Reusable Foundry agent runner with one or more developer-supplied function tools.
+/// The agent decides *which* tool to call; this runner dispatches to the supplied delegate
+/// (which MUST delegate the actual mutation to a pre-existing pure-C# helper / service).
+///
+/// FACTORY TEMPLATE — replace the {{TOKENS}} below when scaffolding into a project:
+///   {{NAMESPACE}}              e.g. "OrdersApi.Services"
+///   {{CLASS_NAME}}             e.g. "OrderAgentService"
+///   {{RESULT_TYPE}}            e.g. "AgentResponse"
+///   {{INPUT_PURPOSE_COMMENT}}  short description of what the agent orchestrates
+///
+/// Pairs with: factory-templates/dotnet/FoundrySettings.cs.template
+/// BRD trigger: implementation.agents[].tools includes one or more named "function" tools.
+///
+/// USAGE:
+///   var tools = new List<FunctionToolDefinition>
+///   {
+///       new(
+///           name: "lookup_order",
+///           description: "Look up an order by ID and return its status.",
+///           parameters: BinaryData.FromString("""
+///             { "type": "object",
+///               "properties": { "order_id": { "type": "string" } },
+///               "required": ["order_id"] }
+///           """),
+///           handler: async (args, ct) => await _orderRepo.LookupAsync(args["order_id"].GetString(), ct)
+///       )
+///   };
+///   var result = await new {{CLASS_NAME}}(_settings).RunAsync(tools, instructions, userPrompt);
+/// </summary>
+public class {{CLASS_NAME}}
+{
+    private readonly FoundrySettings _settings;
+
+    public {{CLASS_NAME}}(FoundrySettings settings)
+    {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    }
+
+    public async Task<{{RESULT_TYPE}}> RunAsync(
+        IReadOnlyList<FunctionToolDefinition> functions,
+        string agentInstructions,
+        string userPrompt,
+        int maxToolHops = 5,
+        CancellationToken cancellationToken = default)
+    {
+        if (functions == null || functions.Count == 0)
+            throw new ArgumentException("function_calling agent requires at least one function tool.", nameof(functions));
+
+        AIProjectClient projectClient = new(
+            new Uri(_settings.Endpoint),
+            new DefaultAzureCredential());
+
+        // 1. Build the agent definition exposing every function as a tool.
+        DeclarativeAgentDefinition agentDefinition = new(model: _settings.Model)
+        {
+            Instructions = agentInstructions,
+        };
+        foreach (FunctionToolDefinition fn in functions)
+        {
+            agentDefinition.Tools.Add(
+                ResponseTool.CreateFunctionTool(
+                    name: fn.Name,
+                    description: fn.Description,
+                    parameters: fn.Parameters));
+        }
+
+        ProjectsAgentVersion agentVersion = projectClient.AgentAdministrationClient.CreateAgentVersion(
+            agentName: _settings.AgentName,
+            options: new(agentDefinition));
+
+        try
+        {
+            AgentReference agentReference = new(name: agentVersion.Name, version: agentVersion.Version);
+            ProjectResponsesClient responsesClient = projectClient.ProjectOpenAIClient
+                .GetProjectResponsesClientForAgent(agentReference);
+
+            // 2. First turn — let the model decide if a tool call is needed.
+            ResponseResult response = responsesClient.CreateResponse(userPrompt);
+
+            // 3. Tool-call loop with safety bound (forward-progress rule).
+            int hops = 0;
+            while (response.RequiresToolCalls && hops++ < maxToolHops)
+            {
+                List<ToolCallOutput> outputs = new();
+                foreach (ResponseToolCall call in response.ToolCalls)
+                {
+                    FunctionToolDefinition fn = functions.FirstOrDefault(f => f.Name == call.FunctionName)
+                        ?? throw new InvalidOperationException($"Model called unknown function '{call.FunctionName}'.");
+
+                    using JsonDocument argsDoc = JsonDocument.Parse(call.Arguments);
+                    string toolResult = await fn.Handler(argsDoc.RootElement, cancellationToken);
+                    outputs.Add(new ToolCallOutput(call.Id, toolResult));
+                }
+                response = responsesClient.SubmitToolOutputs(response.Id, outputs);
+            }
+
+            string finalText = response.GetOutputText()?.Trim() ?? string.Empty;
+            return new {{RESULT_TYPE}}
+            {
+                Success = !response.RequiresToolCalls, // true iff the model converged within the hop budget
+                Answer = finalText,
+                ToolHops = hops
+            };
+        }
+        finally
+        {
+            projectClient.AgentAdministrationClient.DeleteAgentVersion(
+                agentName: agentVersion.Name,
+                agentVersion: agentVersion.Version);
+        }
+    }
+}
+
+/// <summary>
+/// Developer-supplied function tool descriptor + dispatch delegate.
+/// </summary>
+public sealed class FunctionToolDefinition
+{
+    public string Name { get; }
+    public string Description { get; }
+    public BinaryData Parameters { get; }
+    public Func<JsonElement, CancellationToken, Task<string>> Handler { get; }
+
+    public FunctionToolDefinition(
+        string name,
+        string description,
+        BinaryData parameters,
+        Func<JsonElement, CancellationToken, Task<string>> handler)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        Description = description ?? throw new ArgumentNullException(nameof(description));
+        Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+        Handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
+}

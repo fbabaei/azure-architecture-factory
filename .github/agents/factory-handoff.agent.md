@@ -2,6 +2,7 @@
 name: factory-handoff
 description: "Promotes a completed project-orchestrator output to the Azure Architecture Factory portal. Reads the project folder produced by project-orchestrator, submits the requirements doc to the factory BRD intake API, polls for pipeline completion, and records the factory run ID and project slug back into the local project manifest. Use this after project-orchestrator has finished generating a project and you want a canonical factory-managed copy."
 tools: [read, edit, execute, todo]
+foundry_capabilities: [function_calling]
 user-invocable: true
 argument-hint: "Provide the local project path (e.g., projects/my-project). Optionally specify the factory base URL (default: http://127.0.0.1:5501) and FACTORY_PORTAL_API_KEY if the server requires auth."
 ---

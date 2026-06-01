@@ -1,0 +1,133 @@
+using System.Text.Json;
+using Azure.AI.Projects;
+using Azure.AI.Projects.Agents;
+using Azure.Identity;
+using OpenAI.Files;
+using OpenAI.Responses;
+using OpenAI.VectorStores;
+
+namespace {{NAMESPACE}};
+
+/// <summary>
+/// Reusable Foundry agent runner with the File Search tool, grounded against an Azure-hosted
+/// vector store of uploaded documents.
+///
+/// FACTORY TEMPLATE — replace the {{TOKENS}} below when scaffolding into a project:
+///   {{NAMESPACE}}              e.g. "OrdersApi.Services"
+///   {{CLASS_NAME}}             e.g. "PolicyLookupService"
+///   {{RESULT_TYPE}}            e.g. "PolicyAnswer"
+///   {{INPUT_PURPOSE_COMMENT}}  short description of the corpus and why grounding is needed
+///
+/// Pairs with: factory-templates/dotnet/FoundrySettings.cs.template
+/// BRD trigger: implementation.agents[].tools includes "file_search".
+/// </summary>
+public class {{CLASS_NAME}}
+{
+    private readonly FoundrySettings _settings;
+
+    public {{CLASS_NAME}}(FoundrySettings settings)
+    {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    }
+
+    /// <summary>
+    /// Runs the agent against the supplied <paramref name="userPrompt"/> grounded in
+    /// <paramref name="documentPaths"/>. {{INPUT_PURPOSE_COMMENT}}
+    /// </summary>
+    public async Task<{{RESULT_TYPE}}> RunAsync(
+        IReadOnlyList<string> documentPaths,
+        string agentInstructions,
+        string userPrompt,
+        CancellationToken cancellationToken = default)
+    {
+        if (documentPaths == null || documentPaths.Count == 0)
+            throw new ArgumentException("File search requires at least one document.", nameof(documentPaths));
+
+        AIProjectClient projectClient = new(
+            new Uri(_settings.Endpoint),
+            new DefaultAzureCredential());
+
+        // 1. Upload every document; collect file IDs for the vector store.
+        OpenAIFileClient fileClient = projectClient.ProjectOpenAIClient.GetOpenAIFileClient();
+        List<string> fileIds = new();
+        foreach (string path in documentPaths)
+        {
+            OpenAIFile uploaded = fileClient.UploadFile(path, FileUploadPurpose.Assistants);
+            fileIds.Add(uploaded.Id);
+        }
+
+        // 2. Create an ephemeral vector store containing those files.
+        VectorStoreClient vectorClient = projectClient.ProjectOpenAIClient.GetVectorStoreClient();
+        CreateVectorStoreOperation vsOp = vectorClient.CreateVectorStore(
+            waitUntilCompleted: true,
+            new VectorStoreCreationOptions { FileIds = { } });
+        foreach (string fileId in fileIds)
+        {
+            vectorClient.AddFileToVectorStore(vsOp.VectorStoreId, fileId, waitUntilCompleted: true);
+        }
+        string vectorStoreId = vsOp.VectorStoreId;
+
+        // 3. Build the agent definition with FileSearch wired to the vector store.
+        DeclarativeAgentDefinition agentDefinition = new(model: _settings.Model)
+        {
+            Instructions = agentInstructions,
+            Tools =
+            {
+                ResponseTool.CreateFileSearchTool(vectorStoreIds: [vectorStoreId]),
+            }
+        };
+
+        ProjectsAgentVersion agentVersion = projectClient.AgentAdministrationClient.CreateAgentVersion(
+            agentName: _settings.AgentName,
+            options: new(agentDefinition));
+
+        try
+        {
+            // 4. Invoke the agent.
+            AgentReference agentReference = new(name: agentVersion.Name, version: agentVersion.Version);
+            ProjectResponsesClient responsesClient = projectClient.ProjectOpenAIClient
+                .GetProjectResponsesClientForAgent(agentReference);
+
+            ResponseResult response = responsesClient.CreateResponse(userPrompt);
+            string responseText = response.GetOutputText()?.Trim() ?? string.Empty;
+
+            // 5. Strip ```fences``` if the model wrapped output.
+            if (responseText.StartsWith("```"))
+            {
+                int firstNewline = responseText.IndexOf('\n');
+                int lastFence = responseText.LastIndexOf("```");
+                if (firstNewline > 0 && lastFence > firstNewline)
+                    responseText = responseText[(firstNewline + 1)..lastFence].Trim();
+            }
+
+            return new {{RESULT_TYPE}}
+            {
+                Success = true,
+                Answer = responseText,
+                CitedFileIds = fileIds.AsReadOnly()
+            };
+        }
+        catch (Exception ex)
+        {
+            return new {{RESULT_TYPE}}
+            {
+                Success = false,
+                Answer = string.Empty,
+                Error = ex.Message
+            };
+        }
+        finally
+        {
+            // 6. Tear down the agent version and vector store; Foundry retains both otherwise.
+            try
+            {
+                projectClient.AgentAdministrationClient.DeleteAgentVersion(
+                    agentName: agentVersion.Name,
+                    agentVersion: agentVersion.Version);
+            }
+            catch { /* best effort */ }
+
+            try { vectorClient.DeleteVectorStore(vectorStoreId); } catch { /* best effort */ }
+        }
+    }
+}

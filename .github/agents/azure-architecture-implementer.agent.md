@@ -2,6 +2,7 @@
 name: azure-architecture-implementer
 description: "Use when you need to read a draw.io architecture diagram, map it to Azure resources, scaffold modular Python microservices, create implementation files, or produce Azure delivery guidance from a system diagram."
 tools: [read, edit, search, execute, agent, todo, web]
+foundry_capabilities: [file_search, function_calling]
 agents: [drawio-architecture-reader, production-environment-advisor]
 argument-hint: "Provide the diagram path, target architecture, and whether you want scaffolding, Azure deployment assets, or implementation guidance."
 user-invocable: true
@@ -52,6 +53,20 @@ When the diagram contains Azure AI Foundry, Azure OpenAI, a chat agent, a docume
 5. Gate the runtime selection in the project's `build_agent_runtime` factory: try `build_foundry_runtime(...)` first when `foundry_runtime_enabled` is true, and gracefully fall back to the deterministic local runtime on `ImportError` or `RuntimeError` so the service stays online.
 6. Add the three required tests (local fallback, SDK selection, forward-progress safety net) using `importlib.util.find_spec("agent_framework")` to branch so CI passes with and without the preview SDK installed.
 7. Update the project's `README.md`, `DEPLOY.md`, and `requirements.txt` to point at the installer scripts; do not inline `pip install` commands.
+
+### Materialize the baseline prompt
+
+When `projects/<slug>/docs/agents/agent-tooling.json` is present (emitted by Phase 1.5 — see [`FOUNDRY_AGENT_TOOLING_FLOW.md`](../../docs/FOUNDRY_AGENT_TOOLING_FLOW.md)), every agent entry has a `baseline_prompt` string. You MUST persist it as a file the application loads at runtime — do not hardcode it inline:
+
+1. Write `src/<package>/prompts/<agent_name>.system.md` containing the verbatim `baseline_prompt`. Use `.md` so engineers can edit it without redeploying. Ensure `src/<package>/prompts/__init__.py` exists (empty file) so `importlib.resources` treats it as a package.
+2. In `src/<package>/services/foundry_agent_runtime.py` (or the agent factory), load the prompt once at module import via `importlib.resources.files("<package>.prompts").joinpath("<agent_name>.system.md").read_text(encoding="utf-8")` and pass it as the agent `instructions=` argument. Cache it — do not re-read per request.
+3. Add a pytest under `tests/unit/test_prompts.py` asserting the prompt file exists, is non-empty, and mentions every required tool name listed in `agent-tooling.json` (so prompt drift gets caught in CI).
+4. Include `prompts/*.md` and `prompts/__init__.py` in the service's package data (`pyproject.toml` `[tool.setuptools.package-data]` or equivalent) so files ship with the wheel/container image.
+5. If `agent-tooling.json` is absent (Phase 1.5 was skipped), fall back to a minimal default prompt (`"You are a helpful Azure-hosted assistant. Answer concisely."`) and emit a startup log warning. Never block the build.
+6. **Materialize example user prompts as eval seeds.** When the agent entry has `example_user_prompts[]`, write `tests/agents/<agent_name>.examples.jsonl` — one JSON object per line with keys `prompt`, `expected_behavior`, `exercises`. Smoke / eval tests load the fixture via `pathlib.Path(__file__).parent / "agents" / "<agent>.examples.jsonl"`. Do NOT inline these prompts into Python code; treat the file as a fixture. If the array is empty, skip silently (do not block).
+7. **Generate a pytest smoke that loads the seeds.** Emit `tests/agents/test_<agent_name>_smoke.py` with: (a) a parametrized test that the JSONL file exists, parses line-by-line, and every record has non-empty `prompt`/`expected_behavior` and a list `exercises`; (b) a test that constructs the agent runtime with `AGENT_FRAMEWORK_ENABLED=false` and runs each example through the deterministic fallback once without raising. Do not call live Foundry from CI.
+8. **Respect user edits on re-runs.** Before overwriting `prompts/<agent_name>.system.md`, check for either an `<!-- AAF-EDITED -->` marker in the file OR a file mtime newer than `docs/agents/agent-tooling.json`. If either holds, skip the write and emit a `minor` build note (`Prompt file <path> was hand-edited; advisor refresh skipped. Remove the AAF-EDITED marker to re-sync.`). Never silently clobber.
+9. **Emit a startup telemetry log line** when the runtime initializes the agent: `logger.info("Foundry agent loaded: name=%s service=%s tools=%s prompt_chars=%d source=agent-tooling.json", ...)`. Required for prod grep-debugging.
 
 The canonical reference is [`factory-templates/agent-framework/`](../../factory-templates/agent-framework/) — the template files are designed to be self-sufficient. The factory's own BRD classifier at [`scripts/factory_runtime/`](../../scripts/factory_runtime/) is a second worked example of the same pattern applied in-repo.
 

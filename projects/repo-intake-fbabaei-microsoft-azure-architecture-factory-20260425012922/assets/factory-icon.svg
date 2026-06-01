@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Azure Architecture Factory">
+
+  <!-- Azure blue rounded background -->
+  <rect width="48" height="48" rx="9" fill="#0078d4"/>
+
+  <!-- Cloud — three overlapping circles + bottom fill bar -->
+  <circle cx="18"  cy="18.5" r="6.5" fill="white"/>
+  <circle cx="26.5" cy="14"  r="8"   fill="white"/>
+  <circle cx="35"  cy="18.5" r="5.5" fill="white"/>
+  <rect   x="11.5" y="18.5"  width="29" height="5.5" fill="white"/>
+
+  <!-- Short pipe connecting cloud to factory chimneys -->
+  <rect x="22.5" y="24" width="3" height="3" rx="0.8" fill="white" opacity="0.55"/>
+
+  <!-- Left chimney -->
+  <rect x="12" y="27" width="5" height="8.5" rx="1.5" fill="white" opacity="0.72"/>
+  <!-- Right chimney -->
+  <rect x="31" y="27" width="5" height="8.5" rx="1.5" fill="white" opacity="0.72"/>
+
+  <!-- Factory building base -->
+  <rect x="9" y="34" width="30" height="12" rx="2.5" fill="white" opacity="0.2"/>
+
+  <!-- Gear — outer ring -->
+  <circle cx="24" cy="40" r="5" fill="white" opacity="0.9"/>
+
+  <!-- Gear — four teeth (N / S / E / W) -->
+  <rect x="22.8" y="32.8" width="2.4" height="2.3" rx="0.7" fill="white" opacity="0.9"/>
+  <rect x="22.8" y="44.9" width="2.4" height="2.3" rx="0.7" fill="white" opacity="0.9"/>
+  <rect x="30.0" y="38.8" width="2.3" height="2.4" rx="0.7" fill="white" opacity="0.9"/>
+  <rect x="15.7" y="38.8" width="2.3" height="2.4" rx="0.7" fill="white" opacity="0.9"/>
+
+  <!-- Gear — centre hole -->
+  <circle cx="24" cy="40" r="2.3" fill="#0078d4"/>
+
+</svg>

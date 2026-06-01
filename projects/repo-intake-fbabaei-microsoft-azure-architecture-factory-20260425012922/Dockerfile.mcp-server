@@ -1,0 +1,56 @@
+# MCP Environment Orchestrator Server
+# Streamable HTTP MCP server (Starlette + Uvicorn)
+
+# Stage 1: Builder
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 mcpserver && \
+    mkdir -p /workspace /logs && \
+    chown -R mcpserver:mcpserver /app /workspace /logs
+
+COPY --from=builder /wheels /wheels
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --no-index --find-links /wheels -r requirements.txt && \
+    rm -rf /wheels
+
+# Copy application source
+COPY src/ src/
+COPY pyproject.toml .
+
+RUN chown -R mcpserver:mcpserver /app
+
+USER mcpserver
+
+EXPOSE 8000
+
+ENV PYTHONUNBUFFERED=1 \
+    MCP_SERVER_HOST=0.0.0.0 \
+    MCP_SERVER_PORT=8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["python", "-m", "src.mcp_server.main"]

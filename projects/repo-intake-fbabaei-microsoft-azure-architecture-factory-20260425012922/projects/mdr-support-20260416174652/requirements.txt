@@ -1,0 +1,34 @@
+fastapi==0.116.1
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+python-multipart==0.0.12
+
+# Azure SDKs (optional at runtime - service auto-falls back to local stubs)
+azure-identity==1.19.0
+azure-storage-blob==12.24.0
+azure-ai-documentintelligence==1.0.0
+azure-cosmos==4.9.0
+openai==1.54.4
+
+# Observability
+azure-monitor-opentelemetry==1.6.4
+
+# Microsoft Agent Framework SDK (optional; enable via AGENT_FRAMEWORK_ENABLED=1)
+# Install in this exact order - agentserver pins agent-framework-core<=rc3,
+# and the rc6 agent-framework packages MUST be installed AFTER the agentserver
+# packages so the rc6 versions win dependency resolution.
+#
+# Use the helper scripts instead of running pip manually:
+#   Windows : .\scripts\install_agent_framework.ps1
+#   Linux   : ./scripts/install_agent_framework.sh
+#
+# Equivalent manual install (kept for reference):
+#   pip install azure-ai-agentserver-agentframework==1.0.0b16 \
+#               azure-ai-agentserver-core==1.0.0b16 \
+#               agent-dev-cli==0.0.1b260316
+#   pip install agent-framework-core==1.0.0rc6 \
+#               agent-framework-foundry==1.0.0rc6 \
+#               agent-framework-openai==1.0.0rc6
+#
+# These packages are preview (rc/beta) and are intentionally not pinned as
+# hard dependencies to keep local dev installs and CI deterministic.

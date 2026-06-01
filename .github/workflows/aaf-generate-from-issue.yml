@@ -1,0 +1,207 @@
+name: AAF Generate from Issue
+
+# Trigger: label an issue with "aaf:generate" to kick off the pipeline.
+#
+# What this does:
+#   1. Reads the issue body as a BRD (Business Requirements Document).
+#   2. Creates a branch  aaf/issue-<N>-<slug>
+#   3. Commits the BRD to  docs/requirements-issue-<N>.md  on that branch.
+#   4. Opens a draft PR referencing the issue.
+#   5. Posts a @copilot assignment comment on the PR so that the GitHub
+#      Copilot coding agent picks up the work and runs project-orchestrator.
+#
+# Requirements:
+#   - The issue body should contain a valid BRD.  A minimal template is posted
+#     as a comment on the issue when the label is first applied.
+#   - The repository must have GitHub Copilot coding agent enabled.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  generate:
+    if: github.event.label.name == 'aaf:generate'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Prepare branch and BRD file
+        id: prep
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue    = context.payload.issue;
+            const issueNum = issue.number;
+            const title    = issue.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '')
+              .slice(0, 40);
+
+            const branch  = `aaf/issue-${issueNum}-${title}`;
+            const brdPath = `docs/requirements-issue-${issueNum}.md`;
+            const body    = issue.body || '# BRD\n\n_No body provided._';
+
+            // Check whether the branch already exists
+            let branchExists = false;
+            try {
+              await github.rest.repos.getBranch({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                branch,
+              });
+              branchExists = true;
+            } catch (_) { /* branch doesn't exist — create it */ }
+
+            core.setOutput('branch',   branch);
+            core.setOutput('brd_path', brdPath);
+            core.setOutput('brd_body', body);
+            core.setOutput('issue_num', String(issueNum));
+            core.setOutput('branch_exists', String(branchExists));
+
+      - name: Create branch
+        if: steps.prep.outputs.branch_exists == 'false'
+        run: |
+          git checkout -b "${{ steps.prep.outputs.branch }}"
+          git push origin "${{ steps.prep.outputs.branch }}"
+
+      - name: Check out branch
+        run: git checkout "${{ steps.prep.outputs.branch }}"
+
+      - name: Commit BRD file
+        run: |
+          BRD_PATH="${{ steps.prep.outputs.brd_path }}"
+          mkdir -p "$(dirname "$BRD_PATH")"
+          cat > "$BRD_PATH" << 'EOBRD'
+          ${{ steps.prep.outputs.brd_body }}
+          EOBRD
+          git add "$BRD_PATH"
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: add BRD from issue #${{ steps.prep.outputs.issue_num }}"
+            git push origin "${{ steps.prep.outputs.branch }}"
+          fi
+
+      - name: Create or find draft PR
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch   = '${{ steps.prep.outputs.branch }}';
+            const issueNum = '${{ steps.prep.outputs.issue_num }}';
+            const brdPath  = '${{ steps.prep.outputs.brd_path }}';
+
+            // Check whether a PR already exists for this branch
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              head:  `${context.repo.owner}:${branch}`,
+              state: 'open',
+            });
+
+            let prNumber;
+            let prUrl;
+
+            if (prs.data.length > 0) {
+              prNumber = prs.data[0].number;
+              prUrl    = prs.data[0].html_url;
+              core.info(`Existing PR #${prNumber} found — skipping creation`);
+            } else {
+              const pr = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                head:  branch,
+                base:  'main',
+                title: `feat(aaf): generate project from issue #${issueNum}`,
+                draft: true,
+                body: [
+                  `## AAF Project Generation`,
+                  ``,
+                  `Closes #${issueNum}`,
+                  ``,
+                  `This PR was created automatically when issue #${issueNum} was labeled \`aaf:generate\`.`,
+                  `The BRD has been committed to \`${brdPath}\`.`,
+                  ``,
+                  `### Next steps`,
+                  ``,
+                  `The GitHub Copilot coding agent will run \`project-orchestrator\` on the BRD`,
+                  `and commit the generated architecture, code, and infrastructure to this branch.`,
+                  ``,
+                  `**Requirements Coverage** and **Validation** sections will be populated by the agent.`,
+                ].join('\n'),
+              });
+              prNumber = pr.data.number;
+              prUrl    = pr.data.html_url;
+              core.info(`Created PR #${prNumber}: ${prUrl}`);
+            }
+
+            core.setOutput('pr_number', String(prNumber));
+            core.setOutput('pr_url',    prUrl);
+
+      - name: Assign Copilot on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber  = ${{ steps.pr.outputs.pr_number }};
+            const issueNum  = '${{ steps.prep.outputs.issue_num }}';
+            const brdPath   = '${{ steps.prep.outputs.brd_path }}';
+
+            // Post the @copilot work assignment comment on the PR
+            await github.rest.issues.createComment({
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
+              issue_number: prNumber,
+              body: [
+                `@copilot Please run the **project-orchestrator** agent on the BRD at`,
+                `\`${brdPath}\` and generate a complete AAF project on this branch.`,
+                ``,
+                `**Instructions:**`,
+                `1. Read the BRD at \`${brdPath}\`.`,
+                `2. Run \`project-orchestrator\` with \`deploy: false\` to generate the`,
+                `   full project (architecture diagram, source code, Bicep/Terraform infra,`,
+                `   tests, and documentation).`,
+                `3. Commit all generated files to this branch.`,
+                `4. Update this PR body with the Requirements Coverage table and Validation`,
+                `   results once the generation is complete.`,
+                `5. Mark the PR as ready for review.`,
+                ``,
+                `Ref: Fixes #${issueNum}`,
+              ].join('\n'),
+            });
+
+      - name: Comment on the original issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNum = ${{ steps.prep.outputs.issue_num }};
+            const prUrl    = '${{ steps.pr.outputs.pr_url }}';
+            const branch   = '${{ steps.prep.outputs.branch }}';
+
+            await github.rest.issues.createComment({
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
+              issue_number: issueNum,
+              body: [
+                `✅ **AAF pipeline started** — PR opened: ${prUrl}`,
+                ``,
+                `Branch: \`${branch}\``,
+                ``,
+                `The GitHub Copilot coding agent has been assigned to run \`project-orchestrator\``,
+                `on your BRD and will commit the generated project to the PR branch.`,
+                `Track progress in the PR.`,
+              ].join('\n'),
+            });

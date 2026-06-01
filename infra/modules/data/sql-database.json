@@ -1,0 +1,219 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "6182146867627654270"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure region for the SQL server and database."
+      }
+    },
+    "serverName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 63,
+      "metadata": {
+        "description": "Logical SQL server name (3-63 chars, lowercase, globally unique)."
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Database name on the server."
+      }
+    },
+    "aadAdminObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Object ID (GUID) of the AAD principal that becomes the SQL admin (user, group, or managed identity)."
+      }
+    },
+    "aadAdminLogin": {
+      "type": "string",
+      "metadata": {
+        "description": "Display name of the AAD admin principal (user@tenant or group/MI name)."
+      }
+    },
+    "aadAdminTenantId": {
+      "type": "string",
+      "defaultValue": "[subscription().tenantId]",
+      "metadata": {
+        "description": "Tenant ID for the AAD admin principal."
+      }
+    },
+    "aadAdminPrincipalType": {
+      "type": "string",
+      "defaultValue": "Group",
+      "allowedValues": [
+        "User",
+        "Group",
+        "Application"
+      ],
+      "metadata": {
+        "description": "Principal type for the AAD admin: User, Group, or Application (managed identities use Application)."
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "GP_S_Gen5_1",
+      "metadata": {
+        "description": "Database SKU. Defaults to General Purpose Serverless 1 vCore."
+      }
+    },
+    "skuTier": {
+      "type": "string",
+      "defaultValue": "GeneralPurpose",
+      "metadata": {
+        "description": "Database tier. Must align with skuName."
+      }
+    },
+    "maxSizeBytes": {
+      "type": "int",
+      "defaultValue": 34359738368,
+      "metadata": {
+        "description": "Maximum database size in bytes. Defaults to 32 GB."
+      }
+    },
+    "autoPauseDelay": {
+      "type": "int",
+      "defaultValue": 60,
+      "metadata": {
+        "description": "Auto-pause delay in minutes for serverless DBs. Use -1 to disable."
+      }
+    },
+    "publicNetworkAccess": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Allow public network access. Set false when a private endpoint is in place."
+      }
+    },
+    "allowAzureServices": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Allow Azure services (e.g., App Service, Container Apps) to connect when public network access is enabled."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Resource tags."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[parameters('serverName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "version": "12.0",
+        "minimalTlsVersion": "1.2",
+        "publicNetworkAccess": "[if(parameters('publicNetworkAccess'), 'Enabled', 'Disabled')]",
+        "administrators": {
+          "administratorType": "ActiveDirectory",
+          "azureADOnlyAuthentication": true,
+          "login": "[parameters('aadAdminLogin')]",
+          "sid": "[parameters('aadAdminObjectId')]",
+          "tenantId": "[parameters('aadAdminTenantId')]",
+          "principalType": "[parameters('aadAdminPrincipalType')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers/azureADOnlyAuthentications",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}', parameters('serverName'), 'Default')]",
+      "properties": {
+        "azureADOnlyAuthentication": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('publicNetworkAccess'), parameters('allowAzureServices'))]",
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}', parameters('serverName'), 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "startIpAddress": "0.0.0.0",
+        "endIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2023-08-01-preview",
+      "name": "[format('{0}/{1}', parameters('serverName'), parameters('databaseName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "tier": "[parameters('skuTier')]"
+      },
+      "properties": {
+        "maxSizeBytes": "[parameters('maxSizeBytes')]",
+        "autoPauseDelay": "[parameters('autoPauseDelay')]",
+        "zoneRedundant": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers/azureADOnlyAuthentications', parameters('serverName'), 'Default')]",
+        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "sqlServerFqdn": {
+      "type": "string",
+      "metadata": {
+        "description": "Fully qualified server name (use in connection strings)."
+      },
+      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('serverName')), '2023-08-01-preview').fullyQualifiedDomainName]"
+    },
+    "sqlDatabaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Database name."
+      },
+      "value": "[parameters('databaseName')]"
+    },
+    "sqlConnectionStringAadDefault": {
+      "type": "string",
+      "metadata": {
+        "description": "AAD-auth ADO.NET connection string (no secrets). Caller supplies the identity at runtime via DefaultAzureCredential."
+      },
+      "value": "[format('Server=tcp:{0},1433;Database={1};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;', reference(resourceId('Microsoft.Sql/servers', parameters('serverName')), '2023-08-01-preview').fullyQualifiedDomainName, parameters('databaseName'))]"
+    },
+    "sqlServerId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the SQL server."
+      },
+      "value": "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+    },
+    "sqlDatabaseId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the SQL database."
+      },
+      "value": "[resourceId('Microsoft.Sql/servers/databases', parameters('serverName'), parameters('databaseName'))]"
+    }
+  }
+}

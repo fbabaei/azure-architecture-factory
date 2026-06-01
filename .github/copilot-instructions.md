@@ -46,3 +46,11 @@
 - Keep the root `README.md` focused on repo orientation.
 - Keep `PRD.md` and `BRD.md` as the product and business source documents.
 - Update `QUICKSTART.md` when agent entry points or setup steps change.
+
+## Git and PR Conventions
+- One focused PR per change. Prefer a single `feat(issue-N): <short description>` commit; use `fix(...)`, `chore(...)`, `docs(...)` when more appropriate.
+- Branch from `main`: `feature/issue-<N>-<slug>` for issue work, `feature/<slug>` otherwise.
+- Write the PR body to `docs/PR_<TOPIC>.md` first (template: `factory-templates/pr/PR_TEMPLATE.md`), then open the PR with `gh pr create --body-file docs/PR_<TOPIC>.md`. The body MUST include a **Requirements Coverage** table and a **Validation** section with concrete build/test results.
+- Reference the issue with `Fixes #<N>` so it auto-closes on merge.
+- Never use `git push --no-verify`, never `git push --force` on shared branches, never amend an already-pushed commit without explicit user approval.
+- When `deploy: true`, honor the orchestrator's Phase 4.5 approval gate — do not skip it to "save a step".

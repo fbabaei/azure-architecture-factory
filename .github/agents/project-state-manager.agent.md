@@ -2,6 +2,7 @@
 name: project-state-manager
 description: "Use when you need to initialize or update a project's folder structure, logs, and project-manifest.json during orchestration. Acts as the bookkeeping and state-management helper for project-orchestrator."
 tools: [read, edit, search, execute]
+foundry_capabilities: [function_calling]
 user-invocable: false
 argument-hint: "Provide the project path, current phase, status change, and any artifacts or metadata that should be recorded in logs or project-manifest.json."
 ---

@@ -2,6 +2,7 @@
 name: project-cost-analyzer
 description: "Analyze actual and projected Azure costs for a generated project. Queries Azure Cost Management for post-deployment spend, compares against Bicep-derived pre-deployment estimates, identifies optimization opportunities, and saves a dated cost report into the project folder."
 tools: [read, execute, write, todo]
+foundry_capabilities: [code_interpreter, function_calling]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project), the Azure resource group name, and optionally a date range (e.g., last-30-days or 2026-03-01/2026-03-31). Optionally provide subscription ID."
 ---

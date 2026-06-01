@@ -1,0 +1,54 @@
+name: portal-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/start_factory_portal.py"
+      - "scripts/blob_sync.py"
+      - "scripts/telemetry.py"
+      - "scripts/local_brd_runner.py"
+      - "scripts/requirements.portal.txt"
+      - "tests/portal/**"
+      - "Dockerfile.portal"
+      - "factory-portal.html"
+      - ".github/workflows/portal-ci.yml"
+      - ".github/workflows/portal-deploy.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  portal-tests:
+    name: Portal tests (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Byte-compile portal sources
+        run: python -m compileall -q scripts/start_factory_portal.py scripts/blob_sync.py scripts/telemetry.py
+
+      - name: Run portal test suite
+        run: python -m pytest tests/portal -v --tb=short
+
+  dockerfile-lint:
+    name: Dockerfile sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dockerfile builds (no push)
+        run: docker build --file Dockerfile.portal --tag portal:pr-${{ github.event.pull_request.number }} .

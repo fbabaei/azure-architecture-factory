@@ -1,0 +1,50 @@
+[
+  {
+    "request_id": "req-ff325a4577bf",
+    "project": "datalab",
+    "team": "platform",
+    "environment": "dev",
+    "data_class": "internal",
+    "status": "COMPLETED",
+    "created_at": "2026-03-23T16:59:41.944924Z",
+    "updated_at": "2026-03-23T16:59:42.032386+00:00",
+    "tags": {
+      "project": "datalab",
+      "team": "platform",
+      "environment": "dev",
+      "data_class": "internal"
+    },
+    "resources": {
+      "storage_account": "stdatalabdev",
+      "adls_container": "platform-dev-internal",
+      "resource_group": "rg-datalab-dev"
+    },
+    "status_history": [
+      {
+        "status": "PENDING",
+        "at": "2026-03-23T16:59:41.944924+00:00",
+        "message": "Request submitted"
+      },
+      {
+        "status": "VALIDATING",
+        "at": "2026-03-23T16:59:41.964718+00:00",
+        "message": "Governance validation started"
+      },
+      {
+        "status": "PROVISIONING",
+        "at": "2026-03-23T16:59:41.981898+00:00",
+        "message": "Provisioning started"
+      },
+      {
+        "status": "GOVERNED",
+        "at": "2026-03-23T16:59:42.012947+00:00",
+        "message": "Governance registration complete"
+      },
+      {
+        "status": "COMPLETED",
+        "at": "2026-03-23T16:59:42.032386+00:00",
+        "message": "Provisioning completed"
+      }
+    ]
+  }
+]

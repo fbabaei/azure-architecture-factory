@@ -6,9 +6,11 @@ Azure Architecture Factory is an AI-driven Azure delivery workspace that turns r
 
 1. [docs/QUICKSTART.md](docs/QUICKSTART.md) — the one-page "how do I use this" guide. Start here.
 2. [docs/WORKFLOW_GUIDE.md](docs/WORKFLOW_GUIDE.md) — what each agent does and when to pick one.
-3. [docs/BRD_CLASSIFICATION_FLOW.md](docs/BRD_CLASSIFICATION_FLOW.md) — how the factory decides whether a BRD needs the Agent Framework SDK runtime.
-4. [docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md](docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — when a generated project should ship the Agent Framework SDK runtime vs. stay deterministic.
-5. [docs/SELF_CONTAINED_SETUP.md](docs/SELF_CONTAINED_SETUP.md) — running the repo without any sibling checkouts.
+3. [docs/AAF_AGENT_SCOPING.md](docs/AAF_AGENT_SCOPING.md) — the 3-tier scoping model (Intake → Design → Architecture), inter-agent JSON Schema contracts, and the validation layer.
+4. [docs/FOUNDRY_AGENT_TOOLING_FLOW.md](docs/FOUNDRY_AGENT_TOOLING_FLOW.md) — Phase 1.5 end-to-end: how Foundry capabilities, tools, and baseline prompts are recommended for BRD-driven and diagram-only intakes.
+5. [docs/BRD_CLASSIFICATION_FLOW.md](docs/BRD_CLASSIFICATION_FLOW.md) — how the factory decides whether a BRD needs the Agent Framework SDK runtime.
+6. [docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md](docs/AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — when a generated project should ship the Agent Framework SDK runtime vs. stay deterministic.
+7. [docs/SELF_CONTAINED_SETUP.md](docs/SELF_CONTAINED_SETUP.md) — running the repo without any sibling checkouts.
 
 Reference material:
 

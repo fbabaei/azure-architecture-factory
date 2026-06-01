@@ -1,0 +1,8 @@
+run_id=default-e2e-91241ede
+generated_at=2026-04-20T22:21:09.494489Z
+project_slug=brd-default-path-smoke-test-20260420222109
+source_brd=default-path-smoke.md
+enable_observability=true
+user_home_copy=C:\Users\fbabaei\app\brd-default-path-smoke-test-20260420222109
+status=complete
+runner=azure_native_factory_runner

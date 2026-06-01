@@ -127,6 +127,7 @@ Pick these from the **Agent** dropdown to load specialist instructions:
 | `security-compliance-auditor` | `Audit projects/<slug>/ for secrets, identity, network boundaries, and CVEs. Emit a severity-classified report.` |
 | `source-code-maintainer` | `mode: drift-check — compare projects/<slug>/src/ against diagrams/<slug>.drawio and list drift.` |
 | `modernization-to-factory` | `Assess the legacy codebase under legacy-app/ and generate an Azure modernization BRD, then hand off.` |
+| `repo-change-agent` | `Inside this cloned repo, review docs, architecture, source, tests, and infra; decide whether to enhance existing code or add minimal new code; implement, validate, and write AAF-change-summary.md.` |
 
 ### 🐞 Diagnostics
 

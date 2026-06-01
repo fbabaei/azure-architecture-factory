@@ -1,0 +1,25 @@
+{
+  "project": "smart-inventory-tracker-20260408222513",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\smart-inventory-tracker.md",
+  "created_at": "2026-04-08T22:25:13.250951+00:00",
+  "generator": "local_factory_stub_orchestrator",
+  "title": "Smart Inventory Tracker",
+  "requirements_detected": [
+    "Real-time inventory level updates from IoT sensors",
+    "Automated purchase order generation",
+    "Multi-warehouse dashboard with alerts",
+    "ERP REST API integration"
+  ],
+  "success_criteria_detected": [
+    "Stock-out rate below 2% in 90 days"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": false,
+    "governance": false,
+    "workflow": false,
+    "api": true
+  }
+}

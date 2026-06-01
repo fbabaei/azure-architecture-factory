@@ -2,6 +2,7 @@
 name: project-observability-advisor
 description: "Audit, configure, and report on observability and monitoring for a factory-generated project deployed on Azure. Reviews Application Insights, Log Analytics, Azure Monitor alerts, and distributed tracing — then saves a dated observability report and optionally generates Bicep modules to close gaps."
 tools: [read, execute, write, todo]
+foundry_capabilities: [file_search, function_calling]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project) and the Azure resource group name. Optionally specify the Log Analytics workspace name, Application Insights resource name, and whether to generate Bicep fixes (generate-bicep: true/false)."
 ---

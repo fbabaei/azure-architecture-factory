@@ -1,0 +1,32 @@
+{
+  "project": "mdr-support-20260416174652",
+  "status": "complete",
+  "source_brd": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\docs\\intake\\mdr-support.md",
+  "created_at": "2026-04-16T17:46:52.562243Z",
+  "generator": "azure_native_factory_runner",
+  "title": "Mdr Support",
+  "requirements_detected": [
+    "The EY Tax team is looking to build a compliance agent to support Mandatory Disclosure Rules (MDR) arrangement creation. The goal is to deliver an agent that enables MDR\u2011specific Q&A and supports two arrangement\u2011creation flows:",
+    "File upload\u2013based extraction",
+    "An interactive, human\u2011in\u2011the\u2011loop chat experience that guides users through creating an arrangement.",
+    "This CodeWith will focus on Phase 1, building a data extraction agent capable of ingesting unstructured documents (PDFs and text inputs), extracting structured MDR arrangement data into a consistent JSON format, and enabling an intelligent clarification loop. The agent will identify missing mandatory fields and prompt the user for additional inputs before generating an arrangement draft.",
+    "The outcome will be a more reliable, scalable, and user\u2011friendly arrangement creation workflow, with batch and multi\u2011arrangement processing explicitly deferred to a later phase.",
+    "This engagement will also produce a clear technical blueprint, reusable extraction patterns, and testable end\u2011to\u2011end flows that EY can extend into their MDR modernization roadmap and also while significantly reducing the manual time and effort required per document for arrangement creation and review."
+  ],
+  "success_criteria_detected": [
+    "Generated starter solution is reviewed and refined before production deployment"
+  ],
+  "capabilities": {
+    "openai": false,
+    "copilot": false,
+    "ml": false,
+    "governance": true,
+    "workflow": true,
+    "api": false
+  },
+  "generation_options": {
+    "enableObservability": false,
+    "networkTier": "public"
+  },
+  "user_home_copy": "C:\\Users\\fbabaei\\app\\mdr-support-20260416174652"
+}

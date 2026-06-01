@@ -1,0 +1,22 @@
+# Docker configuration for all microservices.
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port (varies by service)
+# Build with: docker build --build-arg PORT=8000 -f docker/Dockerfile.service -t service-image:latest .
+
+ENV SERVICE_NAME=microservice
+ENV ENVIRONMENT=production
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:${PORT:-8000}/health')"
+
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${PORT:-8000}"]

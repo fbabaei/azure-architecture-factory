@@ -1,0 +1,33 @@
+# Generated BRD intake artifacts from local portal smoke tests
+/docs/intake/
+/scripts/docs/intake/
+
+# Generated projects from local portal and pipeline verification
+/projects/factory-portal-smoke-test-*/
+/projects/portal-e2e-success-*/
+/projects/post-quota-test-*/
+/projects/ticket-triage-assistant/
+# Squad: ignore runtime state (logs, inbox, sessions)
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+# Squad: SubSquad activation file (local to this machine)
+.squad-workstream
+
+# Python build/cache artifacts — never commit
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Portal runtime state (crash-safe RUNS snapshot — local to container/host)
+logs/portal-runs.state.json
+logs/portal-runs.state.tmp

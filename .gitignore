@@ -31,3 +31,16 @@ env/
 # Portal runtime state (crash-safe RUNS snapshot — local to container/host)
 logs/portal-runs.state.json
 logs/portal-runs.state.tmp
+
+# Portal runtime logs (local diagnostics, high churn)
+logs/*.err
+logs/*.out
+logs/*.log
+portal.err
+
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# Temporary working directory
+/tmp/

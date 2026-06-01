@@ -1,0 +1,22 @@
+
+================================================================================
+AZURE ARCHITECTURE FACTORY - DEDICATED PORTAL
+================================================================================
+
+Factory Portal:     http://localhost:5501/factory-portal.html
+Friendly Alias:     http://localhost:5501/portal
+BRD Intake API:     http://localhost:5501/api/brd-intake
+CSA Companion API:  (not configured)
+Project Directory:  http://0.0.0.0:5501/projects/
+Listening On:       http://0.0.0.0:5501 (all interfaces)
+Auth:               None (local dev mode)
+
+You can now:
+  • Submit BRDs via the portal
+  • View generated projects in real-time
+  • Monitor pipeline execution status
+  • Access project documentation and architecture
+
+Tip: Press Ctrl+C to stop the server.
+================================================================================
+

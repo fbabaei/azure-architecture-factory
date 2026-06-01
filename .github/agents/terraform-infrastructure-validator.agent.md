@@ -2,6 +2,7 @@
 name: terraform-infrastructure-validator
 description: "Use when you need to validate and auto-fix HashiCorp Terraform infrastructure configuration for projects whose manifest declares `iac_tool: terraform`. Reviews all .tf files and `terraform.tfvars.example` for syntax, logic, and configuration errors—then applies fixes automatically."
 tools: [read, edit, search, execute]
+foundry_capabilities: [function_calling]
 user-invocable: true
 argument-hint: "Optionally specify a particular infra path (e.g., 'projects/<slug>/infra') or 'all' to validate every Terraform-backed project. For Phase 2.8 invocations, pass mode: scalability-review with a findings slice."
 ---
@@ -56,6 +57,7 @@ When the project manifest declares `implementation_language`, use it to pick the
 |---------------------------|----------------|--------------------|
 | `python` (default, or absent) | 8000 | caller-provided |
 | `dotnet` | 8080 | `/health`, `/health/ready` |
+| `csharp` | 8080 | `/health`, `/health/ready` (alias of `dotnet`) |
 | `java` / `go` / `node` | not yet supported — escalate via blockers |
 
 If the wrong port is wired (e.g., 8000 on a dotnet project), rewrite the `ingress.target_port` attribute, re-run `terraform validate`, and record the swap in the fix log with category `language_port_mismatch`.

@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: AgentMetadata
+metadata:
+  name: daop-meta-orchestrator
+  namespace: dynamic-agent-ops-platform
+  labels:
+    platform: daop
+    version: "1.0"
+
+spec:
+  agentType: hosted
+  framework: microsoft-agent-framework
+  runtime: python
+  model:
+    deployment: gpt-4o
+    version: "2024-11-20"
+    provider: azure-ai-foundry
+
+  capabilities:
+    - intent-decomposition
+    - multi-agent-coordination
+    - agent-lifecycle-management
+    - human-in-the-loop
+    - dynamic-agent-instantiation
+
+  tools:
+    - name: aaf_generate_architecture
+      type: function
+      description: >
+        Submit a BRD to Azure Architecture Factory and poll for
+        architecture diagram + Bicep scaffold output.
+      parameters:
+        project_name: string
+        requirements: string
+        language: string
+        iac: string
+
+  subAgents:
+    - name: architect
+      endpoint: http://daop-agent-architect/run
+      capabilities: [architecture_design, iac_generation, diagram_creation]
+    - name: developer
+      endpoint: http://daop-agent-developer/run
+      capabilities: [code_generation, code_review, test_writing]
+    - name: ops
+      endpoint: http://daop-agent-ops/run
+      capabilities: [deployment, monitoring, incident_triage]
+    - name: analyst
+      endpoint: http://daop-agent-analyst/run
+      capabilities: [requirements_analysis, cost_estimation, traceability]
+    - name: security
+      endpoint: http://daop-agent-security/run
+      capabilities: [cve_scanning, rbac_audit, compliance_check]
+
+  observability:
+    tracing: application-insights
+    retentionDays: 30
+    customEvents:
+      - agent_trace
+      - task_dispatch
+      - hitl_approval
+
+  identity:
+    type: user-assigned-managed-identity
+    name: daop-identity
+    requiredRoles:
+      - roleDefinition: Azure AI Developer
+        scope: foundry-project
+      - roleDefinition: Key Vault Secrets User
+        scope: key-vault
+      - roleDefinition: Cosmos DB Built-in Data Contributor
+        scope: cosmos-account
+      - roleDefinition: Azure Service Bus Data Owner
+        scope: service-bus-namespace
+      - roleDefinition: AcrPull
+        scope: container-registry

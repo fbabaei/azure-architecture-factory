@@ -56,6 +56,10 @@ Beyond `Runtime`, the BRD intake (portal or CLI) accepts these generation option
 
 The factory also detects a workload **archetype** from the BRD — `extraction-chat` (document upload + clarification loop), `rag-qa` (corpus-grounded Q&A), or `api-service` (generic). The selected archetype drives the language agent's emission shape (e.g., extraction-chat produces 5 domain services and 6 endpoints instead of a single starter endpoint) and is recorded under `analysis.archetype` in `project-manifest.json`. See [docs/MDR_PY_VS_DOTNET.md](MDR_PY_VS_DOTNET.md) for a side-by-side of Python vs .NET output for the same `extraction-chat` BRD.
 
+### Azure AI Foundry agents (Phase 1.5)
+
+If your BRD declares `implementation.agents[]`, OR you import a diagram that contains Azure AI Foundry / OpenAI shapes (or labels matching `agent|assistant|copilot|bot|extractor|classifier`), the orchestrator runs **Phase 1.5 Agent Tooling Advisory** between architecture and implementation. It recommends Foundry capabilities (`code_interpreter`, `file_search`, `function_calling`), tool signatures, and a baseline system prompt per agent, and writes them to `projects/<slug>/docs/agents/agent-tooling.{json,md}`. Diagram-only intakes always land at `next_action: needs_review` for human confirmation. Full walkthrough: [FOUNDRY_AGENT_TOOLING_FLOW.md](FOUNDRY_AGENT_TOOLING_FLOW.md).
+
 Expected output shape:
 
 ```text
@@ -77,7 +81,9 @@ Use these when you only need one part of the workflow.
 
 | Agent | Use Case |
 | --- | --- |
-| `brd-to-architecture-diagram` | Generate or import an Azure architecture diagram |
+| `brd-to-architecture-diagram` | Generate or import an Azure architecture diagram (also runs `synthesize-agents` mode for diagram-only Foundry agent drafts) |
+| `agent-tooling-advisor` | Phase 1.5: recommend Foundry capabilities, tools, and baseline prompts per agent (read-only) |
+| `contract-validator` | Validate inter-agent handoffs against intake / design / architecture JSON Schema contracts |
 | `azure-architecture-implementer` | Convert diagram intent into Python services + Bicep scaffolding |
 | `lang-dotnet-implementer` | Same as above but emits ASP.NET Core 8 services when `implementationLanguage` is `dotnet` |
 | `bicep-infrastructure-validator` | Validate and repair Bicep modules and params |

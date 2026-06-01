@@ -2,6 +2,7 @@
 name: source-code-maintainer
 description: "Use when you need to generate, refactor, or maintain a factory project's source code so it stays in sync with the architecture diagram and BRD. Handles drift detection between diagram and code, incremental code changes driven by architecture deltas, service-contract consistency, shared-library updates, and code-quality hygiene (lint, imports, docstrings, test stubs). Called by project-orchestrator during greenfield scaffolding follow-ups and on every BRD update cycle."
 tools: [read, edit, search, execute, agent, todo]
+foundry_capabilities: [file_search, function_calling]
 agents: [drawio-architecture-reader, project-state-manager, azure-architecture-implementer]
 user-invocable: true
 argument-hint: "Provide the project path (e.g., projects/my-project). Optionally specify: mode (sync|drift-check|inventory|error-handling-audit|scalability-audit|add-to-service|refactor), a scoped service name to target, and dry-run: true to report changes without writing."

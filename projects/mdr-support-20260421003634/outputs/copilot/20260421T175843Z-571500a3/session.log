@@ -1,0 +1,8 @@
+# Copilot run 20260421T175843Z-571500a3
+# project: mdr-support-20260421003634
+# started: 2026-04-21T17:58:43Z
+# requestedBy: 
+# cmd: copilot -p projects/mdr-support-20260421003634/diagrams/mdr-support-20260421003634.drawio ... (22 args)
+# allowTools: write,shell
+# denyTools: shell(git push*),shell(rm -rf*),shell(npm publish*),shell(pnpm publish*),shell(yarn publish*),shell(gh release*),shell(az logout*)
+# --- stdout+stderr below ---

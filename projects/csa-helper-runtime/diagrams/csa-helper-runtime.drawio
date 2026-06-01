@@ -1,0 +1,83 @@
+<mxfile host="app.diagrams.net" modified="2026-05-07T00:00:00.000Z" agent="azure-architecture-factory" version="24.0.0">
+  <diagram id="csa-helper-runtime" name="CSA Helper Runtime">
+    <mxGraphModel dx="1422" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="grp-app" value="Azure Subscription / RG: csa-helper-runtime-dev-rg (East US 2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="900" height="540" as="geometry" />
+        </mxCell>
+
+        <mxCell id="grp-ext" value="External Resource Group: rg-fbabaei-2653 (existing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8DC;strokeColor=#B8860B;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="980" y="200" width="280" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="client" value="Client / curl / chat surface" style="shape=mxgraph.azure.users;html=1;labelPosition=right;align=left;verticalAlign=middle;spacingLeft=10" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="40" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="acr" value="Azure Container Registry&#xa;(Basic)" style="shape=mxgraph.azure.container_registries;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="180" y="100" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cae" value="Container Apps Environment&#xa;csa-helper-runtime-cae" style="shape=mxgraph.azure.container_instances;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="capp" value="Container App&#xa;csa-helper-runtime&#xa;(public ingress 8080, UAMI)" style="shape=mxgraph.azure.app_services;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="460" y="320" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="uami" value="User-Assigned Managed Identity&#xa;csa-helper-runtime-id" style="shape=mxgraph.azure.managed_identities;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="460" y="430" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="kv" value="Key Vault&#xa;secret: aoai-endpoint" style="shape=mxgraph.azure.key_vaults;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="640" y="240" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="law" value="Log Analytics Workspace&#xa;30-day retention" style="shape=mxgraph.azure.log_analytics_workspaces;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="780" y="100" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ai" value="Application Insights&#xa;workspace-based" style="shape=mxgraph.azure.application_insights;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="780" y="240" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aoai" value="Azure OpenAI&#xa;(EXISTING)&#xa;fbfoundrywestus / gpt-4o" style="shape=mxgraph.azure.cognitive_services;html=1;labelPosition=bottom;align=center;verticalAlign=top;spacingTop=4" vertex="1" parent="1">
+          <mxGeometry x="1080" y="280" width="48" height="48" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" value="HTTPS POST /ask" style="endArrow=classic;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#0078D4" edge="1" parent="1" source="client" target="capp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="image pull (AcrPull via UAMI)" style="endArrow=classic;html=1;dashed=1;strokeColor=#666" edge="1" parent="1" source="acr" target="capp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="hosts" style="endArrow=classic;html=1;strokeColor=#666" edge="1" parent="1" source="cae" target="capp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="uses" style="endArrow=classic;html=1;strokeColor=#666" edge="1" parent="1" source="capp" target="uami">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="Get aoai-endpoint&#xa;(Key Vault Secrets User)" style="endArrow=classic;html=1;strokeColor=#0078D4" edge="1" parent="1" source="capp" target="kv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="custom events / traces" style="endArrow=classic;html=1;strokeColor=#7FBA00" edge="1" parent="1" source="capp" target="ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="logs" style="endArrow=classic;html=1;dashed=1;strokeColor=#666" edge="1" parent="1" source="cae" target="law">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="workspace-backed" style="endArrow=classic;html=1;dashed=1;strokeColor=#666" edge="1" parent="1" source="ai" target="law">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="chat completions&#xa;(Cognitive Services OpenAI User)" style="endArrow=classic;html=1;strokeColor=#D83B01" edge="1" parent="1" source="capp" target="aoai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
