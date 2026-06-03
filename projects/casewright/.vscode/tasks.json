@@ -1,0 +1,74 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Teams Bot: Install Dependencies",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend/teams-bot"
+			}
+		},
+		{
+			"label": "Teams Bot: Create .localConfigs",
+			"type": "shell",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend/teams-bot"
+			},
+			"command": "if (-not (Test-Path .localConfigs)) { Copy-Item .localConfigs.sample .localConfigs; Write-Host 'Created .localConfigs from sample.' } else { Write-Host '.localConfigs already exists; leaving in place.' }"
+		},
+		{
+			"label": "Teams Bot: Install M365 Agents Playground",
+			"type": "shell",
+			"command": "winget install --id Microsoft.M365AgentsPlayground -e --accept-source-agreements --accept-package-agreements"
+		},
+		{
+			"label": "Teams Bot: Start Dev (Playground)",
+			"type": "shell",
+			"command": "npm run dev:teamsfx",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend/teams-bot"
+			},
+			"isBackground": true
+		},
+		{
+			"label": "Teams Bot: Launch Playground UI",
+			"type": "shell",
+			"command": "agentsplayground -e http://localhost:3978/api/messages -c msteams",
+			"isBackground": true
+		},
+		{
+			"label": "Teams Bot: Lint",
+			"type": "shell",
+			"command": "npm run lint",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend/teams-bot"
+			}
+		},
+		{
+			"label": "Teams Bot: Build",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend/teams-bot"
+			}
+		},
+		{
+			"label": "Teams Messaging App: Install Dependencies",
+			"type": "shell",
+			"command": "pip install -r requirements.txt",
+			"options": {
+				"cwd": "${workspaceFolder}/teams-messaging-app"
+			}
+		},
+		{
+			"label": "Teams Messaging App: Run (Foundry-direct)",
+			"type": "shell",
+			"command": "python main.py",
+			"options": {
+				"cwd": "${workspaceFolder}/teams-messaging-app"
+			},
+			"isBackground": true
+		}
+	]
+}

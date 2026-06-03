@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": "${AZURE_BASE_NAME=casewright}"
+    },
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME=dev}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "apiImage": {
+      "value": "${SERVICE_CASEWRIGHT_API_IMAGE_NAME=mcr.microsoft.com/azuredocs/containerapps-helloworld:latest}"
+    },
+    "workerImage": {
+      "value": "${SERVICE_CASEWRIGHT_WORKER_IMAGE_NAME=mcr.microsoft.com/azuredocs/containerapps-helloworld:latest}"
+    },
+    "graphTenantId": {
+      "value": "${GRAPH_TENANT_ID=}"
+    },
+    "graphClientId": {
+      "value": "${GRAPH_CLIENT_ID=}"
+    },
+    "sharePointSyncSchedule": {
+      "value": "${SHAREPOINT_SYNC_SCHEDULE=0 0 */6 * * *}"
+    },
+    "syncDefaultTenantId": {
+      "value": "${SYNC_DEFAULT_TENANT_ID=}"
+    },
+    "embeddingDimensions": {
+      "value": "${AZURE_OPENAI_EMBEDDING_DIMENSIONS=3072}"
+    }
+  }
+}

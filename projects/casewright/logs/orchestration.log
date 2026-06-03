@@ -1,0 +1,10 @@
+[phase:requirements]   status=complete  artifacts=docs/requirements.md
+[phase:architecture]   status=complete  artifacts=docs/architecture-decisions.md, diagrams/casewright.md
+[phase:agent-design]   status=complete  artifacts=docs/agents/agent-tooling.json
+[phase:retrieval]      status=complete  artifacts=docs/retrieval/retrieval-design.json, docs/retrieval/retrieval-design.md
+[phase:security]       status=complete  artifacts=docs/security/security-audit.json (status=pass, 8 role assignments)
+[phase:source]         status=complete  artifacts=src/casewright/** (api, agents, core, functions, ingestion, repositories, retrieval, sharepoint, worker)
+[phase:infra]          status=complete  artifacts=infra/main.bicep, infra/modules/** (14 modules), infra/params/{dev,test,prod}.bicepparam (bicep build clean)
+[phase:packaging]      status=complete  artifacts=pyproject.toml, src/requirements.txt, src/Dockerfile
+[phase:tests]          status=complete  artifacts=tests/** (9 tests passing)
+[phase:finalize]       status=complete  artifacts=project-manifest.json, README.md, DEPLOY.md, logs/**

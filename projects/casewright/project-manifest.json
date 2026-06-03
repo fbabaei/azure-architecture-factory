@@ -1,0 +1,82 @@
+{
+  "name": "casewright",
+  "displayName": "Casewright",
+  "version": "1.0.0",
+  "description": "Agentic knowledge assistant that answers case questions over SharePoint-sourced content using Azure AI Search retrieval, an Azure AI Foundry agent, and an event-driven ingestion pipeline.",
+  "archetype": "rag-qa",
+  "runtime": "agent-framework",
+  "language": "python",
+  "pythonVersion": "3.11",
+  "network": "vnet-integrated",
+  "iac": "bicep",
+  "identityModel": "managed-identity-first",
+  "agents": [
+    {
+      "name": "case-knowledge-agent",
+      "hosting": "foundry-hosted",
+      "tools": ["mcp_knowledge_base", "function_calling"],
+      "functions": ["request_sharepoint_sync", "get_indexer_status"],
+      "retrieval": {
+        "primary": "foundry-iq-knowledge-base",
+        "fallback": "in-process-hybrid-query"
+      }
+    }
+  ],
+  "search": {
+    "index": "casewright-index",
+    "semanticConfig": "casewright-semantic",
+    "mode": "hybrid",
+    "minRerankerScore": 2.0
+  },
+  "knowledgeBase": {
+    "name": "casewright-kb",
+    "knowledgeSource": "casewright-ks",
+    "index": "casewright-index",
+    "apiVersion": "2025-11-01-preview",
+    "outputModality": "extractiveData",
+    "mcpConnection": "casewright-kb-mcp",
+    "connectionAuth": "ProjectManagedIdentity",
+    "provisioning": "scripts/deploy_agent.py"
+  },
+  "models": {
+    "chat": { "deployment": "gpt-4o", "version": "2024-11-20", "sku": "GlobalStandard", "capacity": 30 },
+    "embedding": { "deployment": "text-embedding-3-large", "version": "1", "sku": "Standard", "capacity": 50, "dimensions": 3072 }
+  },
+  "services": [
+    { "name": "casewright-api", "type": "container-app", "ingress": "external", "port": 8000 },
+    { "name": "casewright-worker", "type": "container-app", "ingress": "internal" },
+    { "name": "casewright-scheduler", "type": "function-app", "plan": "flex-consumption" }
+  ],
+  "data": {
+    "cosmos": {
+      "database": "casewright",
+      "containers": [
+        { "name": "chat-history", "partitionKeys": ["/tenantId", "/userId", "/conversationId"], "kind": "MultiHash", "version": 2, "defaultTtl": -1 },
+        { "name": "sync-state", "partitionKey": "/tenantId", "kind": "Hash" }
+      ]
+    },
+    "serviceBus": { "queue": "sharepoint-sync" },
+    "storage": { "containers": ["ingestion", "knowledge-store"] }
+  },
+  "identities": [
+    { "name": "casewright-api", "service": "casewright-api" },
+    { "name": "casewright-worker", "service": "casewright-worker" },
+    { "name": "casewright-scheduler", "service": "casewright-scheduler" }
+  ],
+  "structure": {
+    "source": "src/casewright",
+    "infra": "infra",
+    "tests": "tests",
+    "docs": "docs",
+    "diagrams": "diagrams"
+  },
+  "deployment": {
+    "tool": "az deployment group create",
+    "templates": "infra/main.bicep",
+    "parameterFiles": {
+      "dev": "infra/params/dev.bicepparam",
+      "test": "infra/params/test.bicepparam",
+      "prod": "infra/params/prod.bicepparam"
+    }
+  }
+}
