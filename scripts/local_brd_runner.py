@@ -25,11 +25,13 @@ except ImportError:  # pragma: no cover - executed as a script
 
 try:
     from . import language_agents, iac_agents  # type: ignore
+    from .iac_agents.azd_emitter import AzdEmitter, AzdEmitContext  # type: ignore
 except ImportError:  # pragma: no cover - executed as a script
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parent))
     import language_agents  # type: ignore
     import iac_agents  # type: ignore
+    from iac_agents.azd_emitter import AzdEmitter, AzdEmitContext  # type: ignore
 
 
 def _normalize_target_slug(value: object) -> str | None:
@@ -66,8 +68,7 @@ def process_brd_document(
     # orchestrator's Phase 3 (infra validation) and Phase 2.6 (security gate)
     # can skip cleanly without re-reading the original portal payload.
     generate_infra = bool(generation_options.get("generateInfra", True))
-    run_security_audit = bool(generation_options.get("runSecurityAudit", True))
-    _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
+    run_security_audit = bool(generation_options.get("runSecurityAudit", True))    _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
     network_tier = str(generation_options.get("networkTier", "public")).strip().lower()
     if network_tier not in _VALID_NETWORK_TIERS:
         network_tier = "public"
@@ -278,8 +279,25 @@ def process_brd_document(
         }
     _write_json(project_root / "project-manifest.json", manifest)
 
-    # Generate the deterministic guide report (heuristic, no LLM) so portal-only
-    # users can view workflow-guide output without running Copilot locally.
+    # azd adapter emission. Bicep stays the source of truth; when a Bicep infra
+    # was emitted we also write `azure.yaml` + `infra/main.parameters.json` so
+    # the project is `azd up`-ready out of the box. The emitter parses the
+    # just-written main.bicep, so the parameters always mirror the real params.
+    # Opt out with generation_options.generateAzd=false.
+    generate_azd = bool(generation_options.get("generateAzd", True))
+    azd_files_written: list[str] = []
+    if generate_infra and iac_tool_recorded == "bicep" and generate_azd:
+        try:
+            azd_result = AzdEmitter().emit(
+                AzdEmitContext(project_root=project_root, manifest=manifest, slug=slug)
+            )
+            azd_files_written = azd_result.files_written
+            manifest["azd_files"] = azd_files_written
+            _write_json(project_root / "project-manifest.json", manifest)
+        except Exception as exc:  # pragma: no cover - never fail the run on azd
+            manifest["azd_error"] = str(exc)
+
+
     guide_report_info: dict[str, Any] = {}
     try:
         guide_report_info = generate_guide_report(project_root, brd_path)
