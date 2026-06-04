@@ -1,0 +1,28 @@
+# Node
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Env / secrets
+.env
+.env.*
+.localConfigs
+
+# azd
+.azure/
+
+# Logs
+logs/
+*.log

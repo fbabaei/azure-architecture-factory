@@ -81,6 +81,23 @@ class AgenticRAGWorkflow:
                 continue
             break
 
+        # Fallback: if reflection discarded every result and left nothing vetted,
+        # ground the answer on the discarded results rather than returning an empty
+        # ("I couldn't find relevant information") response.
+        if not state.vetted_results and state.discarded_results:
+            state.vetted_results = list(state.discarded_results)
+            state.thought_process.append(
+                {
+                    "step": "fallback",
+                    "attempt": state.current_attempt,
+                    "detail": (
+                        f"No vetted results; grounding answer on "
+                        f"{len(state.discarded_results)} discarded result(s)"
+                    ),
+                    "timestamp": _utcnow().isoformat(),
+                }
+            )
+
         self._answer_step(state)
         return state
 

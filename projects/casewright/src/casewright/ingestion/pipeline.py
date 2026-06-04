@@ -44,6 +44,7 @@ def _ensure_indexers() -> None:
 
     for indexer_name, skillset_name in INDEXERS.items():
         parsing_mode = "json" if "json" in indexer_name else "default"
+        is_multimodal = "multimodal" in indexer_name
         indexer = SearchIndexer(
             name=indexer_name,
             data_source_name=DATASOURCE_NAME,
@@ -53,6 +54,8 @@ def _ensure_indexers() -> None:
                 configuration=IndexingParametersConfiguration(
                     parsing_mode=parsing_mode,
                     data_to_extract="contentAndMetadata",
+                    # Document Intelligence layout skill reads /document/file_data.
+                    allow_skillset_to_read_file_data=is_multimodal,
                     query_timeout=None,
                 )
             ),
@@ -72,7 +75,7 @@ class IngestionPipeline:
         self._settings = get_settings()
 
     async def setup(self, storage_resource_id: str | None = None) -> None:
-        rid = storage_resource_id or self._settings.blob_account_url
+        rid = storage_resource_id or self._settings.storage_resource_id
         await asyncio.to_thread(self._setup_sync, rid)
 
     def _setup_sync(self, storage_resource_id: str) -> None:
@@ -87,6 +90,13 @@ class IngestionPipeline:
 
     def _run_indexer_sync(self, indexer_name: str) -> None:
         client = get_search_indexer_client()
+        # Indexers are created disabled (see _ensure_indexers); re-enable before running,
+        # otherwise run_indexer fails with "indexer is disabled and cannot be run".
+        indexer = client.get_indexer(indexer_name)
+        if getattr(indexer, "is_disabled", False):
+            indexer.is_disabled = False
+            client.create_or_update_indexer(indexer)
+            logger.info("re-enabled indexer %s before run", indexer_name)
         client.run_indexer(indexer_name)
         logger.info("triggered indexer %s", indexer_name)
 

@@ -14,6 +14,9 @@ param environmentName string = 'dev'
 
 param location string = resourceGroup().location
 
+@description('Region for the Azure AI Search service. Defaults to the deployment location; override when the primary region is out of Search capacity.')
+param searchLocation string = location
+
 @description('Container image for the API service (e.g. <acr>.azurecr.io/casewright-api:latest).')
 param apiImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
@@ -56,6 +59,7 @@ var names = {
   registry: take('${baseName}acr${shortSuffix}', 50)
   search: '${baseName}-search-${shortSuffix}'
   openai: '${baseName}-openai-${shortSuffix}'
+  aiServices: '${baseName}-aiservices-${shortSuffix}'
   cosmos: '${baseName}-cosmos-${shortSuffix}'
   serviceBus: '${baseName}-sb-${shortSuffix}'
   containerEnv: '${baseName}-cae-${shortSuffix}'
@@ -136,7 +140,7 @@ module search 'modules/search.bicep' = {
   name: 'search'
   params: {
     name: names.search
-    location: location
+    location: searchLocation
     tags: tags
   }
 }
@@ -145,6 +149,17 @@ module openai 'modules/openai.bicep' = {
   name: 'openai'
   params: {
     name: names.openai
+    location: location
+    tags: tags
+  }
+}
+
+// Multi-service Cognitive Services account (Document Intelligence, Vision,
+// Content Safety) attached to the AI Search multimodal skillset.
+module aiServices 'modules/aiservices.bicep' = {
+  name: 'aiServices'
+  params: {
+    name: names.aiServices
     location: location
     tags: tags
   }
@@ -199,6 +214,10 @@ var coreEnvVars = [
     value: openai.outputs.endpoint
   }
   {
+    name: 'AI_SERVICES_ENDPOINT'
+    value: aiServices.outputs.endpoint
+  }
+  {
     name: 'AZURE_OPENAI_CHAT_DEPLOYMENT'
     value: openai.outputs.chatDeploymentName
   }
@@ -221,6 +240,14 @@ var coreEnvVars = [
   {
     name: 'KNOWLEDGE_STORE_CONTAINER'
     value: 'knowledge-store'
+  }
+  {
+    name: 'STORAGE_RESOURCE_ID'
+    value: storage.outputs.id
+  }
+  {
+    name: 'IMAGE_VERBALIZATION_ENABLED'
+    value: 'true'
   }
   {
     name: 'COSMOS_ENDPOINT'
@@ -362,6 +389,7 @@ module rbac 'modules/rbac.bicep' = {
     searchServiceName: search.outputs.name
     storageAccountName: storage.outputs.name
     openAiName: openai.outputs.name
+    aiServicesName: aiServices.outputs.name
     serviceBusNamespaceName: serviceBus.outputs.name
     cosmosAccountName: cosmos.outputs.name
     registryName: registry.outputs.name
@@ -375,6 +403,7 @@ module rbac 'modules/rbac.bicep' = {
 // ---- Outputs ----
 output apiFqdn string = apiApp.outputs.fqdn
 output registryLoginServer string = registry.outputs.loginServer
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.loginServer
 output searchEndpoint string = search.outputs.endpoint
 output openAiEndpoint string = openai.outputs.endpoint
 output cosmosEndpoint string = cosmos.outputs.endpoint

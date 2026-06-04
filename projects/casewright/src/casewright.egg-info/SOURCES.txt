@@ -31,6 +31,7 @@ src/casewright/api/routers/health.py
 src/casewright/api/routers/pipeline.py
 src/casewright/api/routers/sharepoint.py
 src/casewright/core/__init__.py
+src/casewright/core/app_config_source.py
 src/casewright/core/clients.py
 src/casewright/core/config_options.py
 src/casewright/core/models.py

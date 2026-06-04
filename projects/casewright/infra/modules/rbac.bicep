@@ -4,6 +4,7 @@
 param searchServiceName string
 param storageAccountName string
 param openAiName string
+param aiServicesName string
 param serviceBusNamespaceName string
 param cosmosAccountName string
 param registryName string
@@ -19,6 +20,9 @@ var searchServiceContributor = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
 var storageBlobDataContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var storageBlobDataReader = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 var cognitiveServicesOpenAiUser = '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+// "Cognitive Services User" — multi-service AI account (Document Intelligence,
+// Vision) used by the AI Search multimodal skillset.
+var cognitiveServicesUser = 'a97b65f3-24c7-4388-baec-2e87135dc908'
 var serviceBusDataSender = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
 var serviceBusDataReceiver = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 var acrPull = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
@@ -34,6 +38,9 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
 }
 resource openai 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = {
   name: openAiName
+}
+resource aiServices 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = {
+  name: aiServicesName
 }
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
   name: serviceBusNamespaceName
@@ -119,6 +126,19 @@ resource searchOpenAiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   name: guid(openai.id, searchPrincipalId, cognitiveServicesOpenAiUser)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', cognitiveServicesOpenAiUser)
+    principalId: searchPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ---- AI Services (multi-service) data plane ----
+// search-service: runs the multimodal skillset's Document Intelligence Layout
+// and ChatCompletion (image verbalization) skills via attached identity.
+resource searchAiServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiServices
+  name: guid(aiServices.id, searchPrincipalId, cognitiveServicesUser)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', cognitiveServicesUser)
     principalId: searchPrincipalId
     principalType: 'ServicePrincipal'
   }

@@ -1,0 +1,42 @@
+flowchart TB
+    subgraph Clients
+        Web[Web Chat Client]
+        Teams[Teams / M365 Bot]
+    end
+
+    subgraph ContainerApps[Azure Container Apps]
+        API[casewright-api\nFastAPI]
+        Worker[casewright-worker\nSB consumer]
+    end
+
+    Sched[casewright-scheduler\nFunctions: Timer + HTTP]
+
+    subgraph Data
+        Search[(Azure AI Search\nvector + semantic)]
+        Blob[(Blob Storage)]
+        Cosmos[(Cosmos DB\nhistory + sync-state)]
+        SB[Service Bus queue]
+    end
+
+    OpenAI[Azure OpenAI\nchat + embeddings]
+    Graph[(Microsoft Graph\nSharePoint)]
+    Foundry[Foundry prompt-agent\noptional]
+
+    Web -->|----------------| API
+    Teams -->| `casewright-api` | API
+    API -->| User-assigned MI | Search
+    API -->|
+| Foundry
+    API -->| Container Apps | OpenAI
+    API -->| Service Bus consumer → SharePoint sync → conditional indexer run | Cosmos
+    API -->| `casewright-scheduler` | SB
+    Sched -->| User-assigned MI | SB
+    SB --> Worker
+    Worker -->|
+| Graph
+    Worker -->| Azure AI Search | Blob
+    Worker -->| Vector + semantic index, skillsets, indexers | Cosmos
+    Worker -->| OpenAI | Search
+    Search -->| — | Blob
+    Search -->|
+| OpenAI

@@ -37,10 +37,21 @@ def build_index():
     s = get_settings()
 
     fields = [
-        SimpleField(name="content_id", type=SearchFieldDataType.String, key=True),
+        SearchableField(
+            name="content_id",
+            type=SearchFieldDataType.String,
+            key=True,
+            filterable=True,
+            analyzer_name="keyword",
+        ),
+        SimpleField(name="parent_id", type=SearchFieldDataType.String, filterable=True),
+        SimpleField(name="text_document_id", type=SearchFieldDataType.String, filterable=True),
+        SimpleField(name="image_document_id", type=SearchFieldDataType.String, filterable=True),
         SearchableField(name="content_text", type=SearchFieldDataType.String),
         SearchableField(name="document_title", type=SearchFieldDataType.String),
         SimpleField(name="source_path", type=SearchFieldDataType.String, filterable=True),
+        SimpleField(name="content_path", type=SearchFieldDataType.String, filterable=True),
+        SimpleField(name="location_metadata", type=SearchFieldDataType.String),
         SimpleField(name="site_id", type=SearchFieldDataType.String, filterable=True, facetable=True),
         SimpleField(name="content_type", type=SearchFieldDataType.String, filterable=True, facetable=True),
         SimpleField(name="last_modified", type=SearchFieldDataType.DateTimeOffset, filterable=True, sortable=True),
