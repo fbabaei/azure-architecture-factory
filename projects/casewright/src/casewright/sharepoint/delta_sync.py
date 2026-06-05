@@ -65,7 +65,14 @@ class SharePointDeltaSync:
             content = await self._graph.download_item(request.site_id, item_id)
             name = item_by_id[item_id].get("name", item_id)
             blob_name = f"{request.site_id}/{name}"
-            blob.upload_blob(name=blob_name, data=content, overwrite=True)
+            # Stamp the site id as blob metadata so the indexer can surface it at
+            # /document/site_id and project it into each chunk for site-scoped retrieval.
+            blob.upload_blob(
+                name=blob_name,
+                data=content,
+                overwrite=True,
+                metadata={"site_id": request.site_id},
+            )
 
         for item_id in deleted:
             # Soft-delete marker; the indexer's SoftDeleteColumnDeletionDetectionPolicy removes it.

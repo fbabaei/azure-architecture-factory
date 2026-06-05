@@ -4,3 +4,13 @@ microsoft-teams-apps==2.0.12
 azure-ai-projects>=1.0.0b10
 azure-identity>=1.19.0
 openai>=1.54.0
+
+# Async transport required by azure.identity.aio.DefaultAzureCredential
+# (used by sharepointService for the proactive broadcast workflow).
+aiohttp>=3.10.0
+
+# Microsoft Graph calls for the SharePoint site/member broadcast workflow.
+httpx>=0.27.0
+
+# Durable conversation-reference store for proactive messaging (Phase 5).
+azure-cosmos>=4.7.0

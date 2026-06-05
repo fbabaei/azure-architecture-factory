@@ -14,6 +14,13 @@ param workerPrincipalId string
 param schedulerPrincipalId string
 param searchPrincipalId string
 
+@description('AI Foundry account name hosting the knowledge agent project.')
+param foundryAccountName string
+@description('Foundry project name (child of the account).')
+param foundryProjectName string
+@description('System-assigned principal id of the Foundry project.')
+param foundryProjectPrincipalId string
+
 // ---- Built-in role definition IDs ----
 var searchIndexDataReader = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
 var searchServiceContributor = '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
@@ -28,6 +35,8 @@ var serviceBusDataReceiver = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 var acrPull = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 // Cosmos DB built-in SQL data-plane role: "Cosmos DB Built-in Data Contributor".
 var cosmosDataContributorRole = '00000000-0000-0000-0000-000000000002'
+// "Azure AI User" — lets api/worker invoke agents on the Foundry project.
+var azureAiUser = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
 
 // ---- Existing resources (scopes) ----
 resource search 'Microsoft.Search/searchServices@2024-06-01-preview' existing = {
@@ -50,6 +59,13 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' ex
 }
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
   name: cosmosAccountName
+}
+resource foundryAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
+  name: foundryAccountName
+}
+resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' existing = {
+  parent: foundryAccount
+  name: foundryProjectName
 }
 
 // ---- Search service data plane ----
@@ -217,5 +233,50 @@ resource workerCosmosData 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignme
     roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/${cosmosDataContributorRole}'
     principalId: workerPrincipalId
     scope: cosmos.id
+  }
+}
+
+// ---- AI Foundry (hosted agent) data plane ----
+// Foundry project identity: queries the Search knowledge base over the KB MCP
+// tool (ProjectManagedIdentity auth, audience https://search.azure.com/).
+resource foundryProjectSearchReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: search
+  name: guid(search.id, foundryProjectPrincipalId, searchIndexDataReader)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', searchIndexDataReader)
+    principalId: foundryProjectPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Foundry project identity: invoke the chat model deployment on its own account.
+resource foundryProjectOpenAiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: foundryAccount
+  name: guid(foundryAccount.id, foundryProjectPrincipalId, cognitiveServicesOpenAiUser)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', cognitiveServicesOpenAiUser)
+    principalId: foundryProjectPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// api + worker: invoke the hosted agent on the project.
+resource apiFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: foundryProject
+  name: guid(foundryProject.id, apiPrincipalId, azureAiUser)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', azureAiUser)
+    principalId: apiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource workerFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: foundryProject
+  name: guid(foundryProject.id, workerPrincipalId, azureAiUser)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', azureAiUser)
+    principalId: workerPrincipalId
+    principalType: 'ServicePrincipal'
   }
 }

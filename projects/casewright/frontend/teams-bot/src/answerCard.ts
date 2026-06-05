@@ -57,30 +57,23 @@ export function buildAnswerCard(
 function formatCitation(c: Citation, index: number, backendUrl?: string): string {
   const title =
     c.document_title ||
-    fileNameFromPath(c.source_path) ||
+    c.content_id ||
+    c.document_id ||
     "Source";
+  const page = c.page_number ? ` (p.${c.page_number})` : "";
   const link = citationLink(c, backendUrl);
+  const titleWithPage = `${title}${page}`;
   // Use bracketed prefix so Adaptive Cards' markdown parser doesn't treat
   // "1. ..." as an ordered list (which strips/renumbers the prefix).
-  const linkedTitle = link ? `[${title}](${link})` : title;
+  const linkedTitle = link ? `[${titleWithPage}](${link})` : titleWithPage;
   return `**[${index}]** ${linkedTitle}`;
 }
 
 /**
- * Render a citation link only when the source path is already an absolute
- * URL. Casewright stores `source_path` as either a blob/SharePoint URL or a
- * relative path; relative paths are shown as plain text since there is no
- * content proxy to resolve them.
+ * The agentic Citation shape exposes no resolvable source URL, so citations
+ * render as plain text. (Kept as a hook in case the backend later returns an
+ * absolute content path/URL.)
  */
-function citationLink(c: Citation, _backendUrl?: string): string | undefined {
-  const path = c.source_path;
-  if (!path) return undefined;
-  if (/^https?:\/\//i.test(path)) return path;
+function citationLink(_c: Citation, _backendUrl?: string): string | undefined {
   return undefined;
-}
-
-function fileNameFromPath(path: string | undefined): string | undefined {
-  if (!path) return undefined;
-  const name = decodeURIComponent(path.split(/[\\/]/).pop() || "");
-  return name || undefined;
 }

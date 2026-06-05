@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from casewright.api.exception_handlers import register_exception_handlers
 from casewright.api.routers import agentic_chat, chat, health, pipeline, sharepoint
 from casewright.core.observability import configure_telemetry
 
@@ -20,6 +21,9 @@ app = FastAPI(
     description="Agentic case knowledge platform — grounded RAG chat + ingestion orchestration.",
     version="1.0.0",
 )
+
+# Register centralised exception handlers (domain + framework exceptions -> Problem Details).
+register_exception_handlers(app)
 
 app.include_router(health.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")

@@ -36,6 +36,7 @@ class ChatHistoryMessage(BaseModel):
 class SearchFilters(BaseModel):
     """Optional search filters for narrowing results."""
 
+    site_id: str | None = Field(default=None, description="Restrict retrieval to a single SharePoint site (site_id); enforces strict site isolation")
     date_from: str | None = Field(default=None, description="Filter docs modified on/after this date (ISO 8601)")
     date_to: str | None = Field(default=None, description="Filter docs modified on/before this date (ISO 8601)")
     document_type: str | None = Field(default=None, description="Filter by content/document type")

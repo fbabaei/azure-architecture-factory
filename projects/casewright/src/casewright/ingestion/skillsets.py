@@ -102,6 +102,7 @@ def _index_projection():
                     InputFieldMappingEntry(name="content_embedding", source="/document/chunks/*/content_embedding"),
                     InputFieldMappingEntry(name="document_title", source="/document/metadata_storage_name"),
                     InputFieldMappingEntry(name="source_path", source="/document/metadata_storage_path"),
+                    InputFieldMappingEntry(name="site_id", source="/document/site_id"),
                 ],
             )
         ],
@@ -241,6 +242,7 @@ def _build_multimodal_skillset():
                 ),
                 InputFieldMappingEntry(name="document_title", source="/document/metadata_storage_name"),
                 InputFieldMappingEntry(name="source_path", source="/document/metadata_storage_path"),
+                InputFieldMappingEntry(name="site_id", source="/document/site_id"),
             ],
         ),
     ]
@@ -268,6 +270,7 @@ def _build_multimodal_skillset():
                     ),
                     InputFieldMappingEntry(name="document_title", source="/document/metadata_storage_name"),
                     InputFieldMappingEntry(name="source_path", source="/document/metadata_storage_path"),
+                    InputFieldMappingEntry(name="site_id", source="/document/site_id"),
                 ],
             )
         )

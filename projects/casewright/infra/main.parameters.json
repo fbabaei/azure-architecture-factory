@@ -34,6 +34,9 @@
     },
     "embeddingDimensions": {
       "value": "${AZURE_OPENAI_EMBEDDING_DIMENSIONS=3072}"
+    },
+    "foundryAgentId": {
+      "value": "${FOUNDRY_AGENT_ID=}"
     }
   }
 }

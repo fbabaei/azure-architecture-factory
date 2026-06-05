@@ -43,6 +43,11 @@ from casewright.ingestion.knowledge_base import KnowledgeBaseService  # noqa: E4
 AGENT_NAME = "case-knowledge-agent"
 AGENT_DESCRIPTION = "Answers questions grounded in synced case documents via Foundry IQ retrieval."
 MCP_SERVER_LABEL = "knowledge-base"
+# Force the model to always invoke a tool (the knowledge-base MCP tool) before
+# answering, mirroring the Foundry portal "Choose when to use tools = Always use".
+AGENT_TOOL_CHOICE = "required"
+# Reasoning effort applied by the model deployment (portal "Reasoning Effort").
+AGENT_REASONING_EFFORT = "medium"
 _ARM_CONNECTIONS_API_VERSION = "2025-10-01-preview"
 _MANAGEMENT_SCOPE = "https://management.azure.com/.default"
 
@@ -118,10 +123,24 @@ def _resolve_project_resource_id(explicit: str, endpoint: str) -> str:
 
 
 def _ensure_mcp_kb_connection(
-    project_resource_id: str, connection_name: str, mcp_endpoint: str
+    project_resource_id: str, connection_name: str, mcp_endpoint: str, kb_name: str
 ) -> None:
-    """Create/update a Foundry RemoteTool connection targeting the KB MCP endpoint (ARM REST)."""
-    token = get_credential().get_token(_MANAGEMENT_SCOPE)
+    """Create/update a Foundry RemoteTool connection targeting the KB MCP endpoint (ARM REST).
+
+    The ``metadata.type == "knowledgeBase_MCP"`` (plus ``knowledgeBaseName``) marker is
+    required: Foundry Agent Service only treats a RemoteTool connection as a Foundry IQ
+    knowledge base when this metadata is present. Without it the MCP tool is attached to
+    the agent but the knowledge base is never actually invoked at runtime.
+    """
+    # Exclude the environment credential so locally-set AZURE_* env vars cannot hijack the
+    # control-plane identity used for the ARM connection PUT (mirrors the upstream fix).
+    from azure.identity import DefaultAzureCredential  # noqa: PLC0415
+
+    credential = DefaultAzureCredential(
+        exclude_interactive_browser_credential=True,
+        exclude_environment_credential=True,
+    )
+    token = credential.get_token(_MANAGEMENT_SCOPE)
     headers = {"Authorization": f"Bearer {token.token}", "Content-Type": "application/json"}
     url = (
         f"https://management.azure.com{project_resource_id}"
@@ -136,7 +155,10 @@ def _ensure_mcp_kb_connection(
             "target": mcp_endpoint,
             "isSharedToAll": True,
             "audience": "https://search.azure.com/",
-            "metadata": {"ApiType": "Azure"},
+            "metadata": {
+                "type": "knowledgeBase_MCP",
+                "knowledgeBaseName": kb_name,
+            },
         },
     }
     logger.info("Provisioning RemoteTool connection '%s' -> %s", connection_name, mcp_endpoint)
@@ -151,28 +173,34 @@ def _ensure_mcp_kb_connection(
 def _create_agent(connection_name: str, mcp_endpoint: str) -> str:
     """Create the hosted agent with the KB MCP tool. Returns the agent id."""
     from azure.ai.projects import AIProjectClient
+    from azure.ai.projects.models import MCPTool, PromptAgentDefinition, Reasoning
 
     settings = get_settings()
     client = AIProjectClient(
         endpoint=settings.foundry_project_endpoint, credential=get_credential()
     )
     tools = [
-        {
-            "type": "mcp",
-            "server_label": MCP_SERVER_LABEL,
-            "server_url": mcp_endpoint,
-            "project_connection_id": connection_name,
-        }
+        MCPTool(
+            server_label=MCP_SERVER_LABEL,
+            server_url=mcp_endpoint,
+            project_connection_id=connection_name,
+            require_approval="never",
+        )
     ]
-    logger.info("Creating hosted agent '%s' (model=%s)", AGENT_NAME, settings.chat_deployment)
-    agent = client.agents.create_agent(
+    definition = PromptAgentDefinition(
         model=settings.chat_deployment,
-        name=AGENT_NAME,
-        description=AGENT_DESCRIPTION,
         instructions=SYSTEM_PROMPT,
         tools=tools,
+        tool_choice=AGENT_TOOL_CHOICE,
+        reasoning=Reasoning(effort=AGENT_REASONING_EFFORT),
     )
-    return str(getattr(agent, "id", ""))
+    logger.info("Creating hosted agent '%s' (model=%s)", AGENT_NAME, settings.chat_deployment)
+    agent = client.agents.create_version(
+        agent_name=AGENT_NAME,
+        definition=definition,
+        description=AGENT_DESCRIPTION,
+    )
+    return str(getattr(agent, "name", "") or getattr(agent, "id", ""))
 
 
 def _deploy(skip_kb: bool, kb_only: bool, project_resource_id: str) -> None:
@@ -193,7 +221,9 @@ def _deploy(skip_kb: bool, kb_only: bool, project_resource_id: str) -> None:
         project_resource_id or os.environ.get("FOUNDRY_PROJECT_RESOURCE_ID", ""),
         settings.foundry_project_endpoint,
     )
-    _ensure_mcp_kb_connection(resolved, settings.foundry_kb_connection_name, mcp_endpoint)
+    _ensure_mcp_kb_connection(
+        resolved, settings.foundry_kb_connection_name, mcp_endpoint, kb_name
+    )
     agent_id = _create_agent(settings.foundry_kb_connection_name, mcp_endpoint)
 
     logger.info("Agent created: %s", agent_id)

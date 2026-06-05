@@ -37,11 +37,17 @@ def _build_filter(filters: dict[str, Any] | None, exclude_ids: list[str] | None)
     clauses: list[str] = []
 
     if filters:
+        site_id = filters.get("site_id")
         date_from = filters.get("date_from")
         date_to = filters.get("date_to")
         document_type = filters.get("document_type")
         custom = filters.get("custom")
 
+        # Site scoping: restrict retrieval to a single SharePoint site so answers never
+        # mix data across sites. `site_id` is the filterable index field populated from the
+        # blob's `site_id` metadata during ingestion (see sharepoint/delta_sync.py).
+        if site_id:
+            clauses.append(f"site_id eq '{_escape_odata(site_id)}'")
         if date_from:
             clauses.append(f"last_modified ge {date_from}")
         if date_to:

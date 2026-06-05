@@ -12,6 +12,13 @@ param syncStateContainerName string = 'sync-state'
 @description('Disable local (key) auth. Must stay true per the security audit.')
 param disableLocalAuth bool = true
 
+@description('Public network access. The Container Apps environment is not VNet-integrated, so the apps reach Cosmos over its public endpoint (data plane is still Entra/RBAC-only via disableLocalAuth). Keep Enabled to avoid Forbidden firewall errors.')
+@allowed([
+  'Enabled'
+  'Disabled'
+])
+param publicNetworkAccess string = 'Enabled'
+
 resource account 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: accountName
   location: location
@@ -20,6 +27,7 @@ resource account 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   properties: {
     databaseAccountOfferType: 'Standard'
     disableLocalAuth: disableLocalAuth
+    publicNetworkAccess: publicNetworkAccess
     disableKeyBasedMetadataWriteAccess: true
     enableAutomaticFailover: false
     minimalTlsVersion: 'Tls12'

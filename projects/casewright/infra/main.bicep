@@ -38,6 +38,9 @@ param syncDefaultTenantId string = ''
 @description('Embedding vector dimensions — must match the retrieval index.')
 param embeddingDimensions int = 3072
 
+@description('Hosted Foundry agent id. Set after the agent is created (scripts/deploy_agent.py) to route runtime chat through Foundry.')
+param foundryAgentId string = ''
+
 var tags = {
   application: 'casewright'
   environment: environmentName
@@ -60,6 +63,8 @@ var names = {
   search: '${baseName}-search-${shortSuffix}'
   openai: '${baseName}-openai-${shortSuffix}'
   aiServices: '${baseName}-aiservices-${shortSuffix}'
+  aiFoundry: '${baseName}-foundry-${shortSuffix}'
+  aiFoundryProject: '${baseName}-proj'
   cosmos: '${baseName}-cosmos-${shortSuffix}'
   serviceBus: '${baseName}-sb-${shortSuffix}'
   containerEnv: '${baseName}-cae-${shortSuffix}'
@@ -160,6 +165,18 @@ module aiServices 'modules/aiservices.bicep' = {
   name: 'aiServices'
   params: {
     name: names.aiServices
+    location: location
+    tags: tags
+  }
+}
+
+// AI Foundry account + project hosting the case-knowledge-agent (Foundry Agent
+// Service). Retrieves from the Search knowledge base over an MCP tool.
+module foundry 'modules/foundry.bicep' = {
+  name: 'foundry'
+  params: {
+    name: names.aiFoundry
+    projectName: names.aiFoundryProject
     location: location
     tags: tags
   }
@@ -285,6 +302,14 @@ var coreEnvVars = [
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
     value: monitoring.outputs.appInsightsConnectionString
   }
+  {
+    name: 'FOUNDRY_PROJECT_ENDPOINT'
+    value: foundry.outputs.projectEndpoint
+  }
+  {
+    name: 'FOUNDRY_AGENT_ID'
+    value: foundryAgentId
+  }
 ]
 
 var apiEnvVars = concat(coreEnvVars, [
@@ -397,6 +422,9 @@ module rbac 'modules/rbac.bicep' = {
     workerPrincipalId: workerIdentity.outputs.principalId
     schedulerPrincipalId: schedulerIdentity.outputs.principalId
     searchPrincipalId: search.outputs.principalId
+    foundryAccountName: foundry.outputs.accountName
+    foundryProjectName: foundry.outputs.projectName
+    foundryProjectPrincipalId: foundry.outputs.projectPrincipalId
   }
 }
 
@@ -414,3 +442,6 @@ output functionAppName string = functionApp.outputs.name
 output apiIdentityClientId string = apiIdentity.outputs.clientId
 output workerIdentityClientId string = workerIdentity.outputs.clientId
 output schedulerIdentityClientId string = schedulerIdentity.outputs.clientId
+output foundryProjectEndpoint string = foundry.outputs.projectEndpoint
+output foundryAccountName string = foundry.outputs.accountName
+output foundryProjectName string = foundry.outputs.projectName
