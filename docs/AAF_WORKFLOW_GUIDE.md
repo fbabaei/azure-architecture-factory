@@ -46,8 +46,8 @@ This guide covers orchestration patterns, agent roles, quality gates, and produc
 4. **Review Architecture Diagram**
    - Located in `projects/<slug>/diagrams/`
    - Validates service components, data flows, Azure resources
-   - Compare against BRD requirements — ensure 1:1 mapping
-   - Saved as source of truth for implementation
+   - Compare against BRD requirements — ensure each requirement maps to one or more architecture elements; capture cross-cutting/non-functional mappings in a reference table
+   - Saved as source of truth for generated project implementation (repo-level governance remains anchored in `diagrams/`)
 
 ### 2.3 Implementation & Code Sync
 
@@ -155,7 +155,7 @@ This guide covers orchestration patterns, agent roles, quality gates, and produc
 
 ### Post-Architecture (Gate 2)
 **Diagram-to-Spec Coverage**
-- [ ] Every BRD requirement maps to architecture component
+- [ ] Every BRD requirement maps to one or more architecture components
 - [ ] Data flows align with service boundaries
 - [ ] External dependencies (APIs, databases) documented
 - [ ] Deployment topology (dev/test/prod) clear
@@ -305,7 +305,7 @@ Output: Structured BRD describing Azure target state
 | **azure-rbac** | "what role should I assign", "least privilege access" | RBAC recommendations + CLI/Bicep commands |
 | **azure-storage** | "blob storage", "file shares", "access tiers" | Storage architecture + tier comparison |
 
-See [docs/Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills.
+See [General Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills and broader process guidance outside AAF-specific orchestration.
 
 ---
 
@@ -338,7 +338,7 @@ See [docs/Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills.
 
 - [ ] **Code Quality**
   - [ ] Peer review completed
-  - [ ] Unit tests pass with >80% coverage
+   - [ ] Unit tests meet the agreed project threshold (default target: >80% for production-critical services)
   - [ ] Integration tests passing
   - [ ] No lint errors or warnings
 
@@ -428,7 +428,7 @@ See [docs/Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills.
 
 1. **BRD is the Contract** — Architecture, code, and infra all flow from BRD; changes ripple via orchestrator updates.
 2. **Diagram as Source of Truth** — For generated project implementation, keep `projects/<slug>/diagrams/` synchronized with code and infra; for repo-level architecture governance, treat `diagrams/` as authoritative. Use `source-code-maintainer` to detect and fix drift.
-3. **Quality Gates Drive Confidence** — Every phase boundary includes a validation checkpoint; no skipping approval gates.
+3. **Quality Gates Drive Confidence** — Every phase boundary includes a validation checkpoint; production deployments do not skip approval gates. Non-production bypasses require explicit, documented risk acceptance.
 4. **Requirement Traceability** — Every user-facing feature, infrastructure capability, and critical architectural decision traces back to a BRD requirement (REQ-ID); enables change impact analysis.
 5. **Least-Privilege Security** — Managed identity + RBAC + Key Vault are mandatory; no secrets in source; audit logging always on.
 6. **Cost & Observability First-Class** — Budget and monitoring are not afterthoughts; integrate pre-deployment estimates and post-deploy audits into the workflow.
