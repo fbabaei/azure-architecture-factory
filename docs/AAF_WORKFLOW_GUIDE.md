@@ -338,7 +338,7 @@ See [General Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skill
 
 - [ ] **Code Quality**
   - [ ] Peer review completed
-   - [ ] Unit tests meet the agreed project threshold (default target: >80% for production-critical services)
+  - [ ] Unit tests meet the agreed project threshold (default target: >80% for production-critical services)
   - [ ] Integration tests passing
   - [ ] No lint errors or warnings
 
