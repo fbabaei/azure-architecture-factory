@@ -134,7 +134,7 @@ This guide covers orchestration patterns, agent roles, quality gates, and produc
 - Infra validation (Bicep or Terraform)
 - RBAC and managed identity validation
 - Observability stack verification
-- **4.5 Approval Gate**: Manual sign-off before deployment (unless `approval_gate: false`)
+- **4.5 Approval Gate**: Manual sign-off is required before deployment (use `approval_gate: false` only for non-production experiments with explicit risk acceptance documented in the project records)
 
 ### Phase 5: Deployment & Observability
 - `azd deploy` or `terraform apply`
@@ -408,7 +408,7 @@ See [docs/Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills.
 ```
 1. Review infra parameters
 2. Invoke: security-compliance-auditor (fix critical findings)
-3. Invoke: project-cost-analyzer (on pre-deployment estimates)
+3. Review pre-deployment estimates from project-orchestrator and IaC plan output
 4. Team approves cost and compliance at Gate 4.5
 5. Proceed to deployment
 ```
@@ -427,9 +427,9 @@ See [docs/Workflow Guide](WORKFLOW_GUIDE.md) for additional specialized skills.
 ## 14. Key Principles
 
 1. **BRD is the Contract** — Architecture, code, and infra all flow from BRD; changes ripple via orchestrator updates.
-2. **Diagram as Source of Truth** — Keep `projects/<slug>/diagrams/` synchronized with implementation; use `source-code-maintainer` to detect and fix drift.
+2. **Diagram as Source of Truth** — For generated project implementation, keep `projects/<slug>/diagrams/` synchronized with code and infra; for repo-level architecture governance, treat `diagrams/` as authoritative. Use `source-code-maintainer` to detect and fix drift.
 3. **Quality Gates Drive Confidence** — Every phase boundary includes a validation checkpoint; no skipping approval gates.
-4. **Requirement Traceability** — Every line of code and Bicep module traces back to a BRD requirement (REQ-ID); enables change impact analysis.
+4. **Requirement Traceability** — Every user-facing feature, infrastructure capability, and critical architectural decision traces back to a BRD requirement (REQ-ID); enables change impact analysis.
 5. **Least-Privilege Security** — Managed identity + RBAC + Key Vault are mandatory; no secrets in source; audit logging always on.
 6. **Cost & Observability First-Class** — Budget and monitoring are not afterthoughts; integrate pre-deployment estimates and post-deploy audits into the workflow.
 
