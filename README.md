@@ -16,6 +16,7 @@ Reference material:
 
 - [docs/README.md](docs/README.md) repository overview
 - [docs/COPILOT_GUIDE.md](docs/COPILOT_GUIDE.md) — the two portal AI copilots (BRD Copilot + Project Copilot), their tools, rubrics, and safety rails
+- [docs/SCOUT_AFF_SETUP.md](docs/SCOUT_AAF_SETUP.md) — setup and usage notes for Scout with Azure Architecture Factory
 - [docs/VIEW_DETAILED_ARCHITECTURE.md](docs/VIEW_DETAILED_ARCHITECTURE.md) viewing `.drawio` files on Windows
 - [docs/MDR_PY_VS_DOTNET.md](docs/MDR_PY_VS_DOTNET.md) side-by-side comparison of Python vs .NET output for the same `extraction-chat` BRD
 - [docs/PRD.md](docs/PRD.md) product scope and capabilities
