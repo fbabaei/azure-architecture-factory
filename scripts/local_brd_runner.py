@@ -68,7 +68,8 @@ def process_brd_document(
     # orchestrator's Phase 3 (infra validation) and Phase 2.6 (security gate)
     # can skip cleanly without re-reading the original portal payload.
     generate_infra = bool(generation_options.get("generateInfra", True))
-    run_security_audit = bool(generation_options.get("runSecurityAudit", True))    _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
+    run_security_audit = bool(generation_options.get("runSecurityAudit", True))
+    _VALID_NETWORK_TIERS = {"public", "vnet-integrated", "private"}
     network_tier = str(generation_options.get("networkTier", "public")).strip().lower()
     if network_tier not in _VALID_NETWORK_TIERS:
         network_tier = "public"

@@ -16,6 +16,7 @@ Azure Architecture Factory is an internal Azure delivery workspace built around 
 - [AGENT_FRAMEWORK_RUNTIME_PATTERN.md](AGENT_FRAMEWORK_RUNTIME_PATTERN.md) — how generated projects adopt the Microsoft Agent Framework SDK runtime alongside a deterministic fallback
 - [CHAT_WAKEUP_GUIDE.md](CHAT_WAKEUP_GUIDE.md) — update an existing project from GitHub Copilot Chat using wake words (`hey`, `wakeup`, etc.)
 - [PORTAL_RUNBOOK.md](PORTAL_RUNBOOK.md) — operations guide for the hosted factory portal (deploy, probes, env vars, incident playbooks, rollback)
+- [SCOUT_AAF_SETUP.md](SCOUT_AAF_SETUP.md) — setup steps and BRD/PRD flow for using Azure Architecture Factory through Microsoft Scout
 
 ## Delivery Model
 
