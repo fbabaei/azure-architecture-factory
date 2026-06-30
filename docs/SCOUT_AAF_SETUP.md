@@ -6,29 +6,45 @@ This guide helps a new Microsoft Scout user run Azure Architecture Factory (AAF)
 
 Install Microsoft Scout, then open a new Scout chat session.
 
-## 2. Clone or locate the AAF repo
+## 2. Use the deployed AAF portal
 
-Use this recommended local path:
+Use the deployed AAF portal as the primary AAF experience:
+
+```text
+https://arch-factory-dev-portal.politebeach-70e24eed.eastus.azurecontainerapps.io/factory-portal.html
+```
+
+The deployed portal may require Microsoft sign-in. If Scout needs to interact with it, use a browser-backed Scout flow so the user can complete sign-in.
+
+## 3. Optional local repo fallback
+
+The AAF repo is still useful for reference docs, local troubleshooting, and offline development. Use this recommended local path only when the deployed portal is unavailable or when you need to inspect implementation details:
 
 ```powershell
 C:\workspace\azure-architecture-factory
 ```
 
-If the repo is somewhere else, tell Scout the path:
+If the repo is somewhere else, tell Scout:
 
 ```text
 Use C:\workspace\azure-architecture-factory as the AAF repo.
 ```
 
-## 3. Add the AAF skill to Scout
+## 4. Add the AAF skill to Scout
 
 Ask Scout:
 
 ```text
-Add AAF as a Scout skill using the Azure Architecture Factory repo README, docs, and .github agents.
+Add AAF as a Scout skill using the deployed AAF portal as the primary interface and the Azure Architecture Factory repo README, docs, and .github agents as fallback reference.
 ```
 
-The skill should reference these live repo resources:
+The skill should prefer:
+
+```text
+https://arch-factory-dev-portal.politebeach-70e24eed.eastus.azurecontainerapps.io/factory-portal.html
+```
+
+The skill can also reference these repo resources when local implementation guidance is needed:
 
 ```text
 README.md
@@ -39,7 +55,7 @@ docs\**
 .github\workflows\*
 ```
 
-## 4. Use AAF through Scout
+## 5. Use AAF through Scout
 
 You can ask Scout naturally:
 
@@ -53,14 +69,36 @@ If the slash command is available in your Scout session, you can also use:
 /aaf help
 ```
 
-If `/aaf` is not recognized, paste the request normally. Scout can still use the AAF repo guidance directly.
+If `/aaf` is not recognized, paste the request normally. Scout can still use the deployed AAF portal and fall back to repo guidance when needed.
 
-## 5. Run a BRD or PRD
+### AAF Scout command catalog
+
+For direct feature access, create or use these Scout skills as slash commands:
+
+| Command | Use when |
+| --- | --- |
+| `/aaf-help` | Show available AAF commands and route to the right workflow. |
+| `/aaf-review-brd` | Classify a pasted or referenced BRD/PRD with the AAF readiness gate. |
+| `/aaf-run-brd` | Run a new BRD/PRD through the deployed AAF portal, with `deploy: false` unless explicitly requested. |
+| `/aaf-portal` | Open, sign in to, or troubleshoot the deployed AAF portal; use local portal only as fallback. |
+| `/aaf-project-status` | Inspect a deployed portal project when accessible, or a local `projects\<slug>` fallback folder. |
+| `/aaf-update-project` | Apply new BRD/change text to an existing AAF-generated project. |
+| `/aaf-modernize` | Assess a legacy app and route it into AAF modernization guidance. |
+| `/aaf-validate` | Validate generated artifacts: IaC, tests, readiness, observability, cost, or traceability. |
+| `/aaf-deploy` | Deploy a prepared AAF project only after explicit user confirmation. |
+
+If Scout does not recognize a newly-created slash command immediately, start a new Scout session or ask naturally with the command name in the message, for example:
+
+```text
+Use aaf-run-brd for this BRD with deploy: false.
+```
+
+## 6. Run a BRD or PRD
 
 Paste the BRD or PRD into Scout and say:
 
 ```text
-Run this through AAF with deploy: false.
+Run this through the deployed AAF portal with deploy: false.
 ```
 
 Default safe options:
@@ -72,43 +110,44 @@ region: eastus
 environment: dev
 ```
 
-Scout should first classify the BRD or PRD using the AAF readiness gate, then run `project-orchestrator` only if appropriate.
+Scout should first classify the BRD or PRD using the AAF readiness gate, then submit it to the deployed AAF portal only if appropriate.
 
-## 6. BRD/PRD flow through Scout and AAF
+## 7. BRD/PRD flow through Scout and AAF
 
 ```mermaid
 flowchart TD
     A[Paste BRD or PRD in Scout] --> B[AAF BRD Readiness Gate]
     B --> C{Readiness outcome}
 
-    C -->|Auto-Ready| D[Run project-orchestrator]
-    C -->|Auto-Ready With Guardrails| E[Run project-orchestrator<br/>Require architecture review before deploy]
+    C -->|Auto-Ready| D[Submit to deployed AAF portal]
+    C -->|Auto-Ready With Guardrails| E[Submit to deployed AAF portal<br/>Require architecture review before deploy]
     C -->|Architect Review Required| F[Clarify BRD before orchestration]
 
-    D --> G[Phase 1: Generate architecture diagram]
+    D --> G[AAF portal runs project-orchestrator]
     E --> G
 
-    G --> H[Phase 1.5: Foundry agent tooling advisory<br/>if agentic workload detected]
-    H --> I[Phase 2: Scaffold code and infrastructure]
-    I --> J[Phase 2.5: Alignment convergence]
-    J --> K[Phase 2.6: Security and compliance gate]
-    K --> L[Phase 2.7: Error-handling gate]
-    L --> M[Phase 2.8: Scalability gate]
-    M --> N[Phase 3: IaC validation<br/>Bicep or Terraform]
-    N --> O[Phase 3.7: Test convergence]
-    O --> P[Phase 4: Production readiness review]
-    P --> Q{Deploy requested?}
+    G --> H[Phase 1: Generate architecture diagram]
+    H --> I[Phase 1.5: Foundry agent tooling advisory<br/>if agentic workload detected]
+    I --> J[Phase 2: Scaffold code and infrastructure]
+    J --> K[Phase 2.5: Alignment convergence]
+    K --> L[Phase 2.6: Security and compliance gate]
+    L --> M[Phase 2.7: Error-handling gate]
+    M --> N[Phase 2.8: Scalability gate]
+    N --> O[Phase 3: IaC validation<br/>Bicep or Terraform]
+    O --> P[Phase 3.7: Test convergence]
+    P --> Q[Phase 4: Production readiness review]
+    Q --> R{Deploy requested?}
 
-    Q -->|No default| R[Generate local AAF project artifacts only]
-    Q -->|Yes explicit approval| S[Phase 5: Deploy to Azure]
+    R -->|No default| S[Generate AAF project artifacts in portal]
+    R -->|Yes explicit approval| T[Phase 5: Deploy to Azure]
 
-    R --> T[projects/project-name folder]
-    S --> T
-
-    T --> U[docs, diagrams, src, infra, tests, logs,<br/>project-manifest.json, README, DEPLOY.md]
+    S --> U[Portal project details and downloadable artifacts]
+    T --> U
 ```
 
-## 7. Optional: run the local AAF portal
+## 8. Optional: run the local AAF portal
+
+Use the local portal only when the deployed portal is unavailable or when you need local development/debugging.
 
 To run the deployed-style portal locally:
 
@@ -123,9 +162,11 @@ Then open:
 http://127.0.0.1:5501/
 ```
 
-## 8. Expected output
+## 9. Expected output
 
-AAF-generated projects land under:
+In the deployed portal, AAF-generated projects appear as portal project records with generated architecture, docs, source, infrastructure, tests, logs, and downloadable artifacts.
+
+For local fallback runs, generated projects land under:
 
 ```text
 projects\<project-name>\
@@ -140,6 +181,6 @@ projects\<project-name>\
   DEPLOY.md
 ```
 
-## 9. Safety rule
+## 10. Safety rule
 
 Scout should not deploy Azure resources unless the user explicitly asks for deployment and confirms it. Use `deploy: false` for normal BRD or PRD generation.

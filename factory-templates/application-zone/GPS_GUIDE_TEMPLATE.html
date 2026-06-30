@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Application Zone GPS Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .gps-map {
+            padding: 40px;
+            position: relative;
+        }
+
+        .journey-container {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            margin-bottom: 40px;
+            gap: 0;
+        }
+
+        .journey-container::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .journey-container::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            z-index: 2;
+            width: 0;
+            transition: width 0.6s ease;
+        }
+
+        .journey-stage {
+            position: relative;
+            z-index: 3;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stage-dot {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 4;
+        }
+
+        .journey-stage:hover .stage-dot {
+            transform: scale(1.1);
+        }
+
+        .journey-stage.active .stage-dot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .journey-stage.completed .stage-dot {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .stage-label {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #333;
+            max-width: 100px;
+        }
+
+        .journey-stage.active .stage-label {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1em;
+        }
+
+        .current-stage {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .current-stage h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .stage-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .stage-description {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .stage-description h3 {
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .stage-description ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .stage-description li {
+            padding: 5px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .stage-description li:before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 0.7em;
+        }
+
+        .stage-checklist {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            gap: 12px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+            color: white;
+        }
+
+        .checklist-text {
+            cursor: pointer;
+            color: #555;
+            user-select: none;
+            flex: 1;
+        }
+
+        .checklist-item.completed .checklist-text {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0;
+            transition: width 0.6s ease;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            color: #666;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: #999;
+        }
+
+        .substages {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .substage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .substage.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .substage-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            flex-shrink: 0;
+        }
+
+        .substage.active .substage-icon {
+            background: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+        }
+
+        .help-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #1565c0;
+        }
+
+        .help-box strong {
+            color: #0d47a1;
+        }
+
+        .stage-timing {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .landmark {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .stage-content {
+                grid-template-columns: 1fr;
+            }
+
+            .journey-container {
+                flex-direction: column;
+            }
+
+            .journey-container::before,
+            .journey-container::after {
+                left: 40px;
+                top: auto;
+                width: 4px;
+                height: auto;
+            }
+
+            .journey-stage {
+                flex-direction: row;
+                align-items: flex-start;
+                margin: 20px 0;
+                padding-left: 20px;
+            }
+
+            .stage-dot {
+                margin-bottom: 0;
+                margin-right: 20px;
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+
+            .stage-label {
+                max-width: none;
+                text-align: left;
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="headerTitle">🗺️ Application Zone GPS Guide</h1>
+            <p id="headerSubtitle">Know exactly where you are in your journey</p>
+        </div>
+
+        <div class="gps-map">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="journey-container" id="journeyMap"></div>
+
+            <div class="breadcrumb" id="breadcrumb"></div>
+
+            <div class="current-stage" id="currentStage">
+                <h2>
+                    <span class="stage-number" id="stageNumber">0</span>
+                    <span id="stageName">Loading...</span>
+                </h2>
+                <div class="stage-timing" id="stageTiming"></div>
+                <div id="stageContent" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration object passed from wrapper
+        const appConfig = window.appConfig || {
+            appName: "Application Zone",
+            subtitle: "Know exactly where you are in your journey",
+            agentCount: 0,
+            runtimePort: 8000,
+            stages: []
+        };
+
+        let currentStage = appConfig.startStage || 0;
+        const stages = appConfig.stages || [];
+
+        // Initialize page with app config
+        function initializeGPS() {
+            document.getElementById('pageTitle').textContent = `${appConfig.appName} GPS Guide`;
+            document.getElementById('headerTitle').textContent = `🗺️ ${appConfig.appName} GPS Guide`;
+            document.getElementById('headerSubtitle').textContent = appConfig.subtitle;
+
+            buildJourneyMap();
+            initializeCheckboxes();
+            goToStage(currentStage);
+        }
+
+        function buildJourneyMap() {
+            const journeyMap = document.getElementById('journeyMap');
+            journeyMap.innerHTML = '';
+
+            stages.forEach((stage, index) => {
+                const stageEl = document.createElement('div');
+                stageEl.className = `journey-stage ${index < currentStage ? 'completed' : index === currentStage ? 'active' : ''}`;
+                stageEl.dataset.stage = index;
+                stageEl.innerHTML = `
+                    <div class="stage-dot">${stage.emoji || '📍'}</div>
+                    <div class="stage-label">${stage.shortName || stage.name.split(' ').slice(1).join(' ')}</div>
+                `;
+                stageEl.addEventListener('click', () => goToStage(index));
+                journeyMap.appendChild(stageEl);
+            });
+
+            updateProgressBar();
+        }
+
+        function initializeCheckboxes() {
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.checklist-item')) {
+                    const item = e.target.closest('.checklist-item');
+                    item.classList.toggle('completed');
+                    const checkbox = item.querySelector('.checkbox');
+                    if (checkbox) {
+                        checkbox.classList.toggle('checked');
+                        checkbox.textContent = checkbox.classList.contains('checked') ? '✓' : '';
+                    }
+                }
+            });
+        }
+
+        function updateProgressBar() {
+            const progress = stages.length > 1 ? ((currentStage) / (stages.length - 1)) * 100 : 0;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateJourneyMap() {
+            document.querySelectorAll('.journey-stage').forEach((stage, index) => {
+                stage.classList.remove('active', 'completed');
+                if (index < currentStage) {
+                    stage.classList.add('completed');
+                } else if (index === currentStage) {
+                    stage.classList.add('active');
+                }
+            });
+        }
+
+        function goToStage(stageIndex) {
+            if (stageIndex < 0 || stageIndex >= stages.length) return;
+            currentStage = stageIndex;
+            updateProgressBar();
+            updateJourneyMap();
+            updateStageDisplay();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStageDisplay() {
+            const stage = stages[currentStage];
+            document.getElementById('stageName').textContent = stage.name;
+            document.getElementById('stageNumber').textContent = currentStage;
+            document.getElementById('stageTiming').textContent = `⏱️ Estimated time: ${stage.timing}`;
+
+            // Render stage content
+            const contentDiv = document.getElementById('stageContent');
+            contentDiv.innerHTML = renderStageContent(stage);
+
+            updateBreadcrumb();
+        }
+
+        function renderStageContent(stage) {
+            let html = `
+                <div class="stage-content">
+                    <div class="stage-description">
+                        <p>${stage.description}</p>
+            `;
+
+            if (stage.details) {
+                html += `<h3>${stage.details.title}</h3><ul>`;
+                stage.details.items.forEach(item => {
+                    html += `<li>${item}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            if (stage.tip) {
+                html += `<div class="help-box"><strong>💡 Tip:</strong> ${stage.tip}</div>`;
+            }
+
+            if (stage.substages && stage.substages.length > 0) {
+                html += `<div class="substages"><strong>Sub-stages at this level:</strong>`;
+                stage.substages.forEach((substage, idx) => {
+                    const isActive = idx === 0;
+                    html += `<div class="substage ${isActive ? 'active' : ''}">
+                        <div class="substage-icon"></div>
+                        <span>${substage}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div><div class="stage-checklist"><strong style="display: block; margin-bottom: 15px; color: #333;">Your Progress at This Stage</strong>`;
+
+            stage.checklist.forEach((item, idx) => {
+                html += `
+                    <div class="checklist-item" data-check="${idx}">
+                        <div class="checkbox"></div>
+                        <span class="checklist-text">${item}</span>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+
+            if (stage.landmark) {
+                html += `<div class="landmark">📍 ${stage.landmark}</div>`;
+            }
+
+            html += `
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="goToStage(${currentStage - 1})" ${currentStage === 0 ? 'disabled' : ''}>← Previous Stage</button>
+                    <button class="btn-primary" onclick="goToStage(${currentStage + 1})" ${currentStage === stages.length - 1 ? 'disabled' : ''}>Next Stage →</button>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = [];
+            for (let i = 0; i <= currentStage && i < stages.length; i++) {
+                if (i < currentStage) {
+                    breadcrumb.push(`<a onclick="goToStage(${i})">${stages[i].shortName || stages[i].name.split(' ').slice(1).join(' ')}</a>`);
+                } else {
+                    breadcrumb.push(`<span class="active">${stages[i].shortName || stages[i].name.split(' ').slice(1).join(' ')}</span>`);
+                }
+                if (i < currentStage) breadcrumb.push('<span>›</span>');
+            }
+
+            if (currentStage < stages.length - 1) {
+                breadcrumb.push('<span>›</span>');
+                breadcrumb.push(`<a onclick="goToStage(${currentStage + 1})">${stages[currentStage + 1].shortName || stages[currentStage + 1].name.split(' ').slice(1).join(' ')}</a>`);
+            }
+
+            document.getElementById('breadcrumb').innerHTML = breadcrumb.join('');
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeGPS);
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+azure-identity>=1.17
+azure-search-documents==11.7.0b2  # Pre-release required for DocumentIntelligenceLayoutSkill / ChatCompletionSkill / AIServicesAccountIdentity
+azure-storage-blob>=12.20
+azure-servicebus>=7.12
+azure-cosmos>=4.7
+azure-appconfiguration-provider>=2.1.0
+azure-ai-projects>=1.0.0b10  # Foundry V2 prompt-agent invocation via the Responses API (get_openai_client + agent_reference)
+openai>=1.54
+httpx>=0.27
+azure-monitor-opentelemetry>=1.6

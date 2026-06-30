@@ -64,6 +64,86 @@
             </div>
         </section>
 
+        <section class="application-zone" id="application-zone">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Application Zone (MVP)</h2>
+                    <p class="subtitle">Browse pre-implemented App Packs and launch a configured instance using the new Application Zone APIs.</p>
+                </div>
+
+                <div class="app-zone-grid">
+                    <div class="app-zone-card">
+                        <div class="live-header">
+                            <div>
+                                <h3>Catalog</h3>
+                                <p class="subtitle">Current App Packs in the local registry.</p>
+                            </div>
+                            <div class="live-actions">
+                                <button class="btn btn-secondary" onclick="loadApplicationZoneCatalog(true)">Refresh Catalog</button>
+                            </div>
+                        </div>
+                        <p id="app-zone-status" class="live-status">Loading Application Zone catalog...</p>
+                        <div id="app-zone-catalog" class="rich-list">No catalog loaded.</div>
+                    </div>
+
+                    <div class="app-zone-card">
+                        <div class="live-header">
+                            <div>
+                                <h3>Quick Launch</h3>
+                                <p class="subtitle">Deploy a CaseWright instance using validated defaults.</p>
+                            </div>
+                        </div>
+
+                        <div class="app-zone-form-grid">
+                            <label class="app-zone-field">
+                                Environment Name
+                                <input id="az-env-name" type="text" value="legal-dev-us" />
+                            </label>
+                            <label class="app-zone-field">
+                                Region
+                                <select id="az-region">
+                                    <option value="eastus" selected>eastus</option>
+                                    <option value="westeurope">westeurope</option>
+                                    <option value="westus3">westus3</option>
+                                </select>
+                            </label>
+                            <label class="app-zone-field">
+                                Identity Mode
+                                <select id="az-identity-mode">
+                                    <option value="system-assigned" selected>system-assigned</option>
+                                    <option value="user-assigned">user-assigned</option>
+                                </select>
+                            </label>
+                            <label class="app-zone-field">
+                                Model Profile
+                                <select id="az-model-profile">
+                                    <option value="balanced" selected>balanced</option>
+                                    <option value="quality">quality</option>
+                                    <option value="cost">cost</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="live-actions app-zone-actions">
+                            <button class="btn btn-primary" id="az-validate-btn" onclick="validateApplicationZoneInputs()">Validate Inputs</button>
+                            <button class="btn btn-primary" id="az-deploy-btn" onclick="deployApplicationZoneInstance()">Deploy Instance</button>
+                        </div>
+
+                        <div class="live-details-grid app-zone-result-grid">
+                            <div class="live-detail-card">
+                                <h4>Validation</h4>
+                                <div id="app-zone-validation" class="rich-list">No validation run yet.</div>
+                            </div>
+                            <div class="live-detail-card">
+                                <h4>Instance Result</h4>
+                                <pre id="app-zone-instance-result">No instance created yet.</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Key Metrics -->
         <section class="metrics">
             <div class="container">

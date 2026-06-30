@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casewright</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f5f6f8;
+      color: #1b1b1f;
+    }
+    header {
+      padding: 12px 20px;
+      background: #0f172a;
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    #log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .msg { max-width: 720px; padding: 10px 14px; border-radius: 12px; line-height: 1.45; white-space: pre-wrap; }
+    .user { align-self: flex-end; background: #2563eb; color: #fff; border-bottom-right-radius: 2px; }
+    .assistant { align-self: flex-start; background: #fff; border: 1px solid #e2e8f0; border-bottom-left-radius: 2px; }
+    .citations { font-size: 12px; color: #64748b; margin-top: 6px; }
+    .citations a { color: #2563eb; }
+    form { display: flex; gap: 8px; padding: 16px 20px; background: #fff; border-top: 1px solid #e2e8f0; }
+    input {
+      flex: 1; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px;
+    }
+    button {
+      padding: 12px 20px; border: 0; border-radius: 8px; background: #2563eb; color: #fff;
+      font-size: 15px; cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+  </style>
+</head>
+<body>
+  <header>Casewright — Case Knowledge Assistant</header>
+  <div id="log"></div>
+  <form id="form">
+    <input id="input" placeholder="Ask about a case…" autocomplete="off" required />
+    <button id="send" type="submit">Send</button>
+  </form>
+
+  <script>
+    const log = document.getElementById("log");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const send = document.getElementById("send");
+    const conversationId = crypto.randomUUID();
+
+    function bubble(text, role) {
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    function addCitations(bubbleEl, citations) {
+      if (!citations || !citations.length) return;
+      const c = document.createElement("div");
+      c.className = "citations";
+      c.textContent = "Sources: " + citations.map(x => x.document_title || x.source_path).join(" · ");
+      bubbleEl.appendChild(c);
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      bubble(message, "user");
+      input.value = "";
+      send.disabled = true;
+      const pending = bubble("…", "assistant");
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, conversation_id: conversationId }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        pending.textContent = data.answer || "(no answer)";
+        addCitations(pending, data.citations);
+      } catch (err) {
+        pending.textContent = `Error: ${err.message}`;
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

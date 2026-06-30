@@ -1,0 +1,10 @@
+{
+  "environmentName": "legal-dev-us",
+  "region": "eastus",
+  "identityMode": "system-assigned",
+  "documentSource": {
+    "type": "blob",
+    "resourceId": "/subscriptions/mock/resourceGroups/mock-rg/providers/Microsoft.Storage/storageAccounts/mocksa"
+  },
+  "modelProfile": "balanced"
+}

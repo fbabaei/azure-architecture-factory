@@ -6,7 +6,7 @@ A web-based showcase demonstrating the end-to-end automation capabilities
 of the Azure Architecture Factory platform.
 """
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import argparse
 import json
@@ -15,8 +15,10 @@ import subprocess
 import sys
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 CORS(app)
@@ -27,6 +29,10 @@ ORDER_MONITORING_FILE = REPO_ROOT / "projects" / "order-management-platform" / "
 ORDER_MGMT_ROOT = REPO_ROOT / "projects" / "order-management-platform"
 STORAGE_SELF_SERVICE_ROOT = REPO_ROOT / "projects" / "storage-self-service-provisioning"
 FABRIC_MEDALLION_ROOT = REPO_ROOT / "projects" / "fabric-medallion-pipeline"
+APP_PACKS_DIR = REPO_ROOT / "factory-templates" / "application-zone" / "packs"
+
+APP_ZONE_INSTANCES: dict[str, dict] = {}
+APP_ZONE_RUNS: dict[str, list[dict]] = {}
 
 FACTORY_PROJECTS = [
     {
@@ -91,6 +97,284 @@ def _read_json(path: Path) -> dict | None:
 
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def _app_pack_key(pack_id: str, version: str) -> str:
+    return f"{pack_id}:{version}"
+
+
+def _load_app_packs() -> dict[str, dict]:
+    registry: dict[str, dict] = {}
+    if not APP_PACKS_DIR.exists():
+        return registry
+
+    for path in sorted(APP_PACKS_DIR.glob("**/manifest.json")):
+        doc = _read_json(path)
+        if not doc:
+            continue
+
+        metadata = doc.get("metadata", {})
+        pack_id = metadata.get("packId")
+        version = metadata.get("version")
+        if not pack_id or not version:
+            continue
+
+        registry[_app_pack_key(pack_id, version)] = doc
+
+    return registry
+
+
+def _get_pack_or_none(pack_id: str, version: str) -> dict | None:
+    registry = _load_app_packs()
+    return registry.get(_app_pack_key(pack_id, version))
+
+
+def _list_pack_versions(pack_id: str) -> list[dict]:
+    registry = _load_app_packs()
+    versions = [
+        value
+        for value in registry.values()
+        if value.get("metadata", {}).get("packId") == pack_id
+    ]
+    versions.sort(key=lambda item: item.get("metadata", {}).get("version", ""), reverse=True)
+    return versions
+
+
+def _build_pack_catalog() -> list[dict]:
+    registry = _load_app_packs()
+    grouped: dict[str, list[dict]] = {}
+    for pack in registry.values():
+        pack_id = pack.get("metadata", {}).get("packId")
+        if not pack_id:
+            continue
+        grouped.setdefault(pack_id, []).append(pack)
+
+    catalog = []
+    for pack_id, versions in grouped.items():
+        versions.sort(key=lambda item: item.get("metadata", {}).get("version", ""), reverse=True)
+        latest = versions[0]
+        required_inputs = latest.get("inputs", {}).get("required", [])
+
+        catalog.append({
+            "packId": pack_id,
+            "displayName": latest.get("metadata", {}).get("displayName", pack_id),
+            "latestVersion": latest.get("metadata", {}).get("version"),
+            "status": latest.get("metadata", {}).get("status", "unknown"),
+            "owner": latest.get("metadata", {}).get("owner", "unknown"),
+            "supportTier": latest.get("metadata", {}).get("supportTier", "unknown"),
+            "supportedRegions": latest.get("compatibility", {}).get("supportedRegions", []),
+            "requiredInputCount": len(required_inputs),
+            "requiredServices": latest.get("compatibility", {}).get("requiredServices", []),
+            "versions": [v.get("metadata", {}).get("version") for v in versions],
+        })
+
+    catalog.sort(key=lambda item: item["displayName"].lower())
+    return catalog
+
+
+def _validate_input_rule(rule: dict, value) -> str | None:
+    field_type = rule.get("type")
+    name = rule.get("name", "field")
+    allowed_values = rule.get("allowedValues", [])
+
+    if field_type == "string":
+        if not isinstance(value, str) or not value.strip():
+            return f"{name} must be a non-empty string"
+    elif field_type == "enum":
+        if value not in allowed_values:
+            return f"{name} must be one of: {', '.join(allowed_values)}"
+    elif field_type == "integer":
+        if not isinstance(value, int):
+            return f"{name} must be an integer"
+    elif field_type == "boolean":
+        if not isinstance(value, bool):
+            return f"{name} must be a boolean"
+    elif field_type == "object":
+        if not isinstance(value, dict):
+            return f"{name} must be an object"
+        required_fields = rule.get("requiredFields", [])
+        for field in required_fields:
+            if field not in value:
+                return f"{name}.{field} is required"
+
+    return None
+
+
+def _validate_pack_inputs(pack: dict, inputs: dict) -> list[str]:
+    errors: list[str] = []
+    required_rules = pack.get("inputs", {}).get("required", [])
+    optional_rules = pack.get("inputs", {}).get("optional", [])
+
+    for rule in required_rules:
+        name = rule.get("name")
+        if name not in inputs:
+            errors.append(f"Missing required input: {name}")
+            continue
+
+        rule_error = _validate_input_rule(rule, inputs.get(name))
+        if rule_error:
+            errors.append(rule_error)
+
+    optional_by_name = {rule.get("name"): rule for rule in optional_rules}
+    required_by_name = {rule.get("name"): rule for rule in required_rules}
+
+    for name, value in inputs.items():
+        if name in required_by_name:
+            continue
+        if name in optional_by_name:
+            rule_error = _validate_input_rule(optional_by_name[name], value)
+            if rule_error:
+                errors.append(rule_error)
+
+    return errors
+
+
+def _append_instance_run(instance_id: str, run_type: str, status: str, details: dict | None = None) -> None:
+    APP_ZONE_RUNS.setdefault(instance_id, [])
+    APP_ZONE_RUNS[instance_id].append({
+        "runId": str(uuid4()),
+        "type": run_type,
+        "status": status,
+        "details": details or {},
+        "timestamp": datetime.now().isoformat(),
+    })
+
+
+def _normalize_base_url(url: str) -> str:
+    return url.strip().rstrip("/")
+
+
+def _sanitize_instance(instance: dict) -> dict:
+    sanitized = dict(instance)
+    runtime = dict(sanitized.get("runtime", {}))
+    if "apiKey" in runtime:
+        runtime["apiKey"] = "***"
+    if "headers" in runtime:
+        headers = dict(runtime.get("headers") or {})
+        if "Authorization" in headers:
+            headers["Authorization"] = "***"
+        if "x-api-key" in headers:
+            headers["x-api-key"] = "***"
+        runtime["headers"] = headers
+    sanitized["runtime"] = runtime
+    return sanitized
+
+
+def _proxy_runtime_request(
+    base_url: str,
+    path: str,
+    method: str = "GET",
+    payload: dict | None = None,
+    api_key: str | None = None,
+    headers: dict | None = None,
+    timeout: int = 30,
+) -> tuple[int, dict]:
+    normalized_base = _normalize_base_url(base_url)
+    request_path = path if path.startswith("/") else f"/{path}"
+    url = f"{normalized_base}{request_path}"
+
+    request_headers = {
+        "Accept": "application/json",
+    }
+    if payload is not None:
+        request_headers["Content-Type"] = "application/json"
+    if api_key:
+        request_headers["x-api-key"] = api_key
+    if headers:
+        request_headers.update(headers)
+
+    body_bytes = None
+    if payload is not None:
+        body_bytes = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(url=url, data=body_bytes, method=method.upper(), headers=request_headers)
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            raw = response.read().decode("utf-8") if response.length != 0 else ""
+            if raw:
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError:
+                    parsed = {"raw": raw}
+            else:
+                parsed = {}
+            return response.status, parsed
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8") if exc.fp else ""
+        try:
+            parsed = json.loads(raw) if raw else {"error": str(exc)}
+        except json.JSONDecodeError:
+            parsed = {"error": str(exc), "raw": raw}
+        return exc.code, parsed
+    except urllib.error.URLError as exc:
+        return 502, {"error": f"Runtime unreachable: {exc.reason}"}
+
+
+def _default_agent_services_for_pack(pack_id: str) -> list[dict]:
+    if pack_id == "casewright":
+        return [
+            {
+                "agentId": "casewright-health-agent",
+                "displayName": "CaseWright Health Agent",
+                "description": "Checks runtime readiness and service health.",
+                "method": "GET",
+                "path": "/health",
+                "category": "operations",
+            },
+            {
+                "agentId": "casewright-chat-agent",
+                "displayName": "CaseWright Knowledge Chat Agent",
+                "description": "Answers case and policy questions with grounded retrieval.",
+                "method": "POST",
+                "path": "/api/chat/query",
+                "category": "knowledge",
+                "samplePayload": {
+                    "query": "Summarize the key contract dispute factors in this case.",
+                    "user_id": "portal-user",
+                    "session_id": "portal-session",
+                },
+            },
+            {
+                "agentId": "casewright-sharepoint-sync-agent",
+                "displayName": "CaseWright SharePoint Sync Agent",
+                "description": "Triggers SharePoint site synchronization workflows.",
+                "method": "POST",
+                "path": "/api/sharepoint/sites/sync",
+                "category": "ingestion",
+                "samplePayload": {
+                    "site_id": "<sharepoint-site-id>",
+                    "force": False,
+                },
+            },
+            {
+                "agentId": "casewright-indexer-agent",
+                "displayName": "CaseWright Indexer Agent",
+                "description": "Runs or checks retrieval index pipeline operations.",
+                "method": "GET",
+                "path": "/api/pipeline/indexer-status",
+                "category": "pipeline",
+            },
+        ]
+
+    return [
+        {
+            "agentId": "generic-health-agent",
+            "displayName": "Generic Health Agent",
+            "description": "Checks app runtime health endpoint.",
+            "method": "GET",
+            "path": "/health",
+            "category": "operations",
+        }
+    ]
+
+
+def _agent_services_for_pack(pack: dict) -> list[dict]:
+    declared = pack.get("agentServices")
+    if isinstance(declared, list) and declared:
+        return declared
+    pack_id = pack.get("metadata", {}).get("packId", "")
+    return _default_agent_services_for_pack(pack_id)
 
 
 def _repo_relative(path: Path) -> str:
@@ -683,7 +967,12 @@ def _get_project_link_statuses() -> list[dict]:
 
 @app.route('/')
 def index():
-    """Main demo page"""
+    """Serve the deployed-style factory portal as the primary local experience."""
+    portal_path = REPO_ROOT / "factory-portal.html"
+    if portal_path.exists():
+        return send_file(portal_path)
+
+    # Fallback to the legacy template only if the new portal file is missing.
     return render_template(
         'index.html',
         scenarios=DEMO_SCENARIOS,
@@ -691,6 +980,39 @@ def index():
         metrics=_build_demo_metrics(),
         project_links=PROJECT_LINKS,
     )
+
+
+@app.route('/legacy-demo')
+def legacy_demo():
+    """Legacy demo page retained for compatibility and side-by-side comparison."""
+    return render_template(
+        'index.html',
+        scenarios=DEMO_SCENARIOS,
+        benefits=BENEFITS,
+        metrics=_build_demo_metrics(),
+        project_links=PROJECT_LINKS,
+    )
+
+
+@app.route('/assets/<path:asset_path>')
+def serve_repo_assets(asset_path):
+    """Serve root-level portal assets when running via the demo Flask app."""
+    return send_from_directory(REPO_ROOT / "assets", asset_path)
+
+
+@app.route('/docs/<path:doc_path>')
+def serve_repo_docs(doc_path):
+    """Serve root-level docs used by the deployed-style portal previews."""
+    return send_from_directory(REPO_ROOT / "docs", doc_path)
+
+
+@app.route('/factory-projects.generated.json')
+def serve_generated_projects_file():
+    """Serve generated project listing expected by the deployed-style portal."""
+    file_path = REPO_ROOT / "factory-projects.generated.json"
+    if not file_path.exists():
+        return jsonify({"error": "factory-projects.generated.json not found"}), 404
+    return send_file(file_path)
 
 @app.route('/api/scenarios')
 def get_scenarios():
@@ -706,6 +1028,513 @@ def get_project_link_status():
         'updated_at': datetime.now().isoformat(),
         'projects': statuses,
     })
+
+
+@app.route('/api/me')
+def get_current_user():
+    """Return a local user profile compatible with the deployed portal UI."""
+    return jsonify({
+        "name": "Local Demo User",
+        "email": "local.demo@aaf",
+        "auth_mode": "local",
+        "is_admin": True,
+    })
+
+
+@app.route('/api/csa-copilot/tools')
+def get_csa_copilot_tools():
+    """Return CSA companion tool metadata for local preview mode."""
+    return jsonify({
+        "tools": [
+            {"name": "best_practices", "description": "Guidance for Azure security and reliability."},
+            {"name": "troubleshooting", "description": "Production diagnostics and triage patterns."},
+        ]
+    })
+
+
+@app.route('/api/csa-copilot/ask', methods=['POST'])
+def ask_csa_copilot():
+    """Provide a deterministic local response for CSA companion queries."""
+    payload = request.json or {}
+    question = str(payload.get("question", "")).strip()
+    if not question:
+        return jsonify({"error": "question is required"}), 400
+
+    return jsonify({
+        "answer": (
+            "Local CSA companion preview is active. "
+            "For production guidance, validate identity, network boundaries, and observability baselines first."
+        ),
+        "question": question,
+        "source": "local-demo",
+    })
+
+
+@app.route('/api/application-zone/packs')
+def get_application_zone_packs():
+    """Return the app pack catalog for the Application Zone."""
+    return jsonify({
+        "updated_at": datetime.now().isoformat(),
+        "packs": _build_pack_catalog(),
+    })
+
+
+@app.route('/api/application-zone/packs/<pack_id>/versions')
+def get_application_zone_pack_versions(pack_id):
+    """Return available versions for a given app pack ID."""
+    versions = _list_pack_versions(pack_id)
+    if not versions:
+        return jsonify({"error": f"App pack not found: {pack_id}"}), 404
+
+    return jsonify({
+        "packId": pack_id,
+        "versions": [pack.get("metadata", {}).get("version") for pack in versions],
+    })
+
+
+@app.route('/api/application-zone/packs/<pack_id>/versions/<version>')
+def get_application_zone_pack_version(pack_id, version):
+    """Return the full app pack manifest for a specific version."""
+    pack = _get_pack_or_none(pack_id, version)
+    if not pack:
+        return jsonify({"error": f"App pack version not found: {pack_id}@{version}"}), 404
+    return jsonify(pack)
+
+
+@app.route('/api/application-zone/validate-inputs', methods=['POST'])
+def validate_application_zone_inputs():
+    """Validate user-provided deployment inputs against app pack rules."""
+    payload = request.json or {}
+    pack_id = payload.get("packId")
+    version = payload.get("version")
+    inputs = payload.get("inputs", {})
+
+    if not pack_id or not version:
+        return jsonify({"error": "packId and version are required"}), 400
+    if not isinstance(inputs, dict):
+        return jsonify({"error": "inputs must be an object"}), 400
+
+    pack = _get_pack_or_none(pack_id, version)
+    if not pack:
+        return jsonify({"error": f"App pack version not found: {pack_id}@{version}"}), 404
+
+    errors = _validate_pack_inputs(pack, inputs)
+    return jsonify({
+        "packId": pack_id,
+        "version": version,
+        "valid": len(errors) == 0,
+        "errors": errors,
+    })
+
+
+@app.route('/api/application-zone/instances', methods=['POST'])
+def create_application_zone_instance():
+    """Create an Application Zone instance after input validation."""
+    payload = request.json or {}
+    pack_id = payload.get("packId")
+    version = payload.get("version")
+    profile = payload.get("profile", "dev")
+    inputs = payload.get("inputs", {})
+
+    if not pack_id or not version:
+        return jsonify({"error": "packId and version are required"}), 400
+    if not isinstance(inputs, dict):
+        return jsonify({"error": "inputs must be an object"}), 400
+
+    pack = _get_pack_or_none(pack_id, version)
+    if not pack:
+        return jsonify({"error": f"App pack version not found: {pack_id}@{version}"}), 404
+
+    errors = _validate_pack_inputs(pack, inputs)
+    if errors:
+        return jsonify({
+            "error": "Validation failed",
+            "valid": False,
+            "errors": errors,
+        }), 400
+
+    instance_id = f"az-inst-{uuid4().hex[:10]}"
+    now = datetime.now().isoformat()
+
+    APP_ZONE_INSTANCES[instance_id] = {
+        "instanceId": instance_id,
+        "packId": pack_id,
+        "version": version,
+        "displayName": pack.get("metadata", {}).get("displayName", pack_id),
+        "profile": profile,
+        "state": "Provisioned",
+        "createdAt": now,
+        "updatedAt": now,
+        "inputs": inputs,
+        "runtime": {
+            "mode": "simulation",
+            "baseUrl": "",
+            "connected": False,
+            "capabilities": [],
+            "lastHealth": None,
+        },
+        "agentServices": _agent_services_for_pack(pack),
+    }
+
+    runtime_input = inputs.get("runtime") if isinstance(inputs, dict) else None
+    if isinstance(runtime_input, dict) and runtime_input.get("baseUrl"):
+        base_url = _normalize_base_url(str(runtime_input.get("baseUrl", "")))
+        api_key = str(runtime_input.get("apiKey", "")).strip() or None
+        connect_headers = runtime_input.get("headers") if isinstance(runtime_input.get("headers"), dict) else None
+
+        status_code, health_payload = _proxy_runtime_request(
+            base_url=base_url,
+            path="/api/health",
+            method="GET",
+            api_key=api_key,
+            headers=connect_headers,
+            timeout=15,
+        )
+
+        if status_code >= 400:
+            status_code, health_payload = _proxy_runtime_request(
+                base_url=base_url,
+                path="/health",
+                method="GET",
+                api_key=api_key,
+                headers=connect_headers,
+                timeout=15,
+            )
+
+        connected = status_code < 400
+        APP_ZONE_INSTANCES[instance_id]["runtime"] = {
+            "mode": "proxy",
+            "baseUrl": base_url,
+            "apiKey": api_key,
+            "headers": connect_headers or {},
+            "connected": connected,
+            "capabilities": [
+                "/api/health",
+                "/api/chat",
+                "/api/chat/query",
+                "/api/sharepoint/sites",
+                "/api/sharepoint/sites/sync",
+                "/api/pipeline/indexer-status",
+                "/api/pipeline/run-indexer",
+            ],
+            "lastHealth": {
+                "status": status_code,
+                "payload": health_payload,
+                "checkedAt": datetime.now().isoformat(),
+            },
+        }
+        APP_ZONE_INSTANCES[instance_id]["agentServices"] = _agent_services_for_pack(pack)
+        APP_ZONE_INSTANCES[instance_id]["state"] = "Connected" if connected else "Provisioned"
+        APP_ZONE_INSTANCES[instance_id]["updatedAt"] = datetime.now().isoformat()
+
+        _append_instance_run(
+            instance_id,
+            run_type="connect-runtime",
+            status="success" if connected else "warning",
+            details={
+                "baseUrl": base_url,
+                "healthStatus": status_code,
+                "healthPayload": health_payload,
+            },
+        )
+
+    _append_instance_run(
+        instance_id,
+        run_type="provision",
+        status="success",
+        details={
+            "message": "Instance created in simulation mode",
+            "profile": profile,
+        },
+    )
+
+    return jsonify({
+        "status": "created",
+        "instance": _sanitize_instance(APP_ZONE_INSTANCES[instance_id]),
+    }), 201
+
+
+@app.route('/api/application-zone/instances/<instance_id>')
+def get_application_zone_instance(instance_id):
+    """Return a single Application Zone instance."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+    return jsonify(_sanitize_instance(instance))
+
+
+@app.route('/api/application-zone/instances/<instance_id>/runs')
+def get_application_zone_instance_runs(instance_id):
+    """Return run history for a single Application Zone instance."""
+    if instance_id not in APP_ZONE_INSTANCES:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    runs = APP_ZONE_RUNS.get(instance_id, [])
+    return jsonify({
+        "instanceId": instance_id,
+        "runs": runs,
+    })
+
+
+@app.route('/api/application-zone/instances/<instance_id>/connect-runtime', methods=['POST'])
+def connect_application_zone_runtime(instance_id):
+    """Connect an existing app-zone instance to a real runtime endpoint (proxy mode)."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    payload = request.json or {}
+    base_url = _normalize_base_url(str(payload.get("baseUrl", "")))
+    api_key = str(payload.get("apiKey", "")).strip() or None
+    extra_headers = payload.get("headers") if isinstance(payload.get("headers"), dict) else None
+
+    if not base_url:
+        return jsonify({"error": "baseUrl is required"}), 400
+
+    status_code, health_payload = _proxy_runtime_request(
+        base_url=base_url,
+        path="/api/health",
+        method="GET",
+        api_key=api_key,
+        headers=extra_headers,
+        timeout=15,
+    )
+    if status_code >= 400:
+        status_code, health_payload = _proxy_runtime_request(
+            base_url=base_url,
+            path="/health",
+            method="GET",
+            api_key=api_key,
+            headers=extra_headers,
+            timeout=15,
+        )
+
+    connected = status_code < 400
+    instance["runtime"] = {
+        "mode": "proxy",
+        "baseUrl": base_url,
+        "apiKey": api_key,
+        "headers": extra_headers or {},
+        "connected": connected,
+        "capabilities": [
+            "/api/health",
+            "/api/chat",
+            "/api/chat/query",
+            "/api/sharepoint/sites",
+            "/api/sharepoint/sites/sync",
+            "/api/pipeline/indexer-status",
+            "/api/pipeline/run-indexer",
+        ],
+        "lastHealth": {
+            "status": status_code,
+            "payload": health_payload,
+            "checkedAt": datetime.now().isoformat(),
+        },
+    }
+    instance["state"] = "Connected" if connected else "Provisioned"
+    instance["updatedAt"] = datetime.now().isoformat()
+
+    _append_instance_run(
+        instance_id,
+        run_type="connect-runtime",
+        status="success" if connected else "warning",
+        details={
+            "baseUrl": base_url,
+            "healthStatus": status_code,
+            "healthPayload": health_payload,
+        },
+    )
+
+    return jsonify({
+        "status": "connected" if connected else "warning",
+        "instance": _sanitize_instance(instance),
+        "health": {
+            "status": status_code,
+            "payload": health_payload,
+        },
+    }), (200 if connected else 207)
+
+
+@app.route('/api/application-zone/instances/<instance_id>/capabilities')
+def get_application_zone_instance_capabilities(instance_id):
+    """Return runtime capability metadata for a connected app-zone instance."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    runtime = instance.get("runtime", {})
+    return jsonify({
+        "instanceId": instance_id,
+        "runtimeMode": runtime.get("mode", "simulation"),
+        "connected": runtime.get("connected", False),
+        "baseUrl": runtime.get("baseUrl", ""),
+        "capabilities": runtime.get("capabilities", []),
+        "lastHealth": runtime.get("lastHealth"),
+    })
+
+
+@app.route('/api/application-zone/instances/<instance_id>/invoke', methods=['POST'])
+def invoke_application_zone_runtime(instance_id):
+    """Proxy arbitrary requests to a connected runtime for app-zone platform access."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    runtime = instance.get("runtime", {})
+    base_url = runtime.get("baseUrl")
+    if runtime.get("mode") != "proxy" or not base_url:
+        return jsonify({"error": "Instance is not connected to a runtime"}), 400
+
+    payload = request.json or {}
+    path = str(payload.get("path", "")).strip()
+    method = str(payload.get("method", "GET")).strip().upper()
+    body = payload.get("body")
+    headers = payload.get("headers") if isinstance(payload.get("headers"), dict) else None
+
+    if not path:
+        return jsonify({"error": "path is required"}), 400
+
+    status_code, proxied = _proxy_runtime_request(
+        base_url=base_url,
+        path=path,
+        method=method,
+        payload=body if isinstance(body, dict) else None,
+        api_key=runtime.get("apiKey"),
+        headers={**(runtime.get("headers") or {}), **(headers or {})},
+    )
+
+    _append_instance_run(
+        instance_id,
+        run_type="invoke-runtime",
+        status="success" if status_code < 400 else "failed",
+        details={
+            "method": method,
+            "path": path,
+            "status": status_code,
+        },
+    )
+
+    return jsonify({
+        "instanceId": instance_id,
+        "status": status_code,
+        "method": method,
+        "path": path,
+        "response": proxied,
+    }), (200 if status_code < 400 else 502)
+
+
+@app.route('/api/application-zone/instances/<instance_id>/agents')
+def list_application_zone_agents(instance_id):
+    """List available agents for an app instance."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    pack_id = instance.get("packId")
+    version = instance.get("version")
+    pack = _get_pack_or_none(pack_id, version)
+    if not pack:
+        return jsonify({"agents": [], "services": []})
+
+    agents = pack.get("agents", [])
+    services = pack.get("services", [])
+    return jsonify({
+        "instanceId": instance_id,
+        "packId": pack_id,
+        "agents": agents,
+        "services": services,
+    })
+
+
+@app.route('/api/application-zone/instances/<instance_id>/agents/<agent_id>/invoke', methods=['POST'])
+def invoke_application_zone_agent(instance_id, agent_id):
+    """Invoke a specific agent within an app instance."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    runtime = instance.get("runtime", {})
+    base_url = runtime.get("baseUrl")
+    if runtime.get("mode") != "proxy" or not base_url:
+        return jsonify({"error": "Instance is not connected to a runtime"}), 400
+
+    pack_id = instance.get("packId")
+    version = instance.get("version")
+    pack = _get_pack_or_none(pack_id, version)
+    if not pack:
+        return jsonify({"error": "App pack not found"}), 404
+
+    agents = pack.get("agents", [])
+    agent = next((a for a in agents if a.get("agentId") == agent_id), None)
+    if not agent:
+        return jsonify({"error": f"Agent not found: {agent_id}"}), 404
+
+    payload = request.json or {}
+    endpoint = payload.get("endpoint")
+    method = str(payload.get("method", "POST")).upper()
+    body = payload.get("body")
+
+    if not endpoint:
+        endpoint = agent.get("endpoints", {}).get("query", "/api/chat/query")
+
+    status_code, proxied = _proxy_runtime_request(
+        base_url=base_url,
+        path=endpoint,
+        method=method,
+        payload=body if isinstance(body, dict) else None,
+        api_key=runtime.get("apiKey"),
+        headers=runtime.get("headers") or {},
+    )
+
+    _append_instance_run(
+        instance_id,
+        run_type=f"agent-invoke-{agent_id}",
+        status="success" if status_code < 400 else "failed",
+        details={"agentId": agent_id, "endpoint": endpoint, "status": status_code},
+    )
+
+    return jsonify({
+        "instanceId": instance_id,
+        "agentId": agent_id,
+        "status": status_code,
+        "response": proxied,
+    }), (200 if status_code < 400 else 502)
+
+
+@app.route('/api/application-zone/instances/<instance_id>/casewright/chat-query', methods=['POST'])
+def invoke_casewright_chat_query(instance_id):
+    """Convenience endpoint to call the CaseWright /api/chat/query route through runtime proxy."""
+    instance = APP_ZONE_INSTANCES.get(instance_id)
+    if not instance:
+        return jsonify({"error": f"Instance not found: {instance_id}"}), 404
+
+    runtime = instance.get("runtime", {})
+    base_url = runtime.get("baseUrl")
+    if runtime.get("mode") != "proxy" or not base_url:
+        return jsonify({"error": "Instance is not connected to a runtime"}), 400
+
+    payload = request.json or {}
+    status_code, proxied = _proxy_runtime_request(
+        base_url=base_url,
+        path="/api/chat/query",
+        method="POST",
+        payload=payload,
+        api_key=runtime.get("apiKey"),
+        headers=runtime.get("headers") or {},
+    )
+
+    _append_instance_run(
+        instance_id,
+        run_type="casewright-chat-query",
+        status="success" if status_code < 400 else "failed",
+        details={"status": status_code},
+    )
+
+    return jsonify({
+        "instanceId": instance_id,
+        "status": status_code,
+        "response": proxied,
+    }), (200 if status_code < 400 else 502)
 
 @app.route('/api/scenario/<scenario_id>')
 def get_scenario(scenario_id):

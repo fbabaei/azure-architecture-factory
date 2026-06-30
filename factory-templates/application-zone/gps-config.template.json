@@ -1,0 +1,196 @@
+{
+  "appName": "Your App Name",
+  "subtitle": "Know exactly where you are in your journey",
+  "agentCount": 6,
+  "runtimePort": 8000,
+  "startStage": 0,
+  "stages": [
+    {
+      "number": 0,
+      "emoji": "🚀",
+      "shortName": "Start",
+      "name": "🚀 Let's Begin!",
+      "timing": "1 minute",
+      "description": "Welcome to the Application Zone. You're about to discover a multi-agent platform that bridges your apps with powerful AI services.",
+      "details": {
+        "title": "What you'll learn:",
+        "items": [
+          "How to discover agents from your app",
+          "How to invoke agents with payloads",
+          "How to see results and iterate"
+        ]
+      },
+      "tip": "Take your time. This guide adjusts to your pace.",
+      "substages": [
+        "Read this welcome",
+        "Understand the architecture",
+        "Prepare your environment"
+      ],
+      "checklist": [
+        "Read this welcome guide",
+        "Understand the architecture",
+        "Prepare your environment"
+      ],
+      "landmark": "You understand the overall flow"
+    },
+    {
+      "number": 1,
+      "emoji": "⚙️",
+      "shortName": "Setup",
+      "name": "⚙️ Setup Your Environment",
+      "timing": "10 minutes",
+      "description": "Start the Application Zone backend and factory portal. This creates the infrastructure for discovering and invoking agents.",
+      "details": {
+        "title": "What happens at this stage:",
+        "items": [
+          "Application Zone backend starts listening on port 5000",
+          "Factory Portal opens in your browser on port 5501",
+          "Your app runtime connects to port [APP_PORT]",
+          "All services verify they can reach each other"
+        ]
+      },
+      "tip": "If services don't start, check that ports 5000, 5501, and [APP_PORT] are available.",
+      "substages": [
+        "Start backend service",
+        "Open Factory Portal",
+        "Verify services running",
+        "Check for errors"
+      ],
+      "checklist": [
+        "Start Application Zone backend (port 5000)",
+        "Open Factory Portal in browser (port 5501)",
+        "Verify both services are running",
+        "Check browser console for errors"
+      ],
+      "landmark": "Both services are running and can see each other"
+    },
+    {
+      "number": 2,
+      "emoji": "📦",
+      "shortName": "Create Instance",
+      "name": "📦 Create Your First Instance",
+      "timing": "2 minutes",
+      "description": "Create an isolated workspace that connects to your app runtime and auto-discovers all agents.",
+      "details": {
+        "title": "What happens at this stage:",
+        "items": [
+          "You provide instance configuration (name, app ID, runtime URL)",
+          "Application Zone backend loads your app's manifest",
+          "All agents are discovered and indexed",
+          "Instance is saved with your configuration"
+        ]
+      },
+      "tip": "Don't have your app running? You can add the runtime URL later—create the instance anyway.",
+      "substages": [
+        "Fill instance form",
+        "Provide app runtime URL",
+        "Click Create Instance",
+        "See success message"
+      ],
+      "checklist": [
+        "Click 'Create Instance' button",
+        "Enter instance name (e.g., my-app-instance)",
+        "Select app ID from dropdown",
+        "Provide runtime URL (or skip)",
+        "Click Create and see success message"
+      ],
+      "landmark": "Instance created—you should see 'N agents discovered' in the portal"
+    },
+    {
+      "number": 3,
+      "emoji": "🔍",
+      "shortName": "Discover Agents",
+      "name": "🔍 Discover Available Agents",
+      "timing": "3 minutes",
+      "description": "Load and explore all agents that your app exposes. Each agent solves a specific problem.",
+      "details": {
+        "title": "Understanding agents:",
+        "items": [
+          "Agents are AI-powered workers that handle specific tasks",
+          "Each agent has a name, description, and expected input format",
+          "Agents are grouped by capability (Knowledge, Discovery, Operations, Pipeline)",
+          "You choose which agent best fits your task"
+        ]
+      },
+      "tip": "Start with a simple agent like the 'Fallback Chat Agent' to understand the flow.",
+      "substages": [
+        "Click 'Load Agents'",
+        "See agents in dropdown",
+        "Review descriptions",
+        "Choose your first agent"
+      ],
+      "checklist": [
+        "Click 'Load Agents' button",
+        "See agent dropdown populated",
+        "Review agent categories",
+        "Read descriptions and use cases",
+        "Understand which agent fits your need"
+      ],
+      "landmark": "You can see all agents and their descriptions in the agent dropdown"
+    },
+    {
+      "number": 4,
+      "emoji": "⚡",
+      "shortName": "Invoke Agent",
+      "name": "⚡ Select & Invoke an Agent",
+      "timing": "5 minutes",
+      "description": "Build a JSON payload and invoke your first agent. See how payloads transform into results.",
+      "details": {
+        "title": "What happens when you invoke:",
+        "items": [
+          "Your JSON payload is sent to the selected agent",
+          "The agent processes your request using its trained model",
+          "The agent returns a structured response with metadata",
+          "You see results in the output panel with citations"
+        ]
+      },
+      "tip": "Start with the sample payload—modify it once you see how it works.",
+      "substages": [
+        "Select an agent",
+        "Review sample payload",
+        "Modify or paste payload",
+        "Click Invoke"
+      ],
+      "checklist": [
+        "Select an agent from dropdown",
+        "Review the sample payload structure",
+        "Build or paste your JSON payload",
+        "Click 'Invoke Selected Agent'",
+        "Wait for response"
+      ],
+      "landmark": "You see agent response in the output panel with metadata"
+    },
+    {
+      "number": 5,
+      "emoji": "🎯",
+      "shortName": "Results",
+      "name": "🎯 See Results & Next Steps",
+      "timing": "Varies",
+      "description": "Your agent has processed your request. Explore the response and try different agents.",
+      "details": {
+        "title": "Understanding results:",
+        "items": [
+          "Each response includes the agent's answer plus metadata",
+          "Citations show which sources or knowledge the agent used",
+          "Metadata includes confidence scores and processing time",
+          "You can iterate—try different payloads or agents"
+        ]
+      },
+      "tip": "Keep iterating! Each invocation teaches you more about how agents work.",
+      "substages": [
+        "View response",
+        "Check metadata",
+        "Try another agent",
+        "Build complex queries"
+      ],
+      "checklist": [
+        "View agent response in output panel",
+        "Check for citations and metadata",
+        "Try invoking a different agent",
+        "Build more complex queries",
+        "Explore all agents to understand their strengths"
+      ],
+      "landmark": "You've successfully invoked multiple agents and explored their responses"
+    }
+  ]
+}

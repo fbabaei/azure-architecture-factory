@@ -1,0 +1,46 @@
+{
+  "audited_at": "2026-04-22T00:00:00Z",
+  "auditor_version": "1.0.0",
+  "project_slug": "casewright",
+  "status": "pass",
+  "next_action": "proceed",
+  "summary": "Identity-first design. No account/connection-string keys on the data plane; managed identity + data-plane RBAC for every hop. All gates pass.",
+  "checks": [
+    {
+      "id": "data_plane_rbac_assigned",
+      "result": "pass",
+      "evidence": "infra/modules/rbac.bicep assigns Cosmos SQL data-plane role (00000000-0000-0000-0000-000000000002), Search Index Data Reader/Contributor, Storage Blob Data Reader/Contributor, Cognitive Services OpenAI User, and Azure Service Bus Data Sender/Receiver to the api/worker/scheduler/search identities.",
+      "role_assignments": [
+        "Cosmos DB Built-in Data Contributor -> casewright-api, casewright-worker",
+        "Search Index Data Reader -> casewright-api",
+        "Search Service Contributor -> casewright-worker",
+        "Storage Blob Data Contributor -> casewright-worker, search-service",
+        "Storage Blob Data Reader -> search-service",
+        "Cognitive Services OpenAI User -> casewright-api, search-service",
+        "Azure Service Bus Data Sender -> casewright-api, casewright-scheduler",
+        "Azure Service Bus Data Receiver -> casewright-worker"
+      ]
+    },
+    {
+      "id": "key_based_auth_disabled",
+      "result": "pass",
+      "evidence": "storage.bicep allowSharedKeyAccess=false; search.bicep disableLocalAuth=true authOptions absent; servicebus.bicep disableLocalAuth=true; cosmos.bicep disableKeyBasedMetadataWriteAccess=true and data-plane SQL role used instead of keys; openai.bicep disableLocalAuth=true (Entra-only)."
+    },
+    {
+      "id": "search_openai_no_account_keys",
+      "result": "pass",
+      "evidence": "Search-to-OpenAI vectorizer and embedding skill authenticate via the Search service system-assigned identity (Cognitive Services OpenAI User). Search-to-Storage data source uses ResourceId= managed identity, not AccountKey=. No apiKey present in skillset/datasource definitions."
+    },
+    {
+      "id": "managed_identity_first",
+      "result": "pass",
+      "evidence": "Container Apps + Function App use user-assigned managed identity; Search uses system-assigned identity. No secrets in app settings except optional Graph app secret stored in Key Vault and referenced via Key Vault reference."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "message": "Microsoft Graph (SharePoint) app-only auth may require a client secret if certificate auth is not provisioned; stored in Key Vault and surfaced via Key Vault reference, never inlined."
+    }
+  ]
+}

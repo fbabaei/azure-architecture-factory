@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: casewright
+metadata:
+  template: casewright@1.0.0
+
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+services:
+  casewright-api:
+    project: src
+    language: docker
+    host: containerapp
+    docker:
+      path: Dockerfile
+      context: .
+      remoteBuild: true
+
+  casewright-worker:
+    project: src
+    language: docker
+    host: containerapp
+    docker:
+      path: Dockerfile
+      context: .
+      remoteBuild: true
+
+  casewright-scheduler:
+    project: src/casewright/functions/sharepoint_sync_scheduler
+    language: python
+    host: function

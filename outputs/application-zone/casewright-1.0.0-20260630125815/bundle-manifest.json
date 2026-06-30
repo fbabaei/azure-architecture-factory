@@ -1,0 +1,78 @@
+{
+  "bundleType": "application-zone-export",
+  "createdAt": "2026-06-30T12:58:16.583195",
+  "packId": "casewright",
+  "version": "1.0.0",
+  "sourceProjectSlug": "casewright",
+  "executionModel": "independent",
+  "sourceManifest": "factory-templates/application-zone/packs/casewright/1.0.0/manifest.json",
+  "bundlePath": "C:\\Users\\fbabaei\\workspace\\azure-architecture-factory\\outputs\\application-zone\\casewright-1.0.0-20260630125815",
+  "copiedEntries": [
+    {
+      "path": "README.md",
+      "copied": true,
+      "type": "file"
+    },
+    {
+      "path": "DEPLOY.md",
+      "copied": true,
+      "type": "file"
+    },
+    {
+      "path": "pyproject.toml",
+      "copied": true,
+      "type": "file"
+    },
+    {
+      "path": "azure.yaml",
+      "copied": true,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "copied": true,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "infra",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "docs",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "scripts",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "tests",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "diagrams",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "frontend",
+      "copied": true,
+      "type": "dir"
+    },
+    {
+      "path": "teams-messaging-app",
+      "copied": true,
+      "type": "dir"
+    }
+  ],
+  "copiedEntryCount": 13
+}

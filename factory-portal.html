@@ -1962,6 +1962,60 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Tab Styles */
+        .workspace-tabs {
+            display: flex;
+            gap: 0.35rem;
+            border-bottom: 2px solid var(--border);
+            margin: 0 0 1.25rem 0;
+            padding: 0;
+        }
+
+        .workspace-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.55rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            position: relative;
+        }
+
+        .workspace-tab:hover {
+            color: var(--primary);
+        }
+
+        .workspace-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .workspace-tab-content {
+            display: none;
+        }
+
+        .workspace-tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .workspace-tab-panel {
+            padding: 0;
+        }
+
+        .gps-embed-container {
+            width: 100%;
+            height: 800px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
         .diagram-modal {
             position: fixed;
             inset: 0;
@@ -3009,6 +3063,7 @@
         <div class="workspace-nav" aria-label="Portal workspaces">
             <a class="workspace-chip workspace-chip-build" href="#build-workspace">Build Here</a>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
+            <a class="workspace-chip" href="#application-zone-workspace">Application Zone</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
         </div>
@@ -3549,6 +3604,272 @@
                     </div>
                 </section>
             </div>
+                </div>
+            </section>
+
+            <section id="application-zone-workspace" class="workspace-card collapsed" aria-label="Application Zone workspace">
+                <div class="workspace-card-header" onclick="expandWorkspaceCard('application-zone-workspace', event)">
+                    <div>
+                        <h3 class="workspace-card-title">Application Zone Workspace</h3>
+                        <p class="workspace-card-subtitle">Build independent app bundles from App Packs (CaseWright) without AAF runtime dependency.</p>
+                    </div>
+                    <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('application-zone-workspace', event)">Hide</button>
+                </div>
+                <div class="workspace-card-body">
+                    <div class="workspace-tabs">
+                        <button class="workspace-tab active" onclick="switchAppZoneTab('workspace-tab', event)">🚀 Workspace</button>
+                        <button class="workspace-tab" onclick="switchAppZoneTab('gps-tab', event)">🗺️ GPS Guide</button>
+                        <button class="workspace-tab" onclick="switchAppZoneTab('onboarding-tab', event)">📚 Onboarding</button>
+                    </div>
+
+                    <div id="workspace-tab" class="workspace-tab-content active workspace-tab-panel">
+                        <div class="appzone-grid">
+                        <div class="appzone-panel">
+                            <h4>Catalog</h4>
+                            <p class="appzone-note">Shows App Packs loaded from factory templates.</p>
+                            <div class="appzone-kpi-row">
+                                <div class="appzone-kpi">
+                                    <div class="appzone-kpi-label">Selected Pack</div>
+                                    <div id="appzone-selected-pack" class="appzone-kpi-value">casewright</div>
+                                </div>
+                                <div class="appzone-kpi">
+                                    <div class="appzone-kpi-label">Version</div>
+                                    <div id="appzone-selected-version" class="appzone-kpi-value">1.0.0</div>
+                                </div>
+                                <div class="appzone-kpi">
+                                    <div class="appzone-kpi-label">Profile</div>
+                                    <div class="appzone-kpi-value">dev</div>
+                                </div>
+                            </div>
+                            <div class="appzone-actions">
+                                <button type="button" class="btn-primary" onclick="refreshAppZoneCatalog(true)">Refresh Catalog</button>
+                            </div>
+                            <div id="appzone-catalog-status" class="status-message info visible">Loading catalog...</div>
+                            <div id="appzone-catalog-list" class="appzone-list"></div>
+                        </div>
+
+                        <div class="appzone-panel">
+                            <h4>Quick Launch (Local)</h4>
+                            <p class="appzone-note">Validate + create an instance using the local Application Zone APIs.</p>
+                            <div class="appzone-form-grid">
+                                <div class="appzone-field">
+                                    <label for="appzone-pack-id">App Pack</label>
+                                    <select id="appzone-pack-id" onchange="onAppZonePackChanged()">
+                                        <option value="casewright" selected>casewright</option>
+                                    </select>
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-pack-version">Version</label>
+                                    <select id="appzone-pack-version">
+                                        <option value="1.0.0" selected>1.0.0</option>
+                                    </select>
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-env-name">Environment Name</label>
+                                    <input id="appzone-env-name" type="text" value="legal-dev-us">
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-region">Region</label>
+                                    <select id="appzone-region">
+                                        <option value="eastus" selected>eastus</option>
+                                        <option value="westeurope">westeurope</option>
+                                        <option value="westus3">westus3</option>
+                                    </select>
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-identity">Identity Mode</label>
+                                    <select id="appzone-identity">
+                                        <option value="system-assigned" selected>system-assigned</option>
+                                        <option value="user-assigned">user-assigned</option>
+                                    </select>
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-model-profile">Model Profile</label>
+                                    <select id="appzone-model-profile">
+                                        <option value="balanced" selected>balanced</option>
+                                        <option value="quality">quality</option>
+                                        <option value="cost">cost</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="appzone-actions">
+                                <button type="button" class="btn-primary" onclick="validateAppZoneLocal()">Validate Inputs</button>
+                                <button type="button" class="btn-primary" onclick="deployAppZoneLocal()">Create Instance</button>
+                            </div>
+                            <div class="appzone-form-grid" style="margin-top:0.35rem;">
+                                <div class="appzone-field">
+                                    <label for="appzone-runtime-base-url">Runtime Base URL (CaseWright API)</label>
+                                    <input id="appzone-runtime-base-url" type="text" placeholder="http://127.0.0.1:8000">
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-runtime-api-key">Runtime API Key (optional)</label>
+                                    <input id="appzone-runtime-api-key" type="password" placeholder="x-api-key">
+                                </div>
+                            </div>
+                            <div class="appzone-actions">
+                                <button type="button" class="btn-primary" onclick="connectAppZoneRuntime()">Connect Runtime</button>
+                                <button type="button" class="btn-primary" onclick="runCasewrightHealthCheck()">Check Health</button>
+                                <button type="button" class="btn-primary" onclick="runCasewrightSampleQuery()">Run Sample Query</button>
+                            </div>
+                            <div class="appzone-output-label">Validation Result</div>
+                            <div id="appzone-validation" class="appzone-output">No validation run yet.</div>
+                            <div style="height:0.5rem;"></div>
+                            <div class="appzone-output-label">Instance Result</div>
+                            <div id="appzone-instance" class="appzone-output">No instance created yet.</div>
+                            <div style="height:0.5rem;"></div>
+                            <div class="appzone-output-label">Runtime Result</div>
+                            <div id="appzone-runtime-output" class="appzone-output">No runtime action yet.</div>
+                            <div style="height:0.5rem;"></div>
+                            <div class="appzone-output-label">Agent Services</div>
+                            <div class="appzone-form-grid" style="margin-bottom:0.35rem;">
+                                <div class="appzone-field">
+                                    <label for="appzone-agent-select">Select Agent</label>
+                                    <select id="appzone-agent-select"></select>
+                                </div>
+                                <div class="appzone-field">
+                                    <label for="appzone-agent-payload">Agent Payload (JSON body)</label>
+                                    <input id="appzone-agent-payload" type="text" value='{}'>
+                                </div>
+                            </div>
+                            <div class="appzone-actions">
+                                <button type="button" class="btn-primary" onclick="loadAppZoneAgents()">Load Agents</button>
+                                <button type="button" class="btn-primary" onclick="invokeSelectedAppZoneAgent()">Invoke Agent</button>
+                            </div>
+                            <div id="appzone-agent-output" class="appzone-output">No agent invocation yet.</div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div id="gps-tab" class="workspace-tab-content workspace-tab-panel">
+                        <iframe id="gps-embed" class="gps-embed-container" src="factory-templates/application-zone/GPS_GUIDE.html" frameborder="0" allowfullscreen></iframe>
+                    </div>
+
+                    <div id="onboarding-tab" class="workspace-tab-content workspace-tab-panel">
+                        <div class="onboarding-container" style="max-width: 1000px; margin: 0 auto;">
+                            <div class="onboarding-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                                <h2 style="margin: 0; font-size: 1.8rem;">🚀 Add GPS Guide to Your App</h2>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; opacity: 0.9;">Get your journey map running in 5 minutes</p>
+                            </div>
+
+                            <div class="onboarding-section" style="background: #f0f7ff; border-left: 4px solid #0078d4; padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 4px;">
+                                <h3 style="margin: 0 0 0.75rem 0; color: #0078d4;">⚡ Quick Start (5 minutes)</h3>
+                                <div style="display: grid; gap: 1rem;">
+                                    <div style="background: white; padding: 1rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.5rem;">Step 1: Copy the Template</div>
+                                        <code style="display: block; background: #f5f5f5; padding: 0.5rem; border-radius: 4px; font-size: 0.85rem; overflow-x: auto; margin-bottom: 0.5rem;">factory-templates/application-zone/GPS_GUIDE_TEMPLATE_WRAPPER.html</code>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">Copy this file to your app's pack directory and rename to <code>GPS_GUIDE.html</code></p>
+                                    </div>
+                                    <div style="background: white; padding: 1rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.5rem;">Step 2: Customize 3 Fields</div>
+                                        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.9rem; color: #5a5a5a;">
+                                            <li><code>appName</code> - Your app's display name</li>
+                                            <li><code>agentCount</code> - Number of journey stages</li>
+                                            <li><code>stages</code> - Array of stage definitions</li>
+                                        </ul>
+                                    </div>
+                                    <div style="background: white; padding: 1rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.5rem;">Step 3: Test</div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">Open your <code>GPS_GUIDE.html</code> in a browser and verify the journey map loads with your 6 stages.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="onboarding-section" style="background: #fff8e1; border-left: 4px solid #ffb900; padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 4px;">
+                                <h3 style="margin: 0 0 0.75rem 0; color: #d83b01;">📋 Stage Template Structure</h3>
+                                <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #5a5a5a;">Each stage in your <code>appConfig.stages[]</code> should have this structure:</p>
+                                <pre style="background: white; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.8rem; border: 1px solid #e0e0e0; margin: 0;"><code>{
+  number: 0,
+  emoji: "🚀",
+  shortName: "Start",
+  name: "🚀 Let's Begin!",
+  timing: "1 minute",
+  description: "Welcome and orientation...",
+  details: { title: "What you'll learn:", items: ["Item 1", "Item 2"] },
+  tip: "💡 Helpful tip for users",
+  substages: ["Step 1", "Step 2", "Step 3"],
+  checklist: ["Task 1", "Task 2", "Task 3"],
+  landmark: "You'll know you're done when..."
+}</code></pre>
+                            </div>
+
+                            <div class="onboarding-section" style="background: #f0fff4; border-left: 4px solid #107c10; padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 4px;">
+                                <h3 style="margin: 0 0 0.75rem 0; color: #107c10;">✅ Files & Resources</h3>
+                                <div style="display: grid; gap: 0.75rem;">
+                                    <a href="factory-templates/application-zone/GPS_GUIDE_TEMPLATE_WRAPPER.html" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #0078d4; text-decoration: none; font-weight: 500;">
+                                        📄 GPS_GUIDE_TEMPLATE_WRAPPER.html
+                                        <span style="font-size: 0.75rem;">→</span>
+                                    </a>
+                                    <a href="factory-templates/application-zone/gps-config.template.json" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #0078d4; text-decoration: none; font-weight: 500;">
+                                        ⚙️ gps-config.template.json
+                                        <span style="font-size: 0.75rem;">→</span>
+                                    </a>
+                                    <a href="factory-templates/application-zone/GPS_ONBOARDING_FOR_NEW_APPS.md" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #0078d4; text-decoration: none; font-weight: 500;">
+                                        📖 GPS_ONBOARDING_FOR_NEW_APPS.md
+                                        <span style="font-size: 0.75rem;">→</span>
+                                    </a>
+                                    <a href="factory-templates/application-zone/QUICK_START.md" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #0078d4; text-decoration: none; font-weight: 500;">
+                                        ⚡ QUICK_START.md
+                                        <span style="font-size: 0.75rem;">→</span>
+                                    </a>
+                                    <a href="factory-templates/application-zone/GPS_GUIDE_ARCHITECTURE.md" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #0078d4; text-decoration: none; font-weight: 500;">
+                                        🏗️ GPS_GUIDE_ARCHITECTURE.md
+                                        <span style="font-size: 0.75rem;">→</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="onboarding-section" style="background: #f3f2f1; border-left: 4px solid #5a5a5a; padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 4px;">
+                                <h3 style="margin: 0 0 0.75rem 0; color: #1b1b1b;">🎯 Common Questions</h3>
+                                <div style="display: grid; gap: 1rem;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.25rem;">Can I use the same template for multiple apps?</div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">Yes! The template is generic. Each app just needs its own configuration wrapper.</p>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.25rem;">How many stages should I have?</div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">Typically 5-6 stages work best. The UI adjusts automatically based on your appConfig.</p>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.25rem;">Can I customize the colors and styling?</div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">See GPS_GUIDE_ARCHITECTURE.md for advanced customization options.</p>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 0.25rem;">How do I test locally?</div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: #5a5a5a;">Open your <code>GPS_GUIDE.html</code> directly in the browser. It works standalone or embedded in the portal.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="onboarding-section" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-left: 4px solid #667eea; padding: 1.25rem; border-radius: 4px;">
+                                <h3 style="margin: 0 0 0.75rem 0; color: #667eea;">📊 System Benefits</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-size: 2rem; margin: 0;">6x</div>
+                                        <div style="font-size: 0.85rem; color: #5a5a5a;">Faster onboarding</div>
+                                    </div>
+                                    <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-size: 2rem; margin: 0;">0</div>
+                                        <div style="font-size: 0.85rem; color: #5a5a5a;">Code duplication</div>
+                                    </div>
+                                    <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-size: 2rem; margin: 0;">1</div>
+                                        <div style="font-size: 0.85rem; color: #5a5a5a;">Template to maintain</div>
+                                    </div>
+                                    <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <div style="font-size: 2rem; margin: 0;">∞</div>
+                                        <div style="font-size: 0.85rem; color: #5a5a5a;">Scalable to new apps</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; padding: 2rem 0; border-top: 1px solid #e0e0e0; margin-top: 2rem;">
+                                <p style="margin: 0 0 1rem 0; color: #5a5a5a;">Ready to get started?</p>
+                                <a href="factory-templates/application-zone/GPS_ONBOARDING_FOR_NEW_APPS.md" target="_blank" style="display: inline-block; background: #0078d4; color: white; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#005a9e'" onmouseout="this.style.background='#0078d4'">
+                                    Read Full Guide →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -4146,6 +4467,9 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
+        const API_APPZONE_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://${window.location.hostname}:5000`
+            : API_BASE;
         const IS_HOSTED_PORTAL = !['127.0.0.1', 'localhost'].includes(window.location.hostname);
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
         const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
@@ -4156,10 +4480,15 @@
         const API_RUN_STATUS = runId => `${API_BASE}/api/brd-runs/${encodeURIComponent(runId)}`;
         const API_CSA_COPILOT_TOOLS = `${API_BASE}/api/csa-copilot/tools`;
         const API_CSA_COPILOT_ASK = `${API_BASE}/api/csa-copilot/ask`;
+        const API_APPZONE_PACKS = `${API_APPZONE_BASE}/api/application-zone/packs`;
+        const API_APPZONE_VALIDATE = `${API_APPZONE_BASE}/api/application-zone/validate-inputs`;
+        const API_APPZONE_INSTANCES = `${API_APPZONE_BASE}/api/application-zone/instances`;
         const PORTAL_API_KEY_STORAGE_KEY = 'factoryPortalApiKey';
         let allProjects = [];
         let showAllProjects = false;
         let latestProjectForCopilot = null;
+        let appZoneCurrentInstanceId = null;
+        let appZoneAgents = [];
 
         const diagramModal = document.getElementById('diagram-modal');
         const diagramFrame = document.getElementById('diagram-frame');
@@ -6422,8 +6751,488 @@
                 return;
             }
 
+            if (hash === '#application-zone-workspace') {
+                toggleWorkspaceCard('application-zone-workspace', true);
+                return;
+            }
+
             if (hash === '#design-analysis' || hash.startsWith('#analysis-') || hash === '#analyze-workspace') {
                 toggleWorkspaceCard('analyze-workspace', true);
+            }
+        }
+
+        function getAppZonePayload() {
+            const selectedPack = document.getElementById('appzone-pack-id')?.value || 'casewright';
+            const selectedVersion = document.getElementById('appzone-pack-version')?.value || '1.0.0';
+            const runtimeBaseUrl = document.getElementById('appzone-runtime-base-url')?.value?.trim() || '';
+            const runtimeApiKey = document.getElementById('appzone-runtime-api-key')?.value?.trim() || '';
+            const runtimeInput = runtimeBaseUrl
+                ? {
+                    baseUrl: runtimeBaseUrl,
+                    ...(runtimeApiKey ? { apiKey: runtimeApiKey } : {}),
+                }
+                : null;
+
+            return {
+                packId: selectedPack,
+                version: selectedVersion,
+                profile: 'dev',
+                inputs: {
+                    environmentName: document.getElementById('appzone-env-name')?.value?.trim() || '',
+                    region: document.getElementById('appzone-region')?.value || 'eastus',
+                    identityMode: document.getElementById('appzone-identity')?.value || 'system-assigned',
+                    modelProfile: document.getElementById('appzone-model-profile')?.value || 'balanced',
+                    documentSource: {
+                        type: 'blob',
+                        resourceId: '/subscriptions/mock/resourceGroups/mock-rg/providers/Microsoft.Storage/storageAccounts/mocksa',
+                    },
+                    channelMode: 'web',
+                    strictCitationMode: true,
+                    ...(runtimeInput ? { runtime: runtimeInput } : {}),
+                },
+            };
+        }
+
+        function getAppZoneRuntimeEndpoint(instanceId, suffix = '') {
+            const encoded = encodeURIComponent(instanceId);
+            const cleanSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
+            return `${API_APPZONE_INSTANCES}/${encoded}${cleanSuffix}`;
+        }
+
+        async function onAppZonePackChanged(preferredVersion = null) {
+            const packEl = document.getElementById('appzone-pack-id');
+            const versionEl = document.getElementById('appzone-pack-version');
+            const selectedPackEl = document.getElementById('appzone-selected-pack');
+            const selectedVersionEl = document.getElementById('appzone-selected-version');
+            if (!packEl || !versionEl) return;
+
+            const packId = packEl.value;
+            if (selectedPackEl) selectedPackEl.textContent = packId || '-';
+
+            try {
+                const response = await fetch(`${API_APPZONE_PACKS}/${encodeURIComponent(packId)}/versions`, { cache: 'no-store' });
+                const data = await response.json();
+                const versions = data.versions || [];
+                versionEl.innerHTML = versions
+                    .map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)
+                    .join('');
+
+                if (preferredVersion && versions.includes(preferredVersion)) {
+                    versionEl.value = preferredVersion;
+                }
+                if (selectedVersionEl) {
+                    selectedVersionEl.textContent = versionEl.value || versions[0] || '-';
+                }
+            } catch (_error) {
+                versionEl.innerHTML = '<option value="1.0.0">1.0.0</option>';
+                if (selectedVersionEl) selectedVersionEl.textContent = versionEl.value || '1.0.0';
+            }
+
+            versionEl.onchange = () => {
+                if (selectedVersionEl) selectedVersionEl.textContent = versionEl.value || '-';
+            };
+        }
+
+        async function refreshAppZoneCatalog(showToast = false) {
+            const statusEl = document.getElementById('appzone-catalog-status');
+            const listEl = document.getElementById('appzone-catalog-list');
+            if (!statusEl || !listEl) return;
+
+            statusEl.className = 'status-message info visible';
+            statusEl.textContent = 'Loading catalog...';
+            listEl.innerHTML = '';
+
+            try {
+                const response = await fetch(API_APPZONE_PACKS, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+
+                const packs = data.packs || [];
+                if (!packs.length) {
+                    listEl.innerHTML = '<div class="appzone-item"><div class="appzone-meta">No App Packs found.</div></div>';
+                } else {
+                    const packSelect = document.getElementById('appzone-pack-id');
+                    const selectedPack = packSelect?.value || 'casewright';
+
+                    if (packSelect) {
+                        packSelect.innerHTML = packs
+                            .map(pack => `<option value="${escapeHtml(pack.packId || '')}">${escapeHtml(pack.displayName || pack.packId || '')}</option>`)
+                            .join('');
+
+                        const exists = Array.from(packSelect.options).some(option => option.value === selectedPack);
+                        packSelect.value = exists ? selectedPack : (packSelect.options[0]?.value || 'casewright');
+                    }
+
+                    listEl.innerHTML = packs.map(pack => {
+                        const packId = pack.packId || '';
+                        const version = pack.latestVersion || '';
+                        const active = packId === (packSelect?.value || 'casewright') ? 'active' : '';
+                        return `
+                        <div class="appzone-item ${active}" onclick="selectAppZonePack('${escapeHtml(packId)}', '${escapeHtml(version)}')">
+                            <div class="appzone-item-title">${escapeHtml(pack.displayName || pack.packId || 'unknown')}</div>
+                            <div class="appzone-meta">${escapeHtml(pack.packId || '')} · v${escapeHtml(pack.latestVersion || '')} · ${escapeHtml(pack.status || '')}</div>
+                            <div class="appzone-meta">Regions: ${escapeHtml((pack.supportedRegions || []).join(', '))}</div>
+                            <div class="appzone-meta">Required inputs: ${escapeHtml(String(pack.requiredInputCount ?? 0))}</div>
+                        </div>
+                    `;
+                    }).join('');
+
+                    await onAppZonePackChanged();
+                }
+
+                statusEl.className = 'status-message success visible';
+                statusEl.textContent = `Loaded ${packs.length} App Pack(s).`;
+                if (showToast && typeof showStatus === 'function') {
+                    showStatus('Application Zone catalog refreshed.', 'success');
+                }
+            } catch (error) {
+                statusEl.className = 'status-message error visible';
+                statusEl.textContent = `Catalog load failed: ${error.message}`;
+            }
+        }
+
+        function selectAppZonePack(packId, version) {
+            const packEl = document.getElementById('appzone-pack-id');
+            if (!packEl) return;
+            packEl.value = packId;
+            onAppZonePackChanged(version);
+            refreshAppZoneCatalog();
+        }
+
+        function switchAppZoneTab(tabName, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Hide all tab contents
+            const allContents = document.querySelectorAll('.workspace-tab-content');
+            allContents.forEach(content => content.classList.remove('active'));
+
+            // Deactivate all tabs
+            const allTabs = document.querySelectorAll('.workspace-tab');
+            allTabs.forEach(tab => tab.classList.remove('active'));
+
+            // Activate clicked tab and content
+            const tabContentId = tabName;
+            const activeContent = document.getElementById(tabContentId);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+
+            // Mark the clicked button as active
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        async function validateAppZoneLocal() {
+            const outEl = document.getElementById('appzone-validation');
+            if (!outEl) return;
+            outEl.textContent = 'Validating...';
+
+            try {
+                const payload = getAppZonePayload();
+                const response = await fetch(API_APPZONE_VALIDATE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                outEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outEl.textContent = `Validation failed: ${error.message}`;
+            }
+        }
+
+        async function deployAppZoneLocal() {
+            const outEl = document.getElementById('appzone-instance');
+            if (!outEl) return;
+            outEl.textContent = 'Creating instance...';
+
+            try {
+                const payload = getAppZonePayload();
+                const response = await fetch(API_APPZONE_INSTANCES, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                appZoneCurrentInstanceId = data?.instance?.instanceId || null;
+                outEl.textContent = JSON.stringify(data, null, 2);
+                if (appZoneCurrentInstanceId) {
+                    await loadAppZoneAgents();
+                }
+            } catch (error) {
+                outEl.textContent = `Instance creation failed: ${error.message}`;
+            }
+        }
+
+        async function connectAppZoneRuntime() {
+            const outEl = document.getElementById('appzone-runtime-output');
+            if (!outEl) return;
+
+            if (!appZoneCurrentInstanceId) {
+                outEl.textContent = 'Create an instance first.';
+                return;
+            }
+
+            const baseUrl = document.getElementById('appzone-runtime-base-url')?.value?.trim() || '';
+            const apiKey = document.getElementById('appzone-runtime-api-key')?.value?.trim() || '';
+            if (!baseUrl) {
+                outEl.textContent = 'Enter Runtime Base URL first.';
+                return;
+            }
+
+            outEl.textContent = 'Connecting runtime...';
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, 'connect-runtime'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        baseUrl,
+                        ...(apiKey ? { apiKey } : {}),
+                    }),
+                });
+                const data = await response.json();
+                outEl.textContent = JSON.stringify(data, null, 2);
+                await loadAppZoneAgents();
+            } catch (error) {
+                outEl.textContent = `Runtime connect failed: ${error.message}`;
+            }
+        }
+
+        async function loadAppZoneAgents() {
+            const outEl = document.getElementById('appzone-agent-output');
+            const selectEl = document.getElementById('appzone-agent-select');
+            const payloadEl = document.getElementById('appzone-agent-payload');
+            if (!outEl || !selectEl) return;
+
+            if (!appZoneCurrentInstanceId) {
+                outEl.textContent = 'Create an instance first.';
+                selectEl.innerHTML = '';
+                return;
+            }
+
+            outEl.textContent = 'Loading agents...';
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, 'agents'));
+                const data = await response.json();
+                appZoneAgents = data.agents || [];
+
+                if (!appZoneAgents.length) {
+                    selectEl.innerHTML = '';
+                    outEl.textContent = 'No agents available for this instance.';
+                    return;
+                }
+
+                selectEl.innerHTML = appZoneAgents
+                    .map(agent => `<option value="${escapeHtml(agent.agentId || '')}">${escapeHtml(agent.displayName || agent.agentId || 'agent')}</option>`)
+                    .join('');
+
+                const selected = appZoneAgents[0];
+                if (payloadEl && selected?.samplePayload) {
+                    payloadEl.value = JSON.stringify(selected.samplePayload);
+                }
+
+                selectEl.onchange = () => {
+                    const picked = appZoneAgents.find(a => a.agentId === selectEl.value);
+                    if (payloadEl) {
+                        payloadEl.value = JSON.stringify(picked?.samplePayload || {});
+                    }
+                };
+
+                outEl.textContent = JSON.stringify({
+                    connected: data.connected,
+                    agents: appZoneAgents,
+                }, null, 2);
+            } catch (error) {
+                outEl.textContent = `Agent load failed: ${error.message}`;
+            }
+        }
+
+        async function invokeSelectedAppZoneAgent() {
+            const outEl = document.getElementById('appzone-agent-output');
+            const selectEl = document.getElementById('appzone-agent-select');
+            const payloadEl = document.getElementById('appzone-agent-payload');
+            if (!outEl || !selectEl) return;
+
+            if (!appZoneCurrentInstanceId) {
+                outEl.textContent = 'Create an instance first.';
+                return;
+            }
+
+            const agentId = selectEl.value;
+            if (!agentId) {
+                outEl.textContent = 'Load and select an agent first.';
+                return;
+            }
+
+            let body = {};
+            const rawPayload = payloadEl?.value?.trim() || '{}';
+            try {
+                body = JSON.parse(rawPayload);
+            } catch (_error) {
+                outEl.textContent = 'Agent payload must be valid JSON.';
+                return;
+            }
+
+            outEl.textContent = `Invoking ${agentId}...`;
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, `agents/${encodeURIComponent(agentId)}/invoke`), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ body }),
+                });
+                const data = await response.json();
+                outEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outEl.textContent = `Agent invocation failed: ${error.message}`;
+            }
+        }
+
+        async function runCasewrightHealthCheck() {
+            const outEl = document.getElementById('appzone-runtime-output');
+            if (!outEl) return;
+            if (!appZoneCurrentInstanceId) {
+                outEl.textContent = 'Create an instance first.';
+                return;
+            }
+
+            outEl.textContent = 'Checking runtime health...';
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, 'invoke'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'GET', path: '/api/health' }),
+                });
+                const data = await response.json();
+                outEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outEl.textContent = `Health check failed: ${error.message}`;
+            }
+        }
+
+        async function runCasewrightSampleQuery() {
+            const outEl = document.getElementById('appzone-runtime-output');
+            if (!outEl) return;
+            if (!appZoneCurrentInstanceId) {
+                outEl.textContent = 'Create an instance first.';
+                return;
+            }
+
+            outEl.textContent = 'Running CaseWright sample query...';
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, 'casewright/chat-query'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: 'Summarize the key contract dispute factors in this case.',
+                        user_id: 'portal-user',
+                        session_id: `portal-session-${Date.now()}`,
+                    }),
+                });
+                const data = await response.json();
+                outEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                outEl.textContent = `Sample query failed: ${error.message}`;
+            }
+        }
+
+        async function loadAppZoneAgents() {
+            if (!appZoneCurrentInstanceId) {
+                document.getElementById('appzone-agent-output').textContent = 'Create an instance first.';
+                return;
+            }
+
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, 'agents'), {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                const agents = data.agents || [];
+                const services = data.services || [];
+
+                const selectEl = document.getElementById('appzone-agent-select');
+                selectEl.innerHTML = '<option value="">-- Select an agent --</option>';
+
+                // Group agents by use case
+                const useCaseMap = {};
+                agents.forEach(agent => {
+                    const useCases = agent.useCases || [];
+                    useCases.forEach(useCase => {
+                        if (!useCaseMap[useCase]) useCaseMap[useCase] = [];
+                        useCaseMap[useCase].push(agent);
+                    });
+                });
+
+                // Add agents to dropdown
+                agents.forEach(agent => {
+                    const opt = document.createElement('option');
+                    opt.value = agent.agentId;
+                    opt.textContent = `${agent.displayName} - ${agent.description}`;
+                    selectEl.appendChild(opt);
+                });
+
+                // Build agent summary
+                let summary = `<h4>Available Agents (${agents.length})</h4>\n<ul>`;
+                agents.forEach(agent => {
+                    summary += `<li><strong>${agent.displayName}</strong>: ${agent.description}<br>`;
+                    summary += `Use cases: ${agent.useCases ? agent.useCases.join(', ') : 'N/A'}<br>`;
+                    summary += `Capabilities: ${agent.capabilities ? agent.capabilities.join(', ') : 'N/A'}</li>\n`;
+                });
+                summary += '</ul>';
+
+                if (services.length > 0) {
+                    summary += `<h4>Available Services (${services.length})</h4>\n<ul>`;
+                    services.forEach(svc => {
+                        summary += `<li><strong>${svc.displayName}</strong>: ${svc.description}</li>\n`;
+                    });
+                    summary += '</ul>';
+                }
+
+                document.getElementById('appzone-agent-output').innerHTML = summary;
+            } catch (error) {
+                document.getElementById('appzone-agent-output').textContent = `Failed to load agents: ${error.message}`;
+            }
+        }
+
+        async function invokeSelectedAppZoneAgent() {
+            if (!appZoneCurrentInstanceId) {
+                document.getElementById('appzone-agent-output').textContent = 'Create an instance first.';
+                return;
+            }
+
+            const agentId = document.getElementById('appzone-agent-select').value;
+            if (!agentId) {
+                document.getElementById('appzone-agent-output').textContent = 'Please select an agent.';
+                return;
+            }
+
+            const payloadText = document.getElementById('appzone-agent-payload').value || '{}';
+            let payload;
+            try {
+                payload = JSON.parse(payloadText);
+            } catch (e) {
+                document.getElementById('appzone-agent-output').textContent = `Invalid JSON payload: ${e.message}`;
+                return;
+            }
+
+            document.getElementById('appzone-agent-output').textContent = `Invoking agent ${agentId}...`;
+            try {
+                const response = await fetch(getAppZoneRuntimeEndpoint(appZoneCurrentInstanceId, `agents/${agentId}/invoke`), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: payload.endpoint,
+                        method: payload.method || 'POST',
+                        body: payload.body || payload,
+                    }),
+                });
+                const data = await response.json();
+                document.getElementById('appzone-agent-output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('appzone-agent-output').textContent = `Agent invocation failed: ${error.message}`;
             }
         }
 
@@ -6476,6 +7285,7 @@
             restorePortalApiKey();
             loadCsaCompanionTools();
             updateRepoIntakeSourceFields();
+            refreshAppZoneCatalog();
         });
         window.addEventListener('hashchange', syncWorkspaceFromHash);
         window.addEventListener('hashchange', openAnalysisFromHash);
@@ -7718,6 +8528,160 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             transition:background .15s,border-color .15s;
         }
         .helper-quick-btn:hover { background:linear-gradient(135deg,#ddeeff,#c5e2ff); border-color:#0078d4; }
+
+        /* ── Application Zone workspace ────────────────────────────── */
+        .appzone-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.8rem;
+        }
+
+        .appzone-panel {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0.8rem;
+            box-shadow: 0 2px 10px rgba(18, 50, 74, 0.08);
+        }
+
+        .appzone-panel h4 {
+            color: var(--primary);
+            font-size: 0.92rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .appzone-note {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.6rem;
+        }
+
+        .appzone-list {
+            display: grid;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow: auto;
+        }
+
+        .appzone-item {
+            border: 1px solid #dbe7f3;
+            border-radius: 6px;
+            padding: 0.55rem 0.6rem;
+            background: #f8fbff;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+        }
+
+        .appzone-item:hover {
+            border-color: #88b9e8;
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.14);
+            transform: translateY(-1px);
+        }
+
+        .appzone-item.active {
+            border-color: #0078d4;
+            background: #eef6ff;
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.12);
+        }
+
+        .appzone-item-title {
+            font-weight: 700;
+            color: #124267;
+            font-size: 0.84rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .appzone-meta {
+            font-size: 0.74rem;
+            color: #4b6478;
+        }
+
+        .appzone-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .appzone-kpi {
+            border: 1px solid #d9e7f5;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+            padding: 0.45rem 0.55rem;
+        }
+
+        .appzone-kpi-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #5e7991;
+            margin-bottom: 0.15rem;
+            font-weight: 700;
+        }
+
+        .appzone-kpi-value {
+            font-size: 0.82rem;
+            color: #113a5d;
+            font-weight: 700;
+        }
+
+        .appzone-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .appzone-field label {
+            font-size: 0.75rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .appzone-field input,
+        .appzone-field select {
+            width: 100%;
+            padding: 0.42rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            background: #f8fbfe;
+        }
+
+        .appzone-actions {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+        }
+
+        .appzone-output {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #f9fcff;
+            padding: 0.6rem;
+            font-size: 0.77rem;
+            color: #123b5d;
+            white-space: pre-wrap;
+            max-height: 220px;
+            overflow: auto;
+        }
+
+        .appzone-output-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #5e7991;
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .appzone-grid,
+            .appzone-form-grid,
+            .appzone-kpi-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 
     <script>

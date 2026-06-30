@@ -23,6 +23,9 @@ submit_brd              — Submit a BRD/PRD doc, start the orchestrator.
 get_project_status      — Poll phase / run status for a project or run ID.
 get_project_artifacts   — Retrieve file listing / content from a project.
 list_projects           — Browse the factory project catalog.
+export_application_pack — Export a standalone app bundle from an App Pack.
+generate_application_pack_parameters — Generate profile-specific deploy parameters.
+generate_application_pack_deploy_commands — Generate deploy scripts for bundles.
 """
 
 from __future__ import annotations
@@ -48,6 +51,13 @@ from src.mcp_server.tools.submit_brd import submit_brd as _submit_brd
 from src.mcp_server.tools.get_project_status import get_project_status as _get_project_status
 from src.mcp_server.tools.get_project_artifacts import get_project_artifacts as _get_project_artifacts
 from src.mcp_server.tools.list_projects import list_projects as _list_projects
+from src.mcp_server.tools.export_application_pack import export_application_pack as _export_application_pack
+from src.mcp_server.tools.generate_application_pack_parameters import (
+    generate_application_pack_parameters as _generate_application_pack_parameters,
+)
+from src.mcp_server.tools.generate_application_pack_deploy_commands import (
+    generate_application_pack_deploy_commands as _generate_application_pack_deploy_commands,
+)
 
 # ---------------------------------------------------------------------------
 # FastMCP server
@@ -234,6 +244,104 @@ def list_projects(
         total, returned, projects list with slug, name, phase, status, …
     """
     return _list_projects(search=search, status_filter=status_filter, max_results=max_results)
+
+
+# ---------------------------------------------------------------------------
+# Tool: export_application_pack
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def export_application_pack(
+    pack_id: str,
+    version: str = "",
+    output_root: str = "",
+) -> dict:
+    """Export an Application Zone pack as a standalone deployable bundle.
+
+    This tool is designed for runtime decoupling: AAF generates and exports
+    app bundles, but exported apps execute independently.
+
+    Args:
+        pack_id: Application pack ID (for example: "casewright").
+        version: Optional explicit version. If omitted, latest is used.
+        output_root: Optional absolute export directory. Defaults to
+            ``outputs/application-zone`` under the AAF repository.
+
+    Returns:
+        status, bundlePath, pack/version metadata, and copied entries.
+    """
+    return _export_application_pack(
+        pack_id=pack_id,
+        version=version,
+        output_root=output_root,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tool: generate_application_pack_parameters
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def generate_application_pack_parameters(
+    pack_id: str,
+    version: str = "",
+    profile: str = "dev",
+    inputs: dict | None = None,
+    bundle_path: str = "",
+) -> dict:
+    """Generate profile-specific deployment parameter artifacts.
+
+    This tool validates App Pack inputs and emits deployment parameter files
+    that can be used directly by independently shipped applications.
+
+    Args:
+        pack_id: Application pack ID (for example: "casewright").
+        version: Optional explicit version. If omitted, latest is used.
+        profile: Environment profile, typically dev/test/prod.
+        inputs: Input object matching the App Pack contract.
+        bundle_path: Optional exported bundle path. When provided, generated
+            files are written under ``<bundle_path>/deploy/parameters``.
+
+    Returns:
+        status, output directory, and generated file paths.
+    """
+    return _generate_application_pack_parameters(
+        pack_id=pack_id,
+        version=version,
+        profile=profile,
+        inputs=inputs,
+        bundle_path=bundle_path,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tool: generate_application_pack_deploy_commands
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def generate_application_pack_deploy_commands(
+    bundle_path: str,
+    profile: str = "dev",
+    deployment_name: str = "aaf-app-pack-deployment",
+    location: str = "eastus",
+) -> dict:
+    """Generate profile-specific deploy scripts in an exported bundle.
+
+    Args:
+        bundle_path: Absolute path to an exported app bundle.
+        profile: Deployment profile matching generated parameter files.
+        deployment_name: Name used for ARM group deployment.
+        location: Default Azure region for resource-group creation.
+
+    Returns:
+        status and generated script file paths.
+    """
+    return _generate_application_pack_deploy_commands(
+        bundle_path=bundle_path,
+        profile=profile,
+        deployment_name=deployment_name,
+        location=location,
+    )
 
 
 # ---------------------------------------------------------------------------

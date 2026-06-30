@@ -154,6 +154,146 @@ function renderValidationResults(data, showToast = false) {
     }
 }
 
+function getApplicationZonePayload() {
+    return {
+        packId: 'casewright',
+        version: '1.0.0',
+        profile: 'dev',
+        inputs: {
+            environmentName: document.getElementById('az-env-name')?.value?.trim() || '',
+            region: document.getElementById('az-region')?.value || '',
+            identityMode: document.getElementById('az-identity-mode')?.value || '',
+            modelProfile: document.getElementById('az-model-profile')?.value || '',
+            documentSource: {
+                type: 'blob',
+                resourceId: '/subscriptions/mock/resourceGroups/mock-rg/providers/Microsoft.Storage/storageAccounts/mocksa',
+            },
+            channelMode: 'web',
+            strictCitationMode: true,
+        },
+    };
+}
+
+function renderApplicationZoneCatalog(data) {
+    const statusEl = document.getElementById('app-zone-status');
+    const listEl = document.getElementById('app-zone-catalog');
+    const packs = data?.packs || [];
+
+    if (!listEl || !statusEl) {
+        return;
+    }
+
+    if (!packs.length) {
+        listEl.innerHTML = '<div class="rich-item"><p>No App Packs available.</p></div>';
+        statusEl.textContent = 'No App Packs found in registry.';
+        return;
+    }
+
+    listEl.innerHTML = packs.map(pack => `
+        <div class="rich-item">
+            <strong>${pack.displayName}</strong>
+            <p><span class="pill-inline">${pack.packId}</span><span class="pill-inline">v${pack.latestVersion}</span><span class="pill-inline">${pack.status}</span></p>
+            <p>Owner: ${pack.owner} • Support: ${pack.supportTier}</p>
+            <p>Regions: ${pack.supportedRegions.join(', ')}</p>
+            <p>Required Inputs: ${pack.requiredInputCount} • Required Services: ${(pack.requiredServices || []).join(', ')}</p>
+        </div>
+    `).join('');
+
+    statusEl.textContent = `Loaded ${packs.length} App Pack(s) at ${new Date(data.updated_at).toLocaleTimeString()}.`;
+}
+
+async function loadApplicationZoneCatalog(showToast = false) {
+    try {
+        const data = await fetchJsonWithRetry(`${API_BASE}/application-zone/packs?ts=${Date.now()}`);
+        renderApplicationZoneCatalog(data);
+        if (showToast) {
+            showNotification('Application Zone catalog refreshed.', 'success');
+        }
+    } catch (error) {
+        const statusEl = document.getElementById('app-zone-status');
+        if (statusEl) {
+            statusEl.textContent = `Failed to load catalog: ${error.message}`;
+        }
+        if (showToast) {
+            showNotification('Failed to refresh Application Zone catalog.', 'error');
+        }
+    }
+}
+
+async function validateApplicationZoneInputs() {
+    const btn = document.getElementById('az-validate-btn');
+    const validationEl = document.getElementById('app-zone-validation');
+    const original = btn ? btn.textContent : 'Validate Inputs';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Validating...';
+    }
+
+    try {
+        const payload = getApplicationZonePayload();
+        const data = await fetchJsonWithRetry(`${API_BASE}/application-zone/validate-inputs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (validationEl) {
+            const errors = data.errors || [];
+            validationEl.innerHTML = data.valid
+                ? '<div class="rich-item"><strong>Validation Passed</strong><p>Inputs match CaseWright v1.0.0 requirements.</p></div>'
+                : `<div class="rich-item"><strong>Validation Failed</strong><p>${errors.join('<br/>')}</p></div>`;
+        }
+
+        showNotification(data.valid ? 'Application Zone inputs are valid.' : 'Validation returned errors.', data.valid ? 'success' : 'error');
+    } catch (error) {
+        if (validationEl) {
+            validationEl.innerHTML = `<div class="rich-item"><strong>Validation Error</strong><p>${error.message}</p></div>`;
+        }
+        showNotification('Validation request failed.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = original;
+        }
+    }
+}
+
+async function deployApplicationZoneInstance() {
+    const btn = document.getElementById('az-deploy-btn');
+    const outputEl = document.getElementById('app-zone-instance-result');
+    const original = btn ? btn.textContent : 'Deploy Instance';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Deploying...';
+    }
+
+    try {
+        const payload = getApplicationZonePayload();
+        const data = await fetchJsonWithRetry(`${API_BASE}/application-zone/instances`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (outputEl) {
+            outputEl.textContent = JSON.stringify(data, null, 2);
+        }
+        showNotification('Application Zone instance deployed (simulation).', 'success');
+    } catch (error) {
+        if (outputEl) {
+            outputEl.textContent = `Deployment failed:\n${error.message}`;
+        }
+        showNotification('Application Zone deploy failed.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = original;
+        }
+    }
+}
+
 async function loadFactoryReadiness(showToast = false) {
     const statusEl = document.getElementById('live-status');
     const projectCountEl = document.getElementById('live-project-count');
@@ -452,6 +592,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await refreshProjectLinkStatus();
         await loadFactoryReadiness();
+        await loadApplicationZoneCatalog();
         window.setInterval(() => {
             refreshProjectLinkStatus(false);
         }, 15000);

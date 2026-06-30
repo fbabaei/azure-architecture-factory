@@ -15,6 +15,9 @@ The **Azure Architecture Factory MCP Server** exposes the factory's core capabil
    - [get\_project\_status](#get_project_status)
    - [get\_project\_artifacts](#get_project_artifacts)
    - [list\_projects](#list_projects)
+  - [export\_application\_pack](#export_application_pack)
+  - [generate\_application\_pack\_parameters](#generate_application_pack_parameters)
+  - [generate\_application\_pack\_deploy\_commands](#generate_application_pack_deploy_commands)
 4. [Use-case examples](#use-case-examples)
 5. [Security and limits](#security-and-limits)
 6. [Configuration reference](#configuration-reference)
@@ -37,6 +40,9 @@ MCP client (Copilot / Claude / Cursor / …)
 │  │  submit_brd            list_projects │    │
 │  │  get_project_status                  │    │
 │  │  get_project_artifacts               │    │
+│  │  export_application_pack             │    │
+│  │  generate_application_pack_parameters│    │
+│  │  generate_application_pack_deploy... │    │
 │  └──────────────────────────────────────┘    │
 │          │                                   │
 │          ▼                                   │
@@ -335,6 +341,145 @@ Browse the factory project catalog.
     }
   ]
 }
+```
+
+---
+
+### `export_application_pack`
+
+Export an Application Zone App Pack as a standalone, shippable bundle.
+
+This tool enforces runtime separation: AAF creates/exports applications, but
+the exported bundle executes independently.
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pack_id` | string | yes | App Pack ID, for example `casewright`. |
+| `version` | string | no | Explicit pack version. Defaults to latest. |
+| `output_root` | string | no | Absolute output root. Defaults to `outputs/application-zone`. |
+
+**Response**
+
+```jsonc
+{
+  "status": "exported",
+  "packId": "casewright",
+  "version": "1.0.0",
+  "bundlePath": ".../outputs/application-zone/casewright-1.0.0-20260630125815",
+  "copiedEntryCount": 13
+}
+```
+
+---
+
+### `generate_application_pack_parameters`
+
+Generate profile-specific deployment parameter files from App Pack inputs.
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pack_id` | string | yes | App Pack ID. |
+| `version` | string | no | Explicit pack version. Defaults to latest. |
+| `profile` | string | no | Target profile (`dev`, `test`, `prod`). Default: `dev`. |
+| `inputs` | object | no | App input payload matching the pack contract. |
+| `bundle_path` | string | no | Existing export bundle path; writes under `deploy/parameters`. |
+
+**Response**
+
+```jsonc
+{
+  "status": "generated",
+  "profile": "dev",
+  "outputDirectory": ".../deploy/parameters",
+  "files": {
+    "deploymentParametersJson": ".../deployment-parameters.dev.json",
+    "generatedBicepParam": ".../dev.generated.bicepparam",
+    "applicationInputs": ".../application-inputs.dev.json"
+  }
+}
+```
+
+---
+
+### `generate_application_pack_deploy_commands`
+
+Generate runnable deployment scripts in an exported bundle.
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `bundle_path` | string | yes | Absolute path to exported bundle. |
+| `profile` | string | no | Deployment profile (`dev`, `test`, `prod`). Default: `dev`. |
+| `deployment_name` | string | no | ARM deployment name. Default: `aaf-app-pack-deployment`. |
+| `location` | string | no | Default Azure region for RG creation. Default: `eastus`. |
+
+**Response**
+
+```jsonc
+{
+  "status": "generated",
+  "profile": "dev",
+  "files": {
+    "powershell": ".../deploy/commands/deploy-dev.ps1",
+    "bash": ".../deploy/commands/deploy-dev.sh"
+  }
+}
+```
+
+---
+
+## Independent shipping example
+
+1. Export bundle:
+
+```json
+{ "tool": "export_application_pack", "arguments": { "pack_id": "casewright", "version": "1.0.0" } }
+```
+
+2. Generate parameters (dev):
+
+```json
+{
+  "tool": "generate_application_pack_parameters",
+  "arguments": {
+    "pack_id": "casewright",
+    "version": "1.0.0",
+    "profile": "dev",
+    "bundle_path": "<bundlePath>",
+    "inputs": {
+      "environmentName": "legal-dev-us",
+      "region": "eastus",
+      "identityMode": "system-assigned",
+      "documentSource": { "type": "blob", "resourceId": "/subscriptions/.../storageAccounts/..." },
+      "modelProfile": "balanced"
+    }
+  }
+}
+```
+
+3. Generate deployment scripts:
+
+```json
+{
+  "tool": "generate_application_pack_deploy_commands",
+  "arguments": {
+    "bundle_path": "<bundlePath>",
+    "profile": "dev",
+    "deployment_name": "casewright-dev",
+    "location": "eastus"
+  }
+}
+```
+
+4. Deploy outside AAF runtime from the exported bundle:
+
+```powershell
+./deploy/commands/deploy-dev.ps1 -ResourceGroup rg-casewright-dev -SubscriptionId <sub-id>
 ```
 
 ---

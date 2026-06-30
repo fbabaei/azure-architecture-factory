@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Zone GPS Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .gps-map {
+            padding: 40px;
+            position: relative;
+        }
+
+        .journey-container {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            margin-bottom: 40px;
+            gap: 0;
+        }
+
+        .journey-container::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .journey-container::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            z-index: 2;
+            width: 0;
+            transition: width 0.6s ease;
+        }
+
+        .journey-stage {
+            position: relative;
+            z-index: 3;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stage-dot {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 4;
+        }
+
+        .journey-stage:hover .stage-dot {
+            transform: scale(1.1);
+        }
+
+        .journey-stage.active .stage-dot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .journey-stage.completed .stage-dot {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .stage-label {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #333;
+            max-width: 100px;
+        }
+
+        .journey-stage.active .stage-label {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1em;
+        }
+
+        .current-stage {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .current-stage h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .stage-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .stage-description {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .stage-description h3 {
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .stage-description ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .stage-description li {
+            padding: 5px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .stage-description li:before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 0.7em;
+        }
+
+        .stage-checklist {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            gap: 12px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+            color: white;
+        }
+
+        .checklist-text {
+            cursor: pointer;
+            color: #555;
+            user-select: none;
+            flex: 1;
+        }
+
+        .checklist-item.completed .checklist-text {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0;
+            transition: width 0.6s ease;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: #999;
+        }
+
+        .substages {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .substage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .substage.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .substage-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            flex-shrink: 0;
+        }
+
+        .substage.active .substage-icon {
+            background: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+        }
+
+        .help-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #1565c0;
+        }
+
+        .help-box strong {
+            color: #0d47a1;
+        }
+
+        .stage-timing {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .landmark {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .milestone-celebration {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .milestone-celebration h3 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .milestone-celebration p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .stage-content {
+                grid-template-columns: 1fr;
+            }
+
+            .journey-container {
+                flex-direction: column;
+            }
+
+            .journey-container::before,
+            .journey-container::after {
+                left: 40px;
+                top: auto;
+                width: 4px;
+                height: auto;
+            }
+
+            .journey-stage {
+                flex-direction: row;
+                align-items: flex-start;
+                margin: 20px 0;
+                padding-left: 20px;
+            }
+
+            .stage-dot {
+                margin-bottom: 0;
+                margin-right: 20px;
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+
+            .stage-label {
+                max-width: none;
+                text-align: left;
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Application Zone GPS Guide</h1>
+            <p>Know exactly where you are in your journey</p>
+        </div>
+
+        <div class="gps-map">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- Journey Map -->
+            <div class="journey-container" id="journeyMap">
+                <div class="journey-stage completed" data-stage="0">
+                    <div class="stage-dot">🚀</div>
+                    <div class="stage-label">Start</div>
+                </div>
+                <div class="journey-stage completed" data-stage="1">
+                    <div class="stage-dot">⚙️</div>
+                    <div class="stage-label">Setup</div>
+                </div>
+                <div class="journey-stage active" data-stage="2">
+                    <div class="stage-dot">📦</div>
+                    <div class="stage-label">Create Instance</div>
+                </div>
+                <div class="journey-stage" data-stage="3">
+                    <div class="stage-dot">🔍</div>
+                    <div class="stage-label">Discover Agents</div>
+                </div>
+                <div class="journey-stage" data-stage="4">
+                    <div class="stage-dot">⚡</div>
+                    <div class="stage-label">Invoke Agent</div>
+                </div>
+                <div class="journey-stage" data-stage="5">
+                    <div class="stage-dot">🎯</div>
+                    <div class="stage-label">Results</div>
+                </div>
+            </div>
+
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a onclick="goToStage(0)">Start</a>
+                <span>›</span>
+                <a onclick="goToStage(1)">Setup</a>
+                <span>›</span>
+                <span class="active">Create Instance</span>
+                <span>›</span>
+                <a onclick="goToStage(3)">Discover Agents</a>
+            </div>
+
+            <!-- Current Stage Details -->
+            <div class="current-stage">
+                <h2>
+                    <span class="stage-number" id="stageNumber">2</span>
+                    <span id="stageName">Create Your First Instance</span>
+                </h2>
+                <div class="stage-timing" id="stageTiming">⏱️ Estimated time: 2 minutes</div>
+
+                <div class="stage-content">
+                    <div class="stage-description">
+                        <p>An <strong>instance</strong> is your isolated workspace for a single app. It connects the Application Zone to your CaseWright runtime and loads all available agents from the manifest.</p>
+
+                        <h3>What happens at this stage:</h3>
+                        <ul>
+                            <li>You provide instance configuration (name, app ID, runtime URL)</li>
+                            <li>Application Zone backend loads the manifest</li>
+                            <li>All 6 agents are discovered and ready to use</li>
+                            <li>Instance is saved with your configuration</li>
+                        </ul>
+
+                        <div class="help-box">
+                            <strong>💡 Tip:</strong> If you don't have CaseWright running yet, you can still create the instance. The runtime connection can be added later.
+                        </div>
+
+                        <div class="substages">
+                            <strong>Sub-stages at this level:</strong>
+                            <div class="substage active">
+                                <div class="substage-icon"></div>
+                                <span>Fill instance form (name, app ID)</span>
+                            </div>
+                            <div class="substage">
+                                <div class="substage-icon"></div>
+                                <span>Provide runtime URL (optional)</span>
+                            </div>
+                            <div class="substage">
+                                <div class="substage-icon"></div>
+                                <span>Click "Create Instance"</span>
+                            </div>
+                            <div class="substage">
+                                <div class="substage-icon"></div>
+                                <span>See success message + agent count</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stage-checklist">
+                        <strong style="display: block; margin-bottom: 15px; color: #333;">Your Progress at This Stage</strong>
+                        
+                        <div class="checklist-item" data-check="0">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Browser open to factory-portal.html</span>
+                        </div>
+
+                        <div class="checklist-item" data-check="1">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Backend running on port 5000</span>
+                        </div>
+
+                        <div class="checklist-item" data-check="2">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Instance name decided (e.g., my-casewright)</span>
+                        </div>
+
+                        <div class="checklist-item" data-check="3">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">App ID selected (casewright)</span>
+                        </div>
+
+                        <div class="checklist-item" data-check="4">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Form filled out and submitted</span>
+                        </div>
+
+                        <div class="checklist-item" data-check="5">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Instance created ✅</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="landmark">
+                    📍 Landmark: You should see "Instance created" in the portal with agent count
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="goToStage(1)">← Previous Stage</button>
+                    <button class="btn-primary" onclick="goToStage(3)">Next Stage →</button>
+                </div>
+            </div>
+
+            <!-- Alternative Stage Views (Hidden) -->
+            <div id="stageDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        const stages = [
+            {
+                number: 0,
+                name: "🚀 Let's Begin!",
+                timing: "1 minute",
+                description: "Welcome to the Application Zone. You're about to discover a multi-agent platform that bridges your apps with powerful AI services.",
+                tasks: [
+                    { text: "Read this welcome guide", check: false },
+                    { text: "Understand the architecture", check: false },
+                    { text: "Prepare your environment", check: false },
+                ]
+            },
+            {
+                number: 1,
+                name: "⚙️ Setup Your Environment",
+                timing: "10 minutes",
+                description: "Start the Application Zone backend and factory portal. This creates the infrastructure for discovering and invoking agents.",
+                tasks: [
+                    { text: "Start Application Zone backend (port 5000)", check: false },
+                    { text: "Open Factory Portal in browser (port 5501)", check: false },
+                    { text: "Verify both services are running", check: false },
+                    { text: "Check browser console for errors", check: false },
+                ]
+            },
+            {
+                number: 2,
+                name: "📦 Create Your First Instance",
+                timing: "2 minutes",
+                description: "Create an isolated workspace that connects to your CaseWright runtime and auto-discovers all agents.",
+                tasks: [
+                    { text: "Click 'Create Instance' button", check: false },
+                    { text: "Enter instance name (e.g., my-casewright)", check: false },
+                    { text: "Select app ID (casewright)", check: false },
+                    { text: "Provide runtime URL or skip (optional)", check: false },
+                    { text: "Click Create and see success message", check: false },
+                ]
+            },
+            {
+                number: 3,
+                name: "🔍 Discover Available Agents",
+                timing: "3 minutes",
+                description: "Load and explore all 6 agents that CaseWright exposes. Each agent solves a specific problem.",
+                tasks: [
+                    { text: "Click 'Load Agents' button", check: false },
+                    { text: "See agent dropdown populated", check: false },
+                    { text: "Review agent categories (Knowledge, Discovery, Ops, Pipeline)", check: false },
+                    { text: "Read descriptions and use cases", check: false },
+                ]
+            },
+            {
+                number: 4,
+                name: "⚡ Select & Invoke an Agent",
+                timing: "5 minutes",
+                description: "Build a JSON payload and invoke your first agent. Choose Case Knowledge Agent for a chat experience.",
+                tasks: [
+                    { text: "Select an agent from dropdown", check: false },
+                    { text: "Review the sample payload", check: false },
+                    { text: "Build or paste your JSON payload", check: false },
+                    { text: "Click 'Invoke Selected Agent'", check: false },
+                ]
+            },
+            {
+                number: 5,
+                name: "🎯 See Results & Next Steps",
+                timing: "Varies",
+                description: "Your agent has processed your request. See the response with citations, metadata, and options to explore further.",
+                tasks: [
+                    { text: "View agent response in output panel", check: false },
+                    { text: "Check for citations and metadata", check: false },
+                    { text: "Try another agent", check: false },
+                    { text: "Build more complex queries", check: false },
+                ]
+            },
+        ];
+
+        let currentStage = 2; // Default to Create Instance
+
+        function initializeCheckboxes() {
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                const checkbox = item.querySelector('.checkbox');
+                item.addEventListener('click', () => {
+                    item.classList.toggle('completed');
+                    checkbox.classList.toggle('checked');
+                    checkbox.textContent = checkbox.classList.contains('checked') ? '✓' : '';
+                });
+            });
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentStage) / (stages.length - 1)) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateJourneyMap() {
+            document.querySelectorAll('.journey-stage').forEach((stage, index) => {
+                stage.classList.remove('active', 'completed');
+                if (index < currentStage) {
+                    stage.classList.add('completed');
+                } else if (index === currentStage) {
+                    stage.classList.add('active');
+                }
+            });
+        }
+
+        function goToStage(stageIndex) {
+            currentStage = stageIndex;
+            updateProgressBar();
+            updateJourneyMap();
+            updateStageDisplay();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStageDisplay() {
+            const stage = stages[currentStage];
+            document.getElementById('stageName').textContent = stage.name;
+            document.getElementById('stageNumber').textContent = currentStage;
+            document.getElementById('stageTiming').textContent = `⏱️ Estimated time: ${stage.timing}`;
+
+            // Update breadcrumb
+            updateBreadcrumb();
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = [];
+            for (let i = 0; i <= currentStage; i++) {
+                if (i < currentStage) {
+                    breadcrumb.push(`<a onclick="goToStage(${i})">${stages[i].name.split(' ').slice(1).join(' ')}</a>`);
+                } else {
+                    breadcrumb.push(`<span class="active">${stages[i].name.split(' ').slice(1).join(' ')}</span>`);
+                }
+                if (i < currentStage) breadcrumb.push('<span>›</span>');
+            }
+            // Only show next stages as clickable if we want to allow jumping ahead
+            if (currentStage < stages.length - 1) {
+                breadcrumb.push('<span>›</span>');
+                breadcrumb.push(`<a onclick="goToStage(${currentStage + 1})">${stages[currentStage + 1].name.split(' ').slice(1).join(' ')}</a>`);
+            }
+            document.querySelector('.breadcrumb').innerHTML = breadcrumb.join('');
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCheckboxes();
+            updateProgressBar();
+            updateJourneyMap();
+            updateStageDisplay();
+
+            // Add click handlers to journey stages
+            document.querySelectorAll('.journey-stage').forEach((stage, index) => {
+                stage.addEventListener('click', () => goToStage(index));
+            });
+        });
+    </script>
+</body>
+</html>

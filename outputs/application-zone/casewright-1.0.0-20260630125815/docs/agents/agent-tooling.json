@@ -1,0 +1,42 @@
+{
+  "advised_at": "2026-04-22T00:00:00Z",
+  "advisor_version": "1.0.0",
+  "project_slug": "casewright",
+  "status": "ok",
+  "next_action": "proceed",
+  "agents": [
+    {
+      "name": "case-knowledge-agent",
+      "role": "Grounded multi-turn Q&A over the enterprise case corpus with citations.",
+      "recommended_tools": [
+        {
+          "type": "azure_ai_search",
+          "rationale": "Corpus already lives in enterprise systems (SharePoint + Blob), requires provenance/metadata filtering, incremental sync, and multimodal enrichment. These exceed Foundry-managed file_search capabilities, so a bring-your-own Azure AI Search index is required.",
+          "retrieval_hint": "azure_ai_search",
+          "owning_service": "casewright-api",
+          "handoff": "knowledge-retrieval-architect designs and scaffolds the index/skillset/indexer + hybrid query module."
+        },
+        {
+          "type": "function_calling",
+          "rationale": "The agent triggers operational actions (request a SharePoint sync, check indexer status) that are deterministic service calls, not retrieval.",
+          "functions": [
+            "request_sharepoint_sync(site_id)",
+            "get_indexer_status(indexer_name)"
+          ]
+        }
+      ],
+      "rejected_tools": [
+        {
+          "type": "file_search",
+          "reason": "Corpus is enterprise-scale, incremental, multimodal, and needs metadata filtering — file_search cannot express any of these."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "message": "Single agent recommended; azure_ai_search vs file_search split resolved to azure_ai_search. Handed off to knowledge-retrieval-architect for Phase 2r."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "designed_at": "2026-04-22T00:00:00Z",
+  "architect_version": "1.0.0",
+  "project_slug": "casewright",
+  "status": "ok",
+  "next_action": "proceed",
+  "pattern": "azure_ai_search",
+  "pattern_rationale": "matched: corpus already lives in SharePoint + Blob, requires provenance/metadata filtering, incremental sync, and multimodal enrichment — Foundry-managed file_search cannot express these.",
+  "owning_service": "casewright-api",
+  "corpus_sources": [
+    { "type": "sharepoint", "container_or_site": "synced via worker into Blob", "auth": "managed_identity" },
+    { "type": "blob", "container_or_site": "ingestion", "auth": "managed_identity" }
+  ],
+  "index": {
+    "name": "casewright-index",
+    "key_field": "content_id",
+    "content_field": "content_text",
+    "vector_field": {
+      "name": "content_embedding",
+      "algorithm": "hnsw",
+      "quantization": "scalar",
+      "dimensions_source": "settings.embedding_dimensions"
+    },
+    "metadata_fields": ["document_title", "source_path", "site_id", "content_type", "last_modified"],
+    "semantic_config": { "title_field": "document_title", "content_fields": ["content_text"] }
+  },
+  "chunking": { "unit": "characters", "maximum_length": 3000, "overlap": 500 },
+  "embedding": {
+    "deployment_source": "settings.embedding_deployment",
+    "dimensions_source": "settings.embedding_dimensions"
+  },
+  "skillset": {
+    "multimodal": true,
+    "skills": ["layout_extract", "split", "embed", "image_verbalize", "image_embed"],
+    "index_projections": true,
+    "knowledge_store": true,
+    "notes": "Three indexer paths share the index: multimodal (binary PDF/Office) runs the full skillset; markdown and json paths run split + embed only."
+  },
+  "indexer": {
+    "change_detection": "HighWaterMark",
+    "deletion_detection": "SoftDelete",
+    "schedule": "on-demand",
+    "trigger_policy": "run only when worker reports added + updated + deleted > 0"
+  },
+  "query": {
+    "mode": "hybrid",
+    "semantic_reranker": true,
+    "min_reranker_score": 2.0,
+    "returns_citations": true
+  },
+  "agentic_retrieval": {
+    "enabled": false,
+    "rationale": "single-shot hybrid + reranker grounding satisfies the BRD; multi-step planning not requested."
+  },
+  "required_role_assignments": [
+    { "identity": "search-service", "role": "Storage Blob Data Reader", "scope": "storage-account", "reason": "indexer reads source blobs + knowledge store writes" },
+    { "identity": "search-service", "role": "Cognitive Services OpenAI User", "scope": "azure-openai", "reason": "vectorizer + embedding skill" },
+    { "identity": "casewright-api", "role": "Search Index Data Reader", "scope": "search-service", "reason": "runtime hybrid query" },
+    { "identity": "casewright-worker", "role": "Search Service Contributor", "scope": "search-service", "reason": "runs indexers + pipeline setup" }
+  ],
+  "findings": [
+    { "severity": "minor", "message": "BRD did not specify chunk size; defaulted to 3000/500 characters." },
+    { "severity": "info", "message": "Embedding dimensions sourced from settings.embedding_dimensions to keep a model swap from silently breaking the vector field." }
+  ]
+}

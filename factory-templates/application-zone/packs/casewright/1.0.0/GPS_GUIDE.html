@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading GPS Guide...</title>
+</head>
+<body style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f5f5; margin: 0;">
+    <div style="text-align: center;">
+        <h2 style="color: #667eea; margin-bottom: 20px;">🗺️ Loading CaseWright GPS Guide...</h2>
+        <div style="width: 40px; height: 40px; border: 4px solid #667eea; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script>
+        // ============================================================================
+        // CaseWright GPS GUIDE - Using Template Pattern
+        // ============================================================================
+        // This is an EXAMPLE of how to use the reusable GPS_GUIDE_TEMPLATE.html
+        // Copy this pattern when adding GPS to new apps!
+        // ============================================================================
+
+        const appConfig = {
+            appName: "CaseWright",
+            subtitle: "Know exactly where you are in your journey",
+            agentCount: 6,
+            runtimePort: 8000,
+            startStage: 2,  // Show Create Instance by default
+            stages: [
+                {
+                    number: 0,
+                    emoji: "🚀",
+                    shortName: "Start",
+                    name: "🚀 Let's Begin!",
+                    timing: "1 minute",
+                    description: "Welcome to the Application Zone. You're about to discover a multi-agent platform that bridges your apps with powerful AI services.",
+                    details: {
+                        title: "What you'll learn:",
+                        items: [
+                            "How to create an instance for CaseWright",
+                            "How to discover 6 powerful agents",
+                            "How to invoke agents and see results"
+                        ]
+                    },
+                    tip: "Take your time. This guide adjusts to your pace.",
+                    substages: [
+                        "Read this welcome",
+                        "Understand the architecture",
+                        "Prepare your environment"
+                    ],
+                    checklist: [
+                        "Read this welcome guide",
+                        "Understand the multi-agent architecture",
+                        "Prepare your environment"
+                    ],
+                    landmark: "You understand how CaseWright agents work together"
+                },
+                {
+                    number: 1,
+                    emoji: "⚙️",
+                    shortName: "Setup",
+                    name: "⚙️ Setup Your Environment",
+                    timing: "10 minutes",
+                    description: "Start the Application Zone backend and factory portal. This creates the infrastructure for discovering and invoking CaseWright agents.",
+                    details: {
+                        title: "What happens at this stage:",
+                        items: [
+                            "Application Zone backend starts on port 5000",
+                            "Factory Portal opens in your browser on port 5501",
+                            "CaseWright runtime runs on port 8000",
+                            "All services verify they can reach each other"
+                        ]
+                    },
+                    tip: "If services don't start, check that ports 5000, 5501, and 8000 are available.",
+                    substages: [
+                        "Start backend service",
+                        "Open Factory Portal",
+                        "Start CaseWright runtime",
+                        "Verify services running"
+                    ],
+                    checklist: [
+                        "Start Application Zone backend (port 5000)",
+                        "Open Factory Portal in browser (port 5501)",
+                        "Start CaseWright runtime (port 8000)",
+                        "Verify all services are running",
+                        "Check browser console for errors"
+                    ],
+                    landmark: "All three services running and can reach each other"
+                },
+                {
+                    number: 2,
+                    emoji: "📦",
+                    shortName: "Create Instance",
+                    name: "📦 Create Your First Instance",
+                    timing: "2 minutes",
+                    description: "Create an isolated workspace that connects to your CaseWright runtime and auto-discovers all 6 agents.",
+                    details: {
+                        title: "What happens at this stage:",
+                        items: [
+                            "You provide instance configuration (name, app ID, runtime URL)",
+                            "Application Zone loads the CaseWright manifest from port 8000",
+                            "All 6 agents are discovered and indexed",
+                            "Instance is saved for future use"
+                        ]
+                    },
+                    tip: "Don't have CaseWright running? You can add the runtime URL later—create the instance anyway.",
+                    substages: [
+                        "Fill instance form",
+                        "Provide CaseWright runtime URL",
+                        "Click Create Instance",
+                        "See success message"
+                    ],
+                    checklist: [
+                        "Click 'Create Instance' button",
+                        "Enter instance name (e.g., my-casewright)",
+                        "Select app ID (casewright)",
+                        "Provide runtime URL (e.g., http://localhost:8000) or skip",
+                        "Click Create and see success message"
+                    ],
+                    landmark: "Instance created—you should see '6 agents discovered' in the portal"
+                },
+                {
+                    number: 3,
+                    emoji: "🔍",
+                    shortName: "Discover Agents",
+                    name: "🔍 Discover Available Agents",
+                    timing: "3 minutes",
+                    description: "Load and explore all 6 agents that CaseWright exposes. Each agent solves a specific problem in case management.",
+                    details: {
+                        title: "Meet the CaseWright agents:",
+                        items: [
+                            "Case Knowledge Agent - Search and summarize case documents",
+                            "Case Chat Fallback - Conversational fallback for complex queries",
+                            "SharePoint Discovery Agent - Find documents in enterprise knowledge",
+                            "SharePoint Sync Agent - Synchronize case data with SharePoint",
+                            "Health Agent - Monitor system health and performance",
+                            "Indexer Agent - Index and prepare documents for search"
+                        ]
+                    },
+                    tip: "Start with the Case Knowledge Agent—it's perfect for your first query.",
+                    substages: [
+                        "Click 'Load Agents'",
+                        "See 6 agents in dropdown",
+                        "Review descriptions",
+                        "Choose your first agent"
+                    ],
+                    checklist: [
+                        "Click 'Load Agents' button",
+                        "See agent dropdown populated with 6 agents",
+                        "Review all agent categories (Knowledge, Discovery, Ops, Pipeline)",
+                        "Read descriptions and capabilities",
+                        "Understand which agent fits your need"
+                    ],
+                    landmark: "You can see all 6 agents and understand their unique capabilities"
+                },
+                {
+                    number: 4,
+                    emoji: "⚡",
+                    shortName: "Invoke Agent",
+                    name: "⚡ Select & Invoke an Agent",
+                    timing: "5 minutes",
+                    description: "Build a JSON payload and invoke your first CaseWright agent. See how case queries transform into AI-powered results.",
+                    details: {
+                        title: "What happens when you invoke:",
+                        items: [
+                            "Your JSON payload is sent to the selected agent",
+                            "The agent uses RAG (Retrieval-Augmented Generation) on CaseWright data",
+                            "The agent returns results with citations from source documents",
+                            "You see metadata including confidence scores and processing time"
+                        ]
+                    },
+                    tip: "Try a simple query first like 'What are the contract terms?' or 'Summarize case 42'.",
+                    substages: [
+                        "Select an agent",
+                        "Review sample payload",
+                        "Modify or paste payload",
+                        "Click Invoke"
+                    ],
+                    checklist: [
+                        "Select Case Knowledge Agent from dropdown",
+                        "Review the sample payload structure",
+                        "Build or paste your JSON payload",
+                        "Click 'Invoke Selected Agent'",
+                        "Wait for response from CaseWright"
+                    ],
+                    landmark: "You see agent response in the output panel with citations"
+                },
+                {
+                    number: 5,
+                    emoji: "🎯",
+                    shortName: "Results",
+                    name: "🎯 See Results & Next Steps",
+                    timing: "Varies",
+                    description: "Your agent has processed your case request. Explore the response and try different agents to master the platform.",
+                    details: {
+                        title: "Understanding CaseWright results:",
+                        items: [
+                            "Each response includes the agent's answer plus source citations",
+                            "Citations show which case documents or contracts the agent used",
+                            "Confidence scores indicate how certain the agent is about the answer",
+                            "You can iterate—try different queries or switch agents"
+                        ]
+                    },
+                    tip: "Keep iterating! Try the same query with different agents to see different perspectives.",
+                    substages: [
+                        "View response",
+                        "Check citations",
+                        "Try another agent",
+                        "Build complex queries"
+                    ],
+                    checklist: [
+                        "View agent response in output panel",
+                        "Check for citations from source documents",
+                        "Review metadata and confidence scores",
+                        "Try invoking a different agent with same payload",
+                        "Build more complex queries to explore all agents"
+                    ],
+                    landmark: "You've successfully used multiple agents and understand their strengths"
+                }
+            ]
+        };
+
+        async function loadGPSTemplate() {
+            try {
+                const templatePath = '../../GPS_GUIDE_TEMPLATE.html';
+                const response = await fetch(templatePath);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load template: ${response.statusText}`);
+                }
+
+                const templateHTML = await response.text();
+                document.documentElement.innerHTML = templateHTML;
+                window.appConfig = appConfig;
+
+                if (window.initializeGPS) {
+                    window.initializeGPS();
+                }
+            } catch (error) {
+                document.body.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #d32f2f;">
+                        <h2>⚠️ Error Loading GPS Guide</h2>
+                        <p style="margin: 20px 0; font-family: monospace; background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                            ${error.message}
+                        </p>
+                        <p style="color: #666;">Template should be at: <strong>../../GPS_GUIDE_TEMPLATE.html</strong></p>
+                        <p style="color: #999; font-size: 0.9em;">Current path: ${window.location.pathname}</p>
+                    </div>
+                `;
+                console.error('GPS Guide Error:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadGPSTemplate);
+    </script>
+</body>
+</html>
