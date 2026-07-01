@@ -28,7 +28,7 @@ RUN if [ "$INSTALL_COPILOT_CLI" = "1" ]; then \
 
 # Create non-root user
 RUN useradd -m -u 1000 portal && \
-    mkdir -p /app/docs/intake /app/projects /app/outputs/brd-runs /app/logs && \
+    mkdir -p /app/docs/intake /app/outputs/brd-runs /app/logs && \
     chown -R portal:portal /app
 
 # Copy application code
@@ -37,15 +37,14 @@ COPY scripts/factory_runtime/ scripts/factory_runtime/
 COPY scripts/language_agents/ scripts/language_agents/
 COPY scripts/iac_agents/ scripts/iac_agents/
 COPY factory-portal.html ./
+COPY factory-projects.generated.json ./
 COPY README.md ./
 COPY docs/ docs/
 COPY assets/ assets/
-# Bake generated project folders into the image so detail pages work
-# (README, diagrams, /api/projects/*/files). Per-user visibility is enforced
-# at request time via .portal-owners.json + Easy Auth principal headers.
-COPY projects/ projects/
+COPY factory-templates/ factory-templates/
+# Note: projects/ directory NOT included in minimal Docker build context.
 # Snapshot of the project feed baked into the image at build time
-COPY factory-projects.generated.json ./
+# (factory-projects.generated.json will be served without directory filtering).
 # Per-user ownership allowlist (slug → UPNs). Consumed when
 # FACTORY_PORTAL_AUTH_MODE=entra. Safe to include empty / missing.
 COPY .portal-owners.json ./

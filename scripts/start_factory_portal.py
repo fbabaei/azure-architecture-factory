@@ -3110,6 +3110,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_copilot_root_get(request_path)
 
+        # Serve factory-templates/ files dynamically
+        if request_path.startswith("/factory-templates/"):
+            return self._serve_factory_template_file(request_path)
+
         # Default file serving
         return super().do_GET()
 
@@ -5973,7 +5977,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         # links users to those slugs, every subsequent API call (chat, files,
         # analysis) 404s. Filter them out here so the feed only ever advertises
         # projects we can actually serve.
-        if projects_dir.is_dir():
+        # EXCEPTION: if projects/ is empty or missing entirely, assume this is
+        # a snapshot deployment (baked-in feed) and skip filtering.
+        if projects_dir.is_dir() and any(projects_dir.iterdir()):
             merged = [p for p in merged if (projects_dir / (p.get("slug") or "")).is_dir()]
 
         # Apply per-deployment visibility allowlist (hides hidden projects on
@@ -5994,6 +6000,112 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "projects": merged,
         }
         return self._send_json(payload, 200)
+
+    def _serve_factory_template_file(self, request_path: str):
+        """Serve files from factory-templates/ directory.
+        
+        Request path like /factory-templates/application-zone/GPS_ONBOARDING_FOR_NEW_APPS.md
+        maps to factory-templates/application-zone/GPS_ONBOARDING_FOR_NEW_APPS.md
+        
+        Markdown files are automatically rendered as HTML with client-side markdown renderer.
+        """
+        # Extract relative path after /factory-templates/
+        rel_path = request_path[len("/factory-templates/"):]
+        
+        # Validate path (no directory traversal)
+        if ".." in rel_path or rel_path.startswith("/"):
+            self.send_error(400, "Invalid path")
+            return
+        
+        file_path = (FACTORY_REPO_ROOT / "factory-templates" / rel_path).resolve()
+        templates_root = (FACTORY_REPO_ROOT / "factory-templates").resolve()
+        
+        # Ensure the resolved path is within factory-templates/
+        if templates_root not in file_path.parents and file_path.parent != templates_root:
+            self.send_error(403, "Forbidden")
+            return
+        
+        if not file_path.exists() or not file_path.is_file():
+            self.send_error(404, "Not Found")
+            return
+        
+        try:
+            content = file_path.read_bytes()
+            
+            # For markdown files, wrap in HTML with client-side renderer
+            if file_path.suffix == ".md":
+                markdown_text = content.decode('utf-8')
+                # Escape HTML special characters in markdown
+                markdown_escaped = html.escape(markdown_text)
+                
+                html_wrapper = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{html.escape(file_path.stem)}</title>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }}
+        .container {{ max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; min-height: 100vh; }}
+        h1, h2, h3, h4, h5, h6 {{ margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }}
+        h1 {{ font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }}
+        h2 {{ font-size: 1.5em; }}
+        h3 {{ font-size: 1.25em; }}
+        p {{ margin-bottom: 16px; }}
+        ul, ol {{ margin-left: 2em; margin-bottom: 16px; }}
+        li {{ margin-bottom: 8px; }}
+        code {{ background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; }}
+        pre {{ background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; margin-bottom: 16px; }}
+        pre code {{ background: none; padding: 0; }}
+        blockquote {{ border-left: 4px solid #ddd; padding-left: 16px; margin: 16px 0; color: #666; }}
+        table {{ border-collapse: collapse; width: 100%; margin: 16px 0; }}
+        th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+        th {{ background: #f6f8fa; font-weight: 600; }}
+        a {{ color: #0366d6; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+        .back-link {{ margin-bottom: 20px; }}
+        .back-link a {{ font-size: 0.9em; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="javascript:history.back()">← Back</a>
+        </div>
+        <div id="content"></div>
+    </div>
+    <script>
+        const md = new markdownit({{
+            html: false,
+            linkify: true,
+            typographer: true
+        }});
+        const markdown = `{markdown_escaped}`;
+        const html = md.render(markdown);
+        document.getElementById('content').innerHTML = html;
+    </script>
+</body>
+</html>"""
+                content = html_wrapper.encode('utf-8')
+                content_type = "text/html; charset=utf-8"
+            elif file_path.suffix == ".json":
+                content_type = "application/json"
+            elif file_path.suffix == ".html":
+                content_type = "text/html; charset=utf-8"
+            else:
+                content_type = "text/plain; charset=utf-8"
+            
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", len(content))
+            self.send_header("Cache-Control", "public, max-age=3600")
+            self.end_headers()
+            self.wfile.write(content)
+        except (OSError, IOError) as e:
+            logger.error("Error serving factory template file %s: %s", file_path, e)
+            self.send_error(500, "Internal Server Error")
 
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:
         if not re.fullmatch(r"[A-Za-z0-9._-]+", slug or ""):
