@@ -761,6 +761,62 @@
             color: var(--primary);
         }
 
+        .foundry-portal-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 248, 255, 0.98) 100%);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            margin: -0.3rem 0 1.5rem;
+            box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+        }
+
+        .foundry-portal-panel h2 {
+            color: var(--primary);
+            font-size: 1.15rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .foundry-portal-panel h2::before {
+            display: none;
+        }
+
+        .foundry-portal-panel p {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            margin-bottom: 0.85rem;
+            max-width: 820px;
+        }
+
+        .foundry-action-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+
+        .foundry-action-list a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            text-decoration: none;
+            color: var(--primary-dark);
+            background: #eef6ff;
+            border: 1px solid #bfd8ee;
+            border-radius: 999px;
+            padding: 0.48rem 0.85rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+        }
+
+        .foundry-action-list a:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
         .copilot-companion-panel {
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 248, 255, 0.98) 100%);
             border: 1px solid var(--border);
@@ -2876,6 +2932,7 @@
                         <a href="#intake">BRD Intake</a>
                         <a href="#intake" onclick="return launchAcaExpress(event)" title="Skip Bicep — deploy an HTTP container to ACA in under a minute (westcentralus / eastasia only)">⚡ ACA Express Deploy</a>
                         <a href="#csa-companion">CSA Copilot</a>
+                        <a href="#ai-agent-foundry-panel">AI Agent Foundry</a>
                         <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
                         <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
                         <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
@@ -2904,6 +2961,17 @@
             </div>
             <div class="design-analysis-heading" style="margin-top:1.5rem;">
                 <h2>Design Analysis &amp; Rationale - <span style="font-weight:400; font-size:0.75em;">Understanding the architectural patterns and design decisions</span></h2>
+            </div>
+        </section>
+
+        <section id="ai-agent-foundry-panel" class="foundry-portal-panel" aria-labelledby="ai-agent-foundry-title">
+            <h2 id="ai-agent-foundry-title">Azure AI Agent Foundry</h2>
+            <p>Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.</p>
+            <div class="foundry-action-list" aria-label="Azure AI Agent Foundry actions">
+                <a href="../azure-ai-agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Foundry Browser</a>
+                <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
+                <a href="../azure-ai-agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
+                <a href="../azure-ai-agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
             </div>
         </section>
 
@@ -3066,6 +3134,7 @@
             <a class="workspace-chip" href="#application-zone-workspace">Application Zone</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
+            <a class="workspace-chip" href="#ai-agent-foundry-panel">AI Agent Foundry</a>
         </div>
 
         <!-- Design Analysis -->
