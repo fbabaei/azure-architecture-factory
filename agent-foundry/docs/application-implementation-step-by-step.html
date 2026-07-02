@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Application Implementation</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="application-implementation-step-by-step.md">application-implementation-step-by-step.md</a></p>
+<h1 id="azure-ai-agent-foundry-application-implementation">Azure AI Agent Foundry Application Implementation</h1>
+<p>Use this guide as the application-side companion to the learning paths. It shows how to move from an idea to a minimal working AI agent application by using the Azure AI Agent Foundry orchestrators, blueprint agents, and shared platform specialists.</p>
+<h2 id="recommended-agents">Recommended Agents</h2>
+<p>Start with the primary application orchestrator:</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure AI Application Orchestrator</td>
+<td>You need to design an app with reusable Azure AI agents, choose blueprint agents, define configuration, and plan integration.</td>
+</tr>
+<tr>
+<td>Application Planning Companion Agent</td>
+<td>You have an app design and need help managing steps, tracking decisions, coordinating handoffs, or maintaining planning artifacts without terminal execution.</td>
+</tr>
+<tr>
+<td>Application Implementation Validation Agent</td>
+<td>You need to implement bounded steps, run terminal commands, execute tests, start local servers, or collect validation evidence.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-assistant-agents-help-through-this-guide">How Assistant Agents Help Through This Guide</h2>
+<p>Use assistant agents as step-by-step companions rather than only as one-time routers.</p>
+<table>
+<thead>
+<tr>
+<th>User need</th>
+<th>Use this agent</th>
+<th>What it should do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Walk through the application steps in order</td>
+<td>Application Planning Companion Agent</td>
+<td>Track the current step, decisions, owners, handoff agents, validation checks, and open questions.</td>
+</tr>
+<tr>
+<td>Turn a design step into an implementation-ready task</td>
+<td>Application Planning Companion Agent</td>
+<td>Define target files, placeholders, acceptance criteria, validation command, and remaining blockers without running commands.</td>
+</tr>
+<tr>
+<td>Execute an approved bounded step</td>
+<td>Application Implementation Validation Agent</td>
+<td>Edit files, run focused commands, start local servers when needed, collect validation evidence, and report remaining issues.</td>
+</tr>
+<tr>
+<td>Resolve a specialist decision</td>
+<td>The relevant design or shared specialist</td>
+<td>Produce the architecture, API, data, configuration, UX, test, safety, security, monitoring, or operations handoff for the planning companion.</td>
+</tr>
+</tbody>
+</table>
+<p>Recommended starter prompt:</p>
+<pre><code class="language-text">Application Planning Companion Agent, walk me through this application implementation guide one step at a time. Track the current step, decisions, owner agents, handoffs, validation checks, and open questions. Do not run commands; prepare execution handoffs for Application Implementation Validation Agent when needed.
+</code></pre>
+<p>When a step is ready for execution, hand it off explicitly:</p>
+<pre><code class="language-text">Application Implementation Validation Agent, execute the approved current step from the planning tracker, edit only the named files, run the focused validation command, and summarize evidence plus remaining issues.
+</code></pre>
+<p>Use these application design specialists before implementation when the app is new or underspecified:</p>
+<table>
+<thead>
+<tr>
+<th>Specialist</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture &amp; Design Agent</td>
+<td>You need components, boundaries, request flows, data flows, and design decisions before choosing implementation tasks.</td>
+</tr>
+<tr>
+<td>API &amp; Integration Contract Agent</td>
+<td>You need API, CLI, event, webhook, tool, or service contracts with schemas, errors, retries, and integration assumptions.</td>
+</tr>
+<tr>
+<td>Data &amp; Storage Design Agent</td>
+<td>You need storage, indexing, metadata, generated asset, retention, privacy, or audit patterns.</td>
+</tr>
+<tr>
+<td>Configuration &amp; Environment Contract Agent</td>
+<td>You need <code>.env</code>, settings, endpoint placeholders, feature flags, environment-specific values, or validation rules.</td>
+</tr>
+<tr>
+<td>Test &amp; Evaluation Strategy Agent</td>
+<td>You need test layers, mocks, manual validation, AI quality evaluations, regression datasets, or acceptance criteria.</td>
+</tr>
+<tr>
+<td>UX &amp; Human Workflow Agent</td>
+<td>You need user journeys, review queues, confidence thresholds, fallback states, feedback capture, or human-in-the-loop flows.</td>
+</tr>
+</tbody>
+</table>
+<p>Then choose one application blueprint agent:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ask questions about uploaded images</td>
+<td>Vision Chat App Agent</td>
+</tr>
+<tr>
+<td>Generate images from prompts</td>
+<td>Image Generation App Agent</td>
+</tr>
+<tr>
+<td>Generate or remix videos</td>
+<td>Video Generation App Agent</td>
+</tr>
+<tr>
+<td>Extract structured metadata from images</td>
+<td>Content Understanding Metadata Agent</td>
+</tr>
+<tr>
+<td>Build a search-grounded assistant</td>
+<td>RAG Search App Agent</td>
+</tr>
+<tr>
+<td>Extract fields from PDFs, forms, or invoices</td>
+<td>Document Processing App Agent</td>
+</tr>
+</tbody>
+</table>
+<p>Use these shared specialists as needed:</p>
+<table>
+<thead>
+<tr>
+<th>Specialist</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Foundry Integration Agent</td>
+<td>You need Foundry project, model deployment, quota, endpoint, or deployment-name guidance.</td>
+</tr>
+<tr>
+<td>Auth Config Agent</td>
+<td>You need local auth, Microsoft Entra ID, DefaultAzureCredential, <code>.env</code>, managed identity, or endpoint validation guidance.</td>
+</tr>
+<tr>
+<td>Responsible AI Safety Agent</td>
+<td>You need content safety, moderation, prompt-injection handling, output filtering, or evaluation checks.</td>
+</tr>
+<tr>
+<td>Security &amp; Compliance Agent</td>
+<td>You need threat modeling, data protection, secrets, RBAC, network exposure, or compliance readiness review.</td>
+</tr>
+<tr>
+<td>Monitoring &amp; Evaluation Agent</td>
+<td>You need telemetry, tracing, Azure Monitor/Application Insights signals, alerting, evaluation checks, or quality monitoring.</td>
+</tr>
+<tr>
+<td>Operations Readiness Agent</td>
+<td>You need production readiness, runbooks, rollback, support handoff, incident response, quota, or cost guardrails.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="implementation-order">Implementation Order</h2>
+<ol>
+<li>Pick the application scenario or provide a BRD/PRD or architecture artifact.</li>
+<li>Extract verified requirements and map them to Foundry agents when a BRD, PRD, feature brief, or requirements file exists.</li>
+<li>Extract verified architecture elements and map them to Foundry agents when Markdown architecture notes, Mermaid, PlantUML, diagram exports, ADRs, component lists, or data-flow notes exist.</li>
+<li>Use Architecture &amp; Design Agent when the app needs components, boundaries, or flow decisions.</li>
+<li>Use API &amp; Integration Contract Agent when callers, schemas, errors, retries, or downstream assumptions need definition.</li>
+<li>Use Data &amp; Storage Design Agent when persistence, indexing, metadata, retention, or privacy needs definition.</li>
+<li>Use Configuration &amp; Environment Contract Agent when settings, environment variables, or preflight checks need definition.</li>
+<li>Use Test &amp; Evaluation Strategy Agent when validation layers, mocks, datasets, or acceptance criteria need definition.</li>
+<li>Use UX &amp; Human Workflow Agent when users, reviewers, feedback, fallback, or human-in-the-loop states need definition.</li>
+<li>Select the blueprint agent.</li>
+<li>Start the planning companion.</li>
+<li>Define the configuration contract.</li>
+<li>Bring in Foundry integration.</li>
+<li>Decide whether Microsoft Agent Framework makes sense.</li>
+<li>Add authentication and local developer setup.</li>
+<li>Add responsible AI and safety requirements.</li>
+<li>Add security and compliance review.</li>
+<li>Design monitoring and evaluation.</li>
+<li>Prepare operations readiness.</li>
+<li>Design the app flow.</li>
+<li>Define input and output schemas.</li>
+<li>Plan the minimal implementation.</li>
+<li>Build the thin first version.</li>
+<li>Validate with a manual test.</li>
+<li>Add evaluation.</li>
+<li>Prepare for deployment.</li>
+</ol>
+<h2 id="pick-the-application-scenario">1. Pick The Application Scenario</h2>
+<p>Goal: state the app in plain language before choosing services or code structure.</p>
+<p>Examples:</p>
+<pre><code class="language-text">I want to build an app that extracts metadata from product images for search.
+</code></pre>
+<pre><code class="language-text">I want to build a RAG assistant over internal documents.
+</code></pre>
+<pre><code class="language-text">I want to build a document processing app for invoices and receipts.
+</code></pre>
+<p>Start with this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design an AI agent solution for [your scenario].
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Application intent.</li>
+<li>Recommended architecture, contract, or data design specialists.</li>
+<li>Recommended configuration, test/evaluation, or UX workflow specialists.</li>
+<li>Recommended blueprint agent.</li>
+<li>Required Azure services.</li>
+<li>Configuration needs.</li>
+<li>Integration flow.</li>
+<li>Safety and authentication notes.</li>
+</ol>
+<p>Checkpoint: you can explain what the app does, who uses it, what input it accepts, and what output it returns.</p>
+<h2 id="a.start-from-a-brd-or-prd">1A. Start From A BRD Or PRD</h2>
+<p>Goal: convert product or business requirements into a requirement-to-agent implementation plan before writing code.</p>
+<p>Use this path when you already have one of these inputs:</p>
+<ol>
+<li>Business Requirements Document.</li>
+<li>Product Requirements Document.</li>
+<li>Feature brief.</li>
+<li>Issue or epic description.</li>
+<li>Pasted requirements summary.</li>
+</ol>
+<p>Start with this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/implement-from-brd-prd [paste requirements or provide a workspace file path]
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-text">/implement-from-brd-prd docs/customer-support-assistant-prd.md
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>BRD/PRD source and evidence summary.</li>
+<li>Verified requirements and assumptions.</li>
+<li>Requirement-to-agent mapping.</li>
+<li>Selected blueprints and why they fit.</li>
+<li>Architecture, API, data, configuration, UX, and test/evaluation handoffs.</li>
+<li>Security, safety, monitoring, and operations handoffs.</li>
+<li>Microsoft Agent Framework fit assessment.</li>
+<li>Phased implementation plan.</li>
+<li>First bounded implementation step for Application Implementation Validation Agent.</li>
+<li>Missing decisions and open questions.</li>
+</ol>
+<p>Checkpoint: every implementation step traces back to a verified requirement, assumption, or open decision. If the BRD/PRD is incomplete, the plan should stop at missing inputs instead of inventing requirements or Azure resources.</p>
+<h2 id="b.start-from-architecture-markdown-or-a-diagram">1B. Start From Architecture Markdown Or A Diagram</h2>
+<p>Goal: convert an architecture artifact into a design handoff before writing code.</p>
+<p>Use this path when you already have one of these inputs:</p>
+<ol>
+<li>Markdown architecture notes.</li>
+<li>Mermaid or PlantUML diagram text.</li>
+<li>draw.io or Visio export text.</li>
+<li>Architecture decision records.</li>
+<li>Component, deployment, integration, or data-flow notes.</li>
+<li>Pasted diagram description.</li>
+</ol>
+<p>Start with this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/design-from-architecture [paste Markdown architecture notes or provide a workspace file path]
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-text">/design-from-architecture docs/customer-support-architecture.md
+</code></pre>
+<p>If pasting Markdown directly, put the architecture content after the slash command:</p>
+<pre><code class="language-text">/design-from-architecture
+# Customer Support Assistant Architecture
+
+## Components
+- Web chat UI
+- Azure AI Agent for support triage
+- Azure AI Search index over support articles
+- Human escalation queue
+
+## Flows
+- User asks a question in chat
+- Agent retrieves grounding content from Azure AI Search
+- Low-confidence answers route to human review
+</code></pre>
+<p>The Architecture To Design Intake in <code>browser/index.html</code> generates a longer prompt with guardrail instructions. That full prompt is valid and useful when you want the agent to explicitly separate verified facts, assumptions, unsupported inferences, and open decisions, and to avoid inventing components, Azure resources, endpoints, model deployments, security boundaries, test results, or implementation evidence.</p>
+<p>Expected output:</p>
+<ol>
+<li>Architecture source and evidence summary.</li>
+<li>Verified architecture elements and assumptions.</li>
+<li>Unsupported inferences and open decisions.</li>
+<li>Architecture-to-agent mapping.</li>
+<li>Selected blueprints and why they fit.</li>
+<li>Architecture, API, data, configuration, UX, and test/evaluation handoffs.</li>
+<li>Security, safety, monitoring, and operations handoffs.</li>
+<li>Microsoft Agent Framework fit assessment.</li>
+<li>Design plan and implementation handoff sequence.</li>
+<li>First bounded design or implementation step.</li>
+</ol>
+<p>Checkpoint: every design or implementation step traces back to a verified architecture element, assumption, or open decision. If the input is only an image and the agent cannot inspect image contents directly, provide Markdown notes, Mermaid or PlantUML text, OCR output, exported diagram text, or a user summary instead of expecting the agent to infer the diagram.</p>
+<h2 id="select-the-blueprint-agent">2. Select The Blueprint Agent</h2>
+<p>Goal: choose the narrowest useful application blueprint.</p>
+<p>Use this prompt when you already know the target pattern:</p>
+<pre><code class="language-text">/design-ai-agent-solution Use the RAG Search App Agent to design a support assistant over product documentation.
+</code></pre>
+<p>For other scenarios, replace <code>RAG Search App Agent</code> with the relevant blueprint agent name.</p>
+<p>Expected output:</p>
+<ol>
+<li>Agent purpose.</li>
+<li>Input and output contract.</li>
+<li>Required Azure services.</li>
+<li>Model or service choices.</li>
+<li>Configuration fields.</li>
+<li>Integration flow.</li>
+<li>Safety and authentication notes.</li>
+</ol>
+<p>Checkpoint: you know which agent owns the application design and which shared specialists need to review it.</p>
+<h2 id="start-the-planning-companion">3. Start The Planning Companion</h2>
+<p>Goal: keep the implementation organized once the design direction is selected.</p>
+<p>Use this prompt after the application orchestrator or blueprint agent has produced a design:</p>
+<pre><code class="language-text">Application Planning Companion Agent, tag along with this app build. Track the current design, decisions, implementation steps, handoff agents, validation checks, and open questions.
+</code></pre>
+<p>Ask it to manage a specific step when you need coordination:</p>
+<pre><code class="language-text">Application Planning Companion Agent, manage the configuration-contract step and tell me which agent owns each decision.
+</code></pre>
+<p>Ask it to prepare a bounded step for implementation when you are ready for file changes or commands:</p>
+<pre><code class="language-text">Application Planning Companion Agent, prepare the README quickstart step for implementation and define the files, placeholders, validation command, and acceptance criteria.
+</code></pre>
+<p>Hand off to the implementation and validation agent when terminal execution or validation evidence is needed:</p>
+<pre><code class="language-text">Application Implementation Validation Agent, implement the README quickstart step from the current plan and run the focused validation check.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Current step.</li>
+<li>Implementation tracker.</li>
+<li>Recommended owner or handoff agent.</li>
+<li>Action taken or next task list.</li>
+<li>Validation check.</li>
+<li>Open decisions.</li>
+</ol>
+<p>Checkpoint: the app has a living implementation tracker before code or configuration work spreads across files.</p>
+<h2 id="define-the-configuration-contract">4. Define The Configuration Contract</h2>
+<p>Goal: define the settings the app needs before writing implementation code.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Design the configuration contract for this agent, including environment variables, model settings, service endpoints, and required secrets.
+</code></pre>
+<p>Common configuration fields:</p>
+<pre><code class="language-text">AZURE_AI_PROJECT_ENDPOINT=
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_DEPLOYMENT_NAME=
+AZURE_AI_SEARCH_ENDPOINT=
+AZURE_AI_SEARCH_INDEX=
+AZURE_TENANT_ID=
+AZURE_CLIENT_ID=
+</code></pre>
+<p>For quickstarts, key-based authentication may appear. For production, prefer Microsoft Entra ID and managed identity where possible.</p>
+<p>Checkpoint: every required endpoint, deployment name, index name, and credential source is named.</p>
+<h2 id="bring-in-foundry-integration">5. Bring In Foundry Integration</h2>
+<p>Goal: confirm how the app connects to Microsoft Foundry and model deployments.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Foundry Integration Agent to identify the Foundry project endpoint, model deployment name, quota considerations, and required app settings.
+</code></pre>
+<p>Confirm:</p>
+<ol>
+<li>Foundry project endpoint.</li>
+<li>Model deployment name.</li>
+<li>Model family and version.</li>
+<li>Region availability.</li>
+<li>Quota or capacity risk.</li>
+<li>Whether the endpoint is project-scoped or resource-scoped.</li>
+</ol>
+<p>Checkpoint: you know which endpoint the app calls, which deployment name it uses, and whether quota is sufficient for testing.</p>
+<h2 id="decide-whether-microsoft-agent-framework-makes-sense">6. Decide Whether Microsoft Agent Framework Makes Sense</h2>
+<p>Goal: choose whether the design should stay as a lightweight service integration or become a runnable Microsoft Agent Framework application.</p>
+<p>Use this prompt after the blueprint, Foundry, and configuration needs are clear:</p>
+<pre><code class="language-text">Azure AI Application Orchestrator, assess whether Microsoft Agent Framework makes sense for this app. Explain the fit, non-fit reasons, handoff agent, expected scaffold shape, and validation checks.
+</code></pre>
+<p>Use Microsoft Agent Framework when the app needs one or more of these capabilities:</p>
+<ol>
+<li>A runnable agent or workflow runtime rather than only design guidance.</li>
+<li>Tool calling, actions, or multi-step orchestration with clear boundaries.</li>
+<li>Stateful agent behavior, reusable workflows, or handoffs between app agents.</li>
+<li>Microsoft Foundry-connected model deployments, tracing, debugging, evaluation, or deployment lifecycle.</li>
+<li>A production path where implementation, validation, and operational evidence matter.</li>
+</ol>
+<p>Keep the implementation simpler when the task is only a learning lab, catalog browsing, a one-off SDK call, static design documentation, or a prototype that does not need an agent runtime.</p>
+<p>If Microsoft Agent Framework fits, use the planning companion to convert the decision into a bounded implementation step:</p>
+<pre><code class="language-text">Application Planning Companion Agent, add a Microsoft Agent Framework implementation option to the tracker, including scaffold boundaries, required configuration, validation command, and open decisions.
+</code></pre>
+<p>Then hand execution to the implementation and validation agent only after the step has files, placeholders, acceptance criteria, and a validation check:</p>
+<pre><code class="language-text">Application Implementation Validation Agent, implement the approved Microsoft Agent Framework scaffold step and run the focused validation check.
+</code></pre>
+<p>Checkpoint: the plan states either &quot;use Microsoft Agent Framework&quot; with a reason and validation path, or &quot;do not use it yet&quot; with a simpler implementation route.</p>
+<h2 id="add-authentication-and-local-developer-setup">7. Add Authentication And Local Developer Setup</h2>
+<p>Goal: design secure local and production authentication.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Auth Config Agent to design local and production authentication for this app using DefaultAzureCredential where possible.
+</code></pre>
+<p>Ask for:</p>
+<ol>
+<li>Local <code>.env</code> variables.</li>
+<li>Azure CLI login expectations.</li>
+<li>Managed identity plan for production.</li>
+<li>Required RBAC roles.</li>
+<li>Secret handling rules.</li>
+<li>Endpoint validation steps.</li>
+</ol>
+<p>Recommended direction:</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Authentication approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local development</td>
+<td><code>az login</code> plus <code>DefaultAzureCredential</code></td>
+</tr>
+<tr>
+<td>Production</td>
+<td>Managed identity</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Key Vault or app settings, never committed</td>
+</tr>
+<tr>
+<td>Access</td>
+<td>Least privilege RBAC</td>
+</tr>
+</tbody>
+</table>
+<p>Checkpoint: you can explain how local auth differs from production auth.</p>
+<h2 id="add-responsible-ai-and-safety">8. Add Responsible AI And Safety</h2>
+<p>Goal: define safety policy before implementation begins.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Responsible AI Safety Agent to define input validation, output filtering, moderation, refusal behavior, and logging requirements for this app.
+</code></pre>
+<p>Ask it to cover:</p>
+<ol>
+<li>Unsafe input handling.</li>
+<li>Prompt-injection risks.</li>
+<li>Content filtering.</li>
+<li>PII handling.</li>
+<li>Generated-content disclosure.</li>
+<li>Human review thresholds.</li>
+<li>Audit logging.</li>
+<li>Evaluation checks.</li>
+</ol>
+<p>Checkpoint: the app has a documented safety policy before code is written.</p>
+<h2 id="add-security-and-compliance-review">9. Add Security And Compliance Review</h2>
+<p>Goal: identify security and compliance controls before implementation choices make them expensive to change.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Security &amp; Compliance Agent to review this Azure AI app design for threat modeling, data protection, secrets, RBAC, network exposure, and compliance readiness.
+</code></pre>
+<p>Ask it to cover:</p>
+<ol>
+<li>Data classification and retention.</li>
+<li>User roles and least privilege.</li>
+<li>Secret handling and credential flow.</li>
+<li>Network exposure and service boundaries.</li>
+<li>Audit, review, and compliance-sensitive gaps.</li>
+<li>Required security validation before deployment.</li>
+</ol>
+<p>Checkpoint: launch-blocking security controls and open compliance questions are visible before code is written.</p>
+<h2 id="design-monitoring-and-evaluation">10. Design Monitoring And Evaluation</h2>
+<p>Goal: define what the team must observe, measure, and evaluate once the app runs.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Monitoring &amp; Evaluation Agent to define telemetry, tracing, metrics, alerts, evaluation checks, and production quality signals for this app.
+</code></pre>
+<p>Ask it to cover:</p>
+<ol>
+<li>Runtime health signals.</li>
+<li>AI quality signals such as grounding, relevance, extraction accuracy, or retrieval quality.</li>
+<li>Safety and refusal monitoring.</li>
+<li>Latency, failure, and cost signals.</li>
+<li>Privacy-safe logging rules.</li>
+<li>Dashboard and alert ownership.</li>
+</ol>
+<p>Checkpoint: the app has observable success, failure, safety, and quality signals.</p>
+<h2 id="prepare-operations-readiness">11. Prepare Operations Readiness</h2>
+<p>Goal: make the app supportable before deployment planning begins.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Use the Operations Readiness Agent to define production readiness, runbook, rollback, incident response, support handoff, quota, and cost guardrail requirements for this app.
+</code></pre>
+<p>Ask it to cover:</p>
+<ol>
+<li>Release checklist.</li>
+<li>Runbook and support owner.</li>
+<li>Rollback and recovery plan.</li>
+<li>Quota, rate-limit, and dependency risks.</li>
+<li>Incident response and escalation path.</li>
+<li>Operational acceptance criteria.</li>
+</ol>
+<p>Checkpoint: the app has a supportable launch path with owners, runbooks, and rollback expectations.</p>
+<h2 id="design-the-app-flow">12. Design The App Flow</h2>
+<p>Goal: describe the request lifecycle from input to response.</p>
+<p>For a RAG app, use:</p>
+<pre><code class="language-text">RAG Search App Agent, give me the end-to-end request flow from user query to final grounded answer.
+</code></pre>
+<p>Expected RAG flow:</p>
+<pre><code class="language-text">User query
+-&gt; validate input
+-&gt; create embedding if needed
+-&gt; retrieve documents from Azure AI Search
+-&gt; assemble grounded prompt
+-&gt; call model deployment
+-&gt; apply safety and output checks
+-&gt; return answer with citations
+-&gt; log telemetry
+</code></pre>
+<p>For a document processing app, use:</p>
+<pre><code class="language-text">Document Processing App Agent, give me the end-to-end request flow for extracting invoice fields.
+</code></pre>
+<p>Expected document flow:</p>
+<pre><code class="language-text">Upload document
+-&gt; validate file type and size
+-&gt; submit to Document Intelligence
+-&gt; extract fields
+-&gt; check confidence scores
+-&gt; route low-confidence fields to review
+-&gt; return normalized JSON
+-&gt; store result
+</code></pre>
+<p>For a vision app, use:</p>
+<pre><code class="language-text">Vision Chat App Agent, give me the end-to-end request flow for image-aware question answering.
+</code></pre>
+<p>Expected vision flow:</p>
+<pre><code class="language-text">Upload image and question
+-&gt; validate file type, size, and content policy
+-&gt; encode or attach image input
+-&gt; call the model or vision service
+-&gt; apply output safety checks
+-&gt; return answer or structured result
+-&gt; log telemetry
+</code></pre>
+<p>Checkpoint: every step between user input and app response is named.</p>
+<h2 id="define-inputs-and-outputs">13. Define Inputs And Outputs</h2>
+<p>Goal: make the app contract clear enough for frontend, backend, and tests.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Define the input and output JSON schemas for this agent.
+</code></pre>
+<p>Example RAG input:</p>
+<pre><code class="language-json">{
+  &quot;query&quot;: &quot;How do I reset my device?&quot;,
+  &quot;conversationId&quot;: &quot;abc123&quot;,
+  &quot;filters&quot;: {
+    &quot;product&quot;: &quot;Device A&quot;
+  }
+}
+</code></pre>
+<p>Example RAG output:</p>
+<pre><code class="language-json">{
+  &quot;answer&quot;: &quot;To reset Device A...&quot;,
+  &quot;citations&quot;: [
+    {
+      &quot;title&quot;: &quot;Device A Manual&quot;,
+      &quot;source&quot;: &quot;device-a-manual.pdf&quot;,
+      &quot;chunkId&quot;: &quot;manual-42&quot;
+    }
+  ],
+  &quot;confidence&quot;: &quot;high&quot;
+}
+</code></pre>
+<p>Example document processing output:</p>
+<pre><code class="language-json">{
+  &quot;documentType&quot;: &quot;invoice&quot;,
+  &quot;fields&quot;: {
+    &quot;vendorName&quot;: &quot;Contoso Ltd.&quot;,
+    &quot;invoiceNumber&quot;: &quot;INV-1001&quot;,
+    &quot;invoiceDate&quot;: &quot;2026-07-02&quot;,
+    &quot;total&quot;: 1234.56
+  },
+  &quot;confidence&quot;: {
+    &quot;vendorName&quot;: 0.98,
+    &quot;invoiceNumber&quot;: 0.96,
+    &quot;invoiceDate&quot;: 0.94,
+    &quot;total&quot;: 0.99
+  },
+  &quot;needsReview&quot;: false
+}
+</code></pre>
+<p>Checkpoint: schemas are stable enough to build tests against them.</p>
+<h2 id="plan-the-minimal-implementation">14. Plan The Minimal Implementation</h2>
+<p>Goal: turn the design into a small task list for a working prototype.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Break this AI agent application design into implementation tasks for a minimal working version.
+</code></pre>
+<p>Suggested task list:</p>
+<ol>
+<li>Create project structure.</li>
+<li>Add configuration loader.</li>
+<li>Add Azure client factory.</li>
+<li>Add authentication setup.</li>
+<li>Add agent service class.</li>
+<li>Add API route or CLI entrypoint.</li>
+<li>Add safety checks.</li>
+<li>Add telemetry.</li>
+<li>Add tests with mocked Azure responses.</li>
+<li>Add README quickstart.</li>
+</ol>
+<p>Checkpoint: the first version has one clear user-facing operation.</p>
+<h2 id="build-the-thin-first-version">15. Build The Thin First Version</h2>
+<p>Goal: implement the smallest useful path before adding extra UI or workflow features.</p>
+<p>For a RAG app:</p>
+<pre><code class="language-text">POST /ask
+-&gt; accepts query
+-&gt; retrieves top 3 documents
+-&gt; calls model
+-&gt; returns answer and citations
+</code></pre>
+<p>For a document app:</p>
+<pre><code class="language-text">POST /extract
+-&gt; accepts document
+-&gt; calls Document Intelligence
+-&gt; returns normalized fields
+</code></pre>
+<p>For a vision app:</p>
+<pre><code class="language-text">POST /analyze-image
+-&gt; accepts image
+-&gt; sends image to model or service
+-&gt; returns structured result
+</code></pre>
+<p>Avoid building dashboards, admin panels, multi-user workflows, or advanced review queues until the core agent path works.</p>
+<p>Checkpoint: one end-to-end operation runs with mocked services or real configuration.</p>
+<h2 id="validate-with-a-manual-test">16. Validate With A Manual Test</h2>
+<p>Goal: prove the app path works with one known-good test case.</p>
+<p>Example RAG test:</p>
+<pre><code class="language-text">Question: What is the return policy?
+Expected: Answer cites the return-policy document.
+</code></pre>
+<p>Example document processing test:</p>
+<pre><code class="language-text">Input: sample invoice
+Expected: vendor, invoice number, date, total, and line items extracted.
+</code></pre>
+<p>Example vision test:</p>
+<pre><code class="language-text">Input: product image
+Expected: product type, visible attributes, tags, and confidence notes.
+</code></pre>
+<p>Checkpoint: one end-to-end request works and produces the expected output shape.</p>
+<h2 id="add-evaluation">17. Add Evaluation</h2>
+<p>Goal: define how you will know the agent is good enough.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">Define evaluation checks for this agent application, including accuracy, safety, grounding, and failure behavior.
+</code></pre>
+<p>Useful checks:</p>
+<ol>
+<li>Correct answer or extracted fields.</li>
+<li>Citation presence for RAG.</li>
+<li>No unsupported claims.</li>
+<li>Safe refusal behavior.</li>
+<li>Clean handling of missing configuration.</li>
+<li>Clean handling of service timeout.</li>
+<li>No secrets in logs.</li>
+<li>Cost-aware request limits.</li>
+</ol>
+<p>Checkpoint: evaluation covers both success behavior and failure behavior.</p>
+<h2 id="prepare-for-deployment">18. Prepare For Deployment</h2>
+<p>Goal: verify configuration, auth, quota, and safety before deploying.</p>
+<p>Use these prompts:</p>
+<pre><code class="language-text">Foundry Integration Agent: verify deployment endpoint and model settings.
+</code></pre>
+<pre><code class="language-text">Auth Config Agent: verify production managed identity and RBAC.
+</code></pre>
+<pre><code class="language-text">Responsible AI Safety Agent: verify safety and logging requirements before deployment.
+</code></pre>
+<pre><code class="language-text">Security &amp; Compliance Agent: verify launch-blocking security and compliance readiness gaps.
+</code></pre>
+<pre><code class="language-text">Monitoring &amp; Evaluation Agent: verify telemetry, alerting, tracing, and evaluation signals.
+</code></pre>
+<pre><code class="language-text">Operations Readiness Agent: verify runbook, rollback, support handoff, incident response, quota, and cost guardrails.
+</code></pre>
+<p>Deployment checklist:</p>
+<ol>
+<li>Environment variables documented.</li>
+<li>Secrets not committed.</li>
+<li>Managed identity configured.</li>
+<li>RBAC roles assigned.</li>
+<li>Model quota checked.</li>
+<li>Retry and timeout behavior configured.</li>
+<li>Telemetry enabled.</li>
+<li>Cleanup plan documented.</li>
+<li>Security and compliance gaps reviewed.</li>
+<li>Monitoring and evaluation signals documented.</li>
+<li>Runbook, rollback, and support handoff prepared.</li>
+</ol>
+<p>Checkpoint: the app is ready for Azure deployment planning.</p>
+<h2 id="suggested-first-application">Suggested First Application</h2>
+<p>Start with a minimal RAG Search App Agent prototype. It exercises the most reusable application patterns: configuration, auth, retrieval, model calls, grounding, citations, safety, and evaluation.</p>
+<p>Use this prompt:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design a minimal RAG Search App Agent for answering questions over local product documentation, including config contract, request flow, safety checks, and implementation tasks.
+</code></pre>
+<p>Then continue with:</p>
+<pre><code class="language-text">Use the Auth Config Agent to design local and production authentication for this RAG app.
+</code></pre>
+<p>Then:</p>
+<pre><code class="language-text">Use the Responsible AI Safety Agent to define safety checks and evaluation criteria for this RAG app.
+</code></pre>
+<p>Recommended implementation path:</p>
+<pre><code class="language-text">Design -&gt; Planning Companion -&gt; Config -&gt; Auth -&gt; Safety -&gt; Implementation Validation -&gt; Test -&gt; Evaluate -&gt; Deploy
+</code></pre>
+
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Learning Paths</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="learning-paths-step-by-step.md">learning-paths-step-by-step.md</a></p>
+<h1 id="azure-ai-agent-foundry-learning-paths">Azure AI Agent Foundry Learning Paths</h1>
+<p>Use this guide to follow the Azure AI Agent Foundry learning tracks in a practical order. Each track starts with the <code>/learn-ai-capability</code> prompt, points to the relevant source material, and ends with an application follow-up.</p>
+<h2 id="how-assistant-agents-help-through-this-guide">How Assistant Agents Help Through This Guide</h2>
+<p>Use Azure AI Learning Orchestrator as the main step-by-step assistant for learning tracks. It should walk through one learning step at a time, point to the source path, define the checkpoint, and wait for the user before moving on.</p>
+<p>Recommended starter prompt:</p>
+<pre><code class="language-text">Azure AI Learning Orchestrator, walk me through this learning path one step at a time. For each step, give me the source path, goal, action, checkpoint, and next prompt to use. Wait for my checkpoint before continuing.
+</code></pre>
+<p>When the user moves from learning to a real app, use Azure AI Application Orchestrator for the design and Application Planning Companion Agent to manage the application steps. Use Application Implementation Validation Agent only when an approved step needs file changes, terminal commands, tests, local servers, or validation evidence.</p>
+<h2 id="overall-order">Overall Order</h2>
+<ol>
+<li>Azure AI Services foundations</li>
+<li>Vision solutions</li>
+<li>NLP solutions</li>
+<li>Knowledge mining and Azure AI Search</li>
+<li>Document Intelligence</li>
+<li>Generative AI and Azure OpenAI</li>
+<li>Apply what you learned with app blueprints</li>
+</ol>
+<p>This order works because later tracks assume you understand Azure resources, endpoints, keys, authentication, SDK usage, cleanup, and cost.</p>
+<h2 id="azure-ai-services-foundations">1. Azure AI Services Foundations</h2>
+<p>Goal: understand how Azure AI Services are provisioned, secured, monitored, and used.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Services foundations.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Read the foundations module under <code>external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services</code>.</li>
+<li>Learn the resource model: single-service resources vs. multi-service Azure AI Services resources.</li>
+<li>Learn authentication options: keys, endpoints, Microsoft Entra ID, and managed identity.</li>
+<li>Review responsible AI and content safety concepts.</li>
+<li>Practice creating a resource in Azure, using the endpoint and key locally, then deleting the resource.</li>
+<li>Ask the Azure AI Services Foundation Orchestrator for help when you need provisioning, security, monitoring, containers, or content safety guidance.</li>
+</ol>
+<p>Outcome: write a short note explaining endpoint, key, region, resource group, and cleanup steps.</p>
+<h2 id="vision-solutions">2. Vision Solutions</h2>
+<p>Goal: learn image analysis, OCR, image-aware chat, image generation, video generation, and Content Understanding.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Guide me through Azure AI Vision.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Start with <code>external/Azure-AI-Engineer-Associate-Notes/2 - Create computer vision solutions with Azure AI Vision</code>.</li>
+<li>Use the lab repo at <code>external/mslearn-ai-vision/Instructions/Exercises</code>.</li>
+<li>Follow the basic image analysis and OCR material first.</li>
+<li>Move to generative vision with <code>01-gen-ai-vision.md</code>.</li>
+<li>Try image generation with <code>02-generate-image.md</code>.</li>
+<li>Try video generation with <code>03-generate-video.md</code>.</li>
+<li>Try Content Understanding with <code>04-content-understanding.md</code>.</li>
+<li>Apply the learning with the Vision Chat App Agent, Image Generation App Agent, Video Generation App Agent, or Content Understanding Metadata Agent.</li>
+</ol>
+<p>Application follow-up:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design an image metadata extraction agent for product photos.
+</code></pre>
+<h2 id="nlp-solutions">3. NLP Solutions</h2>
+<p>Goal: learn text analytics, translation, speech, conversational language understanding, question answering, and bot-style scenarios.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Language and Speech.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Study <code>external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services</code>.</li>
+<li>Start with text analytics: language detection, key phrases, sentiment, and entities.</li>
+<li>Move to translation.</li>
+<li>Study speech-to-text and text-to-speech.</li>
+<li>Learn conversational language understanding.</li>
+<li>Review question answering and bot integration patterns.</li>
+<li>Ask the NLP Solutions Orchestrator to route you to a specific subtopic when needed.</li>
+</ol>
+<p>Practice task: build a small flow that takes text, extracts entities, summarizes intent, and routes to a response.</p>
+<h2 id="knowledge-mining-and-azure-ai-search">4. Knowledge Mining And Azure AI Search</h2>
+<p>Goal: learn indexing, skillsets, custom skills, knowledge stores, vector search, hybrid search, and RAG grounding.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Search knowledge mining.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Study <code>external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search</code>.</li>
+<li>Learn the core objects: data source, index, indexer, and skillset.</li>
+<li>Learn how enrichment works.</li>
+<li>Add custom skills conceptually.</li>
+<li>Learn vector search and hybrid search.</li>
+<li>Learn how RAG uses search results for grounding.</li>
+<li>Use the Knowledge Mining Search Orchestrator for learning questions.</li>
+<li>Use the RAG Search App Agent when applying the pattern to a real app.</li>
+</ol>
+<p>Application follow-up:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design a RAG agent for searchable internal documents.
+</code></pre>
+<h2 id="document-intelligence">5. Document Intelligence</h2>
+<p>Goal: learn prebuilt models, custom models, composed models, layout extraction, forms, invoices, and document-to-search flows.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Guide me through Document Intelligence custom models.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Study <code>external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence</code>.</li>
+<li>Use the lab repo at <code>external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence</code>.</li>
+<li>Start with prebuilt models in <code>Instructions/Exercises/01-use-prebuilt-models.md</code>.</li>
+<li>Move to custom models in <code>Instructions/Exercises/02-custom-document-intelligence.md</code>.</li>
+<li>Move to composed models in <code>Instructions/Exercises/03-composed-model.md</code>.</li>
+<li>Learn confidence scores and validation workflows.</li>
+<li>Apply the learning with the Document Processing App Agent.</li>
+</ol>
+<p>Application follow-up:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design an agent that extracts invoice fields and lets users query the results.
+</code></pre>
+<h2 id="generative-ai-and-azure-openai">6. Generative AI And Azure OpenAI</h2>
+<p>Goal: learn chat, embeddings, prompt patterns, RAG, image generation, code generation, and Foundry integration.</p>
+<p>Use this prompt in VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure OpenAI and RAG.
+</code></pre>
+<p>Steps:</p>
+<ol>
+<li>Study <code>external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service</code>.</li>
+<li>Use <code>external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service/mslearn-openai</code>.</li>
+<li>Start with app development basics.</li>
+<li>Learn the Azure OpenAI API.</li>
+<li>Learn prompt engineering.</li>
+<li>Learn embeddings.</li>
+<li>Learn use-your-own-data and RAG patterns.</li>
+<li>Learn image generation if relevant.</li>
+<li>Use the Generative AI Solutions Orchestrator for broad learning.</li>
+<li>Use the Foundry Integration Agent for model deployments, endpoints, quotas, and project configuration.</li>
+</ol>
+<p>Application follow-up:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design a Foundry-backed assistant that answers questions over uploaded documents.
+</code></pre>
+<h2 id="apply-with-app-blueprints">7. Apply With App Blueprints</h2>
+<p>After each learning track, apply the concepts with this prompt:</p>
+<pre><code class="language-text">/design-ai-agent-solution &lt;your real app scenario&gt;
+</code></pre>
+<p>Use these application blueprints:</p>
+<table>
+<thead>
+<tr>
+<th>Blueprint</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vision Chat App Agent</td>
+<td>You need image-aware question answering.</td>
+</tr>
+<tr>
+<td>Image Generation App Agent</td>
+<td>You need text-to-image app features.</td>
+</tr>
+<tr>
+<td>Video Generation App Agent</td>
+<td>You need Sora or generated video workflows.</td>
+</tr>
+<tr>
+<td>Content Understanding Metadata Agent</td>
+<td>You need searchable image metadata.</td>
+</tr>
+<tr>
+<td>RAG Search App Agent</td>
+<td>You need search and grounding.</td>
+</tr>
+<tr>
+<td>Document Processing App Agent</td>
+<td>You need structured document extraction.</td>
+</tr>
+</tbody>
+</table>
+<p>Use these shared platform specialists as needed:</p>
+<table>
+<thead>
+<tr>
+<th>Specialist</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auth Config Agent</td>
+<td>You need <code>.env</code>, local auth, Entra ID, or endpoint validation guidance.</td>
+</tr>
+<tr>
+<td>Foundry Integration Agent</td>
+<td>You need Foundry project, model deployment, quota, or endpoint guidance.</td>
+</tr>
+<tr>
+<td>Responsible AI Safety Agent</td>
+<td>You need moderation, safety policy, or evaluation checks.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-first-prompt">Recommended First Prompt</h2>
+<p>Start here:</p>
+<pre><code class="language-text">/learn-ai-capability Start with Azure AI Services foundations and give me the first hands-on exercise.
+</code></pre>
+
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Prompt Files Guide</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="prompt-files-guide.md">prompt-files-guide.md</a></p>
+<h1 id="prompt-files-guide">Prompt Files Guide</h1>
+<p>The files in <code>.github/prompts/</code> are the user-facing slash-command entry points for Azure AI Agent Foundry. They help users start in the right mode without opening the raw agent files first.</p>
+<p>Prompt files are different from agent files:</p>
+<table>
+<thead>
+<tr>
+<th>File type</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prompt files</td>
+<td><code>.github/prompts/*.prompt.md</code></td>
+<td>Define the slash command users invoke, the default handling agent, allowed tools, input hint, and expected answer shape.</td>
+</tr>
+<tr>
+<td>Agent files</td>
+<td><code>.github/agents/*.agent.md</code></td>
+<td>Define the specialist behavior, boundaries, routing rules, and working style for a reusable custom agent.</td>
+</tr>
+</tbody>
+</table>
+<p>Use prompt files when the user needs a guided starting point. Use agent files when you need to inspect or improve the behavior of the specialist that performs the work.</p>
+<h2 id="prompt-entry-points">Prompt Entry Points</h2>
+<table>
+<thead>
+<tr>
+<th>Prompt</th>
+<th>Use When</th>
+<th>Routes To</th>
+<th>Expected Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/find-ai-agent</code></td>
+<td>You know the task, service, app scenario, or learning goal, but do not know which agent to use.</td>
+<td>Azure AI Agent Foundry Orchestrator</td>
+<td>Recommended agent or agents, mode, fit rationale, required configuration or source references, and next action.</td>
+</tr>
+<tr>
+<td><code>/browse-ai-agent-foundry</code></td>
+<td>You want to see what exists in the catalog by area, capability, blueprint, or shared platform concern.</td>
+<td>Azure AI Agent Foundry Orchestrator</td>
+<td>Concise grouped catalog view: orchestrators, application blueprints, shared platform specialists, and source references.</td>
+</tr>
+<tr>
+<td><code>/learn-ai-capability</code></td>
+<td>You want a guided Azure AI learning route backed by the source repositories under <code>external/</code>.</td>
+<td>Azure AI Learning Orchestrator</td>
+<td>Matched learning area, source path, prerequisites, learning sequence, hands-on lab or application follow-up, and cleanup or cost reminders.</td>
+</tr>
+<tr>
+<td><code>/design-ai-agent-solution</code></td>
+<td>You want to design a real application using reusable Azure AI application agents.</td>
+<td>Azure AI Application Orchestrator</td>
+<td>Selected blueprints, architecture/API/data/configuration/test/evaluation/UX handoffs, configuration contract, input/output contracts, integration pattern, safety/auth/security/monitoring/operations considerations, validation checks, and implementation order.</td>
+</tr>
+<tr>
+<td><code>/design-from-architecture</code></td>
+<td>You have Markdown architecture notes, Mermaid or PlantUML text, a diagram export, ADRs, component notes, or a pasted architecture description and want to convert it into a Foundry agent design handoff.</td>
+<td>Azure AI Application Orchestrator</td>
+<td>Architecture evidence summary, verified elements, assumptions, unsupported inferences, architecture-to-agent mapping, selected blueprints, design handoffs, Microsoft Agent Framework fit, validation checks, and open decisions.</td>
+</tr>
+<tr>
+<td><code>/implement-from-brd-prd</code></td>
+<td>You have a BRD, PRD, feature brief, requirements file, or pasted requirements and want to turn it into an implementation-ready Foundry agent plan.</td>
+<td>Azure AI Application Orchestrator</td>
+<td>BRD/PRD evidence summary, verified requirements, requirement-to-agent mapping, selected blueprints, handoffs, Microsoft Agent Framework fit, phased implementation plan, first bounded implementation step, validation checks, and open decisions.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="choosing-the-right-prompt">Choosing The Right Prompt</h2>
+<p>Start with <code>/find-ai-agent</code> when the request is still broad or ambiguous.</p>
+<p>Start with <code>/browse-ai-agent-foundry</code> when the user wants to explore the catalog before choosing a direction.</p>
+<p>Start with <code>/learn-ai-capability</code> when the user asks for study help, labs, modules, prerequisites, or a learning sequence.</p>
+<p>Start with <code>/design-ai-agent-solution</code> when the user has an application scenario and wants a practical agent-based architecture or implementation plan.</p>
+<p>Start with <code>/design-from-architecture</code> when the user already has architecture input, especially Markdown architecture notes, Mermaid, PlantUML, draw.io or Visio exports, ADRs, component lists, data-flow notes, or a diagram summary.</p>
+<p>Start with <code>/implement-from-brd-prd</code> when the user already has product or business requirements and wants an Azure Architecture Factory-style intake that converts the BRD/PRD into Foundry agent implementation work.</p>
+<p>For application designs, ask for a Microsoft Agent Framework fit assessment when the app may need a runnable agent runtime, tools or actions, stateful workflows, Microsoft Foundry lifecycle support, evaluation, tracing, debugging, or deployment. Keep the simpler service or SDK path when the user only needs learning guidance, a one-off API call, a static catalog, or design documentation.</p>
+<h2 id="example-user-paths">Example User Paths</h2>
+<h3 id="find-the-right-agent">Find The Right Agent</h3>
+<pre><code class="language-text">/find-ai-agent I am building an app that extracts invoice fields and lets users search over them.
+</code></pre>
+<p>Expected route:</p>
+<ul>
+<li>Document Processing App Agent</li>
+<li>RAG Search App Agent, if search or question answering is required</li>
+<li>Auth Config Agent and Foundry Integration Agent, if environment setup is part of the work</li>
+</ul>
+<h3 id="browse-before-choosing">Browse Before Choosing</h3>
+<pre><code class="language-text">/browse-ai-agent-foundry application blueprints
+</code></pre>
+<p>Use this when a user wants to compare options such as vision chat, image generation, video generation, content understanding, RAG search, and document processing.</p>
+<h3 id="learn-a-capability">Learn A Capability</h3>
+<pre><code class="language-text">/learn-ai-capability Azure AI Search vector and hybrid retrieval
+</code></pre>
+<p>Use this when the goal is learning first. The output should point to relevant source material, prerequisites, lab flow, and a follow-up application path.</p>
+<h3 id="design-an-application-solution">Design An Application Solution</h3>
+<pre><code class="language-text">/design-ai-agent-solution Build a support assistant that answers questions from product images and policy documents.
+</code></pre>
+<p>Use this when the user is ready to combine agents into a design. The output should describe selected blueprints, architecture handoffs, API and integration contracts, data and storage decisions, configuration and environment contracts, test and evaluation strategy, UX and human workflow needs, integration sequence, safety checks, auth needs, security review needs, monitoring and evaluation signals, operations readiness, and validation steps.</p>
+<p>If the scenario looks like a real runnable agent app, the output should also say whether Microsoft Agent Framework is a good fit and what implementation handoff would be needed.</p>
+<h3 id="design-from-architecture-markdown-or-diagram-text">Design From Architecture Markdown Or Diagram Text</h3>
+<pre><code class="language-text">/design-from-architecture docs/customer-support-architecture.md
+</code></pre>
+<p>Use this when a user wants to start from an existing architecture artifact instead of a blank scenario or BRD/PRD. Markdown is the preferred input format, but Mermaid, PlantUML, draw.io or Visio export text, ADRs, component lists, data-flow notes, and pasted diagram descriptions are also valid.</p>
+<p>The user should replace placeholder text with a real workspace file path or pasted architecture content. The shortest useful form is:</p>
+<pre><code class="language-text">/design-from-architecture &lt;workspace file path or pasted Markdown/Mermaid/PlantUML/export text&gt;
+</code></pre>
+<p>For pasted Markdown, put the content directly after the slash command:</p>
+<pre><code class="language-text">/design-from-architecture
+# Customer Support Assistant Architecture
+
+## Components
+- Web chat UI
+- Azure AI Agent for support triage
+- Azure AI Search index over support articles
+- Human escalation queue
+
+## Flows
+- User asks a question in chat
+- Agent retrieves grounding content from Azure AI Search
+- Low-confidence answers route to human review
+</code></pre>
+<p>The browser can generate a longer prompt that appends handling instructions such as extracting verified architecture elements, mapping components and flows to specialists or blueprints, assessing Microsoft Agent Framework fit, and not inventing components, Azure resources, endpoints, model deployments, security boundaries, test results, or implementation evidence. That longer form is valid and recommended when the user wants evidence discipline called out explicitly.</p>
+<p>The output should extract verified architecture elements, map components and flows to the right Foundry agents, identify unsupported inferences, select blueprints only when supported, assess Microsoft Agent Framework fit, and prepare a design-first handoff sequence.</p>
+<p>If the input is only an image and the agent cannot inspect image contents directly, the prompt should ask for Markdown notes, Mermaid or PlantUML text, OCR output, exported diagram text, or a user-provided summary instead of inventing components, services, data flows, security boundaries, Azure resources, endpoints, or validation evidence.</p>
+<h3 id="implement-from-a-brd-or-prd">Implement From A BRD Or PRD</h3>
+<pre><code class="language-text">/implement-from-brd-prd docs/customer-support-prd.md
+</code></pre>
+<p>Use this when a user wants to start from a BRD, PRD, feature brief, issue, or requirements summary instead of a blank app idea. The output should extract verified requirements, map each requirement to the right Foundry agent, identify missing decisions, select blueprints only when supported, assess Microsoft Agent Framework fit, and prepare the first bounded step for Application Implementation Validation Agent.</p>
+<p>If the document is incomplete or unavailable, the prompt should say what is missing instead of inventing requirements, Azure resources, endpoints, model deployments, or validation evidence.</p>
+<h2 id="maintenance-notes">Maintenance Notes</h2>
+<p>When adding or changing a prompt file:</p>
+<ol>
+<li>Keep the prompt focused on one entry-point job.</li>
+<li>Use a clear <code>name</code>, <code>description</code>, <code>agent</code>, <code>tools</code>, and <code>argument-hint</code> in frontmatter.</li>
+<li>Route broad discovery prompts to the Foundry orchestrator.</li>
+<li>Route learning prompts to the learning orchestrator.</li>
+<li>Route application design prompts to the application orchestrator.</li>
+<li>Keep prompt outputs evidence-based. If a prompt does not have enough workspace, source, Azure, or user-provided context, it should say what is missing instead of making up details.</li>
+<li>Run validation from the repo root:</li>
+</ol>
+<pre><code class="language-powershell">pwsh -File scripts/validate-agent-zone.ps1
+</code></pre>
+
+    </article>
+  </main>
+</body>
+</html>

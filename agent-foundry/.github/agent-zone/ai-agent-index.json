@@ -1,0 +1,300 @@
+{
+  "catalogName": "Azure AI Agent Foundry",
+  "version": "0.1.0",
+  "description": "A VS Code custom-agent zone for Azure AI engineering learning and reusable application agent blueprints.",
+  "sourceRepositories": [
+    {
+      "name": "mslearn-ai-vision",
+      "url": "https://github.com/MicrosoftLearning/mslearn-ai-vision.git",
+      "localPath": "external/mslearn-ai-vision",
+      "purpose": "Vision, generative image/video, and content understanding lab source material."
+    },
+    {
+      "name": "Azure-AI-Engineer-Associate-Notes",
+      "url": "https://github.com/kennethleungty/Azure-AI-Engineer-Associate-Notes.git",
+      "localPath": "external/Azure-AI-Engineer-Associate-Notes",
+      "purpose": "Broad Azure AI engineering topic coverage and module map."
+    }
+  ],
+  "entryPrompts": [
+    ".github/prompts/find-ai-agent.prompt.md",
+    ".github/prompts/browse-ai-agent-foundry.prompt.md",
+    ".github/prompts/design-ai-agent-solution.prompt.md",
+    ".github/prompts/design-from-architecture.prompt.md",
+    ".github/prompts/implement-from-brd-prd.prompt.md",
+    ".github/prompts/learn-ai-capability.prompt.md"
+  ],
+  "agents": [
+    {
+      "id": "azure-ai-agent-foundry-orchestrator",
+      "name": "Azure AI Agent Foundry Orchestrator",
+      "path": ".github/agents/azure-ai-agent-foundry-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "top-orchestrator",
+      "capabilities": ["agent discovery", "intent routing", "catalog search", "multi-agent coordination"],
+      "keywords": ["find agent", "browse catalog", "Azure AI", "application agent", "learning path", "orchestrator"]
+    },
+    {
+      "id": "azure-ai-learning-orchestrator",
+      "name": "Azure AI Learning Orchestrator",
+      "path": ".github/agents/azure-ai-learning-orchestrator.agent.md",
+      "audience": ["learning"],
+      "level": "mode-orchestrator",
+      "capabilities": ["module guidance", "lab routing", "learning plan"],
+      "keywords": ["learn", "module", "lab", "study", "exercise"]
+    },
+    {
+      "id": "azure-ai-application-orchestrator",
+      "name": "Azure AI Application Orchestrator",
+      "path": ".github/agents/azure-ai-application-orchestrator.agent.md",
+      "audience": ["application"],
+      "level": "mode-orchestrator",
+      "capabilities": ["application design", "BRD/PRD intake", "requirements mapping", "architecture artifact intake", "diagram-to-design mapping", "architecture routing", "contract routing", "data design routing", "configuration routing", "test and evaluation routing", "UX workflow routing", "agent configuration", "integration planning", "production readiness routing"],
+      "keywords": ["build app", "BRD", "PRD", "requirements", "feature brief", "architecture diagram", "Markdown architecture", "Mermaid", "PlantUML", "draw.io", "Visio", "diagram to design", "plug in agent", "configure agent", "solution design", "architecture", "API contract", "data design", "storage", "configuration", "environment", "testing", "evaluation", "UX", "human workflow", "security", "monitoring", "operations"]
+    },
+    {
+      "id": "application-planning-companion-agent",
+      "name": "Application Planning Companion Agent",
+      "path": ".github/agents/application-planning-companion-agent.agent.md",
+      "audience": ["application"],
+      "level": "planning-companion",
+      "capabilities": ["implementation tracking", "design handoff", "task management", "planning artifacts", "validation planning"],
+      "keywords": ["tag along", "planning steps", "manage build", "designer helper", "handoff", "track tasks", "without execute"]
+    },
+    {
+      "id": "application-implementation-validation-agent",
+      "name": "Application Implementation Validation Agent",
+      "path": ".github/agents/application-implementation-validation-agent.agent.md",
+      "audience": ["application"],
+      "level": "implementation-validation",
+      "capabilities": ["step implementation", "terminal execution", "test execution", "build validation", "validation evidence"],
+      "keywords": ["implement step", "run validation", "execute commands", "terminal", "tests", "local server", "validator"]
+    },
+    {
+      "id": "architecture-design-agent",
+      "name": "Architecture & Design Agent",
+      "path": ".github/agents/architecture-design-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["application architecture", "component design", "request flow", "data flow", "design decisions"],
+      "keywords": ["architecture", "design", "components", "boundaries", "request flow", "data flow", "new app", "solution design"]
+    },
+    {
+      "id": "api-integration-contract-agent",
+      "name": "API & Integration Contract Agent",
+      "path": ".github/agents/api-integration-contract-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["API contracts", "integration contracts", "schemas", "error handling", "retry policy"],
+      "keywords": ["API", "contract", "schema", "integration", "webhook", "event", "tool contract", "error shape", "idempotency"]
+    },
+    {
+      "id": "data-storage-design-agent",
+      "name": "Data & Storage Design Agent",
+      "path": ".github/agents/data-storage-design-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["data design", "storage design", "indexing", "retention", "metadata", "embeddings"],
+      "keywords": ["data", "storage", "schema", "metadata", "embeddings", "generated media", "retention", "audit log", "indexing"]
+    },
+    {
+      "id": "configuration-environment-contract-agent",
+      "name": "Configuration & Environment Contract Agent",
+      "path": ".github/agents/configuration-environment-contract-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["configuration contract", "environment variables", ".env guidance", "feature flags", "validation rules"],
+      "keywords": ["configuration", "environment", ".env", "settings", "feature flags", "endpoint placeholders", "validation", "local dev", "staging", "production"]
+    },
+    {
+      "id": "test-evaluation-strategy-agent",
+      "name": "Test & Evaluation Strategy Agent",
+      "path": ".github/agents/test-evaluation-strategy-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["test strategy", "AI evaluation planning", "mock strategy", "acceptance criteria", "regression datasets"],
+      "keywords": ["testing", "evaluation", "test strategy", "mock", "acceptance criteria", "regression", "dataset", "manual validation", "quality"]
+    },
+    {
+      "id": "ux-human-workflow-agent",
+      "name": "UX & Human Workflow Agent",
+      "path": ".github/agents/ux-human-workflow-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-design-specialist",
+      "capabilities": ["user journeys", "human review", "confidence thresholds", "fallback states", "feedback capture"],
+      "keywords": ["UX", "user journey", "human workflow", "review queue", "confidence", "fallback", "feedback", "human in the loop", "operator"]
+    },
+    {
+      "id": "azure-ai-services-foundation-orchestrator",
+      "name": "Azure AI Services Foundation Orchestrator",
+      "path": ".github/agents/azure-ai-services-foundation-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
+      "capabilities": ["AI services provisioning", "security", "monitoring", "containers", "content safety"],
+      "keywords": ["Azure AI Services", "provision", "secure", "monitor", "container", "content safety"]
+    },
+    {
+      "id": "vision-solutions-orchestrator",
+      "name": "Vision Solutions Orchestrator",
+      "path": ".github/agents/vision-solutions-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/2 - Create computer vision solutions with Azure AI Vision", "external/mslearn-ai-vision/Instructions/Exercises"],
+      "capabilities": ["image analysis", "classification", "object detection", "OCR", "video", "generative vision"],
+      "keywords": ["vision", "image", "OCR", "video", "classification", "object detection", "Content Understanding"]
+    },
+    {
+      "id": "nlp-solutions-orchestrator",
+      "name": "NLP Solutions Orchestrator",
+      "path": ".github/agents/nlp-solutions-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"],
+      "capabilities": ["text analytics", "translation", "speech", "conversational language", "Q&A", "bot integration"],
+      "keywords": ["NLP", "language", "translation", "speech", "CLU", "QnA", "bot"]
+    },
+    {
+      "id": "knowledge-mining-search-orchestrator",
+      "name": "Knowledge Mining Search Orchestrator",
+      "path": ".github/agents/knowledge-mining-search-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
+      "capabilities": ["Azure AI Search", "indexing", "custom skills", "knowledge store", "retrieval"],
+      "keywords": ["AI Search", "knowledge mining", "index", "custom skill", "knowledge store", "RAG", "vector search"]
+    },
+    {
+      "id": "document-intelligence-orchestrator",
+      "name": "Document Intelligence Orchestrator",
+      "path": ".github/agents/document-intelligence-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"],
+      "capabilities": ["document extraction", "custom models", "composed models", "form processing", "search integration"],
+      "keywords": ["Document Intelligence", "forms", "OCR", "custom document model", "invoice", "receipt", "extraction"]
+    },
+    {
+      "id": "generative-ai-solutions-orchestrator",
+      "name": "Generative AI Solutions Orchestrator",
+      "path": ".github/agents/generative-ai-solutions-orchestrator.agent.md",
+      "audience": ["learning", "application"],
+      "level": "capability-orchestrator",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service", "external/mslearn-ai-vision/Instructions/Exercises/01-gen-ai-vision.md", "external/mslearn-ai-vision/Instructions/Exercises/02-generate-image.md", "external/mslearn-ai-vision/Instructions/Exercises/03-generate-video.md"],
+      "capabilities": ["Azure OpenAI", "chat", "embeddings", "RAG", "image generation", "video generation"],
+      "keywords": ["Azure OpenAI", "chat", "embedding", "RAG", "gpt", "image generation", "Sora", "Foundry"]
+    },
+    {
+      "id": "foundry-integration-agent",
+      "name": "Foundry Integration Agent",
+      "path": ".github/agents/foundry-integration-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["Foundry project", "model deployment", "endpoint selection", "quota guidance"],
+      "keywords": ["Foundry", "model deployment", "endpoint", "quota", "project"]
+    },
+    {
+      "id": "auth-config-agent",
+      "name": "Auth Config Agent",
+      "path": ".github/agents/auth-config-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["Entra ID", "DefaultAzureCredential", ".env", "endpoint validation"],
+      "keywords": ["auth", "authentication", "DefaultAzureCredential", "az login", ".env", "endpoint"]
+    },
+    {
+      "id": "responsible-ai-safety-agent",
+      "name": "Responsible AI Safety Agent",
+      "path": ".github/agents/responsible-ai-safety-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["content safety", "moderation", "RAI policy", "safety evaluation"],
+      "keywords": ["responsible AI", "safety", "moderation", "content filter", "policy"]
+    },
+    {
+      "id": "security-compliance-agent",
+      "name": "Security & Compliance Agent",
+      "path": ".github/agents/security-compliance-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["security posture", "threat modeling", "compliance readiness", "data protection", "least privilege"],
+      "keywords": ["security", "compliance", "threat model", "data protection", "RBAC", "least privilege", "secrets", "privacy"]
+    },
+    {
+      "id": "operations-readiness-agent",
+      "name": "Operations Readiness Agent",
+      "path": ".github/agents/operations-readiness-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["production readiness", "runbooks", "rollback planning", "incident response", "quota and cost guardrails"],
+      "keywords": ["operations", "production readiness", "runbook", "rollback", "incident", "support handoff", "quota", "cost guardrails"]
+    },
+    {
+      "id": "monitoring-evaluation-agent",
+      "name": "Monitoring & Evaluation Agent",
+      "path": ".github/agents/monitoring-evaluation-agent.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["monitoring", "telemetry", "tracing", "evaluation", "alerting", "quality signals"],
+      "keywords": ["monitoring", "observability", "telemetry", "tracing", "Application Insights", "Azure Monitor", "evaluation", "alerts", "quality"]
+    },
+    {
+      "id": "vision-chat-app-agent",
+      "name": "Vision Chat App Agent",
+      "path": ".github/agents/vision-chat-app-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/gen-ai-vision/python/image-chat-app.py"],
+      "capabilities": ["image-aware chat", "visual Q&A", "OpenAI responses API", "image input"],
+      "keywords": ["vision chat", "image chat", "visual question answering", "gpt-4.1", "image input"]
+    },
+    {
+      "id": "image-generation-app-agent",
+      "name": "Image Generation App Agent",
+      "path": ".github/agents/image-generation-app-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/image-client/python/image-client.py"],
+      "capabilities": ["text-to-image", "prompt refinement", "base64 image output", "asset generation"],
+      "keywords": ["image generation", "gpt-image", "text to image", "base64", "generated images"]
+    },
+    {
+      "id": "video-generation-app-agent",
+      "name": "Video Generation App Agent",
+      "path": ".github/agents/video-generation-app-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/video-generation/python/video-app.py"],
+      "capabilities": ["text-to-video", "image-to-video", "async polling", "download", "remix"],
+      "keywords": ["video generation", "Sora", "polling", "remix", "mp4"]
+    },
+    {
+      "id": "content-understanding-metadata-agent",
+      "name": "Content Understanding Metadata Agent",
+      "path": ".github/agents/content-understanding-metadata-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/content-understanding/python/analyze-image.py"],
+      "capabilities": ["image metadata", "analyzer schema", "description", "tags", "structured output"],
+      "keywords": ["Content Understanding", "metadata", "analyzer", "description", "tags", "digital asset management"]
+    },
+    {
+      "id": "rag-search-app-agent",
+      "name": "RAG Search App Agent",
+      "path": ".github/agents/rag-search-app-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "capabilities": ["retrieval augmented generation", "Azure AI Search", "hybrid search", "vector search", "grounding"],
+      "keywords": ["RAG", "AI Search", "vector", "hybrid", "retrieval", "grounding"]
+    },
+    {
+      "id": "document-processing-app-agent",
+      "name": "Document Processing App Agent",
+      "path": ".github/agents/document-processing-app-agent.agent.md",
+      "audience": ["application"],
+      "level": "application-blueprint",
+      "capabilities": ["document extraction", "forms", "layout", "custom models", "confidence review"],
+      "keywords": ["Document Intelligence", "forms", "extract", "layout", "custom model", "confidence"]
+    }
+  ]
+}

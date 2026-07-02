@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Implement From BRD Or PRD</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-link: #0078d4;
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-link: #4da6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="../../.github/prompts/implement-from-brd-prd.prompt.md">implement-from-brd-prd.prompt.md</a></p>
+<h1 id="implement-from-brd-or-prd">Implement From BRD Or PRD</h1>
+<p>Convert a Business Requirements Document (BRD), Product Requirements Document (PRD), feature brief, or requirements file into an Azure AI Agent Foundry implementation plan using the application orchestrator, design specialists, blueprints, shared platform agents, and implementation validation handoff.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slash command</td>
+<td>/implement-from-brd-prd</td>
+</tr>
+<tr>
+<td>Routes to</td>
+<td>Azure AI Application Orchestrator</td>
+</tr>
+<tr>
+<td>Tools</td>
+<td>$tools</td>
+</tr>
+<tr>
+<td>Argument hint</td>
+<td>Provide a BRD/PRD file path, pasted requirements, or a concise product brief plus target users, constraints, and desired Azure AI capabilities.</td>
+</tr>
+<tr>
+<td>Source file</td>
+<td>.github/prompts/implement-from-brd-prd.prompt.md</td>
+</tr>
+</tbody>
+</table>
+<h2 id="prompt-instructions">Prompt Instructions</h2>
+<p>Use Azure AI Agent Foundry agents to convert the supplied BRD, PRD, feature brief, or requirements artifact into an implementation-ready application plan.</p>
+<p>Treat the document as input evidence, not as complete truth. Extract only what is present, label assumptions, and ask for missing decisions when implementation would otherwise require invention.</p>
+<p>Process:</p>
+<ol>
+<li>Identify the source of requirements: file path, pasted content, or summarized brief.</li>
+<li>Extract verified product goals, user roles, workflows, functional requirements, nonfunctional requirements, data inputs, outputs, integrations, constraints, risks, and acceptance criteria.</li>
+<li>Map each requirement to the relevant Foundry agents:
+<ul>
+<li>Azure AI Application Orchestrator for overall routing.</li>
+<li>Architecture &amp; Design Agent for components, boundaries, flows, and design decisions.</li>
+<li>API &amp; Integration Contract Agent for APIs, tool contracts, events, schemas, errors, retries, and downstream assumptions.</li>
+<li>Data &amp; Storage Design Agent for data, storage, indexing, retention, metadata, embeddings, generated assets, audit, and privacy.</li>
+<li>Configuration &amp; Environment Contract Agent for environments, settings, secrets references, endpoint placeholders, and preflight checks.</li>
+<li>Test &amp; Evaluation Strategy Agent for deterministic tests, AI quality evaluation, mocks, datasets, and acceptance criteria.</li>
+<li>UX &amp; Human Workflow Agent for user journeys, review queues, fallbacks, confidence handling, and feedback loops.</li>
+<li>Application Planning Companion Agent for tracking decisions and converting the plan into bounded steps.</li>
+<li>Application Implementation Validation Agent for execution, command running, tests, local server checks, and validation evidence.</li>
+</ul>
+</li>
+<li>Select application blueprint agents only when the requirements support them.</li>
+<li>Add Foundry integration, auth/config, Responsible AI, security/compliance, monitoring/evaluation, and operations readiness handoffs when the requirements imply production use or sensitive data.</li>
+<li>Assess whether Microsoft Agent Framework fits the implementation based on runtime, tools/actions, state, workflow, tracing, evaluation, deployment, or Foundry lifecycle needs.</li>
+<li>Produce a phased implementation plan with requirement traceability and validation gates.</li>
+</ol>
+<p>Return:</p>
+<ul>
+<li>BRD/PRD source and evidence summary</li>
+<li>verified requirements and assumptions</li>
+<li>requirement-to-agent mapping</li>
+<li>selected blueprints and why</li>
+<li>architecture/API/data/configuration/UX/test handoffs</li>
+<li>security, safety, monitoring, and operations handoffs</li>
+<li>Microsoft Agent Framework fit assessment</li>
+<li>phased implementation plan</li>
+<li>bounded first implementation step for Application Implementation Validation Agent</li>
+<li>validation checks and acceptance criteria</li>
+<li>missing decisions and open questions</li>
+</ul>
+<p>Do not invent requirements, Azure resources, endpoints, model deployments, file paths, test results, command output, user research, compliance findings, or implementation evidence. If the BRD/PRD is unavailable or incomplete, say what is missing and provide the safest next step.</p>
+
+    </article>
+  </main>
+</body>
+</html>

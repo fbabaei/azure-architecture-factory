@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Browser</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    button, input, select, textarea { font: inherit; }
+    .shell { max-width: 1440px; margin: 0 auto; padding: 32px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+    .hero-main,
+    .hero-side,
+    .toolbar,
+    .agent-list,
+    .detail-panel {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+    }
+    .hero-main { padding: 28px; }
+    .hero-side { padding: 20px; display: grid; gap: 16px; }
+    h1 { margin: 0 0 12px; font-size: clamp(2rem, 4vw, 4rem); line-height: 1; letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 1.25rem; letter-spacing: 0; }
+    h3 { margin: 0; font-size: 1rem; letter-spacing: 0; }
+    p { color: var(--cp-text-muted); line-height: 1.55; margin: 0; }
+    .section-title { display: grid; gap: 4px; margin-bottom: 14px; }
+    .section-title p { font-size: 0.92rem; }
+    .section-kicker { color: var(--cp-accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0; text-transform: uppercase; }
+    .collapsible > summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .collapsible > summary::-webkit-details-marker { display: none; }
+    .collapsible > summary::after {
+      content: "Hide";
+      flex: 0 0 auto;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text-soft);
+      background: var(--cp-surface-soft);
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      margin-top: 2px;
+    }
+    .collapsible:not([open]) > summary::after { content: "Show"; }
+    .collapsible > summary .section-title { margin-bottom: 0; }
+    .collapsible-body { margin-top: 14px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+    .prompt-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; margin-top: 14px; }
+    .prompt-card {
+      display: grid;
+      gap: 8px;
+      min-height: 150px;
+      align-content: start;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-bg-elevated);
+      color: var(--cp-text);
+      padding: 14px;
+      text-decoration: none;
+    }
+    .prompt-card:hover { border-color: var(--cp-border-strong); }
+    .prompt-name { color: var(--cp-accent); font-family: Consolas, "Courier New", Courier, monospace; font-weight: 700; }
+    .prompt-card p { font-size: 0.9rem; }
+    .prompt-route { color: var(--cp-text-soft); font-size: 0.78rem; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--cp-border);
+      background: var(--cp-surface-soft);
+      color: var(--cp-text);
+      border-radius: 0.625rem;
+      padding: 10px 14px;
+      cursor: pointer;
+      min-height: 40px;
+      text-decoration: none;
+    }
+    .button.primary { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+    .button:hover { border-color: var(--cp-border-strong); }
+    .button.primary:hover { background: var(--cp-accent-hover); }
+    .metric { padding: 12px; border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-bg-elevated); }
+    .metric-value { font-size: 1.6rem; font-weight: 700; color: var(--cp-text); }
+    .metric-label { font-size: 0.82rem; color: var(--cp-text-soft); }
+    .toolbar { padding: 16px; margin-bottom: 20px; display: grid; gap: 14px; }
+    .search-row { display: grid; grid-template-columns: minmax(220px, 1fr) 180px 180px 180px; gap: 12px; }
+    .input,
+    .select {
+      width: 100%;
+      border: 1px solid var(--cp-border);
+      background: var(--cp-surface);
+      color: var(--cp-text);
+      border-radius: 0.625rem;
+      padding: 10px 12px;
+      min-height: 42px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .intake-grid { display: grid; gap: 12px; }
+    .field-stack { display: grid; gap: 8px; }
+    .field-label { color: var(--cp-text); font-weight: 700; font-size: 0.9rem; }
+    .intake-textarea { min-height: 136px; resize: vertical; line-height: 1.45; }
+    .intake-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip {
+      border: 1px solid var(--cp-border);
+      background: var(--cp-surface-soft);
+      color: var(--cp-text-muted);
+      border-radius: 0.625rem;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .chip.active { color: var(--cp-accent); border-color: var(--cp-accent); background: var(--cp-accent-soft); }
+    .content { display: grid; grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr); gap: 20px; align-items: start; }
+    .agent-list { overflow: hidden; }
+    .list-header { padding: 16px; border-bottom: 1px solid var(--cp-border); display: flex; justify-content: space-between; gap: 12px; }
+    .agent-cards { max-height: 720px; overflow: auto; }
+    .agent-card {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      border-bottom: 1px solid var(--cp-border);
+      background: var(--cp-surface);
+      color: var(--cp-text);
+      padding: 16px;
+      cursor: pointer;
+    }
+    .agent-card:hover,
+    .agent-card.selected { background: var(--cp-accent-soft); }
+    .agent-title-row { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      border-radius: 0.625rem;
+      border: 1px solid var(--cp-border);
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      color: var(--cp-text-soft);
+      background: var(--cp-bg-elevated);
+    }
+    .agent-meta { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .detail-panel { padding: 22px; position: sticky; top: 20px; }
+    .detail-section { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--cp-border); }
+    .detail-section > summary { align-items: center; }
+    .detail-section > summary h3 { margin: 0; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .tag { border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 5px 8px; color: var(--cp-text-muted); background: var(--cp-surface-soft); font-size: 0.84rem; }
+    button.tag { cursor: pointer; }
+    a.tag { display: inline-flex; text-decoration: none; }
+    button.tag:hover,
+    a.tag:hover { border-color: var(--cp-border-strong); color: var(--cp-link); }
+    .path-box,
+    .contract-box {
+      margin-top: 10px;
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      padding: 12px;
+      overflow: auto;
+      font-family: Consolas, "Courier New", Courier, monospace;
+      font-size: 0.86rem;
+      color: var(--cp-text);
+    }
+    .path-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .path-actions .button { font-size: 0.86rem; min-height: 34px; padding: 7px 10px; }
+    .empty { padding: 28px; color: var(--cp-text-muted); }
+    .footer { margin-top: 28px; color: var(--cp-text-soft); font-size: 0.9rem; }
+    @media (max-width: 1000px) {
+      .hero,
+      .prompt-grid,
+      .content,
+      .search-row { grid-template-columns: 1fr; }
+      .detail-panel { position: static; }
+      .shell { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-main">
+        <div class="section-kicker">Catalog Home</div>
+        <h1 id="page-title">Azure AI Agent Foundry Browser</h1>
+        <p>Search, inspect, and activate learning agents and reusable application blueprints for Azure AI engineering. This browser reads the Foundry catalog model and keeps the agent files as the source of execution behavior.</p>
+        <details class="collapsible" open>
+          <summary>
+            <div class="section-title">
+              <h2>Start Here</h2>
+              <p>Jump to application blueprints, learning agents, or the step-by-step guides.</p>
+            </div>
+          </summary>
+          <div class="hero-actions collapsible-body">
+            <button class="button primary" id="showAppAgents">Application blueprints</button>
+            <button class="button" id="showLearningAgents">Learning agents</button>
+            <button class="button" id="showAssistantPanel">Use assistant agent</button>
+            <a class="button primary" href="../docs/prompts/design-from-architecture.html" target="_blank" rel="noopener">Architecture to design</a>
+            <a class="button primary" href="../docs/prompts/implement-from-brd-prd.html" target="_blank" rel="noopener">BRD/PRD implementation</a>
+            <a class="button" href="../docs/prompt-files-guide.html" target="_blank" rel="noopener">Prompt guide</a>
+            <a class="button" href="../docs/application-implementation-step-by-step.html" target="_blank" rel="noopener">Application flow guide</a>
+            <a class="button" href="../docs/learning-paths-step-by-step.html" target="_blank" rel="noopener">Learning path guide</a>
+            <a class="button" href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank" rel="noopener">Azure Architecture Factory</a>
+            <button class="button" id="resetFilters">Reset filters</button>
+          </div>
+        </details>
+      </div>
+      <aside class="hero-side" aria-label="Catalog metrics">
+        <details class="collapsible" open>
+          <summary>
+            <div class="section-title">
+              <h2>Catalog Summary</h2>
+              <p>Current inventory from the local Foundry agent zone.</p>
+            </div>
+          </summary>
+          <div class="collapsible-body hero-side">
+            <div class="metric"><div class="metric-value" id="agentCount">0</div><div class="metric-label">Agents indexed</div></div>
+            <div class="metric"><div class="metric-value" id="blueprintCount">0</div><div class="metric-label">Application blueprints</div></div>
+            <div class="metric"><div class="metric-value" id="promptCount">4</div><div class="metric-label">Prompt entry points</div></div>
+          </div>
+        </details>
+      </aside>
+    </section>
+
+    <section class="toolbar" aria-labelledby="prompt-guide-title">
+      <details class="collapsible" open>
+        <summary>
+          <div class="section-title">
+            <h2 id="prompt-guide-title">Prompt Navigation</h2>
+            <p>Choose the slash command that matches the user's current intent.</p>
+          </div>
+        </summary>
+        <div class="collapsible-body">
+          <div class="prompt-grid" id="promptCards"></div>
+          <div class="hero-actions">
+            <a class="button" href="../docs/prompt-files-guide.html" target="_blank" rel="noopener">Open prompt files guide</a>
+            <a class="button" href="../docs/prompts/find-ai-agent.html" target="_blank" rel="noopener">Open rendered prompt example</a>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="toolbar" id="assistant-agent-panel" aria-labelledby="assistant-agent-title">
+      <details class="collapsible" open>
+        <summary>
+          <div class="section-title">
+            <h2 id="assistant-agent-title">Assistant Agent Step-By-Step Support</h2>
+            <p>Copy a companion-agent prompt when the user wants guided help through learning, planning, or implementation validation steps.</p>
+          </div>
+        </summary>
+        <div class="collapsible-body intake-grid">
+          <div class="intake-actions">
+            <button class="button primary" id="copyPlanningAssistantPrompt">Copy planning assistant prompt</button>
+            <button class="button" id="copyLearningAssistantPrompt">Copy learning assistant prompt</button>
+            <button class="button" id="copyValidationAssistantPrompt">Copy validation handoff prompt</button>
+            <button class="button" id="showAssistantAgents">Show assistant agents</button>
+            <a class="button" href="../docs/application-implementation-step-by-step.html" target="_blank" rel="noopener">Open application guide</a>
+            <a class="button" href="../docs/learning-paths-step-by-step.html" target="_blank" rel="noopener">Open learning guide</a>
+          </div>
+          <pre class="contract-box" id="assistantPromptPreview"></pre>
+        </div>
+      </details>
+    </section>
+
+    <section class="toolbar" aria-labelledby="requirements-intake-title">
+      <details class="collapsible" open>
+        <summary>
+          <div class="section-title">
+            <h2 id="requirements-intake-title">BRD/PRD Implementation Intake</h2>
+            <p>Paste a requirements summary or reference a BRD/PRD file, then copy a prompt that routes through the Foundry application agents.</p>
+          </div>
+        </summary>
+        <div class="collapsible-body intake-grid">
+          <label class="field-stack">
+            <span class="field-label">Requirement source or summary</span>
+            <textarea class="input intake-textarea" id="requirementsInput" rows="5" placeholder="Example: docs/my-product-prd.md or paste BRD/PRD goals, users, workflows, constraints, acceptance criteria, and target Azure AI capabilities."></textarea>
+          </label>
+          <div class="intake-actions">
+            <a class="button" href="../docs/prompts/implement-from-brd-prd.html" target="_blank" rel="noopener">Open BRD/PRD prompt guide</a>
+            <button class="button primary" id="copyRequirementsPrompt">Copy implementation prompt</button>
+            <button class="button" id="showDesignSpecialists">Show design specialists</button>
+          </div>
+          <pre class="contract-box" id="requirementsPromptPreview"></pre>
+        </div>
+      </details>
+    </section>
+
+    <section class="toolbar" aria-labelledby="architecture-intake-title">
+      <details class="collapsible" open>
+        <summary>
+          <div class="section-title">
+            <h2 id="architecture-intake-title">Architecture To Design Intake</h2>
+            <p>Paste Markdown architecture notes, Mermaid/PlantUML text, or a diagram export summary, then copy a prompt that converts it into Foundry agent design work.</p>
+          </div>
+        </summary>
+        <div class="collapsible-body intake-grid">
+          <label class="field-stack">
+            <span class="field-label">Architecture source or Markdown summary</span>
+            <textarea class="input intake-textarea" id="architectureInput" rows="6" placeholder="Example: docs/app-architecture.md or paste Markdown with components, data flows, trust boundaries, Azure services, APIs, environments, and open decisions. Mermaid, PlantUML, draw.io export text, or Visio export notes also work."></textarea>
+          </label>
+          <div class="intake-actions">
+            <a class="button" href="../docs/prompts/design-from-architecture.html" target="_blank" rel="noopener">Open architecture prompt guide</a>
+            <button class="button primary" id="copyArchitecturePrompt">Copy design prompt</button>
+            <button class="button" id="showArchitectureSpecialists">Show architecture specialists</button>
+          </div>
+          <pre class="contract-box" id="architecturePromptPreview"></pre>
+        </div>
+      </details>
+    </section>
+
+    <section class="toolbar" aria-labelledby="filters-title">
+      <details class="collapsible" open>
+        <summary>
+          <div class="section-title">
+            <h2 id="filters-title">Search And Filter</h2>
+            <p>Filter by audience, orchestration level, capability, or common task keywords.</p>
+          </div>
+        </summary>
+        <div class="collapsible-body">
+          <div class="search-row">
+            <input class="input" id="searchInput" type="search" placeholder="Search by task, service, model, capability, or keyword" aria-label="Search agents">
+            <select class="select" id="audienceFilter" aria-label="Filter by audience">
+              <option value="all">All audiences</option>
+              <option value="application">Application</option>
+              <option value="learning">Learning</option>
+            </select>
+            <select class="select" id="levelFilter" aria-label="Filter by level">
+              <option value="all">All levels</option>
+            </select>
+            <select class="select" id="capabilityFilter" aria-label="Filter by capability">
+              <option value="all">All capabilities</option>
+            </select>
+          </div>
+          <div class="chips" id="quickFilters" aria-label="Quick filters"></div>
+        </div>
+      </details>
+    </section>
+
+    <section class="content">
+      <div class="agent-list">
+        <details class="collapsible" open>
+          <summary class="list-header">
+            <div class="section-title">
+              <h2>Agent Catalog</h2>
+              <p>Select an agent to inspect its purpose, configuration, and activation path.</p>
+            </div>
+            <span class="badge" id="resultCount">0 results</span>
+          </summary>
+          <div class="agent-cards" id="agentCards"></div>
+        </details>
+      </div>
+      <article class="detail-panel" id="detailPanel" aria-live="polite"></article>
+    </section>
+
+    <p class="footer">Use this browser as the discovery layer. Activation still happens through VS Code prompts, custom agents, or future generated Foundry agent templates.</p>
+  </main>
+
+  <script>
+    const catalog = {
+      catalogName: "Azure AI Agent Foundry",
+      version: "0.1.0",
+      entryPrompts: ["/find-ai-agent", "/browse-ai-agent-foundry", "/design-ai-agent-solution", "/design-from-architecture", "/implement-from-brd-prd", "/learn-ai-capability"],
+      promptGuides: [
+        { prompt: "/find-ai-agent", useCase: "Choose the best agent when the task, service, app scenario, or learning goal is known but the route is unclear.", route: "Azure AI Agent Foundry Orchestrator" },
+        { prompt: "/browse-ai-agent-foundry", useCase: "Explore the full catalog by learning area, application blueprint, Azure service, capability, or platform concern.", route: "Azure AI Agent Foundry Orchestrator" },
+        { prompt: "/learn-ai-capability", useCase: "Start a guided learning route using source repositories, prerequisites, labs, and follow-up application paths.", route: "Azure AI Learning Orchestrator" },
+        { prompt: "/design-ai-agent-solution", useCase: "Design a real application with selected blueprints, contracts, integration pattern, Microsoft Agent Framework fit, safety, auth, security, monitoring, operations, and validation.", route: "Azure AI Application Orchestrator" },
+        { prompt: "/design-from-architecture", useCase: "Convert Markdown architecture notes, Mermaid or PlantUML text, diagram exports, or pasted architecture descriptions into an agent-owned design handoff.", route: "Azure AI Application Orchestrator" },
+        { prompt: "/implement-from-brd-prd", useCase: "Convert a BRD, PRD, feature brief, or requirements file into a requirement-to-agent map, phased implementation plan, and validation handoff.", route: "Azure AI Application Orchestrator" }
+      ],
+      agents: [
+        { id: "azure-ai-agent-foundry-orchestrator", name: "Azure AI Agent Foundry Orchestrator", path: "../.github/agents/azure-ai-agent-foundry-orchestrator.agent.md", audience: ["learning", "application"], level: "top-orchestrator", capabilities: ["agent discovery", "intent routing", "catalog search", "multi-agent coordination"], keywords: ["find agent", "browse catalog", "Azure AI", "application agent", "learning path", "orchestrator"] },
+        { id: "azure-ai-learning-orchestrator", name: "Azure AI Learning Orchestrator", path: "../.github/agents/azure-ai-learning-orchestrator.agent.md", audience: ["learning"], level: "mode-orchestrator", capabilities: ["module guidance", "lab routing", "learning plan"], keywords: ["learn", "module", "lab", "study", "exercise"] },
+        { id: "azure-ai-application-orchestrator", name: "Azure AI Application Orchestrator", path: "../.github/agents/azure-ai-application-orchestrator.agent.md", audience: ["application"], level: "mode-orchestrator", capabilities: ["application design", "BRD/PRD intake", "requirements mapping", "architecture artifact intake", "diagram-to-design mapping", "architecture routing", "contract routing", "data design routing", "configuration routing", "test and evaluation routing", "UX workflow routing", "agent configuration", "integration planning", "Microsoft Agent Framework fit", "production readiness routing"], keywords: ["build app", "BRD", "PRD", "requirements", "feature brief", "architecture diagram", "Markdown architecture", "Mermaid", "PlantUML", "draw.io", "Visio", "diagram to design", "plug in agent", "configure agent", "solution design", "architecture", "API contract", "data design", "storage", "configuration", "environment", "testing", "evaluation", "UX", "human workflow", "Microsoft Agent Framework", "agent runtime", "security", "monitoring", "operations"] },
+        { id: "application-planning-companion-agent", name: "Application Planning Companion Agent", path: "../.github/agents/application-planning-companion-agent.agent.md", audience: ["application"], level: "planning-companion", capabilities: ["implementation tracking", "design handoff", "task management", "planning artifacts", "validation planning"], keywords: ["tag along", "planning steps", "manage build", "designer helper", "handoff", "track tasks", "without execute"] },
+        { id: "application-implementation-validation-agent", name: "Application Implementation Validation Agent", path: "../.github/agents/application-implementation-validation-agent.agent.md", audience: ["application"], level: "implementation-validation", capabilities: ["step implementation", "terminal execution", "test execution", "build validation", "validation evidence", "framework scaffold validation"], keywords: ["implement step", "run validation", "execute commands", "terminal", "tests", "local server", "validator", "Microsoft Agent Framework"] },
+        { id: "architecture-design-agent", name: "Architecture & Design Agent", path: "../.github/agents/architecture-design-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["application architecture", "component design", "request flow", "data flow", "design decisions"], keywords: ["architecture", "design", "components", "boundaries", "request flow", "data flow", "new app", "solution design"] },
+        { id: "api-integration-contract-agent", name: "API & Integration Contract Agent", path: "../.github/agents/api-integration-contract-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["API contracts", "integration contracts", "schemas", "error handling", "retry policy"], keywords: ["API", "contract", "schema", "integration", "webhook", "event", "tool contract", "error shape", "idempotency"] },
+        { id: "data-storage-design-agent", name: "Data & Storage Design Agent", path: "../.github/agents/data-storage-design-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["data design", "storage design", "indexing", "retention", "metadata", "embeddings"], keywords: ["data", "storage", "schema", "metadata", "embeddings", "generated media", "retention", "audit log", "indexing"] },
+        { id: "configuration-environment-contract-agent", name: "Configuration & Environment Contract Agent", path: "../.github/agents/configuration-environment-contract-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["configuration contract", "environment variables", ".env guidance", "feature flags", "validation rules"], keywords: ["configuration", "environment", ".env", "settings", "feature flags", "endpoint placeholders", "validation", "local dev", "staging", "production"] },
+        { id: "test-evaluation-strategy-agent", name: "Test & Evaluation Strategy Agent", path: "../.github/agents/test-evaluation-strategy-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["test strategy", "AI evaluation planning", "mock strategy", "acceptance criteria", "regression datasets"], keywords: ["testing", "evaluation", "test strategy", "mock", "acceptance criteria", "regression", "dataset", "manual validation", "quality"] },
+        { id: "ux-human-workflow-agent", name: "UX & Human Workflow Agent", path: "../.github/agents/ux-human-workflow-agent.agent.md", audience: ["application"], level: "application-design-specialist", capabilities: ["user journeys", "human review", "confidence thresholds", "fallback states", "feedback capture"], keywords: ["UX", "user journey", "human workflow", "review queue", "confidence", "fallback", "feedback", "human in the loop", "operator"] },
+        { id: "azure-ai-services-foundation-orchestrator", name: "Azure AI Services Foundation Orchestrator", path: "../.github/agents/azure-ai-services-foundation-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["AI services provisioning", "security", "monitoring", "containers", "content safety"], keywords: ["Azure AI Services", "provision", "secure", "monitor", "container", "content safety"] },
+        { id: "vision-solutions-orchestrator", name: "Vision Solutions Orchestrator", path: "../.github/agents/vision-solutions-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["image analysis", "classification", "object detection", "OCR", "video", "generative vision"], keywords: ["vision", "image", "OCR", "video", "classification", "object detection", "Content Understanding"] },
+        { id: "nlp-solutions-orchestrator", name: "NLP Solutions Orchestrator", path: "../.github/agents/nlp-solutions-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["text analytics", "translation", "speech", "conversational language", "Q&A", "bot integration"], keywords: ["NLP", "language", "translation", "speech", "CLU", "QnA", "bot"] },
+        { id: "knowledge-mining-search-orchestrator", name: "Knowledge Mining Search Orchestrator", path: "../.github/agents/knowledge-mining-search-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["Azure AI Search", "indexing", "custom skills", "knowledge store", "retrieval"], keywords: ["AI Search", "knowledge mining", "index", "custom skill", "knowledge store", "RAG", "vector search"] },
+        { id: "document-intelligence-orchestrator", name: "Document Intelligence Orchestrator", path: "../.github/agents/document-intelligence-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["document extraction", "custom models", "composed models", "form processing", "search integration"], keywords: ["Document Intelligence", "forms", "OCR", "custom document model", "invoice", "receipt", "extraction"] },
+        { id: "generative-ai-solutions-orchestrator", name: "Generative AI Solutions Orchestrator", path: "../.github/agents/generative-ai-solutions-orchestrator.agent.md", audience: ["learning", "application"], level: "capability-orchestrator", capabilities: ["Azure OpenAI", "chat", "embeddings", "RAG", "image generation", "video generation"], keywords: ["Azure OpenAI", "chat", "embedding", "RAG", "gpt", "image generation", "Sora", "Foundry"] },
+        { id: "foundry-integration-agent", name: "Foundry Integration Agent", path: "../.github/agents/foundry-integration-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["Foundry project", "model deployment", "endpoint selection", "quota guidance", "agent runtime fit"], keywords: ["Foundry", "model deployment", "endpoint", "quota", "project", "Microsoft Agent Framework"] },
+        { id: "auth-config-agent", name: "Auth Config Agent", path: "../.github/agents/auth-config-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["Entra ID", "DefaultAzureCredential", ".env", "endpoint validation"], keywords: ["auth", "authentication", "DefaultAzureCredential", "az login", ".env", "endpoint"] },
+        { id: "responsible-ai-safety-agent", name: "Responsible AI Safety Agent", path: "../.github/agents/responsible-ai-safety-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["content safety", "moderation", "RAI policy", "safety evaluation"], keywords: ["responsible AI", "safety", "moderation", "content filter", "policy"] },
+        { id: "security-compliance-agent", name: "Security & Compliance Agent", path: "../.github/agents/security-compliance-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["security posture", "threat modeling", "compliance readiness", "data protection", "least privilege"], keywords: ["security", "compliance", "threat model", "data protection", "RBAC", "least privilege", "secrets", "privacy"] },
+        { id: "operations-readiness-agent", name: "Operations Readiness Agent", path: "../.github/agents/operations-readiness-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["production readiness", "runbooks", "rollback planning", "incident response", "quota and cost guardrails"], keywords: ["operations", "production readiness", "runbook", "rollback", "incident", "support handoff", "quota", "cost guardrails"] },
+        { id: "monitoring-evaluation-agent", name: "Monitoring & Evaluation Agent", path: "../.github/agents/monitoring-evaluation-agent.agent.md", audience: ["application", "learning"], level: "shared-specialist", capabilities: ["monitoring", "telemetry", "tracing", "evaluation", "alerting", "quality signals"], keywords: ["monitoring", "observability", "telemetry", "tracing", "Application Insights", "Azure Monitor", "evaluation", "alerts", "quality"] },
+        { id: "vision-chat-app-agent", name: "Vision Chat App Agent", path: "../.github/agents/vision-chat-app-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["image-aware chat", "visual Q&A", "OpenAI responses API", "image input"], keywords: ["vision chat", "image chat", "visual question answering", "gpt-4.1", "image input"] },
+        { id: "image-generation-app-agent", name: "Image Generation App Agent", path: "../.github/agents/image-generation-app-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["text-to-image", "prompt refinement", "base64 image output", "asset generation"], keywords: ["image generation", "gpt-image", "text to image", "base64", "generated images"] },
+        { id: "video-generation-app-agent", name: "Video Generation App Agent", path: "../.github/agents/video-generation-app-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["text-to-video", "image-to-video", "async polling", "download", "remix"], keywords: ["video generation", "Sora", "polling", "remix", "mp4"] },
+        { id: "content-understanding-metadata-agent", name: "Content Understanding Metadata Agent", path: "../.github/agents/content-understanding-metadata-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["image metadata", "analyzer schema", "description", "tags", "structured output"], keywords: ["Content Understanding", "metadata", "analyzer", "description", "tags", "digital asset management"] },
+        { id: "rag-search-app-agent", name: "RAG Search App Agent", path: "../.github/agents/rag-search-app-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["retrieval augmented generation", "Azure AI Search", "hybrid search", "vector search", "grounding"], keywords: ["RAG", "AI Search", "vector", "hybrid", "retrieval", "grounding"] },
+        { id: "document-processing-app-agent", name: "Document Processing App Agent", path: "../.github/agents/document-processing-app-agent.agent.md", audience: ["application"], level: "application-blueprint", capabilities: ["document extraction", "forms", "layout", "custom models", "confidence review"], keywords: ["Document Intelligence", "forms", "extract", "layout", "custom model", "confidence"] }
+      ]
+    };
+
+    const state = { search: "", audience: "all", level: "all", capability: "all", quick: "all", selectedId: catalog.agents[0].id };
+    const quickFilters = ["all", "assistant", "BRD", "PRD", "requirements", "architecture", "diagram", "Markdown", "Mermaid", "PlantUML", "vision", "documents", "rag", "foundry", "auth", "safety", "security", "operations", "monitoring", "API", "data", "configuration", "testing", "UX", "learning", "application"];
+    const assistantAgentIds = ["azure-ai-learning-orchestrator", "application-planning-companion-agent", "application-implementation-validation-agent"];
+    const configContracts = {
+      "vision-chat-app-agent": ["AZURE_OPENAI_ENDPOINT", "MODEL_DEPLOYMENT", "SYSTEM_MESSAGE", "IMAGE_INPUT_MODE"],
+      "image-generation-app-agent": ["AZURE_OPENAI_ENDPOINT", "MODEL_DEPLOYMENT", "IMAGE_SIZE", "OUTPUT_STORE", "PROMPT_POLICY"],
+      "video-generation-app-agent": ["AZURE_OPENAI_ENDPOINT", "MODEL_DEPLOYMENT", "VIDEO_SIZE", "DURATION_SECONDS", "POLLING_INTERVAL_SECONDS", "OUTPUT_STORE"],
+      "content-understanding-metadata-agent": ["CONTENT_UNDERSTANDING_ENDPOINT", "ANALYZER_ID", "SCHEMA_FIELDS", "INPUT_SOURCE", "OUTPUT_FORMAT"],
+      "application-planning-companion-agent": ["APP_SCENARIO", "CURRENT_STEP", "DESIGN_ARTIFACT", "TASK_OWNERS", "VALIDATION_PLAN"],
+      "application-implementation-validation-agent": ["IMPLEMENTATION_STEP", "TARGET_FILES", "VALIDATION_COMMAND", "EXPECTED_RESULT", "EVIDENCE_SUMMARY"],
+      "architecture-design-agent": ["APP_SCENARIO", "USERS", "INPUTS", "OUTPUTS", "QUALITY_ATTRIBUTES", "CONSTRAINTS"],
+      "api-integration-contract-agent": ["CALLER", "ENDPOINT_OR_EVENT", "REQUEST_SCHEMA", "RESPONSE_SCHEMA", "ERROR_CONTRACT", "RETRY_POLICY"],
+      "data-storage-design-agent": ["DATA_TYPES", "ACCESS_PATTERNS", "RETENTION_POLICY", "STORAGE_OPTIONS", "INDEXING_NEEDS", "PRIVACY_CONSTRAINTS"],
+      "configuration-environment-contract-agent": ["ENVIRONMENTS", "REQUIRED_SETTINGS", "SECRET_REFERENCES", "AUTH_MODE", "VALIDATION_RULES", "OWNER"],
+      "test-evaluation-strategy-agent": ["BEHAVIORS", "QUALITY_METRICS", "TEST_DATA", "MOCKS", "ACCEPTANCE_CRITERIA", "VALIDATION_OWNER"],
+      "ux-human-workflow-agent": ["USER_ROLES", "PRIMARY_JOURNEY", "REVIEW_STATES", "CONFIDENCE_POLICY", "FEEDBACK_LOOP", "ESCALATION_PATH"],
+      "rag-search-app-agent": ["SEARCH_ENDPOINT", "SEARCH_INDEX", "RETRIEVAL_MODE", "EMBEDDING_DEPLOYMENT", "GROUNDING_POLICY"],
+      "document-processing-app-agent": ["DOCUMENT_INTELLIGENCE_ENDPOINT", "MODEL_ID", "INPUT_SOURCE", "EXTRACTION_FIELDS", "CONFIDENCE_POLICY", "DOWNSTREAM_TARGET"],
+      "foundry-integration-agent": ["FOUNDRY_PROJECT", "RESOURCE_ENDPOINT", "MODEL_DEPLOYMENT", "REGION", "QUOTA_NOTES"],
+      "auth-config-agent": ["AUTH_MODE", "TENANT_ID", "ENDPOINT", "LOCAL_LOGIN", "ENVIRONMENT"],
+      "responsible-ai-safety-agent": ["SAFETY_POLICY", "MODERATION_MODE", "BLOCKED_CONTENT", "ESCALATION_PATH", "EVALUATION_CHECKS"],
+      "security-compliance-agent": ["SECURITY_SCOPE", "DATA_CLASSIFICATION", "IDENTITY_MODEL", "REQUIRED_CONTROLS", "COMPLIANCE_NOTES"],
+      "operations-readiness-agent": ["ENVIRONMENT", "SUPPORT_MODEL", "RUNBOOK_PATH", "ROLLBACK_PLAN", "READINESS_CHECKS"],
+      "monitoring-evaluation-agent": ["TELEMETRY_STACK", "TRACE_SIGNALS", "EVALUATION_CHECKS", "ALERT_THRESHOLDS", "DASHBOARD_NEEDS"]
+    };
+
+    const elements = {
+      searchInput: document.getElementById("searchInput"),
+      audienceFilter: document.getElementById("audienceFilter"),
+      levelFilter: document.getElementById("levelFilter"),
+      capabilityFilter: document.getElementById("capabilityFilter"),
+      quickFilters: document.getElementById("quickFilters"),
+      agentCards: document.getElementById("agentCards"),
+      catalogSection: document.querySelector(".content"),
+      detailPanel: document.getElementById("detailPanel"),
+      resultCount: document.getElementById("resultCount"),
+      agentCount: document.getElementById("agentCount"),
+      blueprintCount: document.getElementById("blueprintCount"),
+      promptCount: document.getElementById("promptCount"),
+      promptCards: document.getElementById("promptCards"),
+      assistantPanel: document.getElementById("assistant-agent-panel"),
+      assistantPromptPreview: document.getElementById("assistantPromptPreview"),
+      requirementsInput: document.getElementById("requirementsInput"),
+      requirementsPromptPreview: document.getElementById("requirementsPromptPreview"),
+      architectureInput: document.getElementById("architectureInput"),
+      architecturePromptPreview: document.getElementById("architecturePromptPreview")
+    };
+
+    const assistantPrompts = {
+      planning: "Application Planning Companion Agent, walk me through this application implementation guide one step at a time. Track the current step, decisions, owner agents, handoffs, validation checks, and open questions. Do not run commands; prepare execution handoffs for Application Implementation Validation Agent when needed.",
+      learning: "Azure AI Learning Orchestrator, walk me through this learning path one step at a time. For each step, give me the source path, goal, action, checkpoint, and next prompt to use. Wait for my checkpoint before continuing.",
+      validation: "Application Implementation Validation Agent, execute the approved current step from the planning tracker, edit only the named files, run the focused validation command, and summarize evidence plus remaining issues."
+    };
+
+    function updateAssistantPreview(prompt) { elements.assistantPromptPreview.textContent = prompt; }
+    async function copyPrompt(button, prompt, fallbackTitle, resetText) {
+      updateAssistantPreview(prompt);
+      try {
+        await navigator.clipboard.writeText(prompt);
+        button.textContent = "Copied";
+      } catch {
+        window.prompt(fallbackTitle, prompt);
+        return;
+      }
+      setTimeout(() => { button.textContent = resetText; }, 1200);
+    }
+
+    function requirementsPrompt() {
+      const source = elements.requirementsInput.value.trim() || "<paste BRD/PRD summary or provide a workspace file path>";
+      return `/implement-from-brd-prd ${source}\n\nUse Azure AI Agent Foundry agents to extract verified requirements, map each requirement to the right specialist or blueprint, assess Microsoft Agent Framework fit, define implementation phases, and prepare the first bounded step for Application Implementation Validation Agent. Mark missing requirements and do not invent Azure resources, endpoints, model deployments, test results, or implementation evidence.`;
+    }
+    function updateRequirementsPreview() { elements.requirementsPromptPreview.textContent = requirementsPrompt(); }
+
+    function architecturePrompt() {
+      const source = elements.architectureInput.value.trim() || "<paste Markdown architecture notes, Mermaid/PlantUML text, diagram export text, or provide a workspace file path>";
+      return `/design-from-architecture ${source}\n\nUse Azure AI Agent Foundry agents to extract verified architecture elements, map components and flows to the right specialists or blueprints, assess Microsoft Agent Framework fit, and create a design-first implementation handoff. Treat Markdown, Mermaid, PlantUML, draw.io, Visio, and diagram descriptions as evidence. Mark unsupported inferences and do not invent components, Azure resources, endpoints, model deployments, security boundaries, test results, or implementation evidence.`;
+    }
+    function updateArchitecturePreview() { elements.architecturePromptPreview.textContent = architecturePrompt(); }
+
+    function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
+    function textFor(agent) { return [agent.name, agent.id, agent.level, ...(agent.audience || []), ...(agent.capabilities || []), ...(agent.keywords || [])].join(" ").toLowerCase(); }
+    function matchesQuick(agent) {
+      if (state.quick === "all") return true;
+      if (state.quick === "assistant") return assistantAgentIds.includes(agent.id);
+      if (state.quick === "application") return agent.audience.includes("application");
+      if (state.quick === "learning") return agent.audience.includes("learning");
+      return textFor(agent).includes(state.quick.toLowerCase());
+    }
+    function filteredAgents() {
+      const query = state.search.trim().toLowerCase();
+      return catalog.agents.filter(agent => {
+        const matchesSearch = !query || textFor(agent).includes(query);
+        const matchesAudience = state.audience === "all" || agent.audience.includes(state.audience);
+        const matchesLevel = state.level === "all" || agent.level === state.level;
+        const matchesCapability = state.capability === "all" || agent.capabilities.includes(state.capability);
+        return matchesSearch && matchesAudience && matchesLevel && matchesCapability && matchesQuick(agent);
+      });
+    }
+    function populateFilters() {
+      elements.levelFilter.innerHTML = `<option value="all">All levels</option>`;
+      elements.capabilityFilter.innerHTML = `<option value="all">All capabilities</option>`;
+      unique(catalog.agents.map(agent => agent.level)).forEach(level => elements.levelFilter.append(new Option(level, level)));
+      unique(catalog.agents.flatMap(agent => agent.capabilities)).forEach(capability => elements.capabilityFilter.append(new Option(capability, capability)));
+      elements.levelFilter.value = state.level;
+      elements.capabilityFilter.value = state.capability;
+      elements.quickFilters.innerHTML = quickFilters.map(filter => `<button type="button" class="chip${filter === state.quick ? " active" : ""}" data-filter="${filter}">${filter}</button>`).join("");
+    }
+    function workspacePath(path) { return path.replace(/^\.\.\//, ""); }
+    function linkPath(path) { return encodeURI(path); }
+    function promptPath(prompt) { return `../docs/prompts/${prompt.replace(/^\//, "")}.html`; }
+    function promptLink(prompt) { return `<a class="tag" href="${linkPath(promptPath(prompt))}" target="_blank" rel="noopener">${prompt}</a>`; }
+    function renderPromptCards() {
+      elements.promptCards.innerHTML = catalog.promptGuides.map(item => `
+        <a class="prompt-card" href="${linkPath(promptPath(item.prompt))}" target="_blank" rel="noopener">
+          <span class="prompt-name">${item.prompt}</span>
+          <p>${item.useCase}</p>
+          <span class="prompt-route">Routes to: ${item.route}</span>
+        </a>`).join("");
+    }
+    function filterButton(value, filter) { return `<button type="button" class="tag" data-${filter}="${value}">${value}</button>`; }
+    function searchButton(value) { return `<button type="button" class="tag" data-search="${value}">${value}</button>`; }
+    function renderList() {
+      const agents = filteredAgents();
+      elements.resultCount.textContent = `${agents.length} result${agents.length === 1 ? "" : "s"}`;
+      if (!agents.some(agent => agent.id === state.selectedId) && agents[0]) state.selectedId = agents[0].id;
+      elements.agentCards.innerHTML = agents.length ? agents.map(agent => `
+        <button type="button" class="agent-card${agent.id === state.selectedId ? " selected" : ""}" data-agent-id="${agent.id}">
+          <div class="agent-title-row"><h3>${agent.name}</h3><span class="badge">${agent.level}</span></div>
+          <p>${agent.capabilities.slice(0, 3).join(" · ")}</p>
+          <div class="agent-meta">${agent.audience.map(item => `<span class="badge">${item}</span>`).join("")}</div>
+        </button>`).join("") : `<div class="empty">No agents match the current filters.</div>`;
+      renderDetail(catalog.agents.find(agent => agent.id === state.selectedId) || agents[0]);
+    }
+    function renderDetail(agent) {
+      if (!agent) {
+        elements.detailPanel.innerHTML = `<h2>No agent selected</h2><p>Adjust the filters to select an agent.</p>`;
+        return;
+      }
+      const contract = configContracts[agent.id] || ["REQUEST_INTENT", "INPUTS", "OUTPUTS", "AZURE_SERVICE", "VALIDATION_CHECKS"];
+      const prompts = catalog.entryPrompts.map(promptLink).join("");
+      const filePath = workspacePath(agent.path);
+      elements.detailPanel.innerHTML = `
+        <div class="section-title"><div class="section-kicker">Agent Detail</div><h2>${agent.name}</h2><p>Review when to use this agent and which inputs it expects before activation.</p></div>
+        <p>${agent.capabilities.join(" · ")}</p>
+        <details class="collapsible detail-section" open><summary><h3>Audience and Level</h3></summary><div class="tag-list">${agent.audience.map(item => filterButton(item, "audience")).join("")}${filterButton(agent.level, "level")}</div></details>
+        <details class="collapsible detail-section" open><summary><h3>Keywords</h3></summary><div class="tag-list">${agent.keywords.map(searchButton).join("")}</div></details>
+        <details class="collapsible detail-section" open><summary><h3>Configuration Contract</h3></summary><pre class="contract-box">${contract.map(item => `${item}=<set value>`).join("\n")}</pre></details>
+        <details class="collapsible detail-section" open><summary><h3>Activation</h3></summary><p>Open the agent file in VS Code, or start from one of the prompt entry points.</p><div class="path-box"><a href="${linkPath(agent.path)}" target="_blank" rel="noopener">${filePath}</a></div><div class="path-actions"><button class="button" data-copy-path="${filePath}">Copy path</button></div><div class="tag-list">${prompts}</div></details>
+        <details class="collapsible detail-section" open><summary><h3>Recommended Next Step</h3></summary><p>${nextStep(agent)}</p></details>`;
+    }
+    function nextStep(agent) {
+      if (agent.level === "application-design-specialist") return "Use this specialist before implementation when the app needs design, contracts, data, configuration, testing, evaluation, or human workflow decisions clarified.";
+      if (agent.level === "application-blueprint") return "Run /design-ai-agent-solution with your app scenario, then use this blueprint's configuration contract as the integration checklist.";
+      if (agent.level.includes("orchestrator")) return "Use this orchestrator when the request spans several specialists or when the user is not sure which blueprint fits.";
+      return "Use this shared specialist alongside an application blueprint whenever Foundry, auth, safety, security, monitoring, or operational readiness affects the design.";
+    }
+    function updateMetrics() {
+      elements.agentCount.textContent = catalog.agents.length;
+      elements.blueprintCount.textContent = catalog.agents.filter(agent => agent.level === "application-blueprint").length;
+      elements.promptCount.textContent = catalog.entryPrompts.length;
+    }
+    function resetFilters() {
+      state.search = ""; state.audience = "all"; state.level = "all"; state.capability = "all"; state.quick = "all";
+      elements.searchInput.value = ""; elements.audienceFilter.value = "all"; elements.levelFilter.value = "all"; elements.capabilityFilter.value = "all";
+      populateFilters(); renderList();
+    }
+    function showSpecialists(search, selectedId) {
+      state.audience = "application";
+      state.level = "application-design-specialist";
+      state.capability = "all";
+      state.quick = "all";
+      state.search = search;
+      state.selectedId = selectedId || state.selectedId;
+      elements.audienceFilter.value = state.audience;
+      elements.searchInput.value = state.search;
+      populateFilters();
+      renderList();
+      elements.catalogSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    function showAssistantAgents() {
+      state.audience = "all";
+      state.level = "all";
+      state.capability = "all";
+      state.quick = "assistant";
+      state.search = "";
+      state.selectedId = "application-planning-companion-agent";
+      elements.audienceFilter.value = state.audience;
+      elements.searchInput.value = state.search;
+      populateFilters();
+      renderList();
+      elements.catalogSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    elements.searchInput.addEventListener("input", event => { state.search = event.target.value; renderList(); });
+    elements.audienceFilter.addEventListener("change", event => { state.audience = event.target.value; renderList(); });
+    elements.levelFilter.addEventListener("change", event => { state.level = event.target.value; renderList(); });
+    elements.capabilityFilter.addEventListener("change", event => { state.capability = event.target.value; renderList(); });
+    elements.quickFilters.addEventListener("click", event => {
+      const button = event.target.closest("button[data-filter]");
+      if (!button) return;
+      state.quick = button.dataset.filter;
+      populateFilters(); renderList();
+    });
+    elements.agentCards.addEventListener("click", event => {
+      const card = event.target.closest("button[data-agent-id]");
+      if (!card) return;
+      state.selectedId = card.dataset.agentId;
+      renderList();
+    });
+    elements.detailPanel.addEventListener("click", async event => {
+      const button = event.target.closest("button[data-copy-path]");
+      if (!button) return;
+      const path = button.dataset.copyPath;
+      try {
+        await navigator.clipboard.writeText(path);
+        button.textContent = "Copied";
+      } catch {
+        window.prompt("Copy this workspace path", path);
+        button.textContent = "Copy path";
+        return;
+      }
+      setTimeout(() => { button.textContent = "Copy path"; }, 1200);
+    });
+    elements.detailPanel.addEventListener("click", event => {
+      const audienceButton = event.target.closest("button[data-audience]");
+      const levelButton = event.target.closest("button[data-level]");
+      const searchButton = event.target.closest("button[data-search]");
+      if (audienceButton) {
+        state.audience = audienceButton.dataset.audience;
+        elements.audienceFilter.value = state.audience;
+      } else if (levelButton) {
+        state.level = levelButton.dataset.level;
+        elements.levelFilter.value = state.level;
+      } else if (searchButton) {
+        state.search = searchButton.dataset.search;
+        elements.searchInput.value = state.search;
+      } else {
+        return;
+      }
+      renderList();
+    });
+    elements.requirementsInput.addEventListener("input", updateRequirementsPreview);
+    elements.architectureInput.addEventListener("input", updateArchitecturePreview);
+    document.getElementById("copyRequirementsPrompt").addEventListener("click", async event => {
+      const prompt = requirementsPrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        event.currentTarget.textContent = "Copied";
+      } catch {
+        window.prompt("Copy this BRD/PRD implementation prompt", prompt);
+        return;
+      }
+      setTimeout(() => { event.currentTarget.textContent = "Copy implementation prompt"; }, 1200);
+    });
+    document.getElementById("copyArchitecturePrompt").addEventListener("click", async event => {
+      const prompt = architecturePrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        event.currentTarget.textContent = "Copied";
+      } catch {
+        window.prompt("Copy this architecture design prompt", prompt);
+        return;
+      }
+      setTimeout(() => { event.currentTarget.textContent = "Copy design prompt"; }, 1200);
+    });
+    document.getElementById("showAssistantPanel").addEventListener("click", () => {
+      elements.assistantPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.getElementById("copyPlanningAssistantPrompt").addEventListener("click", event => {
+      copyPrompt(event.currentTarget, assistantPrompts.planning, "Copy this planning assistant prompt", "Copy planning assistant prompt");
+    });
+    document.getElementById("copyLearningAssistantPrompt").addEventListener("click", event => {
+      copyPrompt(event.currentTarget, assistantPrompts.learning, "Copy this learning assistant prompt", "Copy learning assistant prompt");
+    });
+    document.getElementById("copyValidationAssistantPrompt").addEventListener("click", event => {
+      copyPrompt(event.currentTarget, assistantPrompts.validation, "Copy this validation handoff prompt", "Copy validation handoff prompt");
+    });
+    document.getElementById("showAssistantAgents").addEventListener("click", showAssistantAgents);
+    document.getElementById("showDesignSpecialists").addEventListener("click", () => {
+      showSpecialists("", "architecture-design-agent");
+    });
+    document.getElementById("showArchitectureSpecialists").addEventListener("click", () => {
+      showSpecialists("architecture", "architecture-design-agent");
+    });
+    document.getElementById("showAppAgents").addEventListener("click", () => { state.audience = "application"; elements.audienceFilter.value = "application"; renderList(); });
+    document.getElementById("showLearningAgents").addEventListener("click", () => { state.audience = "learning"; elements.audienceFilter.value = "learning"; renderList(); });
+    document.getElementById("resetFilters").addEventListener("click", resetFilters);
+    updateMetrics(); populateFilters(); renderPromptCards(); updateAssistantPreview(assistantPrompts.planning); updateRequirementsPreview(); updateArchitecturePreview(); renderList();
+  </script>
+</body>
+</html>

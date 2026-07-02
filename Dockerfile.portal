@@ -42,6 +42,7 @@ COPY README.md ./
 COPY docs/ docs/
 COPY assets/ assets/
 COPY factory-templates/ factory-templates/
+COPY agent-foundry/ agent-foundry/
 # Note: projects/ directory NOT included in minimal Docker build context.
 # Snapshot of the project feed baked into the image at build time
 # (factory-projects.generated.json will be served without directory filtering).
