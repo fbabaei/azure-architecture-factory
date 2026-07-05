@@ -882,6 +882,140 @@ def _restore_runs_on_startup() -> None:
         _persist_runs_unlocked()
 
 
+def _build_agent_foundry_plan(source_type: str, title: str, content: str) -> dict:
+    """Build a deterministic portal execution plan from user-provided source text."""
+    source_label = {
+        "brd-prd": "BRD/PRD",
+        "architecture-markdown": "architecture markdown",
+        "architecture-mermaid": "Mermaid architecture diagram",
+        "architecture-drawio": "draw.io architecture diagram",
+        "architecture-visio": "Visio architecture diagram",
+        "learning-plan": "learning plan",
+    }.get(source_type, source_type)
+    diagram_source_types = {"architecture-markdown", "architecture-mermaid", "architecture-drawio", "architecture-visio"}
+    seed_lines = [line.strip(" #-\t") for line in content.splitlines() if line.strip()]
+    goals = seed_lines[:5] or [title]
+    owner_agents = [
+        "Azure AI Application Orchestrator",
+        "Application Planning Companion Agent",
+        "Configuration Environment Contract Agent",
+        "Security Compliance Agent",
+        "Test Evaluation Strategy Agent",
+        "Application Implementation Validation Agent",
+    ]
+    if source_type in diagram_source_types:
+        owner_agents.insert(2, "Architecture Design Agent")
+    if source_type == "learning-plan":
+        owner_agents = [
+            "Azure AI Learning Orchestrator",
+            "Application Planning Companion Agent",
+            "Application Implementation Validation Agent",
+        ]
+
+    steps = [
+        {
+            "id": "plan",
+            "ownerAgent": owner_agents[0],
+            "action": f"Convert the submitted {source_label} into scoped work packages and agent handoffs.",
+            "evidence": "Trace each generated step to submitted source text or bundled Agent Foundry documentation.",
+        },
+        {
+            "id": "contract",
+            "ownerAgent": owner_agents[min(2, len(owner_agents) - 1)],
+            "action": "Define configuration, environment, data, API, and approval boundaries before implementation.",
+            "evidence": "Record required settings, missing decisions, validation gates, and blocked assumptions.",
+        },
+        {
+            "id": "validate",
+            "ownerAgent": owner_agents[-1],
+            "action": "Execute only approved bounded implementation or validation steps in the target workspace.",
+            "evidence": "Capture edited files, focused validation command, status, logs, and remaining risks.",
+        },
+    ]
+    if source_type in diagram_source_types:
+        steps.insert(
+            1,
+            {
+                "id": "diagram-extract",
+                "ownerAgent": "Architecture Design Agent",
+                "action": "Extract components, connectors, boundaries, data flows, dependencies, and unclear diagram assumptions before implementation planning.",
+                "evidence": "Record diagram format, extracted nodes/connectors, source snippets, and any parts that need human clarification.",
+            },
+        )
+
+    return {
+        "title": title or "Agent Foundry portal run",
+        "sourceType": source_type,
+        "sourceLabel": source_label,
+        "summary": f"Create an approved Agent Foundry execution package from {source_label} input.",
+        "goals": goals,
+        "ownerAgents": owner_agents,
+        "steps": steps,
+        "approvalRequired": True,
+        "executionMode": "approval-gated-handoff",
+        "handoffPrompts": {
+            "planning": f"Application Planning Companion Agent, review this portal-created {source_label} plan one step at a time. Do not execute commands. Confirm assumptions, source evidence, owners, and approval gates before handing off.",
+            "implementation": "Application Implementation Validation Agent, execute only the approved current step, edit only named files, run focused validation, and summarize evidence plus remaining issues.",
+        },
+        "guardrails": [
+            "Do not claim hosted execution of .agent.md files; they are VS Code/Copilot customization files.",
+            "Require human approval before implementation or validation work begins.",
+            "Cite source input, bundled docs, file paths, commands, and validation output as evidence.",
+            "Block or mark unknown any requirement that cannot be traced to source material.",
+        ],
+    }
+
+
+def _build_agent_foundry_evidence(plan: dict) -> list[dict]:
+    steps = plan.get("steps") if isinstance(plan, dict) else []
+    evidence = []
+    for step in steps or []:
+        if not isinstance(step, dict):
+            continue
+        evidence.append(
+            {
+                "stepId": step.get("id"),
+                "ownerAgent": step.get("ownerAgent"),
+                "status": "approved_for_handoff",
+                "requiredEvidence": step.get("evidence"),
+            }
+        )
+    evidence.append(
+        {
+            "stepId": "portal-approval",
+            "ownerAgent": "Azure Architecture Factory Portal",
+            "status": "recorded",
+            "requiredEvidence": "Approval timestamp and approver are stored on the run record.",
+        }
+    )
+    return evidence
+
+
+def _safe_agent_foundry_run(run: dict, include_plan: bool = True) -> dict:
+    agent_payload = run.get("agentFoundry") if isinstance(run.get("agentFoundry"), dict) else {}
+    result = run.get("result") if isinstance(run.get("result"), dict) else None
+    safe = {
+        "id": run.get("id"),
+        "kind": "agent-foundry",
+        "status": run.get("status"),
+        "createdAt": run.get("createdAt"),
+        "startedAt": run.get("startedAt"),
+        "finishedAt": run.get("finishedAt"),
+        "returnCode": run.get("returnCode"),
+        "title": agent_payload.get("title"),
+        "sourceType": agent_payload.get("sourceType"),
+        "diagramFileName": agent_payload.get("diagramFileName"),
+        "contentPreview": agent_payload.get("contentPreview"),
+        "approvedAt": agent_payload.get("approvedAt"),
+        "approvedBy": agent_payload.get("approvedBy"),
+        "evidence": agent_payload.get("evidence") or [],
+        "result": result,
+    }
+    if include_plan:
+        safe["plan"] = agent_payload.get("plan")
+    return safe
+
+
 # ── Bounded pipeline worker pool ──────────────────────────────────────────────
 # Every BRD submission used to spawn a raw daemon thread, which meant 50
 # concurrent submissions spawned 50 threads competing for CPU. A bounded pool
@@ -3000,6 +3134,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path in {"/api/brd-runs", "/api/runs"}:
             return self._handle_runs_list()
 
+        if request_path == "/api/agent-foundry/runs":
+            return self._handle_agent_foundry_runs_list()
+
         if request_path == "/api/csa-copilot/tools":
             if not self._require_auth_for_mutation():
                 return
@@ -3022,6 +3159,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path.startswith("/api/brd-runs/") or request_path.startswith("/api/runs/"):
             run_id = request_path.split("/")[-1]
             return self._handle_run_status(run_id)
+
+        if request_path.startswith("/api/agent-foundry/runs/"):
+            run_id = request_path.split("/")[-1]
+            return self._handle_agent_foundry_run_status(run_id)
 
         if request_path.startswith("/api/project-analysis/"):
             slug = request_path.split("/")[-1]
@@ -3138,6 +3279,19 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_brd_intake_principal():
                 return
             return self._handle_repo_intake()
+        if path == "/api/agent-foundry/runs":
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            return self._handle_agent_foundry_run_create()
+        if path.startswith("/api/agent-foundry/runs/") and path.endswith("/approve"):
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            run_id = path.split("/")[-2]
+            return self._handle_agent_foundry_run_approve(run_id)
         if path == "/api/admin/issue-token":
             if not self._require_admin_key():
                 return
@@ -5192,6 +5346,145 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             },
             202,
         )
+
+    def _handle_agent_foundry_run_create(self):
+        """Create a bounded Agent Foundry planning run for portal approval."""
+        if not self._check_intake_rate_limit():
+            return
+        content_type = self.headers.get("Content-Type", "")
+        if not content_type.lower().split(";", 1)[0].strip() == "application/json":
+            self._send_json({"error": "Expected Content-Type: application/json"}, 415)
+            return
+
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body)
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        source_type = str(payload.get("sourceType") or "brd-prd").strip().lower()
+        allowed_source_types = {
+            "brd-prd",
+            "architecture-markdown",
+            "architecture-mermaid",
+            "architecture-drawio",
+            "architecture-visio",
+            "learning-plan",
+        }
+        if source_type not in allowed_source_types:
+            self._send_json(
+                {
+                    "error": "sourceType must be brd-prd, architecture-markdown, architecture-mermaid, architecture-drawio, architecture-visio, or learning-plan"
+                },
+                400,
+            )
+            return
+
+        title = str(payload.get("title") or "Agent Foundry portal run").strip()[:120]
+        content = str(payload.get("content") or "").strip()
+        if len(content) < MIN_BRD_CONTENT_CHARS:
+            self._send_json({"error": f"content must be at least {MIN_BRD_CONTENT_CHARS} characters"}, 400)
+            return
+        if len(content) > MAX_BRD_CONTENT_CHARS:
+            self._send_json({"error": f"content must be at most {MAX_BRD_CONTENT_CHARS} characters"}, 413)
+            return
+
+        diagram_file_name = str(payload.get("diagramFileName") or "").strip()[:180]
+        run_id = str(uuid.uuid4())
+        plan = _build_agent_foundry_plan(source_type, title, content)
+        if diagram_file_name:
+            plan["diagramFileName"] = pathlib.Path(diagram_file_name).name
+        now = _utcnow_iso()
+        with RUNS_LOCK:
+            RUNS[run_id] = {
+                "id": run_id,
+                "kind": "agent-foundry",
+                "status": "planning_ready",
+                "createdAt": now,
+                "startedAt": now,
+                "finishedAt": None,
+                "returnCode": None,
+                "stderr": None,
+                "owner": self._authorized_user(),
+                "agentFoundry": {
+                    "title": title,
+                    "sourceType": source_type,
+                    "diagramFileName": pathlib.Path(diagram_file_name).name if diagram_file_name else None,
+                    "contentPreview": content[:1200],
+                    "approvedAt": None,
+                    "approvedBy": None,
+                    "plan": plan,
+                    "evidence": [],
+                },
+                "result": {
+                    "status": "planning_ready",
+                    "message": "Agent Foundry plan is ready for human approval.",
+                    "plan": plan,
+                },
+            }
+            _persist_runs_unlocked()
+            safe_run = _safe_agent_foundry_run(RUNS[run_id])
+
+        self._send_json(safe_run, 201)
+
+    def _handle_agent_foundry_run_status(self, run_id: str):
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+
+        if not run or run.get("kind") != "agent-foundry":
+            self._send_json({"error": "Agent Foundry run not found"}, 404)
+            return
+
+        self._send_json(_safe_agent_foundry_run(run), 200)
+
+    def _handle_agent_foundry_runs_list(self):
+        with RUNS_LOCK:
+            runs = [run for run in RUNS.values() if run.get("kind") == "agent-foundry"]
+
+        safe_runs = [
+            _safe_agent_foundry_run(run, include_plan=False)
+            for run in sorted(runs, key=lambda item: item.get("createdAt") or "", reverse=True)
+        ]
+        self._send_json({"runs": safe_runs}, 200)
+
+    def _handle_agent_foundry_run_approve(self, run_id: str):
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+            if not run or run.get("kind") != "agent-foundry":
+                self._send_json({"error": "Agent Foundry run not found"}, 404)
+                return
+            if run.get("status") not in {"planning_ready", "approved", "completed"}:
+                self._send_json({"error": f"Run cannot be approved from status {run.get('status')}"}, 409)
+                return
+
+            agent_payload = run.setdefault("agentFoundry", {})
+            plan = agent_payload.get("plan") or {}
+            evidence = _build_agent_foundry_evidence(plan)
+            now = _utcnow_iso()
+            run["status"] = "completed"
+            run["finishedAt"] = now
+            run["returnCode"] = 0
+            agent_payload["approvedAt"] = now
+            agent_payload["approvedBy"] = self._authorized_user()
+            agent_payload["evidence"] = evidence
+            run["result"] = {
+                "status": "completed",
+                "message": "Approved Agent Foundry execution package is ready. Run the handoff prompts in VS Code or connect a hosted runner before enabling command execution.",
+                "plan": plan,
+                "evidence": evidence,
+            }
+            _persist_runs_unlocked()
+            safe_run = _safe_agent_foundry_run(run)
+
+        self._send_json(safe_run, 200)
 
     def _run_pipeline(self, run_id, brd_path, generation_options=None, owner: str | None = None):
         """Execute the pipeline in background with resilience (retry + circuit breaker)"""
