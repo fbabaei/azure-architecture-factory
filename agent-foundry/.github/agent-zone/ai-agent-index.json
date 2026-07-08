@@ -194,6 +194,15 @@
       "keywords": ["Foundry", "model deployment", "endpoint", "quota", "project"]
     },
     {
+      "id": "azure-knowledge-access-architect",
+      "name": "Azure Knowledge Access Architect",
+      "path": ".github/agents/azure-knowledge-access-architect.agent.md",
+      "audience": ["application", "learning"],
+      "level": "shared-specialist",
+      "capabilities": ["Azure AI Search", "Storage network access", "Foundry knowledge access", "RAG routing", "RBAC walkthrough", "private endpoint guidance", "resource reuse planning"],
+      "keywords": ["Azure AI Search", "Storage firewall", "Foundry IQ", "agentic retrieval", "RAG", "vector search", "hybrid search", "multimodal search", "RBAC", "private endpoint", "private DNS", "knowledge access"]
+    },
+    {
       "id": "auth-config-agent",
       "name": "Auth Config Agent",
       "path": ".github/agents/auth-config-agent.agent.md",

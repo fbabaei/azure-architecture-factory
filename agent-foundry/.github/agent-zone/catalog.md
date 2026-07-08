@@ -48,6 +48,7 @@ Use these specialists when a new application is still being shaped and needs des
 | Agent | Use When |
 | --- | --- |
 | Foundry Integration Agent | Connect apps to Foundry projects, models, deployments, and endpoints |
+| Azure Knowledge Access Architect | Plan secure Azure Storage, Azure AI Search, Foundry IQ, and Foundry agent knowledge access; choose classic/vector/hybrid/multimodal/agentic retrieval; guide RBAC, firewall, private endpoint, DNS, and reuse-versus-create decisions |
 | Auth Config Agent | Configure Entra ID, `.env`, local auth, and endpoint validation |
 | Responsible AI Safety Agent | Add safety, moderation, policy, and responsible AI checks |
 | Security & Compliance Agent | Review security posture, threat models, data protection, RBAC, secrets, and compliance readiness |
