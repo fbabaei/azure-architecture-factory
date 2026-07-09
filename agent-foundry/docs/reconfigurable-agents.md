@@ -1,6 +1,6 @@
 # Reconfigurable Agents
 
-Reconfiguration means an agent is not a fixed one-scenario template. It is a reusable baseline that starts with common Azure AI Search patterns, then adapts its configuration contract to the user's requirements.
+Reconfiguration means an agent is not a fixed one-scenario template. It is a reusable baseline that starts with common Azure AI patterns, then adapts its configuration contract to the user's requirements.
 
 In this repo, the Azure AI Search prebuilt reconfigurable category uses one router and three specialized configurable agents:
 
@@ -8,6 +8,11 @@ In this repo, the Azure AI Search prebuilt reconfigurable category uses one rout
 - Classic Search Reconfigurable Agent
 - RAG Search Reconfigurable Agent
 - Agentic Retrieval Reconfigurable Agent
+
+The document processing prebuilt reconfigurable category adds two specialized configurable agents:
+
+- Document Intelligence Reconfigurable Agent
+- Document-to-Search Pipeline Reconfigurable Agent
 
 For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see [Reconfigurable Agents Quick Start](reconfigurable-agents-quick-start.md). For an end-to-end mock project example, see [Reconfigurable Agents Walkthrough](reconfigurable-agents-walkthrough.md).
 
@@ -99,6 +104,57 @@ VALIDATION_PLAN
 
 For example, if the user needs Azure AI Search to manage knowledge bases, knowledge sources, query decomposition, references, activity logs, and optional synthesis, the agent configures the agentic retrieval baseline.
 
+## Document Intelligence Reconfiguration
+
+Document Intelligence reconfiguration is for structured extraction workflows where the output is an explicit document schema, JSON contract, review queue, or downstream business record.
+
+The Document Intelligence Reconfigurable Agent adapts these points:
+
+```text
+DOCUMENT_INTELLIGENCE_ENDPOINT
+DOCUMENT_INTELLIGENCE_AUTH_MODE
+DOCUMENT_TYPES
+DOCUMENT_SOURCES
+EXTRACTION_MODE
+MODEL_SELECTION
+FIELD_SCHEMA
+CONFIDENCE_THRESHOLDS
+HUMAN_REVIEW_POLICY
+OUTPUT_CONTRACT
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+```
+
+For example, if the user needs invoice extraction with line items, confidence thresholds, human review, and a normalized JSON handoff, the agent configures the extraction baseline rather than a search or RAG pipeline.
+
+## Document-to-Search Pipeline Reconfiguration
+
+Document-to-search pipeline reconfiguration is for scenarios where extracted documents need to become searchable, cited, filterable, vectorized, or RAG-ready in Azure AI Search.
+
+The Document-to-Search Pipeline Reconfigurable Agent adapts these points:
+
+```text
+DOCUMENT_INTELLIGENCE_ENDPOINT
+DOCUMENT_INTELLIGENCE_MODEL_ID
+DOCUMENT_SOURCES
+EXTRACTION_PIPELINE
+NORMALIZED_DOCUMENT_SCHEMA
+METADATA_ENRICHMENT
+CHUNKING_POLICY
+SEARCH_ENDPOINT
+SEARCH_INDEX
+SEARCH_INDEX_SCHEMA
+VECTORIZATION_POLICY
+CITATION_POLICY
+INGESTION_MODE
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+```
+
+For example, if the user needs contracts extracted, chunked by sections, enriched with metadata, indexed into Azure AI Search, and returned with page citations for RAG, the agent configures the extraction-to-indexing pipeline and hands off to Classic Search, RAG Search, or Agentic Retrieval as needed.
+
 ## What The Agents Produce
 
 Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:
@@ -114,8 +170,8 @@ The overall flow is:
 
 ```text
 User requirements
-  -> Azure AI Search Reconfigurable Orchestrator
-  -> choose Classic / RAG / Agentic Retrieval baseline
+  -> choose a reconfigurable category
+  -> choose Search / Document Extraction / Document-to-Search baseline
   -> fill reconfiguration points
   -> identify gaps and validations
   -> hand off to planning or implementation

@@ -936,11 +936,46 @@ RECONFIGURABLE_AGENT_OPTIONS = {
             "VALIDATION_PLAN",
         ],
     },
+    "document-intelligence-reconfigurable-agent": {
+        "name": "Document Intelligence Reconfigurable Agent",
+        "summary": "Configure structured document extraction with Document Intelligence models, field schemas, confidence thresholds, human review, and output contracts.",
+        "contract": [
+            "DOCUMENT_INTELLIGENCE_ENDPOINT",
+            "DOCUMENT_INTELLIGENCE_AUTH_MODE",
+            "DOCUMENT_TYPES",
+            "DOCUMENT_SOURCES",
+            "EXTRACTION_MODE",
+            "MODEL_SELECTION",
+            "FIELD_SCHEMA",
+            "CONFIDENCE_THRESHOLDS",
+            "HUMAN_REVIEW_POLICY",
+            "OUTPUT_CONTRACT",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "document-to-search-pipeline-reconfigurable-agent": {
+        "name": "Document-to-Search Pipeline Reconfigurable Agent",
+        "summary": "Configure Document Intelligence extraction into Azure AI Search with normalization, metadata enrichment, chunking, vectorization, citations, and search/RAG readiness.",
+        "contract": [
+            "DOCUMENT_INTELLIGENCE_ENDPOINT",
+            "DOCUMENT_INTELLIGENCE_MODEL_ID",
+            "DOCUMENT_SOURCES",
+            "EXTRACTION_PIPELINE",
+            "NORMALIZED_DOCUMENT_SCHEMA",
+            "CHUNKING_POLICY",
+            "SEARCH_ENDPOINT",
+            "SEARCH_INDEX",
+            "SEARCH_INDEX_SCHEMA",
+            "VECTORIZATION_POLICY",
+            "CITATION_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
 }
 
 
 def _recommend_reconfigurable_agent(source_type: str, content: str, configuration_profile: str = "") -> dict:
-    """Recommend the best reconfigurable search agent from submitted requirements."""
+    """Recommend the best reconfigurable agent from submitted requirements."""
     text = f"{source_type}\n{content}\n{configuration_profile}".lower()
     keyword_sets = {
         "classic-search-reconfigurable-agent": {
@@ -990,6 +1025,42 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             "multi-step": 3,
             "synthesis": 3,
         },
+        "document-intelligence-reconfigurable-agent": {
+            "document intelligence": 4,
+            "form": 2,
+            "forms": 2,
+            "invoice": 4,
+            "receipt": 4,
+            "extract": 3,
+            "extraction": 3,
+            "field": 2,
+            "fields": 2,
+            "line item": 3,
+            "line items": 3,
+            "custom model": 3,
+            "classifier": 3,
+            "confidence": 3,
+            "human review": 3,
+            "json output": 2,
+        },
+        "document-to-search-pipeline-reconfigurable-agent": {
+            "document-to-search": 5,
+            "document to search": 5,
+            "document indexing": 4,
+            "knowledge mining": 4,
+            "search index": 3,
+            "metadata enrichment": 3,
+            "normalized document": 3,
+            "chunk": 2,
+            "chunks": 2,
+            "citation": 2,
+            "citations": 2,
+            "rag ready": 4,
+            "vectorize": 3,
+            "vectorization": 3,
+            "ocr to search": 4,
+            "page citation": 3,
+        },
     }
     scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
     matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
@@ -998,6 +1069,12 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             if keyword in text:
                 scores[agent_id] += weight
                 matched[agent_id].append(keyword)
+
+    document_pipeline_terms = ("document intelligence", "ocr", "extraction", "extract")
+    search_pipeline_terms = ("azure ai search", "search index", "indexing", "chunk", "citation", "rag")
+    if any(term in text for term in document_pipeline_terms) and any(term in text for term in search_pipeline_terms):
+        scores["document-to-search-pipeline-reconfigurable-agent"] += 5
+        matched["document-to-search-pipeline-reconfigurable-agent"].append("document extraction plus search/RAG pipeline")
 
     if source_type == "learning-plan":
         recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
@@ -1013,7 +1090,7 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
     reasons = matched.get(recommended_agent, [])[:6]
     if not reasons:
         reasons = [
-            "The requirements do not yet strongly indicate classic search, RAG, or agentic retrieval, so the orchestrator should route after more detail is provided."
+            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, or document-to-search indexing, so the orchestrator should route after more detail is provided."
         ]
 
     return {

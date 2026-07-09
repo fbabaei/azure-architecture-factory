@@ -111,13 +111,18 @@
     <article class="guide">
       <p class="source-link">Rendered from <a href="reconfigurable-agents.md">reconfigurable-agents.md</a></p>
 <h1 id="reconfigurable-agents">Reconfigurable Agents</h1>
-<p>Reconfiguration means an agent is not a fixed one-scenario template. It is a reusable baseline that starts with common Azure AI Search patterns, then adapts its configuration contract to the user's requirements.</p>
+<p>Reconfiguration means an agent is not a fixed one-scenario template. It is a reusable baseline that starts with common Azure AI patterns, then adapts its configuration contract to the user's requirements.</p>
 <p>In this repo, the Azure AI Search prebuilt reconfigurable category uses one router and three specialized configurable agents:</p>
 <ul>
 <li>Azure AI Search Reconfigurable Orchestrator</li>
 <li>Classic Search Reconfigurable Agent</li>
 <li>RAG Search Reconfigurable Agent</li>
 <li>Agentic Retrieval Reconfigurable Agent</li>
+</ul>
+<p>The document processing prebuilt reconfigurable category adds two specialized configurable agents:</p>
+<ul>
+<li>Document Intelligence Reconfigurable Agent</li>
+<li>Document-to-Search Pipeline Reconfigurable Agent</li>
 </ul>
 <p>For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For an end-to-end mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
 <h2 id="how-reconfiguration-works">How Reconfiguration Works</h2>
@@ -187,6 +192,45 @@ SPECIAL_CASES
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs Azure AI Search to manage knowledge bases, knowledge sources, query decomposition, references, activity logs, and optional synthesis, the agent configures the agentic retrieval baseline.</p>
+<h2 id="document-intelligence-reconfiguration">Document Intelligence Reconfiguration</h2>
+<p>Document Intelligence reconfiguration is for structured extraction workflows where the output is an explicit document schema, JSON contract, review queue, or downstream business record.</p>
+<p>The Document Intelligence Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">DOCUMENT_INTELLIGENCE_ENDPOINT
+DOCUMENT_INTELLIGENCE_AUTH_MODE
+DOCUMENT_TYPES
+DOCUMENT_SOURCES
+EXTRACTION_MODE
+MODEL_SELECTION
+FIELD_SCHEMA
+CONFIDENCE_THRESHOLDS
+HUMAN_REVIEW_POLICY
+OUTPUT_CONTRACT
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs invoice extraction with line items, confidence thresholds, human review, and a normalized JSON handoff, the agent configures the extraction baseline rather than a search or RAG pipeline.</p>
+<h2 id="document-to-search-pipeline-reconfiguration">Document-to-Search Pipeline Reconfiguration</h2>
+<p>Document-to-search pipeline reconfiguration is for scenarios where extracted documents need to become searchable, cited, filterable, vectorized, or RAG-ready in Azure AI Search.</p>
+<p>The Document-to-Search Pipeline Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">DOCUMENT_INTELLIGENCE_ENDPOINT
+DOCUMENT_INTELLIGENCE_MODEL_ID
+DOCUMENT_SOURCES
+EXTRACTION_PIPELINE
+NORMALIZED_DOCUMENT_SCHEMA
+METADATA_ENRICHMENT
+CHUNKING_POLICY
+SEARCH_ENDPOINT
+SEARCH_INDEX
+SEARCH_INDEX_SCHEMA
+VECTORIZATION_POLICY
+CITATION_POLICY
+INGESTION_MODE
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs contracts extracted, chunked by sections, enriched with metadata, indexed into Azure AI Search, and returned with page citations for RAG, the agent configures the extraction-to-indexing pipeline and hands off to Classic Search, RAG Search, or Agentic Retrieval as needed.</p>
 <h2 id="what-the-agents-produce">What The Agents Produce</h2>
 <p>Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:</p>
 <ul>
@@ -199,8 +243,8 @@ VALIDATION_PLAN
 </ul>
 <p>The overall flow is:</p>
 <pre><code class="language-text">User requirements
-  -&gt; Azure AI Search Reconfigurable Orchestrator
-  -&gt; choose Classic / RAG / Agentic Retrieval baseline
+  -&gt; choose a reconfigurable category
+  -&gt; choose Search / Document Extraction / Document-to-Search baseline
   -&gt; fill reconfiguration points
   -&gt; identify gaps and validations
   -&gt; hand off to planning or implementation

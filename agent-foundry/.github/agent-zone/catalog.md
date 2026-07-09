@@ -6,6 +6,8 @@ Start with **Azure AI Agent Foundry Orchestrator** for broad requests. It routes
 
 For reusable Azure AI Search starting points, use **Azure AI Search Reconfigurable Orchestrator**. It routes users to prebuilt reconfigurable agents for classic search, RAG search, or agentic retrieval based on their requirements.
 
+For reusable document processing starting points, use **Document Intelligence Reconfigurable Agent** for extraction-only scenarios and **Document-to-Search Pipeline Reconfigurable Agent** when extracted documents must become searchable, cited, or RAG-ready.
+
 ## Learning Orchestrators
 
 | Area | Agent | Source Coverage |
@@ -31,6 +33,15 @@ Use this category when users want configurable baseline agents with common Azure
 | Classic Search Reconfigurable Agent | Configure direct index-first search for user-specific data, query features, relevance, security, and validation | baseline configuration, reconfiguration points, index/query/relevance plan, validation checks |
 | RAG Search Reconfigurable Agent | Configure Azure AI Search grounded RAG with retrieval, chunking, embeddings, citations, prompt assembly, and evaluation | baseline configuration, retrieval/chunking/prompt plan, grounding policy, evaluation checks |
 | Agentic Retrieval Reconfigurable Agent | Configure Azure AI Search agentic retrieval with knowledge bases, knowledge sources, planning, references, activity logs, and synthesis | baseline configuration, knowledge source plan, reasoning/synthesis notes, reference/activity-log validation |
+
+## Document Intelligence Prebuilt Reconfigurable Agents
+
+Use this category when users want configurable baseline agents for structured document extraction or document-to-search pipelines with explicit reconfiguration points for special cases.
+
+| Agent | Use When | Primary Outputs |
+| --- | --- | --- |
+| Document Intelligence Reconfigurable Agent | Configure document extraction for user-specific document types, models, field schemas, confidence thresholds, human review, output contracts, security, and validation | baseline configuration, model and schema plan, confidence/review policy, output contract, validation checks |
+| Document-to-Search Pipeline Reconfigurable Agent | Configure Document Intelligence extraction into Azure AI Search with normalization, metadata enrichment, chunking, vectorization, citations, and RAG/search readiness | extraction-to-index plan, normalized schema, chunk/index/vector plan, citation policy, search/RAG handoffs, validation checks |
 
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
