@@ -939,6 +939,101 @@ RECONFIGURABLE_AGENT_OPTIONS = {
 }
 
 
+def _recommend_reconfigurable_agent(source_type: str, content: str, configuration_profile: str = "") -> dict:
+    """Recommend the best reconfigurable search agent from submitted requirements."""
+    text = f"{source_type}\n{content}\n{configuration_profile}".lower()
+    keyword_sets = {
+        "classic-search-reconfigurable-agent": {
+            "filter": 2,
+            "filters": 2,
+            "facet": 3,
+            "facets": 3,
+            "autocomplete": 3,
+            "synonym": 3,
+            "keyword": 2,
+            "full-text": 3,
+            "index schema": 3,
+            "relevance": 2,
+            "sorting": 2,
+            "geo": 2,
+            "direct search": 3,
+        },
+        "rag-search-reconfigurable-agent": {
+            "rag": 4,
+            "retrieval augmented": 4,
+            "answer": 2,
+            "chat": 2,
+            "citation": 3,
+            "citations": 3,
+            "grounding": 3,
+            "chunk": 3,
+            "embedding": 3,
+            "vector": 2,
+            "hybrid": 2,
+            "prompt": 2,
+            "no-answer": 3,
+            "q&a": 2,
+        },
+        "agentic-retrieval-reconfigurable-agent": {
+            "agentic": 5,
+            "query planning": 4,
+            "decomposition": 4,
+            "reasoning": 3,
+            "knowledge source": 4,
+            "knowledge sources": 4,
+            "knowledge base": 3,
+            "activity log": 3,
+            "references": 2,
+            "remote source": 3,
+            "sharepoint": 3,
+            "onelake": 3,
+            "multi-step": 3,
+            "synthesis": 3,
+        },
+    }
+    scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
+    matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
+    for agent_id, keywords in keyword_sets.items():
+        for keyword, weight in keywords.items():
+            if keyword in text:
+                scores[agent_id] += weight
+                matched[agent_id].append(keyword)
+
+    if source_type == "learning-plan":
+        recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
+    else:
+        recommended_agent = max(scores, key=scores.get)
+        if scores.get(recommended_agent, 0) == 0:
+            recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
+
+    score = scores.get(recommended_agent, 0)
+    confidence = "high" if score >= 8 else "medium" if score >= 3 else "low"
+    if recommended_agent == "azure-ai-search-reconfigurable-orchestrator":
+        confidence = "medium" if source_type == "learning-plan" else "low"
+    reasons = matched.get(recommended_agent, [])[:6]
+    if not reasons:
+        reasons = [
+            "The requirements do not yet strongly indicate classic search, RAG, or agentic retrieval, so the orchestrator should route after more detail is provided."
+        ]
+
+    return {
+        "recommendedAgent": recommended_agent,
+        "recommendedAgentName": RECONFIGURABLE_AGENT_OPTIONS[recommended_agent]["name"],
+        "confidence": confidence,
+        "scores": scores,
+        "reasons": reasons,
+        "alternatives": [
+            {
+                "agent": agent_id,
+                "name": RECONFIGURABLE_AGENT_OPTIONS[agent_id]["name"],
+                "score": score_value,
+            }
+            for agent_id, score_value in sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        ],
+        "nextFields": RECONFIGURABLE_AGENT_OPTIONS[recommended_agent]["contract"],
+    }
+
+
 def _build_agent_foundry_plan(source_type: str, title: str, content: str, selected_agent: str = "", configuration_profile: str = "") -> dict:
     """Build a deterministic portal execution plan from user-provided source text."""
     source_label = {
@@ -953,6 +1048,9 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str, select
     seed_lines = [line.strip(" #-\t") for line in content.splitlines() if line.strip()]
     goals = seed_lines[:5] or [title]
     selected_agent = (selected_agent or "").strip().lower()
+    agent_recommendation = _recommend_reconfigurable_agent(source_type, content, configuration_profile)
+    if not selected_agent:
+        selected_agent = agent_recommendation.get("recommendedAgent", "")
     selected_agent_info = RECONFIGURABLE_AGENT_OPTIONS.get(selected_agent)
     configuration_profile_preview = (configuration_profile or "").strip()[:4000]
     owner_agents = [
@@ -1037,6 +1135,7 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str, select
         "selectedAgentName": selected_agent_info["name"] if selected_agent_info else "",
         "configurationProfile": configuration_profile_preview,
         "configurationContract": configuration_contract,
+        "agentRecommendation": agent_recommendation,
         "summary": selected_agent_info["summary"] if selected_agent_info else f"Create an approved Agent Foundry execution package from {source_label} input.",
         "goals": goals,
         "ownerAgents": owner_agents,
@@ -1437,6 +1536,55 @@ _IMPLEMENTATION_LANGUAGE_ALIASES = {
     "aspnet": "dotnet",
     "aspnetcore": "dotnet",
 }
+
+
+def _build_agent_foundry_execution(plan: dict, agent_payload: dict) -> dict:
+    """Execute an approved package with the local portal adapter."""
+    selected_agent = plan.get("selectedAgent") or agent_payload.get("selectedAgent") or "azure-ai-search-reconfigurable-orchestrator"
+    selected_agent_info = RECONFIGURABLE_AGENT_OPTIONS.get(selected_agent, RECONFIGURABLE_AGENT_OPTIONS["azure-ai-search-reconfigurable-orchestrator"])
+    contract = plan.get("configurationContract") or selected_agent_info.get("contract") or []
+    profile = plan.get("configurationProfile") or agent_payload.get("configurationProfile") or ""
+    goals = plan.get("goals") if isinstance(plan.get("goals"), list) else []
+    configured_fields = []
+    profile_lower = profile.lower()
+    for field in contract:
+        label = str(field).replace("_", " ").lower()
+        configured_fields.append(
+            {
+                "field": field,
+                "status": "provided_or_inferred" if any(part and part in profile_lower for part in label.split()) else "needs_confirmation",
+                "evidence": "Profile or source text references this concern." if any(part and part in profile_lower for part in label.split()) else "Ask the user to confirm this field before implementation.",
+            }
+        )
+
+    return {
+        "runtime": {
+            "adapter": "portal-local-deterministic",
+            "hostedAgent": False,
+            "agentDefinitionPath": f"agent-foundry/.github/agents/{selected_agent}.agent.md",
+            "note": "This executes the portal-approved package with a deterministic local adapter. It is ready to be replaced by a Copilot CLI or Microsoft Foundry hosted-agent adapter.",
+        },
+        "agent": {
+            "id": selected_agent,
+            "name": selected_agent_info.get("name"),
+            "summary": selected_agent_info.get("summary"),
+        },
+        "executionSummary": f"Configured {selected_agent_info.get('name')} from the approved portal package and produced implementation-ready guidance.",
+        "configuredFields": configured_fields,
+        "recommendedNextActions": [
+            "Confirm any contract fields marked needs_confirmation.",
+            "Create or identify the target Azure AI Search service, index, and data source boundaries.",
+            "Define authentication, RBAC, and citation/grounding behavior before implementation.",
+            "Run a focused validation with representative user queries and expected evidence.",
+        ],
+        "validationChecklist": [
+            "Selected agent matches the retrieval pattern in the submitted requirements.",
+            "Configuration profile covers data sources, security, freshness, and validation.",
+            "Output is traceable to source text, profile, or explicit user approval.",
+            "No hosted .agent.md execution is claimed unless a hosted runtime adapter is configured.",
+        ],
+        "sourceGoals": goals[:8],
+    }
 
 _SOURCE_TYPE_ALIASES = {
     "auto": "auto",
@@ -3377,6 +3525,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_brd_intake_principal():
                 return
             return self._handle_agent_foundry_run_create()
+        if path == "/api/agent-foundry/recommend":
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            return self._handle_agent_foundry_recommend()
         if path.startswith("/api/agent-foundry/runs/") and path.endswith("/approve"):
             if not self._require_auth_for_mutation():
                 return
@@ -3384,6 +3538,13 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             run_id = path.split("/")[-2]
             return self._handle_agent_foundry_run_approve(run_id)
+        if path.startswith("/api/agent-foundry/runs/") and path.endswith("/execute"):
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            run_id = path.split("/")[-2]
+            return self._handle_agent_foundry_run_execute(run_id)
         if path == "/api/admin/issue-token":
             if not self._require_admin_key():
                 return
@@ -5535,6 +5696,33 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         self._send_json(safe_run, 201)
 
+    def _handle_agent_foundry_recommend(self):
+        """Recommend a reconfigurable agent from user-provided requirements."""
+        if not self._check_intake_rate_limit():
+            return
+        content_type = self.headers.get("Content-Type", "")
+        if not content_type.lower().split(";", 1)[0].strip() == "application/json":
+            self._send_json({"error": "Expected Content-Type: application/json"}, 415)
+            return
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+        source_type = str(payload.get("sourceType") or "brd-prd").strip().lower()
+        content = str(payload.get("content") or "").strip()
+        configuration_profile = str(payload.get("configurationProfile") or "").strip()[:4000]
+        if len(content) < MIN_BRD_CONTENT_CHARS:
+            self._send_json({"error": f"content must be at least {MIN_BRD_CONTENT_CHARS} characters"}, 400)
+            return
+        self._send_json(_recommend_reconfigurable_agent(source_type, content, configuration_profile), 200)
+
     def _handle_agent_foundry_run_status(self, run_id: str):
         with RUNS_LOCK:
             run = RUNS.get(run_id)
@@ -5561,7 +5749,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not run or run.get("kind") != "agent-foundry":
                 self._send_json({"error": "Agent Foundry run not found"}, 404)
                 return
-            if run.get("status") not in {"planning_ready", "approved", "completed"}:
+            if run.get("status") not in {"planning_ready", "approved"}:
                 self._send_json({"error": f"Run cannot be approved from status {run.get('status')}"}, 409)
                 return
 
@@ -5569,17 +5757,56 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             plan = agent_payload.get("plan") or {}
             evidence = _build_agent_foundry_evidence(plan)
             now = _utcnow_iso()
-            run["status"] = "completed"
-            run["finishedAt"] = now
+            run["status"] = "approved"
             run["returnCode"] = 0
             agent_payload["approvedAt"] = now
             agent_payload["approvedBy"] = self._authorized_user()
             agent_payload["evidence"] = evidence
             run["result"] = {
-                "status": "completed",
-                "message": "Approved Agent Foundry execution package is ready. Run the handoff prompts in VS Code or connect a hosted runner before enabling command execution.",
+                "status": "approved",
+                "message": "Approved Agent Foundry execution package is ready. Run Agent will execute it with the configured portal runtime adapter.",
                 "plan": plan,
                 "evidence": evidence,
+            }
+            _persist_runs_unlocked()
+            safe_run = _safe_agent_foundry_run(run)
+
+        self._send_json(safe_run, 200)
+
+    def _handle_agent_foundry_run_execute(self, run_id: str):
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+            if not run or run.get("kind") != "agent-foundry":
+                self._send_json({"error": "Agent Foundry run not found"}, 404)
+                return
+            if run.get("status") != "approved":
+                self._send_json({"error": f"Run must be approved before execution. Current status: {run.get('status')}"}, 409)
+                return
+
+            agent_payload = run.setdefault("agentFoundry", {})
+            plan = agent_payload.get("plan") or {}
+            execution = _build_agent_foundry_execution(plan, agent_payload)
+            now = _utcnow_iso()
+            evidence = list(agent_payload.get("evidence") or [])
+            evidence.append(
+                {
+                    "stepId": "portal-local-execution",
+                    "ownerAgent": execution.get("agent", {}).get("name"),
+                    "status": "completed",
+                    "requiredEvidence": "Portal-local runtime adapter generated an execution report from the approved package.",
+                }
+            )
+            run["status"] = "completed"
+            run["finishedAt"] = now
+            run["returnCode"] = 0
+            agent_payload["evidence"] = evidence
+            agent_payload["execution"] = execution
+            run["result"] = {
+                "status": "completed",
+                "message": "Agent Foundry package executed with the portal-local runtime adapter.",
+                "plan": plan,
+                "evidence": evidence,
+                "execution": execution,
             }
             _persist_runs_unlocked()
             safe_run = _safe_agent_foundry_run(run)
