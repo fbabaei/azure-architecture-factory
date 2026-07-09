@@ -882,7 +882,64 @@ def _restore_runs_on_startup() -> None:
         _persist_runs_unlocked()
 
 
-def _build_agent_foundry_plan(source_type: str, title: str, content: str) -> dict:
+RECONFIGURABLE_AGENT_OPTIONS = {
+    "azure-ai-search-reconfigurable-orchestrator": {
+        "name": "Azure AI Search Reconfigurable Orchestrator",
+        "summary": "Route the scenario to Classic Search, RAG Search, or Agentic Retrieval based on the submitted requirements.",
+        "contract": [
+            "USER_OUTCOME",
+            "DATA_SOURCES",
+            "RETRIEVAL_PATTERN",
+            "SECURITY_MODEL",
+            "GROUNDING_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "classic-search-reconfigurable-agent": {
+        "name": "Classic Search Reconfigurable Agent",
+        "summary": "Configure a direct index-first Azure AI Search experience.",
+        "contract": [
+            "SEARCH_ENDPOINT",
+            "SEARCH_INDEX",
+            "INGESTION_MODE",
+            "INDEX_SCHEMA",
+            "QUERY_FEATURES",
+            "RELEVANCE_POLICY",
+            "SECURITY_MODEL",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "rag-search-reconfigurable-agent": {
+        "name": "RAG Search Reconfigurable Agent",
+        "summary": "Configure a retrieval augmented generation baseline over Azure AI Search.",
+        "contract": [
+            "DATA_SOURCES",
+            "CHUNKING_POLICY",
+            "RETRIEVAL_MODE",
+            "EMBEDDING_DEPLOYMENT",
+            "PROMPT_ASSEMBLY",
+            "GROUNDING_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "agentic-retrieval-reconfigurable-agent": {
+        "name": "Agentic Retrieval Reconfigurable Agent",
+        "summary": "Configure Azure AI Search agentic retrieval with knowledge sources, query planning, and answer synthesis.",
+        "contract": [
+            "KNOWLEDGE_BASE",
+            "KNOWLEDGE_SOURCES",
+            "SOURCE_MODE",
+            "RETRIEVAL_REASONING_EFFORT",
+            "QUERY_PLANNING_MODE",
+            "ANSWER_SYNTHESIS",
+            "GROUNDING_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+}
+
+
+def _build_agent_foundry_plan(source_type: str, title: str, content: str, selected_agent: str = "", configuration_profile: str = "") -> dict:
     """Build a deterministic portal execution plan from user-provided source text."""
     source_label = {
         "brd-prd": "BRD/PRD",
@@ -895,14 +952,26 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str) -> dic
     diagram_source_types = {"architecture-markdown", "architecture-mermaid", "architecture-drawio", "architecture-visio"}
     seed_lines = [line.strip(" #-\t") for line in content.splitlines() if line.strip()]
     goals = seed_lines[:5] or [title]
+    selected_agent = (selected_agent or "").strip().lower()
+    selected_agent_info = RECONFIGURABLE_AGENT_OPTIONS.get(selected_agent)
+    configuration_profile_preview = (configuration_profile or "").strip()[:4000]
     owner_agents = [
         "Azure AI Application Orchestrator",
         "Application Planning Companion Agent",
-        "Configuration Environment Contract Agent",
-        "Security Compliance Agent",
-        "Test Evaluation Strategy Agent",
+        "Configuration & Environment Contract Agent",
+        "Security & Compliance Agent",
+        "Test & Evaluation Strategy Agent",
         "Application Implementation Validation Agent",
     ]
+    if selected_agent_info:
+        owner_agents = [
+            selected_agent_info["name"],
+            "Application Planning Companion Agent",
+            "Configuration & Environment Contract Agent",
+            "Security & Compliance Agent",
+            "Test & Evaluation Strategy Agent",
+            "Application Implementation Validation Agent",
+        ]
     if source_type in diagram_source_types:
         owner_agents.insert(2, "Architecture Design Agent")
     if source_type == "learning-plan":
@@ -943,18 +1012,39 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str) -> dic
             },
         )
 
+    configuration_contract = []
+    if selected_agent_info:
+        configuration_contract = selected_agent_info["contract"]
+        steps.insert(
+            1,
+            {
+                "id": "configure-reconfigurable-agent",
+                "ownerAgent": selected_agent_info["name"],
+                "action": "Fill the selected reconfigurable agent contract from the submitted source text and reconfiguration profile.",
+                "evidence": "Return each configured field, source evidence, missing values, assumptions, and validation checks.",
+            },
+        )
+
+    if configuration_profile_preview:
+        profile_goals = [line.strip(" #-\t") for line in configuration_profile_preview.splitlines() if line.strip()]
+        goals.extend(profile_goals[:5])
+
     return {
         "title": title or "Agent Foundry portal run",
         "sourceType": source_type,
         "sourceLabel": source_label,
-        "summary": f"Create an approved Agent Foundry execution package from {source_label} input.",
+        "selectedAgent": selected_agent if selected_agent_info else "",
+        "selectedAgentName": selected_agent_info["name"] if selected_agent_info else "",
+        "configurationProfile": configuration_profile_preview,
+        "configurationContract": configuration_contract,
+        "summary": selected_agent_info["summary"] if selected_agent_info else f"Create an approved Agent Foundry execution package from {source_label} input.",
         "goals": goals,
         "ownerAgents": owner_agents,
         "steps": steps,
         "approvalRequired": True,
         "executionMode": "approval-gated-handoff",
         "handoffPrompts": {
-            "planning": f"Application Planning Companion Agent, review this portal-created {source_label} plan one step at a time. Do not execute commands. Confirm assumptions, source evidence, owners, and approval gates before handing off.",
+            "planning": f"{selected_agent_info['name'] if selected_agent_info else 'Application Planning Companion Agent'}, review this portal-created {source_label} plan one step at a time. Do not execute commands. Confirm assumptions, source evidence, selected configuration fields, owners, and approval gates before handing off.",
             "implementation": "Application Implementation Validation Agent, execute only the approved current step, edit only named files, run focused validation, and summarize evidence plus remaining issues.",
         },
         "guardrails": [
@@ -1004,6 +1094,8 @@ def _safe_agent_foundry_run(run: dict, include_plan: bool = True) -> dict:
         "returnCode": run.get("returnCode"),
         "title": agent_payload.get("title"),
         "sourceType": agent_payload.get("sourceType"),
+        "selectedAgent": agent_payload.get("selectedAgent"),
+        "configurationProfile": agent_payload.get("configurationProfile"),
         "diagramFileName": agent_payload.get("diagramFileName"),
         "contentPreview": agent_payload.get("contentPreview"),
         "approvedAt": agent_payload.get("approvedAt"),
@@ -5388,6 +5480,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             )
             return
 
+        selected_agent = str(payload.get("selectedAgent") or "").strip().lower()
+        if selected_agent and selected_agent not in RECONFIGURABLE_AGENT_OPTIONS:
+            self._send_json({"error": "selectedAgent must be one of the supported reconfigurable agent ids"}, 400)
+            return
+
         title = str(payload.get("title") or "Agent Foundry portal run").strip()[:120]
         content = str(payload.get("content") or "").strip()
         if len(content) < MIN_BRD_CONTENT_CHARS:
@@ -5397,9 +5494,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": f"content must be at most {MAX_BRD_CONTENT_CHARS} characters"}, 413)
             return
 
+        configuration_profile = str(payload.get("configurationProfile") or "").strip()[:4000]
         diagram_file_name = str(payload.get("diagramFileName") or "").strip()[:180]
         run_id = str(uuid.uuid4())
-        plan = _build_agent_foundry_plan(source_type, title, content)
+        plan = _build_agent_foundry_plan(source_type, title, content, selected_agent, configuration_profile)
         if diagram_file_name:
             plan["diagramFileName"] = pathlib.Path(diagram_file_name).name
         now = _utcnow_iso()
@@ -5417,6 +5515,8 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "agentFoundry": {
                     "title": title,
                     "sourceType": source_type,
+                    "selectedAgent": selected_agent,
+                    "configurationProfile": configuration_profile,
                     "diagramFileName": pathlib.Path(diagram_file_name).name if diagram_file_name else None,
                     "contentPreview": content[:1200],
                     "approvedAt": None,

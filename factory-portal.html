@@ -3078,11 +3078,22 @@
                     <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Quick Start</a>
                     <a href="agent-foundry/docs/reconfigurable-agents-walkthrough.html" target="_blank" rel="noopener noreferrer">Walkthrough Example</a>
                     <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Browse Reconfigurable Agents</a>
+                    <button type="button" onclick="selectReconfigurableAgent('azure-ai-search-reconfigurable-orchestrator')">Configure In Portal</button>
                 </div>
             </div>
             <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
                 <form onsubmit="return submitAgentFoundryRun(event)">
                     <div class="foundry-runner-grid">
+                        <label>
+                            Reconfigurable agent
+                            <select id="agent-foundry-selected-agent">
+                                <option value="">Route automatically</option>
+                                <option value="azure-ai-search-reconfigurable-orchestrator">Azure AI Search Reconfigurable Orchestrator</option>
+                                <option value="classic-search-reconfigurable-agent">Classic Search Reconfigurable Agent</option>
+                                <option value="rag-search-reconfigurable-agent">RAG Search Reconfigurable Agent</option>
+                                <option value="agentic-retrieval-reconfigurable-agent">Agentic Retrieval Reconfigurable Agent</option>
+                            </select>
+                        </label>
                         <label>
                             Input type
                             <select id="agent-foundry-source-type">
@@ -3106,6 +3117,10 @@
                         <label style="grid-column: 1 / -1;">
                             Source text
                             <textarea id="agent-foundry-run-content" placeholder="Paste the BRD, PRD, Mermaid diagram, draw.io XML, Visio export/notes, architecture markdown, or learning objective. The portal creates an approval-gated plan with owner agents and evidence requirements."></textarea>
+                        </label>
+                        <label style="grid-column: 1 / -1;">
+                            Reconfiguration profile
+                            <textarea id="agent-foundry-configuration-profile" placeholder="Describe the selected agent configuration: data sources, search index, retrieval mode, embeddings, chunking, grounding/citation rules, security model, freshness needs, special cases, and validation checks."></textarea>
                         </label>
                     </div>
                     <div class="foundry-runner-actions">
@@ -6446,6 +6461,30 @@
             return false;
         }
 
+        function selectReconfigurableAgent(agentId) {
+            const selectedAgent = document.getElementById('agent-foundry-selected-agent');
+            const sourceType = document.getElementById('agent-foundry-source-type');
+            const titleBox = document.getElementById('agent-foundry-run-title');
+            const profileBox = document.getElementById('agent-foundry-configuration-profile');
+            if (selectedAgent) selectedAgent.value = agentId || '';
+            if (sourceType) sourceType.value = 'brd-prd';
+            if (titleBox && !titleBox.value.trim()) {
+                titleBox.value = 'Reconfigurable Azure AI Search agent';
+            }
+            if (profileBox && !profileBox.value.trim()) {
+                profileBox.value = [
+                    'Data sources:',
+                    'Search index or knowledge base:',
+                    'Retrieval pattern: classic search / RAG / agentic retrieval',
+                    'Security model:',
+                    'Grounding and citation policy:',
+                    'Validation checks:',
+                ].join('\n');
+            }
+            toggleAgentFoundryRunner(null, true);
+            return false;
+        }
+
         function setAgentFoundryStatus(message, isError = false) {
             const div = document.getElementById('agent-foundry-status');
             if (!div) return;
@@ -6514,6 +6553,7 @@
             const goals = Array.isArray(plan.goals) ? plan.goals : [];
             const agents = Array.isArray(plan.ownerAgents) ? plan.ownerAgents : [];
             const steps = Array.isArray(plan.steps) ? plan.steps : [];
+            const configurationContract = Array.isArray(plan.configurationContract) ? plan.configurationContract : [];
             const evidence = Array.isArray(run?.evidence) ? run.evidence : [];
             const handoffs = plan.handoffPrompts || {};
             const canApprove = run?.status === 'planning_ready';
@@ -6523,7 +6563,10 @@
                 <h4>${escapeHtml(plan.title || run?.title || 'Agent Foundry run')}</h4>
                 <p><strong>Status:</strong> ${escapeHtml(run?.status || 'unknown')} · <strong>Mode:</strong> ${escapeHtml(plan.executionMode || 'approval-gated-handoff')}</p>
                 ${run?.diagramFileName || plan.diagramFileName ? `<p><strong>Diagram file:</strong> ${escapeHtml(run?.diagramFileName || plan.diagramFileName)}</p>` : ''}
+                ${plan.selectedAgentName ? `<p><strong>Selected agent:</strong> ${escapeHtml(plan.selectedAgentName)}</p>` : ''}
                 <p>${escapeHtml(plan.summary || run?.result?.message || '')}</p>
+                ${configurationContract.length ? `<h4>Configuration Contract</h4><ul>${configurationContract.map(field => `<li>${escapeHtml(field)}</li>`).join('')}</ul>` : ''}
+                ${plan.configurationProfile ? `<h4>Configuration Profile</h4><pre style="white-space:pre-wrap; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:0.75rem;">${escapeHtml(plan.configurationProfile)}</pre>` : ''}
                 ${goals.length ? `<h4>Goals</h4><ul>${goals.map(goal => `<li>${escapeHtml(goal)}</li>`).join('')}</ul>` : ''}
                 ${agents.length ? `<h4>Owner Agents</h4><ul>${agents.map(agent => `<li>${escapeHtml(agent)}</li>`).join('')}</ul>` : ''}
                 ${steps.length ? `<h4>Approval Plan</h4><ol>${steps.map(step => `<li><strong>${escapeHtml(step.ownerAgent || step.id || 'Agent')}</strong>: ${escapeHtml(step.action || '')}<br><small>${escapeHtml(step.evidence || '')}</small></li>`).join('')}</ol>` : ''}
@@ -6538,9 +6581,11 @@
         async function submitAgentFoundryRun(event) {
             if (event) event.preventDefault();
             const createButton = document.getElementById('agent-foundry-create-btn');
+            const selectedAgent = document.getElementById('agent-foundry-selected-agent')?.value || '';
             const sourceType = document.getElementById('agent-foundry-source-type')?.value || 'brd-prd';
             const title = document.getElementById('agent-foundry-run-title')?.value || '';
             const content = document.getElementById('agent-foundry-run-content')?.value || '';
+            const configurationProfile = document.getElementById('agent-foundry-configuration-profile')?.value || '';
             if (content.trim().length < 50) {
                 setAgentFoundryStatus('Provide at least 50 characters of source text.', true);
                 return false;
@@ -6551,7 +6596,7 @@
                 const response = await fetch(API_AGENT_FOUNDRY_RUNS, {
                     method: 'POST',
                     headers: buildAuthenticatedHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ sourceType, title, content, diagramFileName: currentAgentFoundryDiagramFileName })
+                    body: JSON.stringify({ selectedAgent, sourceType, title, content, configurationProfile, diagramFileName: currentAgentFoundryDiagramFileName })
                 });
                 const payload = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
