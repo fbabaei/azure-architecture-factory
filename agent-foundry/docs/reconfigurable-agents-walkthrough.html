@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Reconfigurable Agents Walkthrough</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="reconfigurable-agents-walkthrough.md">reconfigurable-agents-walkthrough.md</a></p>
+<h1 id="reconfigurable-agents-walkthrough">Reconfigurable Agents Walkthrough</h1>
+<p>This walkthrough shows how a new user can use the Azure AI Search prebuilt reconfigurable agents from a rough app idea to a final handoff package.</p>
+<p>The example uses a mock project named Contoso Support Assistant.</p>
+<h2 id="mock-project">Mock Project</h2>
+<p>Contoso wants an internal support assistant for support engineers.</p>
+<p>The assistant should answer questions such as:</p>
+<pre><code class="language-text">How do I troubleshoot device sync failures?
+</code></pre>
+<p>Contoso has these knowledge sources:</p>
+<ul>
+<li>product support articles in Azure AI Search</li>
+<li>policy PDFs in Blob Storage</li>
+<li>internal SharePoint troubleshooting documents</li>
+</ul>
+<p>The app needs:</p>
+<ul>
+<li>grounded answers</li>
+<li>citations</li>
+<li>no guessing when sources do not support an answer</li>
+<li>permission-aware access</li>
+<li>support for questions that may need content from more than one source</li>
+</ul>
+<h2 id="step-1-describe-the-user-need">Step 1: Describe The User Need</h2>
+<p>Start by describing what the application user is trying to do. Do not start with Azure resource names or model names unless you already know them.</p>
+<p>Example prompt:</p>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, help me choose and configure a reusable Search agent baseline.
+
+My app is Contoso Support Assistant. Support engineers ask troubleshooting questions over product support articles, policy PDFs, and SharePoint troubleshooting docs. They need grounded answers with citations, no-answer behavior when sources do not support a response, and permission-aware access.
+</code></pre>
+<p>Expected understanding:</p>
+<pre><code class="language-text">We are trying to find the right search agent for the app based on what the app needs to do.
+</code></pre>
+<h2 id="step-2-ask-the-router-to-choose">Step 2: Ask The Router To Choose</h2>
+<p>The router is Azure AI Search Reconfigurable Orchestrator. Its job is to decide whether the request fits classic search, RAG search, agentic retrieval, or a mixed pattern.</p>
+<p>For this project, the important clues are:</p>
+<ul>
+<li>the user wants generated answers</li>
+<li>the answers must be grounded</li>
+<li>citations are required</li>
+<li>unsupported questions should not be guessed</li>
+</ul>
+<p>That points toward RAG search.</p>
+<h2 id="step-3-choose-rag-instead-of-classic-search">Step 3: Choose RAG Instead Of Classic Search</h2>
+<p>Classic search is best when the app returns ranked documents, records, filters, facets, autocomplete, or direct search results.</p>
+<p>RAG search is best when the app retrieves content and then generates an answer grounded in that retrieved content.</p>
+<p>For Contoso, the right choice is:</p>
+<pre><code class="language-text">RAG Search Reconfigurable Agent
+</code></pre>
+<p>Reason:</p>
+<pre><code class="language-text">The user is asking for grounded answers with citations, not only ranked search results.
+</code></pre>
+<h2 id="step-4-check-whether-agentic-retrieval-is-needed">Step 4: Check Whether Agentic Retrieval Is Needed</h2>
+<p>Agentic retrieval is useful when Azure AI Search should manage knowledge bases, knowledge sources, query planning, query decomposition, references, activity logs, or optional synthesis.</p>
+<p>For the Contoso example, the requirement does not explicitly ask Azure AI Search to manage query decomposition or knowledge-base orchestration. The app can own retrieval, prompt assembly, generated answers, citations, and no-answer behavior.</p>
+<p>So the route remains:</p>
+<pre><code class="language-text">RAG Search Reconfigurable Agent
+</code></pre>
+<h2 id="step-5-configure-the-rag-agent">Step 5: Configure The RAG Agent</h2>
+<p>Ask the selected agent to produce a configuration contract.</p>
+<p>Example prompt:</p>
+<pre><code class="language-text">RAG Search Reconfigurable Agent, configure a reusable RAG baseline for Contoso Support Assistant.
+
+Users ask troubleshooting questions. Data sources include Azure AI Search support articles, Blob Storage policy PDFs, and SharePoint troubleshooting docs. The app needs grounded answers with citations, hybrid retrieval if appropriate, permission-aware access, no-answer behavior, and validation checks for answer quality, citations, and security.
+</code></pre>
+<p>The agent should focus on these configuration areas:</p>
+<pre><code class="language-text">retrieval, chunking, grounding, citations, security, and validation
+</code></pre>
+<h2 id="step-6-identify-missing-inputs">Step 6: Identify Missing Inputs</h2>
+<p>The agent should not invent real Azure values. Missing inputs are a safety feature.</p>
+<p>Example missing inputs:</p>
+<pre><code class="language-text">Missing inputs:
+- SEARCH_ENDPOINT
+- SEARCH_INDEX
+- EMBEDDING_DEPLOYMENT
+- CHAT_MODEL_DEPLOYMENT
+- SECURITY_MODEL
+- CITATION_FIELDS
+- FRESHNESS_POLICY
+</code></pre>
+<p>Why this matters:</p>
+<pre><code class="language-text">Inventing missing values may be inaccurate and can lead to the wrong design or unsafe implementation.
+</code></pre>
+<h2 id="step-7-fill-the-configuration-contract">Step 7: Fill The Configuration Contract</h2>
+<p>The configuration contract is a structured form. The project team fills it with real values and decisions.</p>
+<p>Example filled contract:</p>
+<pre><code class="language-text">RAG configuration:
+- SEARCH_ENDPOINT: &lt;contoso-search-endpoint&gt;
+- SEARCH_INDEX: support-knowledge-index
+- DATA_SOURCES:
+  - Azure AI Search index for support articles
+  - Blob Storage PDFs for policy documents
+  - SharePoint troubleshooting docs
+- RETRIEVAL_MODE: hybrid search
+- CHUNKING_POLICY: 800-token chunks with 150-token overlap
+- GROUNDING_POLICY: answer only from retrieved sources
+- CITATIONS: include article title, document URL, and page number when available
+- SECURITY_MODEL: filter results by user's group permissions
+- NO_ANSWER_BEHAVIOR: say when the answer is not found in the sources
+- VALIDATION_PLAN: test answer quality, citations, and permission filtering
+</code></pre>
+<p>The key idea:</p>
+<pre><code class="language-text">The agent's contract is a structured form that the project fills with real values and decisions.
+</code></pre>
+<h2 id="step-8-turn-the-contract-into-an-implementation-plan">Step 8: Turn The Contract Into An Implementation Plan</h2>
+<p>The contract defines configuration. The implementation plan defines what must be built, connected, or tested.</p>
+<p>Example implementation plan:</p>
+<pre><code class="language-text">Implementation plan:
+1. Create or confirm Azure AI Search index: support-knowledge-index
+2. Ingest support articles, policy PDFs, and SharePoint docs
+3. Chunk documents using the selected chunking policy
+4. Generate embeddings for each chunk
+5. Configure hybrid retrieval over keyword + vector search
+6. Add permission filters so users only see allowed content
+7. Build answer generation using retrieved chunks only
+8. Return citations with title, URL, and page number
+9. Add no-answer behavior when sources do not support an answer
+10. Validate with test questions, citation checks, and security checks
+</code></pre>
+<p>Important distinction:</p>
+<pre><code class="language-text">The contract defines the configuration. The implementation plan defines what needs to be built or connected.
+</code></pre>
+<h2 id="step-9-validate-the-configuration">Step 9: Validate The Configuration</h2>
+<p>A configuration can look correct and still fail in practice. Validation proves whether it works for real user questions.</p>
+<p>Validate at least these areas:</p>
+<pre><code class="language-text">1. Retrieval quality
+2. Grounding
+3. Citations
+4. Security
+</code></pre>
+<p>Example validation checks:</p>
+<ul>
+<li>Ask representative troubleshooting questions.</li>
+<li>Confirm the retrieved chunks contain enough support for the generated answer.</li>
+<li>Confirm citations point to the right source documents.</li>
+<li>Ask unsupported questions and confirm the app does not guess.</li>
+<li>Confirm users cannot retrieve content they do not have permission to access.</li>
+</ul>
+<h2 id="step-10-iterate-or-ship">Step 10: Iterate Or Ship</h2>
+<p>If validation fails, adjust the configuration and validate again.</p>
+<p>Examples:</p>
+<ul>
+<li>If answers miss important policy content, adjust sources or retrieval mode.</li>
+<li>If citations are weak, improve citation fields and chunk metadata.</li>
+<li>If users see restricted content, fix the security model before continuing.</li>
+<li>If no-answer behavior is too eager or too weak, adjust the grounding policy.</li>
+</ul>
+<p>The loop is:</p>
+<pre><code class="language-text">Configure -&gt; Implement -&gt; Validate -&gt; Improve -&gt; Validate again
+</code></pre>
+<h2 id="step-11-produce-the-final-handoff-package">Step 11: Produce The Final Handoff Package</h2>
+<p>At the end, hand off a package containing:</p>
+<pre><code class="language-text">- selected agent
+- configuration contract
+- implementation plan
+- validation results
+- known limitations
+</code></pre>
+<p>For Contoso, the final handoff could look like this:</p>
+<pre><code class="language-text">Final handoff:
+- Selected agent: RAG Search Reconfigurable Agent
+- Reason: grounded answers with citations over support knowledge
+- Configuration contract: completed
+- Implementation plan: completed
+- Environment values: listed or linked safely
+- Security rules: documented
+- Validation results: passed or listed with failures
+- Known limitations: documented
+- Next owner: implementation or operations team
+</code></pre>
+<h2 id="what-you-should-remember">What You Should Remember</h2>
+<p>The reconfigurable agent flow is:</p>
+<pre><code class="language-text">Describe the need
+  -&gt; route to the right agent
+  -&gt; configure the selected baseline
+  -&gt; identify missing inputs
+  -&gt; fill the contract
+  -&gt; create the implementation plan
+  -&gt; validate behavior
+  -&gt; iterate or hand off
+</code></pre>
+<p>For Contoso Support Assistant, RAG search is the best fit because the app needs generated grounded answers with citations and no-answer behavior.</p>
+
+    </article>
+  </main>
+</body>
+</html>

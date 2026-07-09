@@ -98,7 +98,7 @@ Practice task: build a small flow that takes text, extracts entities, summarizes
 
 ## 4. Knowledge Mining And Azure AI Search
 
-Goal: learn indexing, skillsets, custom skills, knowledge stores, vector search, hybrid search, and RAG grounding.
+Goal: learn indexing, skillsets, custom skills, knowledge stores, vector search, hybrid search, multimodal search, classic search, RAG grounding, and agentic retrieval.
 
 Use this prompt in VS Code Chat:
 
@@ -108,14 +108,18 @@ Use this prompt in VS Code Chat:
 
 Steps:
 
-1. Study `external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search`.
-2. Learn the core objects: data source, index, indexer, and skillset.
-3. Learn how enrichment works.
-4. Add custom skills conceptually.
-5. Learn vector search and hybrid search.
-6. Learn how RAG uses search results for grounding.
-7. Use the Knowledge Mining Search Orchestrator for learning questions.
-8. Use the RAG Search App Agent when applying the pattern to a real app.
+1. Ask Azure AI Search Training Agent to create a step-by-step route from the Microsoft Learn introduction and local learning notes.
+2. Study `external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search`.
+3. Learn the core objects: data source, index, indexer, and skillset.
+4. Learn classic search: direct index queries, indexing, querying, filters, facets, autocomplete, synonyms, semantic ranking, relevance tuning, and security.
+5. Learn how enrichment works.
+6. Add custom skills conceptually.
+7. Learn vector search, hybrid search, and multimodal search.
+8. Learn how conventional RAG uses search results for grounding.
+9. Learn agentic retrieval: knowledge bases, knowledge sources, query planning, query decomposition, semantic reranking, references, activity logs, and reasoning effort.
+10. Use the Knowledge Mining Search Orchestrator for broad search routing questions.
+11. Apply the learning with Classic Search App Agent, RAG Search App Agent, or Agentic Retrieval App Agent.
+12. Use [Azure AI Search Agents Step By Step](azure-ai-search-agents-step-by-step.md) when you need the beginner walkthrough for choosing and using these agents.
 
 Application follow-up:
 
@@ -123,9 +127,15 @@ Application follow-up:
 /design-ai-agent-solution Design a RAG agent for searchable internal documents.
 ```
 
+```text
+/design-ai-agent-solution Use the Agentic Retrieval App Agent to design an enterprise assistant over SharePoint and indexed policy documents.
+```
+
 ## 5. Document Intelligence
 
 Goal: learn prebuilt models, custom models, composed models, layout extraction, forms, invoices, and document-to-search flows.
+
+Primary Microsoft Learn source: <https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/?view=doc-intel-4.0.0>.
 
 Use this prompt in VS Code Chat:
 
@@ -135,13 +145,16 @@ Use this prompt in VS Code Chat:
 
 Steps:
 
-1. Study `external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence`.
-2. Use the lab repo at `external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence`.
-3. Start with prebuilt models in `Instructions/Exercises/01-use-prebuilt-models.md`.
-4. Move to custom models in `Instructions/Exercises/02-custom-document-intelligence.md`.
-5. Move to composed models in `Instructions/Exercises/03-composed-model.md`.
-6. Learn confidence scores and validation workflows.
-7. Apply the learning with the Document Processing App Agent.
+1. Ask Document Intelligence Training Agent to create a step-by-step route from the Microsoft Learn landing page and local lab files.
+2. Study `external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence`.
+3. Use the lab repo at `external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence`.
+4. Start with the service overview, Studio concepts, resource setup, auth options, and response JSON anatomy.
+5. Start with prebuilt models in `Instructions/Exercises/01-use-prebuilt-models.md` and `Labfiles/01-prebuild-models/Python/document-analysis.py`.
+6. Move to custom field extraction in `Instructions/Exercises/02-custom-document-intelligence.md` and `Labfiles/02-custom-document-intelligence/Python/test-model.py`.
+7. Move to composed models in `Instructions/Exercises/03-composed-model.md`.
+8. Add custom classification, query fields, add-on capabilities, batch analysis, confidence scores, and responsible AI review from Microsoft Learn when those topics match your application.
+9. Apply the learning with Document Extraction App Agent for structured extraction or Document Knowledge Pipeline Agent for search/RAG pipelines.
+10. Use [Document Intelligence Agents Step By Step](document-intelligence-agents-step-by-step.md) when you need the beginner walkthrough for choosing and using these agents.
 
 Application follow-up:
 
@@ -194,8 +207,12 @@ Use these application blueprints:
 | Image Generation App Agent | You need text-to-image app features. |
 | Video Generation App Agent | You need Sora or generated video workflows. |
 | Content Understanding Metadata Agent | You need searchable image metadata. |
+| Classic Search App Agent | You need direct index-first Azure AI Search with filters, facets, autocomplete, relevance tuning, or semantic/vector/hybrid queries. |
 | RAG Search App Agent | You need search and grounding. |
+| Agentic Retrieval App Agent | You need Azure AI Search agentic retrieval with knowledge bases, knowledge sources, query planning, references, or activity logs. |
 | Document Processing App Agent | You need structured document extraction. |
+| Document Extraction App Agent | You need preconfigured invoice, receipt, form, ID, custom field, classifier, or composed-model extraction. |
+| Document Knowledge Pipeline Agent | You need Document Intelligence output in Azure AI Search, knowledge mining, RAG, metadata enrichment, citations, or batch pipelines. |
 
 Use these shared platform specialists as needed:
 

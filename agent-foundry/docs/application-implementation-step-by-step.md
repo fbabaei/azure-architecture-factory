@@ -54,8 +54,12 @@ Then choose one application blueprint agent:
 | Generate images from prompts | Image Generation App Agent |
 | Generate or remix videos | Video Generation App Agent |
 | Extract structured metadata from images | Content Understanding Metadata Agent |
+| Build a direct index-first search application | Classic Search App Agent |
 | Build a search-grounded assistant | RAG Search App Agent |
+| Build an Azure AI Search agentic retrieval application with knowledge bases and knowledge sources | Agentic Retrieval App Agent |
 | Extract fields from PDFs, forms, or invoices | Document Processing App Agent |
+| Build preconfigured Document Intelligence extraction for invoices, receipts, forms, IDs, custom fields, classifiers, or composed models | Document Extraction App Agent |
+| Send Document Intelligence output into Azure AI Search, knowledge mining, RAG, metadata enrichment, citations, or batch pipelines | Document Knowledge Pipeline Agent |
 
 Use these shared specialists as needed:
 
@@ -244,6 +248,30 @@ Use this prompt when you already know the target pattern:
 ```
 
 For other scenarios, replace `RAG Search App Agent` with the relevant blueprint agent name.
+
+Azure AI Search examples:
+
+```text
+/design-ai-agent-solution Use the Classic Search App Agent to design a product catalog search experience with filters, facets, autocomplete, synonyms, and relevance tuning.
+```
+
+```text
+/design-ai-agent-solution Use the Agentic Retrieval App Agent to design an enterprise assistant that uses Azure AI Search knowledge bases and SharePoint knowledge sources with references and activity logs.
+```
+
+For a beginner-focused walkthrough of the Azure AI Search agents, use [Azure AI Search Agents Step By Step](azure-ai-search-agents-step-by-step.md).
+
+Document Intelligence examples:
+
+```text
+/design-ai-agent-solution Use the Document Extraction App Agent to design an invoice and receipt extraction workflow with human review for low-confidence fields.
+```
+
+```text
+/design-ai-agent-solution Use the Document Knowledge Pipeline Agent to design a searchable policy document pipeline with page-level citations and Azure AI Search grounding.
+```
+
+For a beginner-focused walkthrough of the Document Intelligence agents, use [Document Intelligence Agents Step By Step](document-intelligence-agents-step-by-step.md).
 
 Expected output:
 

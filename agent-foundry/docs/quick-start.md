@@ -161,6 +161,7 @@ Useful files:
 - `.github/prompts/` - VS Code chat prompt entry points
 - `docs/overview.md` - architecture and operating model
 - `docs/quick-start.md` - this guide
+- `docs/reconfigurable-agents-quick-start.md` - user manual for the prebuilt reconfigurable Search agents
 
 ## 6. Common Workflows
 

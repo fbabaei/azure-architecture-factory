@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Reconfigurable Agents</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="reconfigurable-agents.md">reconfigurable-agents.md</a></p>
+<h1 id="reconfigurable-agents">Reconfigurable Agents</h1>
+<p>Reconfiguration means an agent is not a fixed one-scenario template. It is a reusable baseline that starts with common Azure AI Search patterns, then adapts its configuration contract to the user's requirements.</p>
+<p>In this repo, the Azure AI Search prebuilt reconfigurable category uses one router and three specialized configurable agents:</p>
+<ul>
+<li>Azure AI Search Reconfigurable Orchestrator</li>
+<li>Classic Search Reconfigurable Agent</li>
+<li>RAG Search Reconfigurable Agent</li>
+<li>Agentic Retrieval Reconfigurable Agent</li>
+</ul>
+<p>For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For an end-to-end mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
+<h2 id="how-reconfiguration-works">How Reconfiguration Works</h2>
+<ol>
+<li>The user starts with Azure AI Search Reconfigurable Orchestrator.</li>
+<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, or missing enough detail.</li>
+<li>The orchestrator extracts a shared requirements profile.</li>
+<li>The orchestrator routes to the most specific reconfigurable agent.</li>
+<li>The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.</li>
+<li>The selected agent returns missing inputs, special-case handling, validation checks, and handoffs.</li>
+</ol>
+<p>The router captures this shared profile:</p>
+<pre><code class="language-text">USER_OUTCOME
+DATA_SOURCES
+SOURCE_FRESHNESS
+RETRIEVAL_PATTERN
+SECURITY_MODEL
+GROUNDING_POLICY
+VALIDATION_PLAN
+</code></pre>
+<h2 id="classic-search-reconfiguration">Classic Search Reconfiguration</h2>
+<p>Classic search reconfiguration is for direct index-first Azure AI Search experiences. Use it when the application primarily returns ranked results instead of generated answers.</p>
+<p>The Classic Search Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+SEARCH_INDEX
+DATA_SOURCES
+INGESTION_MODE
+INDEX_SCHEMA
+QUERY_FEATURES
+RELEVANCE_POLICY
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs product catalog search with filters, facets, autocomplete, region-based access, and relevance tuning, the agent configures itself around direct index-first search, not RAG or agentic retrieval.</p>
+<h2 id="rag-search-reconfiguration">RAG Search Reconfiguration</h2>
+<p>RAG search reconfiguration is for applications that retrieve content from Azure AI Search and then own prompt assembly, answer generation, citations, and no-answer behavior.</p>
+<p>The RAG Search Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+SEARCH_INDEX
+DATA_SOURCES
+CHUNKING_POLICY
+RETRIEVAL_MODE
+EMBEDDING_DEPLOYMENT
+PROMPT_ASSEMBLY
+GROUNDING_POLICY
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs grounded generated answers with citations, chunking, hybrid retrieval, and unsupported-question behavior, the agent adapts around retrieval plus prompt assembly.</p>
+<h2 id="agentic-retrieval-reconfiguration">Agentic Retrieval Reconfiguration</h2>
+<p>Agentic retrieval reconfiguration is for scenarios where Azure AI Search should manage retrieval through knowledge bases and knowledge sources.</p>
+<p>The Agentic Retrieval Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+KNOWLEDGE_BASE
+KNOWLEDGE_SOURCES
+SOURCE_MODE
+SOURCE_FRESHNESS
+RETRIEVAL_REASONING_EFFORT
+QUERY_PLANNING_MODE
+ANSWER_SYNTHESIS
+MODEL_DEPLOYMENT
+GROUNDING_POLICY
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs Azure AI Search to manage knowledge bases, knowledge sources, query decomposition, references, activity logs, and optional synthesis, the agent configures the agentic retrieval baseline.</p>
+<h2 id="what-the-agents-produce">What The Agents Produce</h2>
+<p>Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:</p>
+<ul>
+<li>baseline configuration</li>
+<li>user-specific changes</li>
+<li>missing inputs</li>
+<li>special-case handling</li>
+<li>validation checks</li>
+<li>handoffs to auth, security, monitoring, operations, or implementation agents</li>
+</ul>
+<p>The overall flow is:</p>
+<pre><code class="language-text">User requirements
+  -&gt; Azure AI Search Reconfigurable Orchestrator
+  -&gt; choose Classic / RAG / Agentic Retrieval baseline
+  -&gt; fill reconfiguration points
+  -&gt; identify gaps and validations
+  -&gt; hand off to planning or implementation
+</code></pre>
+<h2 id="important-boundary">Important Boundary</h2>
+<p>These are prebuilt configurable design agents, not runtime agents that mutate their own code. Their configuration is the structured contract and decision profile they generate for a user's specific scenario.</p>
+
+    </article>
+  </main>
+</body>
+</html>

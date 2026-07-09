@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Reconfigurable Agents Quick Start</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="reconfigurable-agents-quick-start.md">reconfigurable-agents-quick-start.md</a></p>
+<h1 id="reconfigurable-agents-quick-start">Reconfigurable Agents Quick Start</h1>
+<p>Use this guide when you are new to the Azure AI Search prebuilt reconfigurable agents and want a practical path from a rough requirement to a usable configuration plan.</p>
+<p>For an end-to-end mock project walkthrough, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
+<p>The reconfigurable agents help you choose and configure one of three Azure AI Search patterns:</p>
+<ul>
+<li>Classic search: direct index-first search results.</li>
+<li>RAG search: retrieval plus app-owned prompt assembly and grounded answer generation.</li>
+<li>Agentic retrieval: Azure AI Search-managed knowledge bases, knowledge sources, query planning, references, activity logs, and optional synthesis.</li>
+</ul>
+<h2 id="before-you-start">Before You Start</h2>
+<p>Open this repo in VS Code and use VS Code Chat. The agents live under <code>.github/agents/</code> and should be available when this workspace is open.</p>
+<p>You do not need Azure resource names to start. The agents can produce a requirements-driven plan with placeholders and missing-input notes. Do not provide secrets, API keys, or tokens in chat.</p>
+<h2 id="start-with-the-router">1. Start With The Router</h2>
+<p>Start with Azure AI Search Reconfigurable Orchestrator when you are not sure which search pattern fits.</p>
+<p>Use this prompt shape:</p>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, help me choose and configure a reusable Search agent baseline.
+
+My app: [describe the app]
+Users need: [search results, grounded answers, agent assistant, or mixed]
+Data sources: [documents, product catalog, SharePoint, Blob Storage, SQL, APIs, web, indexes]
+Freshness needs: [live, near-real-time, scheduled, batch, archival]
+Security constraints: [public, internal, role-based, tenant-specific, permission-aware, Private Link, compliance]
+Grounding needs: [citations, references, activity logs, no-answer behavior]
+Special cases: [regions, multilingual, regulated data, multiple tenants, high latency sensitivity]
+</code></pre>
+<p>Short example:</p>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, help me choose and configure a reusable Search agent baseline. My app is an internal support assistant over SharePoint and indexed PDF policies. Users need grounded answers with citations, permission-aware access, no-answer behavior, and monitoring. Freshness matters for SharePoint content.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Recommended reconfigurable agent.</li>
+<li>Route decision and why.</li>
+<li>Common reconfiguration profile.</li>
+<li>Pattern-specific configuration gaps.</li>
+<li>Security, validation, cost, and operations checks.</li>
+<li>Handoffs.</li>
+</ol>
+<h2 id="review-the-route-decision">2. Review The Route Decision</h2>
+<p>The router should choose one of these agents:</p>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Use When</th>
+<th>Follow-Up Agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classic search</td>
+<td>The app returns ranked search results directly from indexes.</td>
+<td>Classic Search Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>RAG search</td>
+<td>The app retrieves content, assembles prompts, generates answers, and owns citations/no-answer behavior.</td>
+<td>RAG Search Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>Agentic retrieval</td>
+<td>Azure AI Search should manage knowledge bases, knowledge sources, planning, references, activity logs, and optional synthesis.</td>
+<td>Agentic Retrieval Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>Mixed</td>
+<td>The app needs more than one pattern, such as product search plus a grounded assistant.</td>
+<td>Start with the dominant user journey, then configure the second pattern separately.</td>
+</tr>
+</tbody>
+</table>
+<p>If the route feels wrong, give the router one correction. For example:</p>
+<pre><code class="language-text">The app should not generate answers. It should only return ranked product results with facets and autocomplete. Re-route this as classic search.
+</code></pre>
+<h2 id="configure-classic-search">3. Configure Classic Search</h2>
+<p>Use Classic Search Reconfigurable Agent when the app primarily needs direct search results.</p>
+<p>Prompt template:</p>
+<pre><code class="language-text">Classic Search Reconfigurable Agent, configure a reusable classic search baseline for this app.
+
+Search experience: [what users search for]
+Data sources: [source systems]
+Ingestion: [push, indexer, scheduled, near-real-time, unknown]
+Query features: [keyword, filters, facets, sorting, geo, autocomplete, synonyms, semantic, vector, hybrid]
+Relevance goals: [freshness, boosting, exact match, semantic match, personalization]
+Security: [auth, RBAC, tenant boundaries, document-level access]
+Special cases: [multilingual, regions, high-cardinality facets, compliance]
+Validation: [example queries and expected behavior]
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-text">Classic Search Reconfigurable Agent, configure a reusable classic search baseline for a product catalog. Users need keyword search, filters, facets, autocomplete, synonyms, semantic ranking, and region-based access. Data comes from a product API and nightly export. Identify the index schema, ingestion mode, query features, relevance policy, security model, special cases, and validation checks.
+</code></pre>
+<p>Expected output:</p>
+<ul>
+<li>classic search fit decision</li>
+<li>baseline configuration</li>
+<li>user-specific reconfiguration points</li>
+<li>index, ingestion, query, and relevance plan</li>
+<li>security and operations notes</li>
+<li>validation checks</li>
+<li>handoffs</li>
+</ul>
+<h2 id="configure-rag-search">4. Configure RAG Search</h2>
+<p>Use RAG Search Reconfigurable Agent when your app owns answer generation over retrieved content.</p>
+<p>Prompt template:</p>
+<pre><code class="language-text">RAG Search Reconfigurable Agent, configure a reusable RAG baseline for this app.
+
+User questions: [what users ask]
+Data sources: [documents, indexes, source systems]
+Answer style: [short answer, detailed answer, quoted answer, structured JSON]
+Retrieval mode: [keyword, vector, hybrid, semantic, unknown]
+Chunking needs: [document types, structure, citations, long documents]
+Embedding needs: [known deployment or unknown]
+Grounding policy: [citations, no-answer, unsupported claims, prompt injection]
+Security: [auth, RBAC, permission-aware access]
+Validation: [sample questions, citation checks, no-answer tests]
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-text">RAG Search Reconfigurable Agent, configure a reusable RAG baseline for a support assistant over indexed help articles. Users need grounded answers with citations, hybrid retrieval, no-answer behavior for unsupported questions, and prompt-injection checks. Embedding deployment is not chosen yet. Identify missing inputs and validation checks.
+</code></pre>
+<p>Expected output:</p>
+<ul>
+<li>RAG fit decision</li>
+<li>baseline configuration</li>
+<li>user-specific reconfiguration points</li>
+<li>index, chunking, retrieval, and prompt assembly plan</li>
+<li>grounding, citation, and no-answer policy</li>
+<li>security and operations notes</li>
+<li>evaluation checks</li>
+<li>handoffs</li>
+</ul>
+<h2 id="configure-agentic-retrieval">5. Configure Agentic Retrieval</h2>
+<p>Use Agentic Retrieval Reconfigurable Agent when Azure AI Search should manage retrieval planning through knowledge bases and knowledge sources.</p>
+<p>Prompt template:</p>
+<pre><code class="language-text">Agentic Retrieval Reconfigurable Agent, configure a reusable agentic retrieval baseline for this app.
+
+Agent scenario: [assistant or app behavior]
+Knowledge sources: [indexes, SharePoint, Blob Storage, OneLake, web, mixed, unknown]
+Source mode: [indexed, remote, mixed, unknown]
+Freshness needs: [live, near-real-time, scheduled]
+Grounding needs: [references, citations, activity logs, no-answer behavior]
+Synthesis needs: [raw retrieval, synthesized answer, unknown]
+Security: [permission inheritance, RBAC, Private Link, compliance]
+Special cases: [multi-source questions, regulated data, agent-to-agent workflow]
+Validation: [sample questions, reference checks, activity-log checks]
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-text">Agentic Retrieval Reconfigurable Agent, configure a reusable agentic retrieval baseline for an enterprise policy assistant. Knowledge sources include SharePoint and indexed policy PDFs. I need permission-aware access, references, activity logs, no-answer behavior, and checks for source coverage, latency, and cost.
+</code></pre>
+<p>Expected output:</p>
+<ul>
+<li>agentic retrieval fit decision</li>
+<li>baseline configuration</li>
+<li>user-specific reconfiguration points</li>
+<li>knowledge base and knowledge source plan</li>
+<li>indexed vs. remote source decision</li>
+<li>reasoning effort and synthesis notes</li>
+<li>grounding, references, and activity log validation</li>
+<li>security, cost, region, and operations checks</li>
+<li>handoffs</li>
+</ul>
+<h2 id="fill-missing-inputs">6. Fill Missing Inputs</h2>
+<p>The agents should mark missing inputs instead of inventing them. Common missing inputs include:</p>
+<table>
+<thead>
+<tr>
+<th>Missing Input</th>
+<th>Who Usually Provides It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SEARCH_ENDPOINT</code></td>
+<td>Azure owner or deployment pipeline</td>
+</tr>
+<tr>
+<td><code>SEARCH_INDEX</code></td>
+<td>Search engineer or implementation plan</td>
+</tr>
+<tr>
+<td><code>KNOWLEDGE_BASE</code></td>
+<td>Search or Foundry owner</td>
+</tr>
+<tr>
+<td><code>KNOWLEDGE_SOURCES</code></td>
+<td>Product owner, data owner, or search engineer</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_DEPLOYMENT</code></td>
+<td>Foundry or Azure OpenAI owner</td>
+</tr>
+<tr>
+<td><code>SECURITY_MODEL</code></td>
+<td>Security, identity, or platform owner</td>
+</tr>
+<tr>
+<td><code>VALIDATION_PLAN</code></td>
+<td>Product owner, evaluator, tester, or Monitoring &amp; Evaluation Agent</td>
+</tr>
+</tbody>
+</table>
+<p>Good follow-up prompt:</p>
+<pre><code class="language-text">Here are the missing inputs I can answer: [values]. Keep unknown Azure resources as placeholders and update the configuration plan.
+</code></pre>
+<h2 id="bring-in-shared-specialists">7. Bring In Shared Specialists</h2>
+<p>Use shared specialists when the reconfigurable agent identifies cross-cutting concerns.</p>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Endpoint, identity, <code>.env</code>, local auth, RBAC</td>
+<td>Auth Config Agent</td>
+</tr>
+<tr>
+<td>Private Link, document-level access, permission inheritance, compliance</td>
+<td>Security &amp; Compliance Agent</td>
+</tr>
+<tr>
+<td>Model deployment, embedding deployment, Foundry endpoint, quota</td>
+<td>Foundry Integration Agent</td>
+</tr>
+<tr>
+<td>Prompt-injection, moderation, grounded-answer safety</td>
+<td>Responsible AI Safety Agent</td>
+</tr>
+<tr>
+<td>Retrieval quality, citations, references, traces, latency, alerts</td>
+<td>Monitoring &amp; Evaluation Agent</td>
+</tr>
+<tr>
+<td>Production readiness, runbooks, cost guardrails, support handoff</td>
+<td>Operations Readiness Agent</td>
+</tr>
+<tr>
+<td>Implementation steps, file edits, tests, command execution</td>
+<td>Application Implementation Validation Agent</td>
+</tr>
+</tbody>
+</table>
+<p>Example handoff:</p>
+<pre><code class="language-text">Auth Config Agent, use this reconfigurable Search plan and define the local/dev/prod auth and endpoint configuration. Do not invent secrets. Mark required RBAC roles and missing tenant details.
+</code></pre>
+<h2 id="turn-the-plan-into-implementation-steps">8. Turn The Plan Into Implementation Steps</h2>
+<p>When the configuration plan is stable, use Application Planning Companion Agent to make the work executable.</p>
+<pre><code class="language-text">Application Planning Companion Agent, turn this reconfigurable Search plan into implementation steps. Track owners, files or artifacts to create, validation commands, missing decisions, and the first bounded handoff to Application Implementation Validation Agent.
+</code></pre>
+<p>Only use Application Implementation Validation Agent when the step is bounded and has named files or commands.</p>
+<pre><code class="language-text">Application Implementation Validation Agent, execute this approved step: [step]. Target files: [files]. Validation command: [command]. Expected result: [expected result].
+</code></pre>
+<h2 id="validate-the-configuration">9. Validate The Configuration</h2>
+<p>Every configured agent should end with validation checks. At minimum, cover:</p>
+<ul>
+<li>representative user queries</li>
+<li>no-result or no-answer behavior</li>
+<li>relevance or retrieval quality</li>
+<li>citation or reference accuracy for generated answers</li>
+<li>activity logs for agentic retrieval when used</li>
+<li>latency and cost checks</li>
+<li>access-control tests</li>
+<li>monitoring and operations readiness</li>
+</ul>
+<p>For generated answers, test unsupported questions and prompt-injection attempts before implementation is considered ready.</p>
+<h2 id="quick-decision-cheat-sheet">Quick Decision Cheat Sheet</h2>
+<table>
+<thead>
+<tr>
+<th>User Says</th>
+<th>Start With</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;I need search filters, facets, autocomplete, and relevance tuning.&quot;</td>
+<td>Classic Search Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>&quot;I need answers with citations over indexed documents.&quot;</td>
+<td>RAG Search Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>&quot;I need knowledge bases, knowledge sources, references, and activity logs.&quot;</td>
+<td>Agentic Retrieval Reconfigurable Agent</td>
+</tr>
+<tr>
+<td>&quot;I am not sure whether this is search, RAG, or agentic retrieval.&quot;</td>
+<td>Azure AI Search Reconfigurable Orchestrator</td>
+</tr>
+<tr>
+<td>&quot;I need both product search and a support assistant.&quot;</td>
+<td>Azure AI Search Reconfigurable Orchestrator, then configure each pattern separately</td>
+</tr>
+</tbody>
+</table>
+<h2 id="safe-operating-rules">Safe Operating Rules</h2>
+<ul>
+<li>Do not provide secrets, API keys, or tokens in chat.</li>
+<li>Do not let the agent invent endpoints, index names, model deployments, knowledge base names, regions, quotas, pricing, or test results.</li>
+<li>Keep unknown values as placeholders until the owner provides them.</li>
+<li>Validate retrieval quality before implementation handoff.</li>
+<li>Use the narrowest reconfigurable agent once the route is clear.</li>
+</ul>
+<h2 id="next-prompt">Next Prompt</h2>
+<p>Start here:</p>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, help me choose and configure a reusable Search agent baseline. My app is: [describe your app]. Users need: [describe the desired experience]. Data sources are: [list sources]. Security constraints are: [list constraints].
+</code></pre>
+
+    </article>
+  </main>
+</body>
+</html>

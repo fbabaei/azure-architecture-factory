@@ -180,38 +180,48 @@
 </ol>
 <p>Practice task: build a small flow that takes text, extracts entities, summarizes intent, and routes to a response.</p>
 <h2 id="knowledge-mining-and-azure-ai-search">4. Knowledge Mining And Azure AI Search</h2>
-<p>Goal: learn indexing, skillsets, custom skills, knowledge stores, vector search, hybrid search, and RAG grounding.</p>
+<p>Goal: learn indexing, skillsets, custom skills, knowledge stores, vector search, hybrid search, multimodal search, classic search, RAG grounding, and agentic retrieval.</p>
 <p>Use this prompt in VS Code Chat:</p>
 <pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Search knowledge mining.
 </code></pre>
 <p>Steps:</p>
 <ol>
+<li>Ask Azure AI Search Training Agent to create a step-by-step route from the Microsoft Learn introduction and local learning notes.</li>
 <li>Study <code>external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search</code>.</li>
 <li>Learn the core objects: data source, index, indexer, and skillset.</li>
+<li>Learn classic search: direct index queries, indexing, querying, filters, facets, autocomplete, synonyms, semantic ranking, relevance tuning, and security.</li>
 <li>Learn how enrichment works.</li>
 <li>Add custom skills conceptually.</li>
-<li>Learn vector search and hybrid search.</li>
-<li>Learn how RAG uses search results for grounding.</li>
-<li>Use the Knowledge Mining Search Orchestrator for learning questions.</li>
-<li>Use the RAG Search App Agent when applying the pattern to a real app.</li>
+<li>Learn vector search, hybrid search, and multimodal search.</li>
+<li>Learn how conventional RAG uses search results for grounding.</li>
+<li>Learn agentic retrieval: knowledge bases, knowledge sources, query planning, query decomposition, semantic reranking, references, activity logs, and reasoning effort.</li>
+<li>Use the Knowledge Mining Search Orchestrator for broad search routing questions.</li>
+<li>Apply the learning with Classic Search App Agent, RAG Search App Agent, or Agentic Retrieval App Agent.</li>
+<li>Use <a href="azure-ai-search-agents-step-by-step.md">Azure AI Search Agents Step By Step</a> when you need the beginner walkthrough for choosing and using these agents.</li>
 </ol>
 <p>Application follow-up:</p>
 <pre><code class="language-text">/design-ai-agent-solution Design a RAG agent for searchable internal documents.
 </code></pre>
+<pre><code class="language-text">/design-ai-agent-solution Use the Agentic Retrieval App Agent to design an enterprise assistant over SharePoint and indexed policy documents.
+</code></pre>
 <h2 id="document-intelligence">5. Document Intelligence</h2>
 <p>Goal: learn prebuilt models, custom models, composed models, layout extraction, forms, invoices, and document-to-search flows.</p>
+<p>Primary Microsoft Learn source: <a href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/?view=doc-intel-4.0.0">https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/?view=doc-intel-4.0.0</a>.</p>
 <p>Use this prompt in VS Code Chat:</p>
 <pre><code class="language-text">/learn-ai-capability Guide me through Document Intelligence custom models.
 </code></pre>
 <p>Steps:</p>
 <ol>
+<li>Ask Document Intelligence Training Agent to create a step-by-step route from the Microsoft Learn landing page and local lab files.</li>
 <li>Study <code>external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence</code>.</li>
 <li>Use the lab repo at <code>external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence</code>.</li>
-<li>Start with prebuilt models in <code>Instructions/Exercises/01-use-prebuilt-models.md</code>.</li>
-<li>Move to custom models in <code>Instructions/Exercises/02-custom-document-intelligence.md</code>.</li>
+<li>Start with the service overview, Studio concepts, resource setup, auth options, and response JSON anatomy.</li>
+<li>Start with prebuilt models in <code>Instructions/Exercises/01-use-prebuilt-models.md</code> and <code>Labfiles/01-prebuild-models/Python/document-analysis.py</code>.</li>
+<li>Move to custom field extraction in <code>Instructions/Exercises/02-custom-document-intelligence.md</code> and <code>Labfiles/02-custom-document-intelligence/Python/test-model.py</code>.</li>
 <li>Move to composed models in <code>Instructions/Exercises/03-composed-model.md</code>.</li>
-<li>Learn confidence scores and validation workflows.</li>
-<li>Apply the learning with the Document Processing App Agent.</li>
+<li>Add custom classification, query fields, add-on capabilities, batch analysis, confidence scores, and responsible AI review from Microsoft Learn when those topics match your application.</li>
+<li>Apply the learning with Document Extraction App Agent for structured extraction or Document Knowledge Pipeline Agent for search/RAG pipelines.</li>
+<li>Use <a href="document-intelligence-agents-step-by-step.md">Document Intelligence Agents Step By Step</a> when you need the beginner walkthrough for choosing and using these agents.</li>
 </ol>
 <p>Application follow-up:</p>
 <pre><code class="language-text">/design-ai-agent-solution Design an agent that extracts invoice fields and lets users query the results.
@@ -267,12 +277,28 @@
 <td>You need searchable image metadata.</td>
 </tr>
 <tr>
+<td>Classic Search App Agent</td>
+<td>You need direct index-first Azure AI Search with filters, facets, autocomplete, relevance tuning, or semantic/vector/hybrid queries.</td>
+</tr>
+<tr>
 <td>RAG Search App Agent</td>
 <td>You need search and grounding.</td>
 </tr>
 <tr>
+<td>Agentic Retrieval App Agent</td>
+<td>You need Azure AI Search agentic retrieval with knowledge bases, knowledge sources, query planning, references, or activity logs.</td>
+</tr>
+<tr>
 <td>Document Processing App Agent</td>
 <td>You need structured document extraction.</td>
+</tr>
+<tr>
+<td>Document Extraction App Agent</td>
+<td>You need preconfigured invoice, receipt, form, ID, custom field, classifier, or composed-model extraction.</td>
+</tr>
+<tr>
+<td>Document Knowledge Pipeline Agent</td>
+<td>You need Document Intelligence output in Azure AI Search, knowledge mining, RAG, metadata enrichment, citations, or batch pipelines.</td>
 </tr>
 </tbody>
 </table>

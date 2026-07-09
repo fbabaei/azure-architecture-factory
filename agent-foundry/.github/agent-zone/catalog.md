@@ -4,6 +4,8 @@
 
 Start with **Azure AI Agent Foundry Orchestrator** for broad requests. It routes to learning, application, capability, or shared platform agents.
 
+For reusable Azure AI Search starting points, use **Azure AI Search Reconfigurable Orchestrator**. It routes users to prebuilt reconfigurable agents for classic search, RAG search, or agentic retrieval based on their requirements.
+
 ## Learning Orchestrators
 
 | Area | Agent | Source Coverage |
@@ -11,13 +13,24 @@ Start with **Azure AI Agent Foundry Orchestrator** for broad requests. It routes
 | Azure AI Services foundations | Azure AI Services Foundation Orchestrator | provisioning, security, monitoring, containers, content safety |
 | Vision solutions | Vision Solutions Orchestrator | image analysis, image classification, object detection, face, OCR, video, generative vision |
 | NLP solutions | NLP Solutions Orchestrator | text analytics, translation, speech, conversational language, Q&A, bot scenarios |
-| Knowledge mining and search | Knowledge Mining Search Orchestrator | Azure AI Search, custom skills, knowledge stores, indexing |
-| Document intelligence | Document Intelligence Orchestrator | prebuilt/custom extraction, composed models, search pipeline integration |
+| Knowledge mining and search | Knowledge Mining Search Orchestrator, Azure AI Search Training Agent | Azure AI Search, classic search, agentic retrieval, custom skills, knowledge stores, indexing, vector/hybrid/multimodal search |
+| Document intelligence | Document Intelligence Orchestrator, Document Intelligence Training Agent | quickstarts, Studio, prebuilt/custom extraction, custom classification, composed models, confidence scores, search pipeline integration |
 | Generative AI | Generative AI Solutions Orchestrator | Azure OpenAI, chat, embeddings, RAG, prompt patterns, Foundry integration |
 
 ## Application Agent Blueprints
 
 Use **Application Planning Companion Agent** after the design is selected. It tags along with the application steps, manages decisions and tasks, and coordinates handoffs without terminal execution. Use **Application Implementation Validation Agent** when a bounded step needs file changes, terminal commands, tests, local servers, or validation evidence.
+
+## Azure AI Search Prebuilt Reconfigurable Agents
+
+Use this category when users want configurable baseline agents with common Azure AI Search capabilities, common use cases, and explicit reconfiguration points for special cases.
+
+| Agent | Use When | Primary Outputs |
+| --- | --- | --- |
+| Azure AI Search Reconfigurable Orchestrator | Choose between classic search, RAG search, and agentic retrieval configurable baselines | route decision, common reconfiguration profile, pattern-specific gaps, handoffs |
+| Classic Search Reconfigurable Agent | Configure direct index-first search for user-specific data, query features, relevance, security, and validation | baseline configuration, reconfiguration points, index/query/relevance plan, validation checks |
+| RAG Search Reconfigurable Agent | Configure Azure AI Search grounded RAG with retrieval, chunking, embeddings, citations, prompt assembly, and evaluation | baseline configuration, retrieval/chunking/prompt plan, grounding policy, evaluation checks |
+| Agentic Retrieval Reconfigurable Agent | Configure Azure AI Search agentic retrieval with knowledge bases, knowledge sources, planning, references, activity logs, and synthesis | baseline configuration, knowledge source plan, reasoning/synthesis notes, reference/activity-log validation |
 
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
@@ -27,8 +40,12 @@ Use **Application Planning Companion Agent** after the design is selected. It ta
 | Image Generation App Agent | Add text-to-image generation to an app | model config, moderation notes, output storage contract |
 | Video Generation App Agent | Generate, poll, remix, and download videos | async workflow, polling policy, download/remix contract |
 | Content Understanding Metadata Agent | Extract image metadata for search or asset management | analyzer schema, output JSON shape, integration guidance |
+| Classic Search App Agent | Build direct index-first Azure AI Search applications | index schema, ingestion plan, query/relevance plan, validation checks |
 | RAG Search App Agent | Build retrieval, hybrid/vector search, and knowledge mining flows | index strategy, retrieval contract, grounding flow |
+| Agentic Retrieval App Agent | Build Azure AI Search agentic retrieval applications with knowledge bases and knowledge sources | knowledge base/source plan, indexed-vs-remote decision, references, activity log validation |
 | Document Processing App Agent | Extract structured data from documents and forms | extraction pipeline, model choice, confidence/validation strategy |
+| Document Extraction App Agent | Build preconfigured Document Intelligence extraction apps for invoices, receipts, forms, IDs, custom fields, classifiers, or composed models | model selection, extraction schema, confidence review, validation plan |
+| Document Knowledge Pipeline Agent | Send Document Intelligence output into Azure AI Search, knowledge mining, RAG, metadata enrichment, or custom skill pipelines | normalized document schema, index/RAG contract, citation policy, reprocessing plan |
 
 ## Application Design Specialists
 
@@ -48,7 +65,6 @@ Use these specialists when a new application is still being shaped and needs des
 | Agent | Use When |
 | --- | --- |
 | Foundry Integration Agent | Connect apps to Foundry projects, models, deployments, and endpoints |
-| Azure Knowledge Access Architect | Plan secure Azure Storage, Azure AI Search, Foundry IQ, and Foundry agent knowledge access; choose classic/vector/hybrid/multimodal/agentic retrieval; guide RBAC, firewall, private endpoint, DNS, and reuse-versus-create decisions |
 | Auth Config Agent | Configure Entra ID, `.env`, local auth, and endpoint validation |
 | Responsible AI Safety Agent | Add safety, moderation, policy, and responsible AI checks |
 | Security & Compliance Agent | Review security posture, threat models, data protection, RBAC, secrets, and compliance readiness |

@@ -41,6 +41,11 @@ See the [Prompt Files Guide](docs/prompt-files-guide.md) for when to use each pr
 - [Prompt Files Guide](docs/prompt-files-guide.md) - user guide for choosing the right slash-command entry point.
 - [Application Implementation Step By Step](docs/application-implementation-step-by-step.md) - application build flow with planning and implementation companion handoffs.
 - [Learning Paths Step By Step](docs/learning-paths-step-by-step.md) - guided learning tracks and application follow-ups.
+- [Azure AI Search Agents Step By Step](docs/azure-ai-search-agents-step-by-step.md) - beginner guide for using the Azure AI Search training, classic search, RAG, and agentic retrieval agents.
+- [Reconfigurable Agents](docs/reconfigurable-agents.md) - explanation of how prebuilt reconfigurable agents adapt baseline capabilities to user requirements.
+- [Reconfigurable Agents Quick Start](docs/reconfigurable-agents-quick-start.md) - new-user manual with prompts, steps, examples, handoffs, and validation checks for using the reconfigurable Search agents.
+- [Reconfigurable Agents Walkthrough](docs/reconfigurable-agents-walkthrough.md) - Contoso Support Assistant example showing the full route, contract, implementation, validation, and handoff flow.
+- [Document Intelligence Agents Step By Step](docs/document-intelligence-agents-step-by-step.md) - beginner guide for using the Document Intelligence training, extraction, and search/RAG pipeline agents.
 - [AAF Browser](browser/index.html) - local browser/catalog experience for searching and inspecting agents.
 
 ## Related Project

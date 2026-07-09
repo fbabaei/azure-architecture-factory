@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Document Intelligence Agents</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="document-intelligence-agents-step-by-step.md">document-intelligence-agents-step-by-step.md</a></p>
+<h1 id="document-intelligence-agents-step-by-step">Document Intelligence Agents Step By Step</h1>
+<p>Use this guide when you are new to Azure AI Agent Foundry and want to learn or build with the Document Intelligence agents.</p>
+<p>Primary Microsoft Learn source: <a href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/?view=doc-intel-4.0.0">https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/?view=doc-intel-4.0.0</a>.</p>
+<h2 id="what-was-added">What Was Added</h2>
+<p>Three Document Intelligence agents were added to the Foundry catalog:</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Use when</th>
+<th>Main output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document Intelligence Training Agent</td>
+<td>You want to learn Document Intelligence from Microsoft Learn docs, quickstarts, tutorials, Studio concepts, prebuilt models, custom extraction, custom classification, composed models, batch analysis, confidence scores, SDKs, REST API, or responsible AI notes.</td>
+<td>Learning path, source references, checkpoint, application follow-up</td>
+</tr>
+<tr>
+<td>Document Extraction App Agent</td>
+<td>You want to design an extraction app for invoices, receipts, forms, IDs, tax/legal/financial documents, layout extraction, custom fields, classifiers, composed models, confidence review, or JSON output contracts.</td>
+<td>Model choice, schema, configuration contract, review policy, validation plan</td>
+</tr>
+<tr>
+<td>Document Knowledge Pipeline Agent</td>
+<td>You want to send extracted document content into Azure AI Search, knowledge mining, RAG, metadata enrichment, batch analysis, custom skills, citations, or searchable document workflows.</td>
+<td>Extraction-to-index flow, normalized schema, search/RAG contract, citation policy</td>
+</tr>
+</tbody>
+</table>
+<p>These agents work with the existing Document Intelligence Orchestrator and Document Processing App Agent. Use the orchestrator when you are unsure which specialist should own the next step.</p>
+<h2 id="where-to-find-them">Where To Find Them</h2>
+<p>Open the local browser catalog:</p>
+<pre><code class="language-text">browser/index.html
+</code></pre>
+<p>Search for one of these terms:</p>
+<ul>
+<li><code>Document Intelligence</code></li>
+<li><code>invoice</code></li>
+<li><code>forms</code></li>
+<li><code>custom model</code></li>
+<li><code>RAG</code></li>
+<li><code>documents</code></li>
+<li><code>citations</code></li>
+</ul>
+<p>You can also use these slash prompts from VS Code Chat:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Document Intelligence for invoices and forms.
+</code></pre>
+<pre><code class="language-text">/design-ai-agent-solution Design a Document Intelligence app that extracts invoice fields and stores reviewed results.
+</code></pre>
+<h2 id="beginner-flow">Beginner Flow</h2>
+<p>Follow this order if you are starting from zero.</p>
+<h3 id="start-with-learning">1. Start With Learning</h3>
+<p>Ask the learning route to begin with one small step:</p>
+<pre><code class="language-text">/learn-ai-capability Help me learn Azure AI Document Intelligence for invoices and forms.
+</code></pre>
+<p>Then ask the specialist to guide you one checkpoint at a time:</p>
+<pre><code class="language-text">Document Intelligence Training Agent, walk me through Azure Document Intelligence from beginner to application-ready. Use the Microsoft Learn docs and local labs. Give me one step at a time with a checkpoint before continuing.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Matched training topic.</li>
+<li>Source references.</li>
+<li>Prerequisites.</li>
+<li>Step-by-step learning path.</li>
+<li>Hands-on checkpoint.</li>
+<li>Application follow-up.</li>
+<li>Cleanup and cost reminders.</li>
+<li>Open questions.</li>
+</ol>
+<p>Use this agent for questions like:</p>
+<pre><code class="language-text">Document Intelligence Training Agent, teach me prebuilt invoice extraction.
+</code></pre>
+<pre><code class="language-text">Document Intelligence Training Agent, guide me through custom field extraction and composed models.
+</code></pre>
+<pre><code class="language-text">Document Intelligence Training Agent, explain confidence scores, batch analysis, and responsible AI for document processing.
+</code></pre>
+<h3 id="move-from-learning-to-app-design">2. Move From Learning To App Design</h3>
+<p>When you are ready to design an application, start with the application prompt:</p>
+<pre><code class="language-text">/design-ai-agent-solution Design a Document Intelligence app that extracts invoice fields and stores reviewed results.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Selected agent blueprints.</li>
+<li>Input and output contracts.</li>
+<li>Configuration needs.</li>
+<li>Integration pattern.</li>
+<li>Safety and auth considerations.</li>
+<li>Validation checks.</li>
+<li>Recommended implementation order.</li>
+</ol>
+<h3 id="use-document-extraction-app-agent-for-extraction-apps">3. Use Document Extraction App Agent For Extraction Apps</h3>
+<p>Use this agent when the main job is to extract structured fields from documents.</p>
+<p>Example:</p>
+<pre><code class="language-text">Document Extraction App Agent, design an invoice and receipt extraction app. It should accept uploaded PDFs, extract vendor, date, subtotal, tax, total, and line items, and send low-confidence fields to human review.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Extraction app pattern.</li>
+<li>Model selection rationale.</li>
+<li>Input contract.</li>
+<li>Output schema.</li>
+<li>Configuration contract.</li>
+<li>Confidence and review policy.</li>
+<li>Validation plan.</li>
+<li>Security and privacy notes.</li>
+<li>Implementation handoff.</li>
+<li>Missing inputs.</li>
+</ol>
+<p>Use it for:</p>
+<ul>
+<li>Invoice extraction.</li>
+<li>Receipt extraction.</li>
+<li>Form extraction.</li>
+<li>ID or tax document extraction.</li>
+<li>Custom field extraction.</li>
+<li>Custom classification.</li>
+<li>Composed model routing.</li>
+<li>Human review for low-confidence fields.</li>
+</ul>
+<h3 id="use-document-knowledge-pipeline-agent-for-search-or-rag">4. Use Document Knowledge Pipeline Agent For Search Or RAG</h3>
+<p>Use this agent when extracted content must become searchable or used for grounded answers.</p>
+<p>Example:</p>
+<pre><code class="language-text">Document Knowledge Pipeline Agent, design a searchable policy document pipeline using Document Intelligence and Azure AI Search. Preserve page-level citations and support RAG answers grounded in source documents.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Pipeline pattern.</li>
+<li>Extraction-to-index flow.</li>
+<li>Normalized document schema.</li>
+<li>Search/RAG contract.</li>
+<li>Citation and confidence policy.</li>
+<li>Configuration contract.</li>
+<li>Validation plan.</li>
+<li>Monitoring and operations notes.</li>
+<li>Implementation handoff.</li>
+<li>Missing inputs.</li>
+</ol>
+<p>Use it for:</p>
+<ul>
+<li>Document-to-search indexing.</li>
+<li>Knowledge mining pipelines.</li>
+<li>Searchable metadata enrichment.</li>
+<li>RAG over PDFs or scanned documents.</li>
+<li>Page-level citations.</li>
+<li>Batch document analysis.</li>
+<li>Custom skill bridges.</li>
+<li>Reprocessing and retry workflows.</li>
+</ul>
+<h3 id="bring-in-support-agents">5. Bring In Support Agents</h3>
+<p>Use these agents when the Document Intelligence design needs more detail:</p>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Endpoint, <code>.env</code>, local login, managed identity</td>
+<td>Auth Config Agent</td>
+</tr>
+<tr>
+<td>Data storage, retention, audit records</td>
+<td>Data &amp; Storage Design Agent</td>
+</tr>
+<tr>
+<td>Review queue, exception handling, confidence UX</td>
+<td>UX &amp; Human Workflow Agent</td>
+</tr>
+<tr>
+<td>Sample documents, mocks, acceptance checks</td>
+<td>Test &amp; Evaluation Strategy Agent</td>
+</tr>
+<tr>
+<td>PII, RBAC, threat model, compliance controls</td>
+<td>Security &amp; Compliance Agent</td>
+</tr>
+<tr>
+<td>Responsible AI, privacy, safety review</td>
+<td>Responsible AI Safety Agent</td>
+</tr>
+<tr>
+<td>Azure AI Search indexing and enrichment</td>
+<td>Knowledge Mining Search Orchestrator</td>
+</tr>
+<tr>
+<td>Retrieval, grounding, citations, answer policy</td>
+<td>RAG Search App Agent</td>
+</tr>
+<tr>
+<td>Telemetry, quality signals, alerts</td>
+<td>Monitoring &amp; Evaluation Agent</td>
+</tr>
+<tr>
+<td>Runbooks, rollback, support handoff</td>
+<td>Operations Readiness Agent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="track-the-plan-before-editing-files">6. Track The Plan Before Editing Files</h3>
+<p>Use the planning companion when the design is ready but you do not want code changes yet:</p>
+<pre><code class="language-text">Application Planning Companion Agent, track the implementation steps, owners, open questions, and validation checks for this Document Intelligence app. Do not run commands.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Current step.</li>
+<li>Decisions made.</li>
+<li>Owner agents.</li>
+<li>Open questions.</li>
+<li>Validation checks.</li>
+<li>Next handoff.</li>
+</ol>
+<h3 id="execute-only-approved-steps">7. Execute Only Approved Steps</h3>
+<p>Use the implementation agent only when you have a bounded task that should edit files or run commands:</p>
+<pre><code class="language-text">Application Implementation Validation Agent, execute the approved setup step, edit only the named files, run validation, and summarize evidence.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Files changed.</li>
+<li>Commands run.</li>
+<li>Validation result.</li>
+<li>Evidence summary.</li>
+<li>Remaining issues.</li>
+</ol>
+<h2 id="common-starting-prompts">Common Starting Prompts</h2>
+<p>Learn prebuilt models:</p>
+<pre><code class="language-text">Document Intelligence Training Agent, teach me prebuilt Read, Layout, invoice, and receipt models. Give me checkpoints and application follow-ups.
+</code></pre>
+<p>Design extraction:</p>
+<pre><code class="language-text">Document Extraction App Agent, design a form extraction app for customer onboarding packets. Include custom classification, field schema, review policy, and validation plan.
+</code></pre>
+<p>Design search/RAG:</p>
+<pre><code class="language-text">Document Knowledge Pipeline Agent, design a document-to-search pipeline for policies and procedures. Include normalized schema, chunking, citations, Azure AI Search fields, and reprocessing policy.
+</code></pre>
+<p>Coordinate the whole app:</p>
+<pre><code class="language-text">Azure AI Application Orchestrator, design a complete Document Intelligence solution for uploaded contracts. Route to the right Document Intelligence, search, auth, data, UX, security, and validation agents.
+</code></pre>
+<h2 id="safety-and-grounding-rules">Safety And Grounding Rules</h2>
+<p>All Document Intelligence agents should follow these rules:</p>
+<ol>
+<li>Do not invent model IDs, supported fields, confidence thresholds, resource names, endpoints, schemas, or test results.</li>
+<li>Separate verified facts from assumptions and open questions.</li>
+<li>Use Microsoft Learn, local lab files, registry entries, command output, or user-provided details as evidence.</li>
+<li>Do not expose sensitive document contents in summaries unless safe sample data was explicitly provided.</li>
+<li>Use human review for low-confidence or high-risk document extraction.</li>
+<li>Preserve citations and source metadata when building search or RAG workflows.</li>
+</ol>
+<h2 id="quick-decision-guide">Quick Decision Guide</h2>
+<table>
+<thead>
+<tr>
+<th>If you want to...</th>
+<th>Start with...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Learn Document Intelligence</td>
+<td>Document Intelligence Training Agent</td>
+</tr>
+<tr>
+<td>Choose the right Document Intelligence route</td>
+<td>Document Intelligence Orchestrator</td>
+</tr>
+<tr>
+<td>Extract fields from documents</td>
+<td>Document Extraction App Agent</td>
+</tr>
+<tr>
+<td>Configure a general document processing blueprint</td>
+<td>Document Processing App Agent</td>
+</tr>
+<tr>
+<td>Build search, knowledge mining, or RAG over documents</td>
+<td>Document Knowledge Pipeline Agent</td>
+</tr>
+<tr>
+<td>Turn the design into a step-by-step plan</td>
+<td>Application Planning Companion Agent</td>
+</tr>
+<tr>
+<td>Edit files and run validation</td>
+<td>Application Implementation Validation Agent</td>
+</tr>
+</tbody>
+</table>
+
+    </article>
+  </main>
+</body>
+</html>

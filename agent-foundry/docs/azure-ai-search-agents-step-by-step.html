@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azure AI Agent Foundry Azure AI Search Agents</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cp-bg);
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--cp-link); }
+    .shell { max-width: 1040px; margin: 0 auto; padding: 32px; }
+    .guide {
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: 0 0 2px var(--cp-border), 0 1px 2px var(--cp-border);
+      padding: 32px;
+    }
+    .source-link { margin-bottom: 24px; color: var(--cp-text-soft); }
+    h1, h2, h3 { color: var(--cp-text); letter-spacing: 0; }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1; }
+    h2 { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--cp-border); }
+    h3 { margin-top: 28px; }
+    p, li { color: var(--cp-text-muted); line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; overflow: auto; display: block; }
+    th, td { border: 1px solid var(--cp-border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: var(--cp-surface-soft); color: var(--cp-text); }
+    code { font-family: Consolas, "Courier New", Courier, monospace; color: var(--cp-text); }
+    pre {
+      background: var(--cp-bg-elevated);
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      overflow: auto;
+      padding: 14px;
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 16px; }
+      .guide { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <article class="guide">
+      <p class="source-link">Rendered from <a href="azure-ai-search-agents-step-by-step.md">azure-ai-search-agents-step-by-step.md</a></p>
+<h1 id="azure-ai-search-agents-step-by-step">Azure AI Search Agents Step By Step</h1>
+<p>Use this guide when you want to learn Azure AI Search, choose the right Search-focused application agent, or start from a prebuilt reconfigurable Search agent.</p>
+<p>Primary Microsoft Learn source: <a href="https://learn.microsoft.com/azure/search/search-what-is-azure-search">https://learn.microsoft.com/azure/search/search-what-is-azure-search</a>.</p>
+<h2 id="what-was-added">What Was Added</h2>
+<p>Azure AI Agent Foundry now includes three focused Azure AI Search agents:</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure AI Search Training Agent</td>
+<td>You want a guided learning route through Azure AI Search concepts, quickstarts, classic search, vector/hybrid search, multimodal search, AI enrichment, agentic retrieval, security, pricing, and monitoring.</td>
+</tr>
+<tr>
+<td>Classic Search App Agent</td>
+<td>You want to design a direct index-first search application with indexes, indexers, data sources, skillsets, filters, facets, autocomplete, synonyms, semantic ranking, vector/hybrid search, and relevance tuning.</td>
+</tr>
+<tr>
+<td>Agentic Retrieval App Agent</td>
+<td>You want to design an app that uses Azure AI Search agentic retrieval with knowledge bases, knowledge sources, query planning, query decomposition, reasoning effort, references, activity logs, and optional answer synthesis.</td>
+</tr>
+</tbody>
+</table>
+<p>The existing Knowledge Mining Search Orchestrator remains the broad router. The existing RAG Search App Agent remains the right choice for conventional RAG patterns where the application owns prompt assembly, grounding behavior, citation checks, and generated answers over search results.</p>
+<h2 id="azure-ai-search-prebuilt-reconfigurable-category">Azure AI Search Prebuilt Reconfigurable Category</h2>
+<p>Use this category when you want a configurable baseline agent that covers common use cases but can be adapted for user-specific requirements and special cases.</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Azure AI Search Reconfigurable Orchestrator</td>
+<td>You want help choosing between classic search, RAG search, and agentic retrieval before configuring a reusable baseline.</td>
+</tr>
+<tr>
+<td>Classic Search Reconfigurable Agent</td>
+<td>You want a configurable direct index-first search baseline with schema, ingestion, query features, relevance, security, and validation reconfiguration points.</td>
+</tr>
+<tr>
+<td>RAG Search Reconfigurable Agent</td>
+<td>You want a configurable RAG baseline over Azure AI Search with retrieval, chunking, embeddings, prompt assembly, citations, no-answer behavior, and evaluation.</td>
+</tr>
+<tr>
+<td>Agentic Retrieval Reconfigurable Agent</td>
+<td>You want a configurable agentic retrieval baseline with knowledge bases, knowledge sources, source mode, query planning, reasoning effort, synthesis, references, and activity logs.</td>
+</tr>
+</tbody>
+</table>
+<p>The reconfigurable agents are best when the user wants a reusable starting point. The existing Classic Search App Agent, RAG Search App Agent, and Agentic Retrieval App Agent remain useful when the user wants a narrower application blueprint.</p>
+<p>For a deeper explanation of how these baselines adapt to user requirements, see <a href="reconfigurable-agents.md">Reconfigurable Agents</a>. For a new-user manual with concrete prompts and follow-up steps, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For a full mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
+<h2 id="how-to-choose-the-right-agent">How To Choose The Right Agent</h2>
+<p>Use Azure AI Search Training Agent when you are learning.</p>
+<p>Use Classic Search App Agent when your app should send a query directly to a known search index and receive ranked search results.</p>
+<p>Use RAG Search App Agent when your app retrieves chunks from Azure AI Search and then uses a model or agent to generate a grounded answer.</p>
+<p>Use Agentic Retrieval App Agent when Azure AI Search should manage a knowledge base over one or more knowledge sources, plan/decompose the query, retrieve in parallel, rerank/merge results, and return references or synthesized answers for agent consumption.</p>
+<p>Use Document Knowledge Pipeline Agent when Document Intelligence output must be normalized, chunked, enriched, and sent into Azure AI Search before retrieval.</p>
+<h2 id="how-to-use-these-agents">How To Use These Agents</h2>
+<p>Start with the agent name, then describe the scenario, data sources, user outcome, security constraints, and the decision you need. The agents are designed to split Azure AI Search work into the right lane early, so classic search, conventional RAG, and agentic retrieval do not get blended together.</p>
+<p>Use Azure AI Search Training Agent when you are learning or deciding what Search capability fits.</p>
+<pre><code class="language-text">Azure AI Search Training Agent, help me understand classic search, RAG, and agentic retrieval. My scenario is an internal policy assistant over SharePoint and indexed PDFs.
+</code></pre>
+<p>Use Classic Search App Agent when the app should query Azure AI Search directly and return ranked results. This is for search boxes, filters, facets, autocomplete, synonyms, geo-search, semantic ranking, vector search, hybrid search, index schema design, ingestion, and relevance tuning.</p>
+<pre><code class="language-text">Classic Search App Agent, design a product catalog search app. I need keyword search, filters, facets, autocomplete, synonyms, semantic ranking, vector search, and secure access by product region.
+</code></pre>
+<p>Use Agentic Retrieval App Agent when Azure AI Search should act as the retrieval planner for an AI agent: knowledge bases, knowledge sources, query planning, query decomposition, parallel retrieval, semantic reranking, references, activity logs, reasoning effort, and optional answer synthesis.</p>
+<pre><code class="language-text">Agentic Retrieval App Agent, design an enterprise assistant using Azure AI Search agentic retrieval over SharePoint and indexed policy documents. I need permission-aware access, references, activity logs, no-answer behavior, and validation checks.
+</code></pre>
+<p>Use RAG Search App Agent when your application owns the RAG flow: retrieve chunks from Azure AI Search, assemble prompts, generate grounded answers, enforce citation/no-answer behavior, and evaluate answer quality.</p>
+<pre><code class="language-text">RAG Search App Agent, design a support assistant over indexed help articles. I need hybrid retrieval, chunking, citations, grounded answers, and unsupported-question behavior.
+</code></pre>
+<p>Use Knowledge Mining Search Orchestrator when you are not sure which Search-focused agent to choose.</p>
+<pre><code class="language-text">Knowledge Mining Search Orchestrator, route this scenario to the right agent: I have internal documents, users ask questions in chat, and I need citations plus permission-aware retrieval.
+</code></pre>
+<p>Use Azure AI Search Reconfigurable Orchestrator when you want the new prebuilt reconfigurable category.</p>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, help me choose and configure a reusable Search agent baseline. My app has product search, support articles, user-specific access, citations for generated answers, and special cases for region-based filtering.
+</code></pre>
+<h2 id="beginner-flow">Beginner Flow</h2>
+<ol>
+<li>Start with Azure AI Search Training Agent.</li>
+<li>Ask it to explain classic search vs. agentic retrieval.</li>
+<li>Decide whether your scenario is search results, conventional RAG, or agentic retrieval.</li>
+<li>If you want a reusable configurable baseline, move to Azure AI Search Reconfigurable Orchestrator.</li>
+<li>If you want a narrow blueprint, move to Classic Search App Agent, RAG Search App Agent, or Agentic Retrieval App Agent.</li>
+<li>Define the configuration contract.</li>
+<li>Bring in Auth Config Agent for endpoint and identity details.</li>
+<li>Bring in Security &amp; Compliance Agent if access control, Private Link, document-level permissions, or compliance matters.</li>
+<li>Bring in Monitoring &amp; Evaluation Agent for retrieval quality, logs, metrics, alerts, and evaluation checks.</li>
+<li>Use Application Planning Companion Agent to turn the design into implementation steps.</li>
+<li>Use Application Implementation Validation Agent only when an approved step needs file edits, terminal commands, tests, local servers, or validation evidence.</li>
+</ol>
+<h2 id="learning-prompt">Learning Prompt</h2>
+<pre><code class="language-text">Azure AI Search Training Agent, walk me through Azure AI Search from the Microsoft Learn introduction. Explain classic search, indexing, querying, vector search, hybrid search, multimodal search, AI enrichment, and agentic retrieval. Give me one checkpoint at a time and wait before continuing.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Learning goal.</li>
+<li>Source references.</li>
+<li>Step-by-step route.</li>
+<li>Current checkpoint.</li>
+<li>Classic search vs. agentic retrieval decision note.</li>
+<li>Application follow-up agent.</li>
+</ol>
+<h2 id="classic-search-app-prompt">Classic Search App Prompt</h2>
+<pre><code class="language-text">Classic Search App Agent, design a direct Azure AI Search experience for a product catalog. The app needs keyword search, filters, facets, autocomplete, relevance tuning, and secure access. Identify the index schema, ingestion method, query pattern, configuration contract, validation checks, and handoffs.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Search application route.</li>
+<li>Index and ingestion plan.</li>
+<li>Query and relevance plan.</li>
+<li>Configuration contract.</li>
+<li>Security and operations notes.</li>
+<li>Validation checks.</li>
+<li>Handoffs.</li>
+</ol>
+<p>Use this agent when the app primarily returns search results, not generated answers.</p>
+<h2 id="reconfigurable-search-prompt">Reconfigurable Search Prompt</h2>
+<pre><code class="language-text">Azure AI Search Reconfigurable Orchestrator, choose and configure a prebuilt Search agent baseline for my requirements. I need [search results / grounded answers / agentic retrieval], my data sources are [sources], my users need [experience], and my constraints are [security, freshness, latency, cost, compliance].
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Recommended reconfigurable agent.</li>
+<li>Route decision and why.</li>
+<li>Common reconfiguration profile.</li>
+<li>Pattern-specific configuration gaps.</li>
+<li>Security, validation, cost, and operations checks.</li>
+<li>Handoffs.</li>
+</ol>
+<p>Use this route when you want a reusable baseline that can be adapted for special cases instead of a one-off application blueprint.</p>
+<h2 id="agentic-retrieval-app-prompt">Agentic Retrieval App Prompt</h2>
+<pre><code class="language-text">Agentic Retrieval App Agent, design an Azure AI Search agentic retrieval app for an enterprise assistant over SharePoint and indexed policy documents. I need knowledge bases, knowledge sources, permission-aware access, references, activity logs, no-answer behavior, and evaluation checks.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Agentic retrieval fit decision.</li>
+<li>Knowledge base and knowledge source plan.</li>
+<li>Indexed vs. remote source decision.</li>
+<li>Reasoning effort and answer synthesis notes.</li>
+<li>Configuration contract.</li>
+<li>Grounding, references, and activity log validation.</li>
+<li>Security, cost, region, and operations checks.</li>
+<li>Handoffs.</li>
+</ol>
+<p>Use this agent when the search service should orchestrate retrieval for an agent instead of only returning direct index results.</p>
+<h2 id="conventional-rag-prompt">Conventional RAG Prompt</h2>
+<pre><code class="language-text">RAG Search App Agent, design a RAG assistant over indexed support articles. I need hybrid retrieval, chunking, citations, no-answer behavior, and evaluation checks for grounded answers.
+</code></pre>
+<p>Expected output:</p>
+<ol>
+<li>Index and retrieval plan.</li>
+<li>Configuration contract.</li>
+<li>Grounding and citation pattern.</li>
+<li>Evaluation checks.</li>
+<li>Failure behavior.</li>
+<li>Handoffs.</li>
+</ol>
+<p>Use this agent when your application or agent owns answer generation over retrieved search results.</p>
+<h2 id="configuration-cheat-sheet">Configuration Cheat Sheet</h2>
+<p>Azure AI Search Reconfigurable Orchestrator asks for:</p>
+<pre><code class="language-text">USER_OUTCOME
+DATA_SOURCES
+SOURCE_FRESHNESS
+RETRIEVAL_PATTERN
+SECURITY_MODEL
+GROUNDING_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>Classic Search App Agent asks for:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+SEARCH_INDEX
+DATA_SOURCES
+INGESTION_MODE
+INDEX_SCHEMA
+QUERY_FEATURES
+RELEVANCE_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>Agentic Retrieval App Agent asks for:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+KNOWLEDGE_BASE
+KNOWLEDGE_SOURCES
+SOURCE_MODE
+RETRIEVAL_REASONING_EFFORT
+QUERY_PLANNING_MODE
+ANSWER_SYNTHESIS
+GROUNDING_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>RAG Search App Agent asks for:</p>
+<pre><code class="language-text">SEARCH_ENDPOINT
+SEARCH_INDEX
+RETRIEVAL_MODE
+EMBEDDING_DEPLOYMENT
+GROUNDING_POLICY
+</code></pre>
+<h2 id="important-guardrails">Important Guardrails</h2>
+<p>Do not invent search endpoints, index names, knowledge base names, knowledge source names, regions, model deployments, pricing, quotas, or feature support.</p>
+<p>Treat preview features, Serverless tier constraints, region support, billing, and limits as things to verify before implementation.</p>
+<p>Always validate retrieval quality. For generated answers, validate citations and unsupported-question behavior. For agentic retrieval, also validate references, activity logs, reasoning effort, latency, cost, and source coverage.</p>
+<h2 id="next-prompt">Next Prompt</h2>
+<p>Start with:</p>
+<pre><code class="language-text">Azure AI Search Training Agent, help me decide whether my scenario should use classic search, RAG, or agentic retrieval. My scenario is: [describe your app].
+</code></pre>
+
+    </article>
+  </main>
+</body>
+</html>

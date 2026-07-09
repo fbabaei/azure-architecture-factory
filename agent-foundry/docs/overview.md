@@ -64,85 +64,10 @@ Shared specialists handle concerns that appear across many Azure AI solutions:
 
 - Foundry project and deployment integration
 - Authentication and environment configuration
-- Secure knowledge access across Storage, Azure AI Search, Foundry IQ, and Foundry agents
 - Responsible AI, safety, and moderation
 - Security posture, threat modeling, compliance readiness, and data protection
 - Monitoring, telemetry, tracing, alerting, evaluation, and quality signals
 - Operations readiness, runbooks, rollback, incident response, quota, and cost guardrails
-
-#### Azure Knowledge Access Architect Fit
-
-**Azure Knowledge Access Architect** is a shared platform specialist. It is not a top-level orchestrator, learning route, or application blueprint. Use it when the hard part is the end-to-end knowledge access path across Azure Storage, Azure AI Search, Foundry IQ, Foundry agents, identity, RBAC, firewall rules, private endpoints, private DNS, and validation.
-
-It fills the gap between existing Search, RAG, Foundry, auth, and security agents:
-
-- **Knowledge Mining Search Orchestrator** still owns broad Azure AI Search and knowledge mining routing, indexing, enrichment, skillsets, knowledge stores, and learning routes.
-- **RAG Search App Agent** still owns app-level RAG behavior: retrieval contracts, grounding flow, citation pattern, no-answer behavior, and evaluation checks.
-- **Foundry Integration Agent** still owns Foundry project endpoints, model deployments, deployment names, quota, and project-vs-resource endpoint details.
-- **Auth Config Agent** still owns `.env`, endpoint validation, `DefaultAzureCredential`, local and deployed auth, and credential configuration.
-- **Security & Compliance Agent** still owns broader threat modeling, compliance posture, data protection, privacy, and audit readiness.
-- **Application Implementation Validation Agent** still owns approved edits, commands, smoke tests, and validation evidence.
-
-Use **Azure Knowledge Access Architect** for requests like:
-
-```text
-I want to connect Storage, Azure AI Search, and a Foundry agent securely.
-```
-
-```text
-Should I reuse my existing Search service or create a new one?
-```
-
-```text
-Walk me through networking, RBAC, firewall rules, private endpoints, and DNS for Search and Storage.
-```
-
-```text
-Should this be classic search, vector search, hybrid search, multimodal search, or agentic retrieval?
-```
-
-```text
-Why can't my Search indexer read my Storage account?
-```
-
-Example prompts:
-
-```text
-I want to add search to my app, but I am starting from scratch. Ask me the five starting questions, then help me choose the right Search pattern, decide whether to reuse or create Azure resources, and walk through ingestion, networking, RBAC, querying, and validation step by step.
-```
-
-```text
-I need a Foundry agent to answer questions from PDF and image-heavy documents in Azure Storage. We may already have a Storage account and Azure AI Search service in the subscription. Start with read-only resource discovery, then ask whether to reuse or create resources. Route the scenario between classic, vector/hybrid, multimodal, and agentic retrieval. After that, walk me through networking, RBAC, private endpoints, DNS, and validation one hop at a time. Do not make any Azure changes without explicit confirmation.
-```
-
-```text
-Use Advisory Walkthrough Mode. Walk through every access hop from the Foundry agent to Azure AI Search, from Search to Storage, and from Search to the embedding model. Include RBAC, network route, temporary setup versus production hardening, and validation checks for each hop.
-```
-
-```text
-Given these documents and requirements, choose the simplest Azure AI Search pattern that works. Explain whether classic search, vector search, hybrid search, multimodal search, or agentic retrieval is appropriate, and identify which existing resources should be reused before creating anything new.
-```
-
-```text
-Draft a Bicep module outline for the chosen Storage, Azure AI Search, private endpoint, private DNS, managed identity, and RBAC resources. Do not deploy it. Mark each setting as required now, temporary setup only, production hardening, or optional.
-```
-
-Recommended routing shape:
-
-```text
-User has a broad knowledge-access request
--> Azure AI Agent Foundry Orchestrator
--> Azure Knowledge Access Architect
--> if needed:
-	-> Knowledge Mining Search Orchestrator for indexing and enrichment
-	-> RAG Search App Agent for app-level RAG design
-	-> Foundry Integration Agent for Foundry project and model settings
-	-> Auth Config Agent for credentials, endpoint, and RBAC detail
-	-> Security & Compliance Agent for broader security review
-	-> Application Implementation Validation Agent for approved execution
-```
-
-In short, this agent is the cross-service knowledge access planner. It helps users choose the retrieval pattern, decide whether to reuse or create Azure resources, walk access hops one by one, and separate temporary setup from production hardening.
 
 ### Application Blueprints
 
@@ -172,6 +97,8 @@ The registry file `.github/agent-zone/ai-agent-index.json` is the machine-readab
 The catalog file `.github/agent-zone/catalog.md` is the human-readable browse view.
 
 The browser file `browser/index.html` is the local visual catalog. It embeds the MVP registry data so it can be opened directly from disk, while the JSON registry remains the authoritative machine-readable source for automation.
+
+Prebuilt reconfigurable agents are documented in [Reconfigurable Agents](reconfigurable-agents.md). They use shared requirements profiles and pattern-specific configuration contracts to adapt baseline capabilities to user requirements.
 
 The prompt files in `.github/prompts/` provide the user-facing entry points:
 
