@@ -836,7 +836,7 @@
 
         .foundry-runner-grid {
             display: grid;
-            grid-template-columns: minmax(180px, 0.35fr) minmax(260px, 1fr);
+            grid-template-columns: repeat(2, minmax(320px, 1fr));
             gap: 0.75rem;
             align-items: start;
         }
@@ -3105,9 +3105,9 @@
                                 <option value="learning-plan">Learning plan</option>
                             </select>
                         </label>
-                        <label>
+                        <label style="grid-column: 1 / -1;">
                             Title
-                            <input id="agent-foundry-run-title" type="text" maxlength="120" placeholder="AI support assistant implementation" />
+                            <input id="agent-foundry-run-title" type="text" maxlength="120" placeholder="AI support assistant implementation" title="" />
                         </label>
                         <label style="grid-column: 1 / -1;">
                             Diagram file
@@ -6470,6 +6470,7 @@
             if (sourceType) sourceType.value = 'brd-prd';
             if (titleBox && !titleBox.value.trim()) {
                 titleBox.value = 'Reconfigurable Azure AI Search agent';
+                titleBox.title = titleBox.value;
             }
             if (profileBox && !profileBox.value.trim()) {
                 profileBox.value = [
