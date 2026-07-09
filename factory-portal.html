@@ -873,6 +873,133 @@
             line-height: 1.45;
         }
 
+        .foundry-flow-guide {
+            margin-bottom: 0.85rem;
+            border: 1px solid #bfd8ee;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .foundry-flow-guide summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.75rem 0.85rem;
+            cursor: pointer;
+            color: var(--primary-dark);
+            font-size: 0.88rem;
+            font-weight: 800;
+            list-style: none;
+            user-select: none;
+        }
+
+        .foundry-flow-guide summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .foundry-flow-guide summary::before {
+            content: '▸';
+            color: var(--primary);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .foundry-flow-guide[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .foundry-flow-guide summary span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .foundry-flow-guide summary small {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .foundry-flow-steps {
+            display: grid;
+            gap: 0.45rem;
+            margin: 0;
+            padding: 0 0.85rem 0.85rem;
+            list-style: none;
+            counter-reset: foundry-flow-step;
+        }
+
+        .foundry-flow-step {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.65rem;
+            align-items: start;
+            padding: 0.58rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f8fafc;
+            color: var(--text-secondary);
+            counter-increment: foundry-flow-step;
+        }
+
+        .foundry-flow-step::before {
+            content: counter(foundry-flow-step);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.55rem;
+            height: 1.55rem;
+            border-radius: 999px;
+            background: #e5edf5;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .foundry-flow-step.done {
+            border-color: #badbcc;
+            background: #f3fbf6;
+            color: #20603d;
+        }
+
+        .foundry-flow-step.done::before {
+            content: '✓';
+            background: #2f855a;
+            color: #ffffff;
+        }
+
+        .foundry-flow-step.current {
+            border-color: var(--primary);
+            background: #eef6ff;
+            color: var(--text-primary);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.08);
+        }
+
+        .foundry-flow-step.current::before {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .foundry-flow-step.locked {
+            opacity: 0.7;
+        }
+
+        .foundry-flow-step strong {
+            display: block;
+            color: inherit;
+            font-size: 0.82rem;
+            margin-bottom: 0.12rem;
+        }
+
+        .foundry-flow-step small {
+            display: block;
+            color: inherit;
+            font-size: 0.74rem;
+            line-height: 1.35;
+        }
+
         .foundry-runner-actions {
             display: flex;
             flex-wrap: wrap;
@@ -3105,6 +3232,13 @@
             </div>
             <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
                 <form onsubmit="return submitAgentFoundryRun(event)">
+                    <details id="agent-foundry-flow-guide" class="foundry-flow-guide" open>
+                        <summary>
+                            <span>End-to-end portal flow</span>
+                            <small id="agent-foundry-flow-next">Next: enter requirements and configuration.</small>
+                        </summary>
+                        <ol id="agent-foundry-flow-steps" class="foundry-flow-steps" aria-live="polite"></ol>
+                    </details>
                     <div class="foundry-runner-grid">
                         <label>
                             Reconfigurable agent
@@ -4758,6 +4892,46 @@
         let currentAgentFoundryRunId = null;
         let currentAgentFoundryDiagramFileName = null;
         let currentAgentFoundryRecommendation = null;
+        let currentAgentFoundryFlowStage = 'prepare';
+
+        const AGENT_FOUNDRY_FLOW_STEPS = [
+            {
+                id: 'prepare',
+                title: 'Enter requirements and configuration',
+                detail: 'Paste the source text, pick the input type, and describe data sources, retrieval mode, security, grounding, and validation needs.',
+                next: 'Next: click Recommend Agent, or choose an agent manually.'
+            },
+            {
+                id: 'recommend',
+                title: 'Choose the best-fit reconfigurable agent',
+                detail: 'Let the orchestrator recommend Classic Search, RAG Search, or Agentic Retrieval, then apply or override the recommendation.',
+                next: 'Next: click Create Plan.'
+            },
+            {
+                id: 'plan',
+                title: 'Create the approval plan',
+                detail: 'The portal builds the selected-agent plan, configuration contract, owner-agent steps, and required evidence.',
+                next: 'Next: review the plan and click Approve Execution Package.'
+            },
+            {
+                id: 'approve',
+                title: 'Approve the execution package',
+                detail: 'Approval records the plan and evidence package before any execution action is enabled.',
+                next: 'Next: click Run Agent.'
+            },
+            {
+                id: 'run',
+                title: 'Run the approved agent package',
+                detail: 'The portal runs the approved package through the local deterministic adapter and records execution output.',
+                next: 'Next: export the VS Code package or generate the runtime package.'
+            },
+            {
+                id: 'package',
+                title: 'Export or generate a runtime package',
+                detail: 'Download the VS Code/Copilot agent handoff or the deployable FastAPI runtime starter for use outside the portal.',
+                next: 'Next: use the downloaded package in VS Code or deploy the runtime starter.'
+            }
+        ];
 
         const diagramModal = document.getElementById('diagram-modal');
         const diagramFrame = document.getElementById('diagram-frame');
@@ -6494,8 +6668,37 @@
             if (!panel) return false;
             const shouldOpen = forceOpen === null ? !panel.classList.contains('open') : Boolean(forceOpen);
             panel.classList.toggle('open', shouldOpen);
+            if (shouldOpen) updateAgentFoundryFlowGuide(currentAgentFoundryFlowStage);
             if (shouldOpen) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return false;
+        }
+
+        function getAgentFoundryFlowStageFromRun(run) {
+            const status = String(run?.status || '').toLowerCase();
+            if (status === 'planning_ready') return 'approve';
+            if (status === 'approved') return 'run';
+            if (status === 'completed') return 'package';
+            return currentAgentFoundryRecommendation?.recommendedAgent ? 'plan' : 'prepare';
+        }
+
+        function updateAgentFoundryFlowGuide(stage = null, run = null, options = {}) {
+            const stepsContainer = document.getElementById('agent-foundry-flow-steps');
+            const nextLabel = document.getElementById('agent-foundry-flow-next');
+            if (!stepsContainer) return;
+            const resolvedStage = stage || getAgentFoundryFlowStageFromRun(run);
+            currentAgentFoundryFlowStage = resolvedStage;
+            const currentIndex = Math.max(0, AGENT_FOUNDRY_FLOW_STEPS.findIndex(step => step.id === resolvedStage));
+            const handoffComplete = Boolean(options.handoffComplete);
+            stepsContainer.innerHTML = AGENT_FOUNDRY_FLOW_STEPS.map((step, index) => {
+                const state = index < currentIndex || (handoffComplete && step.id === 'package') ? 'done' : index === currentIndex ? 'current' : 'locked';
+                const stateText = state === 'done' ? 'Done' : state === 'current' ? 'Current' : 'Upcoming';
+                return `<li class="foundry-flow-step ${state}" aria-current="${state === 'current' ? 'step' : 'false'}"><div><strong>${escapeHtml(step.title)} · ${stateText}</strong><small>${escapeHtml(step.detail)}</small></div></li>`;
+            }).join('');
+            if (nextLabel) {
+                nextLabel.textContent = handoffComplete
+                    ? 'Flow complete: use the downloaded package outside the portal.'
+                    : AGENT_FOUNDRY_FLOW_STEPS[currentIndex]?.next || 'Next: continue the portal flow.';
+            }
         }
 
         function selectReconfigurableAgent(agentId) {
@@ -6520,6 +6723,7 @@
                 ].join('\n');
             }
             toggleAgentFoundryRunner(null, true);
+            updateAgentFoundryFlowGuide('prepare');
             return false;
         }
 
@@ -6555,6 +6759,7 @@
             const selectedAgent = document.getElementById('agent-foundry-selected-agent');
             if (!selectedAgent || !currentAgentFoundryRecommendation?.recommendedAgent) return false;
             selectedAgent.value = currentAgentFoundryRecommendation.recommendedAgent;
+            updateAgentFoundryFlowGuide('plan');
             setAgentFoundryStatus(`Recommendation applied: ${escapeHtml(currentAgentFoundryRecommendation.recommendedAgentName || currentAgentFoundryRecommendation.recommendedAgent)}.`, false);
             return false;
         }
@@ -6579,6 +6784,7 @@
                 const payload = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
                 renderAgentFoundryRecommendation(payload);
+                updateAgentFoundryFlowGuide('recommend');
                 setAgentFoundryStatus(`Recommended ${escapeHtml(payload.recommendedAgentName || payload.recommendedAgent)}. Apply it or keep your manual selection.`, false);
             } catch (error) {
                 setAgentFoundryStatus(`Error: ${escapeHtml(error.message)}`, true);
@@ -6667,6 +6873,7 @@
             if (exportButton) exportButton.disabled = !canExport;
             if (runtimeButton) runtimeButton.disabled = !canExport;
             renderAgentFoundryRecommendation(recommendation);
+            updateAgentFoundryFlowGuide(getAgentFoundryFlowStageFromRun(run), run);
 
             output.innerHTML = `
                 <h4>${escapeHtml(plan.title || run?.title || 'Agent Foundry run')}</h4>
@@ -6705,6 +6912,7 @@
                 return false;
             }
             if (createButton) createButton.disabled = true;
+            updateAgentFoundryFlowGuide('plan');
             setAgentFoundryStatus('<span class="loading"></span> Creating approval-gated agent plan...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_RUNS, {
@@ -6732,6 +6940,7 @@
             }
             const approveButton = document.getElementById('agent-foundry-approve-btn');
             if (approveButton) approveButton.disabled = true;
+            updateAgentFoundryFlowGuide('approve');
             setAgentFoundryStatus('<span class="loading"></span> Recording approval and evidence package...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_APPROVE(currentAgentFoundryRunId), {
@@ -6757,6 +6966,7 @@
             }
             const executeButton = document.getElementById('agent-foundry-execute-btn');
             if (executeButton) executeButton.disabled = true;
+            updateAgentFoundryFlowGuide('run');
             setAgentFoundryStatus('<span class="loading"></span> Running approved Agent Foundry package...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_EXECUTE(currentAgentFoundryRunId), {
@@ -6782,6 +6992,7 @@
             }
             const exportButton = document.getElementById('agent-foundry-export-btn');
             if (exportButton) exportButton.disabled = true;
+            updateAgentFoundryFlowGuide('package');
             setAgentFoundryStatus('<span class="loading"></span> Building export package...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_EXPORT(currentAgentFoundryRunId), {
@@ -6804,6 +7015,7 @@
                 link.click();
                 link.remove();
                 URL.revokeObjectURL(url);
+                updateAgentFoundryFlowGuide('package', null, { handoffComplete: true });
                 setAgentFoundryStatus(`Export package downloaded: ${escapeHtml(fileName)}.`, false);
             } catch (error) {
                 setAgentFoundryStatus(`Error: ${escapeHtml(error.message)}`, true);
@@ -6820,6 +7032,7 @@
             }
             const runtimeButton = document.getElementById('agent-foundry-runtime-btn');
             if (runtimeButton) runtimeButton.disabled = true;
+            updateAgentFoundryFlowGuide('package');
             setAgentFoundryStatus('<span class="loading"></span> Generating deployable runtime package...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_RUNTIME(currentAgentFoundryRunId), {
@@ -6842,6 +7055,7 @@
                 link.click();
                 link.remove();
                 URL.revokeObjectURL(url);
+                updateAgentFoundryFlowGuide('package', null, { handoffComplete: true });
                 setAgentFoundryStatus(`Runtime package downloaded: ${escapeHtml(fileName)}. Fill .env.example, run locally, or deploy the container to Azure.`, false);
             } catch (error) {
                 setAgentFoundryStatus(`Error: ${escapeHtml(error.message)}`, true);
