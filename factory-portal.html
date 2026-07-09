@@ -3093,6 +3093,7 @@
                                 <option value="rag-search-reconfigurable-agent">RAG Search Reconfigurable Agent</option>
                                 <option value="agentic-retrieval-reconfigurable-agent">Agentic Retrieval Reconfigurable Agent</option>
                             </select>
+                            <span class="foundry-runner-hint">Choose a specific agent, or let the portal route based on your source text and profile.</span>
                         </label>
                         <label>
                             Input type
@@ -3104,23 +3105,27 @@
                                 <option value="architecture-visio">Architecture diagram - Visio</option>
                                 <option value="learning-plan">Learning plan</option>
                             </select>
+                            <span class="foundry-runner-hint">Tell the planner what kind of evidence you are providing.</span>
                         </label>
                         <label style="grid-column: 1 / -1;">
                             Title
                             <input id="agent-foundry-run-title" type="text" maxlength="120" placeholder="AI support assistant implementation" title="" />
+                            <span class="foundry-runner-hint">Name this planning run so it is easy to recognize in the results list.</span>
                         </label>
                         <label style="grid-column: 1 / -1;">
                             Diagram file
                             <input id="agent-foundry-diagram-file" type="file" accept=".mmd,.mermaid,.drawio,.xml,.vsdx,.vsd" onchange="loadAgentFoundryDiagramFile(event)" />
-                            <span class="foundry-runner-hint">Mermaid and draw.io files are read into the source text. For Visio, add exported text, SVG/XML, or a short component/connector summary so the agents have evidence to work from.</span>
+                            <span class="foundry-runner-hint">Optional. Mermaid and draw.io files are read into Source text; for Visio, include exported text or a short component summary.</span>
                         </label>
                         <label style="grid-column: 1 / -1;">
                             Source text
                             <textarea id="agent-foundry-run-content" placeholder="Paste the BRD, PRD, Mermaid diagram, draw.io XML, Visio export/notes, architecture markdown, or learning objective. The portal creates an approval-gated plan with owner agents and evidence requirements."></textarea>
+                            <span class="foundry-runner-hint">Paste the requirement, architecture, diagram text, or learning goal the agents should plan from.</span>
                         </label>
                         <label style="grid-column: 1 / -1;">
                             Reconfiguration profile
                             <textarea id="agent-foundry-configuration-profile" placeholder="Describe the selected agent configuration: data sources, search index, retrieval mode, embeddings, chunking, grounding/citation rules, security model, freshness needs, special cases, and validation checks."></textarea>
+                            <span class="foundry-runner-hint">Describe how to tailor the agent: data sources, retrieval mode, security, citations, freshness, and validation.</span>
                         </label>
                     </div>
                     <div class="foundry-runner-actions">
