@@ -1705,6 +1705,235 @@ The package is not a hosted service by itself. To turn it into a hosted runtime,
             archive.writestr(f".github/agents/{selected_agent}.agent.md", original_agent)
     return f"{package_slug}-agent-package.zip", buffer.getvalue()
 
+
+def _build_agent_foundry_runtime_package(run: dict) -> tuple[str, bytes]:
+    """Build a deployable starter runtime package for a completed agent run."""
+    agent_payload = run.get("agentFoundry") if isinstance(run.get("agentFoundry"), dict) else {}
+    plan = agent_payload.get("plan") if isinstance(agent_payload.get("plan"), dict) else {}
+    result = run.get("result") if isinstance(run.get("result"), dict) else {}
+    execution = result.get("execution") if isinstance(result.get("execution"), dict) else agent_payload.get("execution")
+    if not isinstance(execution, dict):
+        execution = {}
+
+    selected_agent = plan.get("selectedAgent") or agent_payload.get("selectedAgent") or "azure-ai-search-reconfigurable-orchestrator"
+    selected_agent_info = RECONFIGURABLE_AGENT_OPTIONS.get(selected_agent, RECONFIGURABLE_AGENT_OPTIONS["azure-ai-search-reconfigurable-orchestrator"])
+    title = str(plan.get("title") or agent_payload.get("title") or "agent-foundry-runtime")
+    package_slug = _sanitize_project_slug(re.sub(r"[^a-z0-9-]+", "-", title.lower()).strip("-")) or "agent-foundry-runtime"
+    generated_at = _utcnow_iso()
+    config = {
+        "schemaVersion": "1.0",
+        "generatedAt": generated_at,
+        "source": "Azure Architecture Factory Agent Foundry portal",
+        "runId": run.get("id"),
+        "title": title,
+        "agent": {
+            "id": selected_agent,
+            "name": selected_agent_info.get("name"),
+            "summary": selected_agent_info.get("summary"),
+        },
+        "configurationProfile": plan.get("configurationProfile") or agent_payload.get("configurationProfile") or "",
+        "configurationContract": plan.get("configurationContract") or selected_agent_info.get("contract") or [],
+        "configuredFields": execution.get("configuredFields") or [],
+        "recommendedNextActions": execution.get("recommendedNextActions") or [],
+        "validationChecklist": execution.get("validationChecklist") or [],
+        "guardrails": plan.get("guardrails") or [],
+    }
+    config_json = json.dumps(config, indent=2, ensure_ascii=False)
+    app_py = '''import json
+import os
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+
+CONFIG_PATH = Path(__file__).with_name("agent.config.json")
+AGENT_CONFIG = json.loads(CONFIG_PATH.read_text(encoding="utf-8")) if CONFIG_PATH.exists() else {}
+
+
+class ChatRequest(BaseModel):
+    question: str = Field(..., min_length=1)
+    top: int = Field(default=5, ge=1, le=20)
+
+
+app = FastAPI(title=AGENT_CONFIG.get("title") or "Agent Foundry Runtime")
+
+
+def _env(name: str, required: bool = False) -> str:
+    value = os.environ.get(name, "").strip()
+    if required and not value:
+        raise HTTPException(status_code=500, detail=f"Missing required setting: {name}")
+    return value
+
+
+def _credential_or_key_header() -> Any:
+    search_key = _env("AZURE_SEARCH_KEY")
+    if search_key:
+        from azure.core.credentials import AzureKeyCredential
+
+        return AzureKeyCredential(search_key)
+    from azure.identity import DefaultAzureCredential
+
+    return DefaultAzureCredential()
+
+
+def _search(question: str, top: int) -> list[dict[str, Any]]:
+    endpoint = _env("AZURE_SEARCH_ENDPOINT", required=True)
+    index_name = _env("AZURE_SEARCH_INDEX", required=True)
+    from azure.search.documents import SearchClient
+
+    client = SearchClient(endpoint=endpoint, index_name=index_name, credential=_credential_or_key_header())
+    results = client.search(search_text=question, top=top, include_total_count=False)
+    documents: list[dict[str, Any]] = []
+    for item in results:
+        doc = dict(item)
+        doc.pop("@search.reranker_score", None)
+        documents.append(doc)
+    return documents
+
+
+def _answer(question: str, documents: list[dict[str, Any]]) -> str:
+    endpoint = _env("AZURE_OPENAI_ENDPOINT", required=True)
+    deployment = _env("AZURE_OPENAI_DEPLOYMENT", required=True)
+    api_key = _env("AZURE_OPENAI_API_KEY")
+    if api_key:
+        from openai import AzureOpenAI
+
+        client = AzureOpenAI(azure_endpoint=endpoint, api_key=api_key, api_version=_env("AZURE_OPENAI_API_VERSION") or "2024-10-21")
+    else:
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+        from openai import AzureOpenAI
+
+        token_provider = get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default")
+        client = AzureOpenAI(azure_endpoint=endpoint, azure_ad_token_provider=token_provider, api_version=_env("AZURE_OPENAI_API_VERSION") or "2024-10-21")
+    grounding = json.dumps(documents[:5], ensure_ascii=False)
+    response = client.chat.completions.create(
+        model=deployment,
+        messages=[
+            {"role": "system", "content": "Answer only from the supplied Azure AI Search grounding data. If evidence is missing, say you do not know. Include source identifiers when available."},
+            {"role": "user", "content": f"Question: {question}\n\nGrounding data:\n{grounding}"},
+        ],
+    )
+    return response.choices[0].message.content or ""
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok", "agent": AGENT_CONFIG.get("agent", {}).get("id", "unknown")}
+
+
+@app.get("/config")
+def config() -> dict[str, Any]:
+    redacted = dict(AGENT_CONFIG)
+    redacted["runtimeSettings"] = {
+        "AZURE_SEARCH_ENDPOINT": bool(os.environ.get("AZURE_SEARCH_ENDPOINT")),
+        "AZURE_SEARCH_INDEX": bool(os.environ.get("AZURE_SEARCH_INDEX")),
+        "AZURE_OPENAI_ENDPOINT": bool(os.environ.get("AZURE_OPENAI_ENDPOINT")),
+        "AZURE_OPENAI_DEPLOYMENT": bool(os.environ.get("AZURE_OPENAI_DEPLOYMENT")),
+    }
+    return redacted
+
+
+@app.post("/chat")
+def chat(request: ChatRequest) -> dict[str, Any]:
+    documents = _search(request.question, request.top)
+    answer = _answer(request.question, documents)
+    return {"answer": answer, "documents": documents, "agent": AGENT_CONFIG.get("agent")}
+'''
+    requirements = """fastapi==0.116.1
+uvicorn[standard]==0.35.0
+azure-identity==1.23.1
+azure-search-documents==11.6.0
+openai==1.95.1
+pydantic==2.11.7
+"""
+    dockerfile = """FROM python:3.13-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py agent.config.json ./
+EXPOSE 8000
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+"""
+    env_example = """AZURE_SEARCH_ENDPOINT=https://<search-service>.search.windows.net
+AZURE_SEARCH_INDEX=<index-name>
+# Prefer managed identity in Azure. Use AZURE_SEARCH_KEY only for local development if needed.
+AZURE_SEARCH_KEY=
+AZURE_OPENAI_ENDPOINT=https://<azure-openai-resource>.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=<chat-deployment-name>
+AZURE_OPENAI_API_VERSION=2024-10-21
+# Prefer managed identity in Azure. Use AZURE_OPENAI_API_KEY only for local development if needed.
+AZURE_OPENAI_API_KEY=
+"""
+    deploy_ps1 = """param(
+    [Parameter(Mandatory=$true)][string]$ResourceGroup,
+    [Parameter(Mandatory=$true)][string]$ContainerAppName,
+    [Parameter(Mandatory=$true)][string]$AcrName,
+    [string]$Location = 'eastus',
+    [string]$Tag = (Get-Date -Format 'yyyyMMddHHmmss')
+)
+
+$ErrorActionPreference = 'Stop'
+$image = "$AcrName.azurecr.io/$ContainerAppName:$Tag"
+az acr build --registry $AcrName --image "$ContainerAppName:$Tag" .
+az containerapp update --name $ContainerAppName --resource-group $ResourceGroup --image $image
+Write-Host "Updated $ContainerAppName to $image"
+"""
+    readme = f"""# {title} Runtime Starter
+
+This package turns the portal-approved `{selected_agent_info.get('name')}` configuration into a deployable FastAPI starter. It is not a complete production application; it is the next handoff after the portal export.
+
+## What It Provides
+
+- `app.py`: HTTP runtime with `/health`, `/config`, and `/chat` endpoints.
+- `agent.config.json`: selected agent, configuration profile, guardrails, validation checklist, and run metadata.
+- `requirements.txt`: Python dependencies for Azure AI Search, Azure OpenAI, and FastAPI.
+- `Dockerfile`: container image for local or Azure Container Apps deployment.
+- `.env.example`: required runtime settings without secrets.
+- `deploy/azure-cli-deploy.ps1`: sample Azure CLI image build and Container App update script.
+
+## Run Locally
+
+```powershell
+py -3 -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+# Fill .env, then load the values into your shell.
+uvicorn app:app --reload --port 8000
+```
+
+Test:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health
+Invoke-RestMethod -Method Post http://localhost:8000/chat -ContentType 'application/json' -Body '{{"question":"What can this agent answer?"}}'
+```
+
+## Deploy To Azure Container Apps
+
+Create or choose a Container App, grant its managed identity access to Azure AI Search and Azure OpenAI, set the environment variables from `.env.example`, then run:
+
+```powershell
+pwsh -File deploy/azure-cli-deploy.ps1 -ResourceGroup <rg> -ContainerAppName <app> -AcrName <acr>
+```
+
+The runtime uses managed identity when keys are not provided. Keep keys out of source control.
+"""
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("README.md", readme)
+        archive.writestr("app.py", app_py)
+        archive.writestr("agent.config.json", config_json)
+        archive.writestr("requirements.txt", requirements)
+        archive.writestr("Dockerfile", dockerfile)
+        archive.writestr(".env.example", env_example)
+        archive.writestr("deploy/azure-cli-deploy.ps1", deploy_ps1)
+    return f"{package_slug}-runtime-starter.zip", buffer.getvalue()
+
 _SOURCE_TYPE_ALIASES = {
     "auto": "auto",
     "detect": "auto",
@@ -3526,6 +3755,14 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             run_id = request_path.split("/")[-2]
             return self._handle_agent_foundry_run_export(run_id)
+
+        if request_path.startswith("/api/agent-foundry/runs/") and request_path.endswith("/runtime"):
+            if not self._require_auth_for_mutation():
+                return
+            if not self._require_brd_intake_principal():
+                return
+            run_id = request_path.split("/")[-2]
+            return self._handle_agent_foundry_run_runtime(run_id)
 
         if request_path.startswith("/api/agent-foundry/runs/"):
             run_id = request_path.split("/")[-1]
@@ -5954,6 +6191,30 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             except Exception as exc:
                 logger.exception("Failed to build Agent Foundry export package for %s", run_id)
                 self._send_json({"error": f"Failed to build export package: {exc}"}, 500)
+                return
+
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
+        self.send_header("Content-Type", "application/zip")
+        self.send_header("Content-Disposition", f'attachment; filename="{file_name}"')
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_agent_foundry_run_runtime(self, run_id: str):
+        with RUNS_LOCK:
+            run = RUNS.get(run_id)
+            if not run or run.get("kind") != "agent-foundry":
+                self._send_json({"error": "Agent Foundry run not found"}, 404)
+                return
+            if run.get("status") != "completed":
+                self._send_json({"error": f"Run must be completed before runtime generation. Current status: {run.get('status')}"}, 409)
+                return
+            try:
+                file_name, body = _build_agent_foundry_runtime_package(run)
+            except Exception as exc:
+                logger.exception("Failed to build Agent Foundry runtime package for %s", run_id)
+                self._send_json({"error": f"Failed to build runtime package: {exc}"}, 500)
                 return
 
         self.send_response(200)

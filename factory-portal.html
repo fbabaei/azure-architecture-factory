@@ -3157,6 +3157,7 @@
                         <button type="button" id="agent-foundry-approve-btn" class="button" onclick="approveAgentFoundryRun()" disabled>Approve Execution Package</button>
                         <button type="button" id="agent-foundry-execute-btn" class="button" onclick="executeAgentFoundryRun()" disabled>Run Agent</button>
                         <button type="button" id="agent-foundry-export-btn" class="button secondary" onclick="exportAgentFoundryPackage()" disabled>Export Agent Package</button>
+                        <button type="button" id="agent-foundry-runtime-btn" class="button secondary" onclick="generateAgentFoundryRuntime()" disabled>Generate Runtime Package</button>
                     </div>
                     <div id="agent-foundry-status" class="status-message" role="status" aria-live="polite"></div>
                     <div id="agent-foundry-output" class="foundry-runner-output"></div>
@@ -4741,6 +4742,7 @@
         const API_AGENT_FOUNDRY_APPROVE = runId => `${API_BASE}/api/agent-foundry/runs/${encodeURIComponent(runId)}/approve`;
         const API_AGENT_FOUNDRY_EXECUTE = runId => `${API_BASE}/api/agent-foundry/runs/${encodeURIComponent(runId)}/execute`;
         const API_AGENT_FOUNDRY_EXPORT = runId => `${API_BASE}/api/agent-foundry/runs/${encodeURIComponent(runId)}/export`;
+        const API_AGENT_FOUNDRY_RUNTIME = runId => `${API_BASE}/api/agent-foundry/runs/${encodeURIComponent(runId)}/runtime`;
         const API_AGENT_FOUNDRY_RECOMMEND = `${API_BASE}/api/agent-foundry/recommend`;
         const API_CSA_COPILOT_TOOLS = `${API_BASE}/api/csa-copilot/tools`;
         const API_CSA_COPILOT_ASK = `${API_BASE}/api/csa-copilot/ask`;
@@ -6644,6 +6646,7 @@
             const approveButton = document.getElementById('agent-foundry-approve-btn');
             const executeButton = document.getElementById('agent-foundry-execute-btn');
             const exportButton = document.getElementById('agent-foundry-export-btn');
+            const runtimeButton = document.getElementById('agent-foundry-runtime-btn');
             if (!output) return;
             const plan = run?.plan || run?.result?.plan || {};
             const goals = Array.isArray(plan.goals) ? plan.goals : [];
@@ -6662,6 +6665,7 @@
             if (approveButton) approveButton.disabled = !canApprove;
             if (executeButton) executeButton.disabled = !canExecute;
             if (exportButton) exportButton.disabled = !canExport;
+            if (runtimeButton) runtimeButton.disabled = !canExport;
             renderAgentFoundryRecommendation(recommendation);
 
             output.innerHTML = `
@@ -6678,7 +6682,7 @@
                 ${steps.length ? `<h4>Approval Plan</h4><ol>${steps.map(step => `<li><strong>${escapeHtml(step.ownerAgent || step.id || 'Agent')}</strong>: ${escapeHtml(step.action || '')}<br><small>${escapeHtml(step.evidence || '')}</small></li>`).join('')}</ol>` : ''}
                 ${evidence.length ? `<h4>Evidence</h4><ul>${evidence.map(item => `<li>${escapeHtml(item.stepId || 'step')}: ${escapeHtml(item.status || '')} · ${escapeHtml(item.requiredEvidence || '')}</li>`).join('')}</ul>` : ''}
                 ${execution ? `<h4>Execution Result</h4><p><strong>${escapeHtml(execution.agent?.name || 'Agent')}</strong>: ${escapeHtml(execution.executionSummary || '')}</p><p><strong>Runtime:</strong> ${escapeHtml(execution.runtime?.adapter || '')}${execution.runtime?.hostedAgent === false ? ' · hosted agent not claimed' : ''}</p>` : ''}
-                ${execution ? `<p><strong>Export:</strong> Download the agent package to use this configured agent outside the portal in VS Code/Copilot or as input to a hosted runtime adapter.</p>` : ''}
+                ${execution ? `<p><strong>Export:</strong> Download the agent package for VS Code/Copilot customization, or generate the runtime package for a deployable FastAPI starter with Azure AI Search and Azure OpenAI wiring.</p>` : ''}
                 ${configuredFields.length ? `<h4>Configured Fields</h4><ul>${configuredFields.map(item => `<li><strong>${escapeHtml(item.field || '')}</strong>: ${escapeHtml(item.status || '')}<br><small>${escapeHtml(item.evidence || '')}</small></li>`).join('')}</ul>` : ''}
                 ${nextActions.length ? `<h4>Next Actions</h4><ul>${nextActions.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
                 <h4>Handoff Prompts</h4>
@@ -6805,6 +6809,44 @@
                 setAgentFoundryStatus(`Error: ${escapeHtml(error.message)}`, true);
             } finally {
                 if (exportButton) exportButton.disabled = false;
+            }
+            return false;
+        }
+
+        async function generateAgentFoundryRuntime() {
+            if (!currentAgentFoundryRunId) {
+                setAgentFoundryStatus('Run an approved agent package before generating a runtime package.', true);
+                return false;
+            }
+            const runtimeButton = document.getElementById('agent-foundry-runtime-btn');
+            if (runtimeButton) runtimeButton.disabled = true;
+            setAgentFoundryStatus('<span class="loading"></span> Generating deployable runtime package...', false);
+            try {
+                const response = await fetch(API_AGENT_FOUNDRY_RUNTIME(currentAgentFoundryRunId), {
+                    method: 'GET',
+                    headers: buildAuthenticatedHeaders()
+                });
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => ({}));
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+                const blob = await response.blob();
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const match = disposition.match(/filename="?([^";]+)"?/i);
+                const fileName = match?.[1] || `agent-foundry-runtime-${currentAgentFoundryRunId}.zip`;
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+                setAgentFoundryStatus(`Runtime package downloaded: ${escapeHtml(fileName)}. Fill .env.example, run locally, or deploy the container to Azure.`, false);
+            } catch (error) {
+                setAgentFoundryStatus(`Error: ${escapeHtml(error.message)}`, true);
+            } finally {
+                if (runtimeButton) runtimeButton.disabled = false;
             }
             return false;
         }
