@@ -241,6 +241,36 @@
       "keywords": ["document-to-search reconfigurable", "Document Intelligence search", "knowledge mining", "document indexing", "metadata enrichment", "chunking", "citations", "RAG ready", "search index"]
     },
     {
+      "id": "multimodal-knowledge-pipeline-reconfigurable-agent",
+      "name": "Multimodal Knowledge Pipeline Reconfigurable Agent",
+      "path": ".github/agents/multimodal-knowledge-pipeline-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/mslearn-ai-vision/Instructions/Exercises", "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
+      "capabilities": ["multimodal knowledge baseline", "OCR", "image understanding", "Content Understanding", "visual metadata", "layout preservation", "Azure AI Search indexing", "citations", "RAG readiness"],
+      "keywords": ["multimodal reconfigurable", "multimodal knowledge", "OCR", "image search", "visual metadata", "Content Understanding", "screenshots", "diagrams", "charts", "scanned PDFs", "visual assets", "multimodal RAG"]
+    },
+    {
+      "id": "speech-conversation-intelligence-reconfigurable-agent",
+      "name": "Speech & Conversation Intelligence Reconfigurable Agent",
+      "path": ".github/agents/speech-conversation-intelligence-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"],
+      "capabilities": ["speech baseline", "conversation intelligence", "speech-to-text", "diarization", "translation", "transcript normalization", "summarization", "sentiment", "searchable transcript indexing", "conversation QA"],
+      "keywords": ["speech reconfigurable", "conversation intelligence", "speech to text", "transcription", "diarization", "call analytics", "meeting transcript", "audio ingestion", "sentiment", "transcript search", "conversation QA"]
+    },
+    {
+      "id": "responsible-ai-guardrail-reconfigurable-agent",
+      "name": "Responsible AI Guardrail Reconfigurable Agent",
+      "path": ".github/agents/responsible-ai-guardrail-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
+      "capabilities": ["Responsible AI guardrails", "content safety", "prompt-injection defense", "groundedness policy", "PII detection", "redaction", "human escalation", "protected-content handling", "safety evaluation", "abuse monitoring"],
+      "keywords": ["Responsible AI reconfigurable", "guardrails", "content safety", "prompt injection", "jailbreak", "groundedness", "PII", "redaction", "human escalation", "protected content", "safety evaluation", "abuse monitoring"]
+    },
+    {
       "id": "classic-search-app-agent",
       "name": "Classic Search App Agent",
       "path": ".github/agents/classic-search-app-agent.agent.md",

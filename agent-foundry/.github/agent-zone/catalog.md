@@ -43,6 +43,16 @@ Use this category when users want configurable baseline agents for structured do
 | Document Intelligence Reconfigurable Agent | Configure document extraction for user-specific document types, models, field schemas, confidence thresholds, human review, output contracts, security, and validation | baseline configuration, model and schema plan, confidence/review policy, output contract, validation checks |
 | Document-to-Search Pipeline Reconfigurable Agent | Configure Document Intelligence extraction into Azure AI Search with normalization, metadata enrichment, chunking, vectorization, citations, and RAG/search readiness | extraction-to-index plan, normalized schema, chunk/index/vector plan, citation policy, search/RAG handoffs, validation checks |
 
+## Cross-Modal And Guardrail Prebuilt Reconfigurable Agents
+
+Use this category when users need configurable baselines for mixed visual content, audio/conversation content, or reusable safety controls around Azure AI applications.
+
+| Agent | Use When | Primary Outputs |
+| --- | --- | --- |
+| Multimodal Knowledge Pipeline Reconfigurable Agent | Configure pipelines for PDFs, scans, images, screenshots, diagrams, charts, visual assets, OCR, visual metadata, Azure AI Search indexing, citations, and RAG/search readiness | multimodal ingestion plan, OCR/vision analysis plan, normalized content schema, chunk/index/vector plan, citation policy, validation checks |
+| Speech & Conversation Intelligence Reconfigurable Agent | Configure audio and conversation pipelines with speech-to-text, diarization, translation, transcript normalization, summarization, searchable transcript indexing, privacy, and validation | audio ingestion plan, transcription/diarization policy, transcript schema, enrichment/indexing plan, privacy policy, validation checks |
+| Responsible AI Guardrail Reconfigurable Agent | Configure reusable safety controls for AI workflows, including content safety, prompt-injection defenses, groundedness, PII redaction, human escalation, protected-content handling, monitoring, and validation | risk profile, guardrail policy, grounding/privacy/escalation plan, safety test plan, monitoring handoffs |
+
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
 | Application Planning Companion Agent | Track and manage implementation steps after an app design is chosen | implementation tracker, task ownership, handoff prompts, validation plan |

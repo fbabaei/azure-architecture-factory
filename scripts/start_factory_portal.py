@@ -971,6 +971,60 @@ RECONFIGURABLE_AGENT_OPTIONS = {
             "VALIDATION_PLAN",
         ],
     },
+    "multimodal-knowledge-pipeline-reconfigurable-agent": {
+        "name": "Multimodal Knowledge Pipeline Reconfigurable Agent",
+        "summary": "Configure mixed visual, scanned, diagram, chart, and document content into an enriched searchable or RAG-ready knowledge pipeline.",
+        "contract": [
+            "CONTENT_SOURCES",
+            "CONTENT_TYPES",
+            "VISION_ANALYSIS_MODE",
+            "DOCUMENT_INTELLIGENCE_MODE",
+            "NORMALIZED_CONTENT_SCHEMA",
+            "METADATA_ENRICHMENT",
+            "CHUNKING_POLICY",
+            "SEARCH_ENDPOINT",
+            "SEARCH_INDEX",
+            "SEARCH_INDEX_SCHEMA",
+            "VECTORIZATION_POLICY",
+            "CITATION_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "speech-conversation-intelligence-reconfigurable-agent": {
+        "name": "Speech & Conversation Intelligence Reconfigurable Agent",
+        "summary": "Configure audio, meetings, calls, and conversations into transcripts, summaries, searchable indexes, analytics, and privacy-aware QA experiences.",
+        "contract": [
+            "AUDIO_SOURCES",
+            "AUDIO_FORMATS",
+            "LANGUAGE_POLICY",
+            "TRANSCRIPTION_MODE",
+            "SPEAKER_DIARIZATION",
+            "TRANSCRIPT_SCHEMA",
+            "ENRICHMENT_POLICY",
+            "PRIVACY_POLICY",
+            "SEARCH_ENDPOINT",
+            "SEARCH_INDEX",
+            "RAG_OR_QA_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "responsible-ai-guardrail-reconfigurable-agent": {
+        "name": "Responsible AI Guardrail Reconfigurable Agent",
+        "summary": "Configure reusable safety, privacy, groundedness, prompt-injection, escalation, monitoring, and validation guardrails around Azure AI workflows.",
+        "contract": [
+            "AI_WORKFLOW",
+            "INPUT_CHANNELS",
+            "OUTPUT_CHANNELS",
+            "RISK_PROFILE",
+            "CONTENT_SAFETY_POLICY",
+            "PROMPT_INJECTION_POLICY",
+            "GROUNDING_POLICY",
+            "PII_AND_PRIVACY_POLICY",
+            "HUMAN_ESCALATION_POLICY",
+            "ABUSE_MONITORING_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
 }
 
 
@@ -1061,6 +1115,65 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             "ocr to search": 4,
             "page citation": 3,
         },
+        "multimodal-knowledge-pipeline-reconfigurable-agent": {
+            "multimodal": 5,
+            "mixed content": 4,
+            "image": 2,
+            "images": 2,
+            "screenshot": 3,
+            "screenshots": 3,
+            "diagram": 3,
+            "diagrams": 3,
+            "chart": 3,
+            "charts": 3,
+            "scanned pdf": 4,
+            "scanned pdfs": 4,
+            "visual metadata": 4,
+            "content understanding": 4,
+            "ocr": 3,
+            "table extraction": 3,
+            "visual assets": 3,
+            "multimodal rag": 5,
+        },
+        "speech-conversation-intelligence-reconfigurable-agent": {
+            "speech": 4,
+            "audio": 4,
+            "conversation": 3,
+            "conversations": 3,
+            "call recording": 4,
+            "call recordings": 4,
+            "meeting": 3,
+            "meetings": 3,
+            "transcript": 4,
+            "transcripts": 4,
+            "transcription": 4,
+            "speech to text": 4,
+            "speech-to-text": 4,
+            "diarization": 5,
+            "speaker": 2,
+            "translation": 3,
+            "sentiment": 3,
+            "call analytics": 4,
+            "conversation qa": 4,
+        },
+        "responsible-ai-guardrail-reconfigurable-agent": {
+            "responsible ai": 5,
+            "guardrail": 5,
+            "guardrails": 5,
+            "content safety": 5,
+            "prompt injection": 5,
+            "indirect prompt injection": 5,
+            "jailbreak": 5,
+            "safety": 3,
+            "groundedness": 4,
+            "pii": 4,
+            "redaction": 4,
+            "human escalation": 4,
+            "protected content": 4,
+            "abuse monitoring": 4,
+            "moderation": 3,
+            "refusal": 3,
+        },
     }
     scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
     matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
@@ -1076,6 +1189,23 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
         scores["document-to-search-pipeline-reconfigurable-agent"] += 5
         matched["document-to-search-pipeline-reconfigurable-agent"].append("document extraction plus search/RAG pipeline")
 
+    multimodal_terms = ("image", "images", "screenshot", "diagram", "chart", "scanned", "visual", "multimodal")
+    knowledge_terms = ("search", "rag", "knowledge", "index", "citation", "grounding")
+    if any(term in text for term in multimodal_terms) and any(term in text for term in knowledge_terms):
+        scores["multimodal-knowledge-pipeline-reconfigurable-agent"] += 5
+        matched["multimodal-knowledge-pipeline-reconfigurable-agent"].append("multimodal content plus knowledge/search/RAG pipeline")
+
+    speech_terms = ("speech", "audio", "call", "meeting", "transcript", "conversation")
+    intelligence_terms = ("diarization", "summary", "summarization", "search", "qa", "analytics", "sentiment", "translation")
+    if any(term in text for term in speech_terms) and any(term in text for term in intelligence_terms):
+        scores["speech-conversation-intelligence-reconfigurable-agent"] += 5
+        matched["speech-conversation-intelligence-reconfigurable-agent"].append("speech/conversation content plus intelligence pipeline")
+
+    safety_terms = ("guardrail", "guardrails", "content safety", "prompt injection", "jailbreak", "pii", "redaction", "groundedness")
+    if any(term in text for term in safety_terms):
+        scores["responsible-ai-guardrail-reconfigurable-agent"] += 3
+        matched["responsible-ai-guardrail-reconfigurable-agent"].append("Responsible AI guardrail requirements")
+
     if source_type == "learning-plan":
         recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
     else:
@@ -1090,7 +1220,7 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
     reasons = matched.get(recommended_agent, [])[:6]
     if not reasons:
         reasons = [
-            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, or document-to-search indexing, so the orchestrator should route after more detail is provided."
+            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, or guardrails, so the orchestrator should route after more detail is provided."
         ]
 
     return {

@@ -14,6 +14,12 @@ The document processing prebuilt reconfigurable category adds two specialized co
 - Document Intelligence Reconfigurable Agent
 - Document-to-Search Pipeline Reconfigurable Agent
 
+The cross-modal and guardrail prebuilt reconfigurable category adds three specialized configurable agents:
+
+- Multimodal Knowledge Pipeline Reconfigurable Agent
+- Speech & Conversation Intelligence Reconfigurable Agent
+- Responsible AI Guardrail Reconfigurable Agent
+
 For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see [Reconfigurable Agents Quick Start](reconfigurable-agents-quick-start.md). For an end-to-end mock project example, see [Reconfigurable Agents Walkthrough](reconfigurable-agents-walkthrough.md).
 
 ## How Reconfiguration Works
@@ -155,6 +161,83 @@ VALIDATION_PLAN
 
 For example, if the user needs contracts extracted, chunked by sections, enriched with metadata, indexed into Azure AI Search, and returned with page citations for RAG, the agent configures the extraction-to-indexing pipeline and hands off to Classic Search, RAG Search, or Agentic Retrieval as needed.
 
+## Multimodal Knowledge Pipeline Reconfiguration
+
+Multimodal knowledge pipeline reconfiguration is for mixed content where PDFs, scans, images, screenshots, charts, diagrams, tables, and visual assets need OCR, visual metadata, enrichment, indexing, citations, or RAG readiness.
+
+The Multimodal Knowledge Pipeline Reconfigurable Agent adapts these points:
+
+```text
+CONTENT_SOURCES
+CONTENT_TYPES
+VISION_ANALYSIS_MODE
+DOCUMENT_INTELLIGENCE_MODE
+NORMALIZED_CONTENT_SCHEMA
+METADATA_ENRICHMENT
+CHUNKING_POLICY
+SEARCH_ENDPOINT
+SEARCH_INDEX
+SEARCH_INDEX_SCHEMA
+VECTORIZATION_POLICY
+CITATION_POLICY
+INGESTION_MODE
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+```
+
+For example, if the user needs a knowledge base over scanned PDFs, screenshots, and diagrams with page and region citations, the agent configures OCR, visual metadata, normalization, chunking, indexing, and search/RAG handoffs.
+
+## Speech And Conversation Intelligence Reconfiguration
+
+Speech and conversation intelligence reconfiguration is for audio-first workflows where recordings or conversations need transcription, diarization, translation, summarization, searchable transcripts, QA, privacy controls, or analytics.
+
+The Speech & Conversation Intelligence Reconfigurable Agent adapts these points:
+
+```text
+AUDIO_SOURCES
+AUDIO_FORMATS
+LANGUAGE_POLICY
+TRANSCRIPTION_MODE
+SPEAKER_DIARIZATION
+TRANSCRIPT_SCHEMA
+ENRICHMENT_POLICY
+PRIVACY_POLICY
+SEARCH_ENDPOINT
+SEARCH_INDEX
+SEARCH_INDEX_SCHEMA
+RAG_OR_QA_POLICY
+INGESTION_MODE
+SECURITY_MODEL
+SPECIAL_CASES
+VALIDATION_PLAN
+```
+
+For example, if the user needs support-call transcripts with speaker turns, summaries, sentiment, PII redaction, and searchable citations by timestamp, the agent configures the speech-to-transcript-to-search baseline.
+
+## Responsible AI Guardrail Reconfiguration
+
+Responsible AI guardrail reconfiguration is for reusable safety and governance controls around Azure AI workflows, including chat, RAG, agentic retrieval, document extraction, multimodal enrichment, speech analytics, and generated media.
+
+The Responsible AI Guardrail Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+INPUT_CHANNELS
+OUTPUT_CHANNELS
+RISK_PROFILE
+CONTENT_SAFETY_POLICY
+PROMPT_INJECTION_POLICY
+GROUNDING_POLICY
+PII_AND_PRIVACY_POLICY
+PROTECTED_CONTENT_POLICY
+HUMAN_ESCALATION_POLICY
+ABUSE_MONITORING_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs an enterprise RAG app to resist indirect prompt injection, require citations, redact PII, escalate risky answers, and monitor blocked prompts, the agent configures a layered guardrail baseline.
+
 ## What The Agents Produce
 
 Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:
@@ -171,7 +254,7 @@ The overall flow is:
 ```text
 User requirements
   -> choose a reconfigurable category
-  -> choose Search / Document Extraction / Document-to-Search baseline
+  -> choose Search / Document Extraction / Document-to-Search / Multimodal / Speech / Guardrail baseline
   -> fill reconfiguration points
   -> identify gaps and validations
   -> hand off to planning or implementation
