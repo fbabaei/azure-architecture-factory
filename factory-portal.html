@@ -3065,10 +3065,20 @@
             <p>Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.</p>
             <div class="foundry-action-list" aria-label="Azure AI Agent Foundry actions">
                 <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Foundry Browser</a>
+                <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Open Reconfigurable Search Agents</a>
                 <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
                 <a href="agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
                 <a href="agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
                 <button type="button" onclick="toggleAgentFoundryRunner(event)">Run With Agent Assistant</button>
+            </div>
+            <div class="foundry-reconfigurable-callout" style="margin-top:1rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.25rem;">
+                <h3 style="margin:0 0 0.4rem; color:var(--primary); font-size:1rem;">Prebuilt Reconfigurable Search Agents</h3>
+                <p style="margin:0 0 0.75rem; font-size:0.9rem; color:#334155;">Use the Azure AI Search Reconfigurable Orchestrator to configure one of three reusable patterns: Classic Search, RAG Search, or Agentic Retrieval. Start with the quick start, then open the browser and filter by <strong>reconfigurable</strong>.</p>
+                <div class="foundry-action-list" aria-label="Reconfigurable search agent actions">
+                    <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Quick Start</a>
+                    <a href="agent-foundry/docs/reconfigurable-agents-walkthrough.html" target="_blank" rel="noopener noreferrer">Walkthrough Example</a>
+                    <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Browse Reconfigurable Agents</a>
+                </div>
             </div>
             <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
                 <form onsubmit="return submitAgentFoundryRun(event)">
