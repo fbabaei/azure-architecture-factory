@@ -3242,8 +3242,8 @@
                     <div class="foundry-runner-grid">
                         <label>
                             Reconfigurable agent
-                            <select id="agent-foundry-selected-agent">
-                                <option value="">Route automatically</option>
+                            <select id="agent-foundry-selected-agent" title="Route automatically: the portal scores your Source text, Input type, and Reconfiguration profile and picks the best-fitting agent. If nothing matches strongly it falls back to the Azure AI Search Reconfigurable Orchestrator, which routes to Classic Search, RAG Search, or Agentic Retrieval once you add detail. Select a specific agent to override the automatic choice.">
+                                <option value="">Route automatically (pick best-fit agent)</option>
                                 <option value="azure-ai-search-reconfigurable-orchestrator">Azure AI Search Reconfigurable Orchestrator</option>
                                 <option value="classic-search-reconfigurable-agent">Classic Search Reconfigurable Agent</option>
                                 <option value="rag-search-reconfigurable-agent">RAG Search Reconfigurable Agent</option>
@@ -3262,7 +3262,7 @@
                                 <option value="security-rbac-network-boundary-reconfigurable-agent">Security, RBAC &amp; Network Boundary Reconfigurable Agent</option>
                                 <option value="data-ingestion-source-connector-reconfigurable-agent">Data Ingestion &amp; Source Connector Reconfigurable Agent</option>
                             </select>
-                            <span class="foundry-runner-hint">Choose a specific agent, or let the portal route based on your source text and profile.</span>
+                            <span class="foundry-runner-hint"><strong>Route automatically</strong> (default) scores your Source text, Input type, and Reconfiguration profile and picks the best-fitting agent &mdash; falling back to the Azure AI Search Reconfigurable Orchestrator if nothing matches strongly. Pick a specific agent to force that choice, or click <strong>Recommend Agent</strong> to preview the auto-selection (with confidence and reasons) before running.</span>
                         </label>
                         <div id="agent-foundry-recommendation" class="foundry-recommendation-panel" aria-live="polite"></div>
                         <label>
