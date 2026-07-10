@@ -389,6 +389,321 @@ VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs a RAG corpus to pick up changed files hourly, remove deleted documents, refresh embeddings after chunking changes, and warn on stale citations, the agent configures the freshness and reindexing baseline.</p>
 <h2 id="observability-and-continuous-improvement-reconfiguration">Observability And Continuous Improvement Reconfiguration</h2>
+<p>Observability and continuous improvement reconfiguration is for tracing, quality telemetry, feedback, drift detection, and a closed improvement loop over production AI workflows.</p>
+<p>The Observability &amp; Continuous Improvement Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+OBSERVABILITY_OBJECTIVES
+TRACE_POLICY
+QUALITY_SIGNAL_POLICY
+FEEDBACK_CAPTURE
+DRIFT_DETECTION_POLICY
+DASHBOARD_AND_ALERTS
+CONTINUOUS_EVALUATION_POLICY
+IMPROVEMENT_BACKLOG
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs traces across a RAG pipeline, quality telemetry on citations, failed-answer review, drift alerts, and a continuous-evaluation loop feeding an improvement backlog, the agent configures the observability baseline.</p>
+<h2 id="cost-and-capacity-governance-reconfiguration">Cost And Capacity Governance Reconfiguration</h2>
+<p>Cost and capacity governance reconfiguration is for model and Azure AI Search cost/capacity controls across AI workloads.</p>
+<p>The Cost &amp; Capacity Governance Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+USAGE_PROFILE
+MODEL_COST_POLICY
+SEARCH_CAPACITY_POLICY
+EMBEDDING_AND_INDEXING_COST_POLICY
+BATCH_REALTIME_POLICY
+QUOTA_AND_RATE_LIMIT_POLICY
+CACHE_AND_RETENTION_POLICY
+BUDGET_AND_ALERT_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs token budgets per feature, Search SKU sizing, embedding cost controls, batch-versus-realtime tradeoffs, and budget alerts, the agent configures the cost and capacity baseline.</p>
+<h2 id="security-rbac-and-network-boundary-reconfiguration">Security, RBAC And Network Boundary Reconfiguration</h2>
+<p>Security, RBAC, and network boundary reconfiguration is for identity, least privilege, network isolation, and data-access boundaries across AI workflows.</p>
+<p>The Security, RBAC &amp; Network Boundary Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+SECURITY_SCOPE
+IDENTITY_MODEL
+RBAC_POLICY
+NETWORK_BOUNDARY
+PRIVATE_ENDPOINT_POLICY
+FIREWALL_AND_EGRESS_POLICY
+SECRET_AND_CONFIGURATION_POLICY
+DATA_ACCESS_BOUNDARIES
+AUDIT_AND_COMPLIANCE_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs managed identity, least-privilege RBAC, private endpoints, firewall/egress rules, and document-level data-access boundaries, the agent configures the security baseline.</p>
+<h2 id="data-ingestion-and-source-connector-reconfiguration">Data Ingestion And Source Connector Reconfiguration</h2>
+<p>Data ingestion and source connector reconfiguration is for connecting sources and feeding normalized content into AI and search workflows.</p>
+<p>The Data Ingestion &amp; Source Connector Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">INGESTION_WORKFLOW
+SOURCE_INVENTORY
+CONNECTOR_TYPES
+AUTH_AND_ACCESS_POLICY
+INGESTION_MODE
+SCHEMA_AND_METADATA_MAPPING
+CHANGE_AND_DELETION_HANDLING
+RETRY_AND_DEADLETTER_POLICY
+NORMALIZATION_AND_HANDOFF
+OBSERVABILITY_AND_AUDIT_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs Blob and SharePoint connectors with incremental ingestion, metadata mapping, deletion handling, and dead-letter retries feeding a search index, the agent configures the ingestion baseline.</p>
+<h2 id="conversational-assistant-reconfiguration">Conversational Assistant Reconfiguration</h2>
+<p>Conversational assistant reconfiguration is for reusable multi-turn chat assistants over Azure OpenAI chat models.</p>
+<p>The Conversational Assistant Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+CHANNELS
+PERSONA_AND_SYSTEM_PROMPT
+MODEL_DEPLOYMENT
+CONVERSATION_MEMORY
+CONTEXT_WINDOW_POLICY
+TOOL_AND_GROUNDING_HOOKS
+STREAMING_POLICY
+SESSION_STATE_POLICY
+SAFETY_AND_FALLBACK_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs a support copilot with a defined persona, summarized history, RAG grounding hooks, streaming, and safe fallback, the agent configures the conversational baseline.</p>
+<h2 id="translation-and-localization-reconfiguration">Translation And Localization Reconfiguration</h2>
+<p>Translation and localization reconfiguration is for language coverage, detection, terminology, and localized experiences.</p>
+<p>The Translation &amp; Localization Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+SOURCE_AND_TARGET_LANGUAGES
+LANGUAGE_DETECTION_POLICY
+TRANSLATION_SERVICE
+GLOSSARY_AND_TERMINOLOGY
+CONTENT_TYPES
+LOCALIZATION_POLICY
+QUALITY_AND_REVIEW_POLICY
+PRIVACY_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs multilingual document translation with a brand glossary, do-not-translate terms, and human review on low-quality output, the agent configures the translation baseline.</p>
+<h2 id="vision-analysis-reconfiguration">Vision Analysis Reconfiguration</h2>
+<p>Vision analysis reconfiguration is for image tagging, detection, classification, and OCR that is not primarily document field extraction.</p>
+<p>The Vision Analysis Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+IMAGE_SOURCES
+ANALYSIS_TASKS
+VISION_SERVICE_OR_MODEL
+OCR_POLICY
+OUTPUT_SCHEMA
+CONFIDENCE_THRESHOLDS
+HUMAN_REVIEW_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs image tagging and OCR with confidence thresholds routing low-confidence results to reviewers, the agent configures the vision-analysis baseline.</p>
+<h2 id="embedding-and-vectorization-reconfiguration">Embedding And Vectorization Reconfiguration</h2>
+<p>Embedding and vectorization reconfiguration is for embedding model, dimensions, chunk-to-vector mapping, and re-embedding lifecycle.</p>
+<p>The Embedding &amp; Vectorization Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+CONTENT_INVENTORY
+EMBEDDING_MODEL
+EMBEDDING_DIMENSIONS
+CHUNK_TO_VECTOR_STRATEGY
+VECTOR_INDEX_CONFIG
+RE_EMBEDDING_POLICY
+COST_AND_LATENCY_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs an embedding model and dimensions aligned to a target vector index with a re-embedding plan for content changes, the agent configures the vectorization baseline.</p>
+<h2 id="model-routing-and-ai-gateway-reconfiguration">Model Routing And AI Gateway Reconfiguration</h2>
+<p>Model routing and AI gateway reconfiguration is for routing across multiple models/regions with limits, fallback, and caching.</p>
+<p>The Model Routing &amp; AI Gateway Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+MODEL_INVENTORY
+ROUTING_POLICY
+LOAD_BALANCING_POLICY
+TOKEN_LIMIT_POLICY
+FALLBACK_POLICY
+SEMANTIC_CACHE_POLICY
+OBSERVABILITY_AND_METRICS
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs multiple model deployments behind one endpoint with load balancing, token limits, fallback, and semantic caching, the agent configures the gateway baseline.</p>
+<h2 id="fine-tuning-and-model-customization-reconfiguration">Fine-Tuning And Model Customization Reconfiguration</h2>
+<p>Fine-tuning and model customization reconfiguration is for customizing models with SFT, DPO, RFT, or distillation when prompting and retrieval are insufficient.</p>
+<p>The Fine-Tuning &amp; Model Customization Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+BASE_MODEL
+CUSTOMIZATION_METHOD
+TRAINING_DATA_POLICY
+GRADER_OR_REWARD_POLICY
+HYPERPARAMETERS
+EVALUATION_AND_ACCEPTANCE
+DEPLOYMENT_POLICY
+COST_AND_QUOTA_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs task specialization with a curated dataset, a grader, and an evaluation gate against a baseline before deployment, the agent configures the customization baseline.</p>
+<h2 id="image-generation-reconfiguration">Image Generation Reconfiguration</h2>
+<p>Image generation reconfiguration is for text-to-image generation with prompt templates, moderation, and asset handling.</p>
+<p>The Image Generation Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+IMAGE_MODEL
+PROMPT_TEMPLATES
+SIZE_AND_QUALITY
+MODERATION_POLICY
+OUTPUT_AND_STORAGE
+RATE_AND_COST_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs branded marketing images with prompt templates, moderation, and stored assets, the agent configures the image-generation baseline.</p>
+<h2 id="video-generation-reconfiguration">Video Generation Reconfiguration</h2>
+<p>Video generation reconfiguration is for text-to-video and image-to-video generation with async job handling and moderation.</p>
+<p>The Video Generation Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+VIDEO_MODEL
+GENERATION_MODE
+PROMPT_AND_INPUT_ASSETS
+DURATION_AND_RESOLUTION
+ASYNC_JOB_POLICY
+MODERATION_POLICY
+OUTPUT_AND_STORAGE
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs short promotional clips generated asynchronously with polling, moderation, and stored MP4 output, the agent configures the video-generation baseline.</p>
+<h2 id="knowledge-graph-and-graphrag-reconfiguration">Knowledge Graph And GraphRAG Reconfiguration</h2>
+<p>Knowledge graph and GraphRAG reconfiguration is for entity/relationship extraction and graph-augmented retrieval over a corpus.</p>
+<p>The Knowledge Graph &amp; GraphRAG Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+SOURCE_CORPUS
+ENTITY_AND_RELATIONSHIP_SCHEMA
+EXTRACTION_METHOD
+GRAPH_STORE
+GRAPH_INDEXING_POLICY
+GRAPHRAG_RETRIEVAL_POLICY
+GROUNDING_AND_CITATION_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs multi-hop questions answered by combining graph traversal with text retrieval and citations, the agent configures the GraphRAG baseline.</p>
+<h2 id="batch-and-bulk-inference-reconfiguration">Batch And Bulk Inference Reconfiguration</h2>
+<p>Batch and bulk inference reconfiguration is for large-scale offline processing where latency is not critical.</p>
+<p>The Batch &amp; Bulk Inference Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+WORKLOAD_PROFILE
+BATCH_JOB_DESIGN
+INPUT_AND_OUTPUT_FORMAT
+CHECKPOINT_AND_RESUME
+THROUGHPUT_AND_QUOTA
+ERROR_AND_RETRY_POLICY
+COST_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs to classify millions of records offline with checkpointing, result reconciliation, and cost-optimized batching, the agent configures the batch baseline.</p>
+<h2 id="agent-memory-and-state-reconfiguration">Agent Memory And State Reconfiguration</h2>
+<p>Agent memory and state reconfiguration is for durable and cross-session memory beyond in-session history.</p>
+<p>The Agent Memory &amp; State Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+MEMORY_SCOPES
+SHORT_TERM_MEMORY
+LONG_TERM_MEMORY_STORE
+SUMMARIZATION_POLICY
+RETRIEVAL_POLICY
+RETENTION_AND_PRIVACY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs per-user long-term memory with summarization, relevance-based recall, retention windows, and deletion, the agent configures the memory baseline.</p>
+<h2 id="content-generation-and-summarization-reconfiguration">Content Generation And Summarization Reconfiguration</h2>
+<p>Content generation and summarization reconfiguration is for text summarization, drafting, and templated generation.</p>
+<p>The Content Generation &amp; Summarization Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+INPUT_CONTENT
+GENERATION_TASKS
+MODEL_DEPLOYMENT
+PROMPT_AND_TEMPLATE_POLICY
+OUTPUT_SCHEMA
+STYLE_AND_TONE
+GROUNDING_AND_FACTUALITY
+SAFETY_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs templated summaries with a defined tone, structured output, and factuality controls, the agent configures the generation baseline.</p>
+<h2 id="multi-agent-orchestration-reconfiguration">Multi-Agent Orchestration Reconfiguration</h2>
+<p>Multi-agent orchestration reconfiguration is for coordinating multiple specialized agents toward a goal.</p>
+<p>The Multi-Agent Orchestration Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+AGENT_INVENTORY
+ORCHESTRATION_PATTERN
+HANDOFF_CONTRACTS
+PLANNING_POLICY
+SHARED_STATE_AND_MEMORY
+ERROR_AND_FALLBACK_POLICY
+OBSERVABILITY_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs a planner/worker pattern with explicit handoff contracts, shared state, and cross-agent tracing, the agent configures the orchestration baseline.</p>
+<h2 id="data-privacy-and-pii-redaction-reconfiguration">Data Privacy And PII Redaction Reconfiguration</h2>
+<p>Data privacy and PII redaction reconfiguration is for detecting and handling PII across prompts, documents, logs, and outputs.</p>
+<p>The Data Privacy &amp; PII Redaction Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+DATA_INVENTORY
+PII_CATEGORIES
+DETECTION_METHOD
+REDACTION_OR_DEIDENTIFICATION_POLICY
+DATA_RESIDENCY_POLICY
+RETENTION_AND_MINIMIZATION
+AUDIT_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs PII detected and redacted from inputs and logs with residency constraints and audit evidence, the agent configures the privacy baseline.</p>
+<h2 id="deployment-and-release-reconfiguration">Deployment And Release Reconfiguration</h2>
+<p>Deployment and release reconfiguration is for release strategy, promotion, versioning, and rollback of models and agent apps.</p>
+<p>The Deployment &amp; Release Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+DEPLOYMENT_TARGETS
+RELEASE_STRATEGY
+ENVIRONMENT_PROMOTION
+VERSIONING_POLICY
+ROLLBACK_POLICY
+QUOTA_AND_CAPACITY
+RELEASE_GATES
+OBSERVABILITY_HOOKS
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs staged promotion with canary, versioning, rollback, and evaluation-based release gates, the agent configures the release baseline.</p>
+<h2 id="feedback-and-continuous-learning-reconfiguration">Feedback And Continuous Learning Reconfiguration</h2>
+<p>Feedback and continuous learning reconfiguration is for capturing feedback and closing the loop into prompt optimization or fine-tuning.</p>
+<p>The Feedback &amp; Continuous Learning Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+FEEDBACK_SOURCES
+FEEDBACK_SCHEMA
+LABELING_AND_PREFERENCE_POLICY
+DATASET_CURATION
+LEARNING_LOOP_TARGET
+GUARDRAILS_AND_REVIEW
+PRIVACY_POLICY
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs user ratings and corrections curated into a reviewed dataset that feeds prompt optimization, the agent configures the feedback-loop baseline.</p>
+<h2 id="recommendation-and-personalization-reconfiguration">Recommendation And Personalization Reconfiguration</h2>
+<p>Recommendation and personalization reconfiguration is for ranking, personalization, and recommendations.</p>
+<p>The Recommendation &amp; Personalization Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+USER_AND_ITEM_DATA
+PERSONALIZATION_SIGNALS
+RECOMMENDATION_METHOD
+RANKING_POLICY
+COLD_START_POLICY
+PRIVACY_AND_CONSENT
+EVALUATION_METRICS
+SECURITY_MODEL
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs personalized content recommendations with cold-start handling, diversity rules, consent controls, and evaluation metrics, the agent configures the recommendation baseline.</p>
 <p>Observability and continuous improvement reconfiguration is for production AI applications that need traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs.</p>
 <p>The Observability &amp; Continuous Improvement Reconfigurable Agent adapts these points:</p>
 <pre><code class="language-text">AI_WORKFLOW
@@ -403,7 +718,7 @@ IMPROVEMENT_BACKLOG
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs a support assistant to capture retrieval traces, track no-answer rates, review failed answers, detect index drift, and feed fixes into a monthly prompt/index improvement cycle, the agent configures the improvement loop.</p>
-<h2 id="cost-and-capacity-governance-reconfiguration">Cost And Capacity Governance Reconfiguration</h2>
+<h2 id="cost-and-capacity-governance-reconfiguration-1">Cost And Capacity Governance Reconfiguration</h2>
 <p>Cost and capacity governance reconfiguration is for Azure AI applications that need model cost controls, Azure AI Search capacity planning, embedding cost policy, batch versus realtime tradeoffs, quotas, rate limits, caching, retention, budgets, and alerts.</p>
 <p>The Cost &amp; Capacity Governance Reconfigurable Agent adapts these points:</p>
 <pre><code class="language-text">AI_WORKFLOW
@@ -418,7 +733,7 @@ BUDGET_AND_ALERT_POLICY
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs to control RAG costs across model calls, embeddings, semantic ranking, evaluation runs, traces, and peak query traffic, the agent configures cost and capacity policies with explicit quality and latency tradeoffs.</p>
-<h2 id="security-rbac-and-network-boundary-reconfiguration">Security, RBAC, And Network Boundary Reconfiguration</h2>
+<h2 id="security-rbac-and-network-boundary-reconfiguration-1">Security, RBAC, And Network Boundary Reconfiguration</h2>
 <p>Security, RBAC, and network boundary reconfiguration is for Azure AI applications that need identity, least privilege, private networking, firewall and egress controls, secret handling, data-access boundaries, audit evidence, and compliance handoffs.</p>
 <p>The Security, RBAC &amp; Network Boundary Reconfigurable Agent adapts these points:</p>
 <pre><code class="language-text">AI_WORKFLOW
@@ -434,7 +749,7 @@ AUDIT_AND_COMPLIANCE_POLICY
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs an enterprise RAG app that uses managed identity, private Storage and Search access, document-level security, Key Vault references, denied-access tests, and audit evidence, the agent configures the boundary baseline and hands off to security, auth, and implementation specialists.</p>
-<h2 id="data-ingestion-and-source-connector-reconfiguration">Data Ingestion And Source Connector Reconfiguration</h2>
+<h2 id="data-ingestion-and-source-connector-reconfiguration-1">Data Ingestion And Source Connector Reconfiguration</h2>
 <p>Data ingestion and source connector reconfiguration is for Azure AI applications that need reusable connector patterns before data reaches search, RAG, document processing, analytics, or agent workflows.</p>
 <p>The Data Ingestion &amp; Source Connector Reconfigurable Agent adapts these points:</p>
 <pre><code class="language-text">INGESTION_WORKFLOW
