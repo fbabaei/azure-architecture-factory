@@ -130,11 +130,17 @@
 <li>Speech &amp; Conversation Intelligence Reconfigurable Agent</li>
 <li>Responsible AI Guardrail Reconfigurable Agent</li>
 </ul>
+<p>The quality, workflow, and human review prebuilt reconfigurable category adds three specialized configurable agents:</p>
+<ul>
+<li>AI Evaluation &amp; Quality Reconfigurable Agent</li>
+<li>Tool-Using Workflow Reconfigurable Agent</li>
+<li>Human Review &amp; Escalation Reconfigurable Agent</li>
+</ul>
 <p>For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For an end-to-end mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
 <h2 id="how-reconfiguration-works">How Reconfiguration Works</h2>
 <ol>
 <li>The user starts with Azure AI Search Reconfigurable Orchestrator.</li>
-<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, or missing enough detail.</li>
+<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, or missing enough detail.</li>
 <li>The orchestrator extracts a shared requirements profile.</li>
 <li>The orchestrator routes to the most specific reconfigurable agent.</li>
 <li>The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.</li>
@@ -296,6 +302,51 @@ ABUSE_MONITORING_POLICY
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs an enterprise RAG app to resist indirect prompt injection, require citations, redact PII, escalate risky answers, and monitor blocked prompts, the agent configures a layered guardrail baseline.</p>
+<h2 id="ai-evaluation-and-quality-reconfiguration">AI Evaluation And Quality Reconfiguration</h2>
+<p>AI evaluation and quality reconfiguration is for reusable quality gates around Azure AI workflows, including datasets, metrics, thresholds, groundedness, citation accuracy, safety checks, regression testing, release gates, and validation evidence.</p>
+<p>The AI Evaluation &amp; Quality Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+EVALUATION_OBJECTIVES
+DATASET_POLICY
+METRIC_SET
+THRESHOLDS_AND_GATES
+GROUNDING_AND_CITATION_CHECKS
+SAFETY_EVALUATION_POLICY
+REGRESSION_PLAN
+EVIDENCE_PACKAGE
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs a RAG app release gate with groundedness scores, citation accuracy checks, regression replay, safety evaluation, and reviewer signoff, the agent configures a measurable quality baseline instead of a broad test checklist.</p>
+<h2 id="tool-using-workflow-reconfiguration">Tool-Using Workflow Reconfiguration</h2>
+<p>Tool-using workflow reconfiguration is for AI workflows that call APIs, Azure Functions, business systems, queues, MCP tools, or actions and need clear contracts, authorization, retries, idempotency, approvals, audit logs, and error handling.</p>
+<p>The Tool-Using Workflow Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+TOOL_INVENTORY
+TOOL_CONTRACTS
+AUTHORIZATION_MODEL
+SIDE_EFFECT_POLICY
+RETRY_AND_IDEMPOTENCY_POLICY
+APPROVAL_AND_ESCALATION_POLICY
+AUDIT_AND_TRACE_POLICY
+ERROR_HANDLING_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs an assistant that can create support tickets, call inventory APIs, and request refunds with approval and audit evidence, the agent configures the tool-use baseline around explicit side-effect controls.</p>
+<h2 id="human-review-and-escalation-reconfiguration">Human Review And Escalation Reconfiguration</h2>
+<p>Human review and escalation reconfiguration is for human-in-the-loop workflows around uncertain, risky, low-confidence, policy-sensitive, or high-impact AI outputs.</p>
+<p>The Human Review &amp; Escalation Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+REVIEW_TRIGGERS
+CONFIDENCE_POLICY
+REVIEW_QUEUE
+REVIEWER_ROLES
+EVIDENCE_PACKAGE
+OVERRIDE_POLICY
+FEEDBACK_CAPTURE
+AUDIT_AND_RETENTION_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs low-confidence document extractions and policy-sensitive generated answers routed to reviewers with an evidence package, SLA, override reason, and feedback capture, the agent configures a human review control path.</p>
 <h2 id="what-the-agents-produce">What The Agents Produce</h2>
 <p>Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:</p>
 <ul>

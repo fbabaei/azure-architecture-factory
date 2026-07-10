@@ -271,6 +271,36 @@
       "keywords": ["Responsible AI reconfigurable", "guardrails", "content safety", "prompt injection", "jailbreak", "groundedness", "PII", "redaction", "human escalation", "protected content", "safety evaluation", "abuse monitoring"]
     },
     {
+      "id": "ai-evaluation-quality-reconfigurable-agent",
+      "name": "AI Evaluation & Quality Reconfigurable Agent",
+      "path": ".github/agents/ai-evaluation-quality-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
+      "capabilities": ["AI evaluation", "quality gates", "evaluation datasets", "metrics", "thresholds", "groundedness checks", "citation accuracy", "task completion", "safety evaluations", "regression tests", "release gates", "validation evidence"],
+      "keywords": ["AI evaluation reconfigurable", "quality gates", "evaluation dataset", "metrics", "thresholds", "groundedness", "citation accuracy", "task completion", "regression tests", "release gate", "validation evidence", "safety evaluation"]
+    },
+    {
+      "id": "tool-using-workflow-reconfigurable-agent",
+      "name": "Tool-Using Workflow Reconfigurable Agent",
+      "path": ".github/agents/tool-using-workflow-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service"],
+      "capabilities": ["tool-using workflow", "API tool contracts", "function calls", "business actions", "authentication", "side-effect policy", "retries", "idempotency", "approvals", "audit logs", "error handling", "validation"],
+      "keywords": ["tool workflow reconfigurable", "tool using agent", "API calls", "function calls", "business system", "actions", "idempotency", "retry policy", "approval", "audit log", "side effects", "tool contract"]
+    },
+    {
+      "id": "human-review-escalation-reconfigurable-agent",
+      "name": "Human Review & Escalation Reconfigurable Agent",
+      "path": ".github/agents/human-review-escalation-reconfigurable-agent.agent.md",
+      "audience": ["application"],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
+      "capabilities": ["human review", "human-in-the-loop", "confidence thresholds", "review queues", "reviewer roles", "escalation", "override policy", "feedback capture", "audit evidence", "SLAs", "validation"],
+      "keywords": ["human review reconfigurable", "human in the loop", "human-in-the-loop", "review queue", "confidence threshold", "reviewer", "escalation", "override policy", "feedback capture", "audit evidence", "SLA", "manual review"]
+    },
+    {
       "id": "classic-search-app-agent",
       "name": "Classic Search App Agent",
       "path": ".github/agents/classic-search-app-agent.agent.md",

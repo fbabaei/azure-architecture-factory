@@ -53,6 +53,16 @@ Use this category when users need configurable baselines for mixed visual conten
 | Speech & Conversation Intelligence Reconfigurable Agent | Configure audio and conversation pipelines with speech-to-text, diarization, translation, transcript normalization, summarization, searchable transcript indexing, privacy, and validation | audio ingestion plan, transcription/diarization policy, transcript schema, enrichment/indexing plan, privacy policy, validation checks |
 | Responsible AI Guardrail Reconfigurable Agent | Configure reusable safety controls for AI workflows, including content safety, prompt-injection defenses, groundedness, PII redaction, human escalation, protected-content handling, monitoring, and validation | risk profile, guardrail policy, grounding/privacy/escalation plan, safety test plan, monitoring handoffs |
 
+## Quality, Workflow, And Human Review Prebuilt Reconfigurable Agents
+
+Use this category when users need configurable baselines for AI quality gates, tool/action workflows, or human review and escalation loops around Azure AI applications.
+
+| Agent | Use When | Primary Outputs |
+| --- | --- | --- |
+| AI Evaluation & Quality Reconfigurable Agent | Configure reusable evaluation datasets, metrics, thresholds, groundedness checks, citation accuracy, regression tests, release gates, and validation evidence | evaluation configuration, dataset and metric plan, thresholds and gates, evidence package, monitoring handoffs |
+| Tool-Using Workflow Reconfigurable Agent | Configure AI workflows that call APIs, functions, business systems, queues, MCP tools, or actions with auth, retries, idempotency, approvals, audit logs, and validation | tool inventory, tool contracts, auth and side-effect policy, retry/idempotency plan, approval/audit policy, validation checks |
+| Human Review & Escalation Reconfigurable Agent | Configure human-in-the-loop review, confidence thresholds, review queues, reviewer roles, escalation paths, override policy, feedback capture, audit evidence, SLAs, and validation | review trigger policy, queue and role plan, evidence package, override and feedback policy, audit/SLA checks |
+
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
 | Application Planning Companion Agent | Track and manage implementation steps after an app design is chosen | implementation tracker, task ownership, handoff prompts, validation plan |

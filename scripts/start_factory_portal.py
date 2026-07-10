@@ -1025,6 +1025,54 @@ RECONFIGURABLE_AGENT_OPTIONS = {
             "VALIDATION_PLAN",
         ],
     },
+    "ai-evaluation-quality-reconfigurable-agent": {
+        "name": "AI Evaluation & Quality Reconfigurable Agent",
+        "summary": "Configure reusable AI evaluation datasets, metrics, thresholds, regression tests, release gates, and validation evidence around Azure AI workflows.",
+        "contract": [
+            "AI_WORKFLOW",
+            "EVALUATION_OBJECTIVES",
+            "DATASET_POLICY",
+            "METRIC_SET",
+            "THRESHOLDS_AND_GATES",
+            "GROUNDING_AND_CITATION_CHECKS",
+            "SAFETY_EVALUATION_POLICY",
+            "REGRESSION_PLAN",
+            "EVIDENCE_PACKAGE",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "tool-using-workflow-reconfigurable-agent": {
+        "name": "Tool-Using Workflow Reconfigurable Agent",
+        "summary": "Configure AI workflows that call APIs, functions, business systems, queues, or actions with contracts, auth, side-effect controls, retries, approvals, audit logs, and validation.",
+        "contract": [
+            "AI_WORKFLOW",
+            "TOOL_INVENTORY",
+            "TOOL_CONTRACTS",
+            "AUTHORIZATION_MODEL",
+            "SIDE_EFFECT_POLICY",
+            "RETRY_AND_IDEMPOTENCY_POLICY",
+            "APPROVAL_AND_ESCALATION_POLICY",
+            "AUDIT_AND_TRACE_POLICY",
+            "ERROR_HANDLING_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "human-review-escalation-reconfigurable-agent": {
+        "name": "Human Review & Escalation Reconfigurable Agent",
+        "summary": "Configure reusable human-in-the-loop review, confidence thresholds, review queues, reviewer roles, escalation, override policy, feedback capture, audit evidence, SLAs, and validation.",
+        "contract": [
+            "AI_WORKFLOW",
+            "REVIEW_TRIGGERS",
+            "CONFIDENCE_POLICY",
+            "REVIEW_QUEUE",
+            "REVIEWER_ROLES",
+            "EVIDENCE_PACKAGE",
+            "OVERRIDE_POLICY",
+            "FEEDBACK_CAPTURE",
+            "AUDIT_AND_RETENTION_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
 }
 
 
@@ -1174,6 +1222,68 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             "moderation": 3,
             "refusal": 3,
         },
+        "ai-evaluation-quality-reconfigurable-agent": {
+            "evaluation": 4,
+            "evaluate": 4,
+            "eval": 4,
+            "quality": 4,
+            "quality gate": 5,
+            "quality gates": 5,
+            "metric": 3,
+            "metrics": 3,
+            "dataset": 3,
+            "datasets": 3,
+            "threshold": 3,
+            "thresholds": 3,
+            "groundedness": 3,
+            "citation accuracy": 5,
+            "task completion": 4,
+            "regression": 4,
+            "release gate": 5,
+            "validation evidence": 4,
+            "batch evaluation": 4,
+        },
+        "tool-using-workflow-reconfigurable-agent": {
+            "tool": 2,
+            "tools": 2,
+            "tool call": 4,
+            "tool calls": 4,
+            "tool contract": 5,
+            "api call": 4,
+            "api calls": 4,
+            "function call": 4,
+            "function calls": 4,
+            "workflow": 3,
+            "action": 3,
+            "actions": 3,
+            "business system": 4,
+            "queue": 3,
+            "idempotency": 5,
+            "retry": 4,
+            "approval": 3,
+            "audit log": 4,
+            "side effect": 5,
+            "side effects": 5,
+        },
+        "human-review-escalation-reconfigurable-agent": {
+            "human review": 5,
+            "human-in-the-loop": 5,
+            "human in the loop": 5,
+            "review queue": 5,
+            "reviewer": 4,
+            "reviewers": 4,
+            "manual review": 4,
+            "escalation": 5,
+            "escalate": 4,
+            "confidence threshold": 5,
+            "confidence thresholds": 5,
+            "override": 4,
+            "override policy": 5,
+            "feedback": 3,
+            "feedback capture": 5,
+            "sla": 3,
+            "audit evidence": 4,
+        },
     }
     scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
     matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
@@ -1206,6 +1316,24 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
         scores["responsible-ai-guardrail-reconfigurable-agent"] += 3
         matched["responsible-ai-guardrail-reconfigurable-agent"].append("Responsible AI guardrail requirements")
 
+    evaluation_terms = ("evaluation", "evaluate", "quality", "metric", "metrics", "dataset", "threshold", "regression", "release gate")
+    quality_gate_terms = ("groundedness", "citation accuracy", "task completion", "safety evaluation", "validation evidence", "batch evaluation")
+    if any(term in text for term in evaluation_terms) and any(term in text for term in quality_gate_terms):
+        scores["ai-evaluation-quality-reconfigurable-agent"] += 5
+        matched["ai-evaluation-quality-reconfigurable-agent"].append("AI evaluation plus quality/release gate requirements")
+
+    tool_terms = ("tool", "tools", "api", "function", "action", "workflow", "business system", "queue")
+    side_effect_terms = ("side effect", "side effects", "retry", "idempotency", "approval", "audit", "auth", "authorization")
+    if any(term in text for term in tool_terms) and any(term in text for term in side_effect_terms):
+        scores["tool-using-workflow-reconfigurable-agent"] += 5
+        matched["tool-using-workflow-reconfigurable-agent"].append("tool/API workflow plus side-effect or reliability controls")
+
+    review_terms = ("human review", "human-in-the-loop", "human in the loop", "review queue", "reviewer", "manual review", "escalation")
+    review_control_terms = ("confidence", "threshold", "override", "feedback", "sla", "audit evidence", "approval")
+    if any(term in text for term in review_terms) and any(term in text for term in review_control_terms):
+        scores["human-review-escalation-reconfigurable-agent"] += 5
+        matched["human-review-escalation-reconfigurable-agent"].append("human review plus escalation/control workflow")
+
     if source_type == "learning-plan":
         recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
     else:
@@ -1220,7 +1348,7 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
     reasons = matched.get(recommended_agent, [])[:6]
     if not reasons:
         reasons = [
-            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, or guardrails, so the orchestrator should route after more detail is provided."
+            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, guardrails, evaluation/quality, tool workflows, or human review, so the orchestrator should route after more detail is provided."
         ]
 
     return {

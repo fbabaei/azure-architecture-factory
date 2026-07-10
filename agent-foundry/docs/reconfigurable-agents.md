@@ -20,12 +20,18 @@ The cross-modal and guardrail prebuilt reconfigurable category adds three specia
 - Speech & Conversation Intelligence Reconfigurable Agent
 - Responsible AI Guardrail Reconfigurable Agent
 
+The quality, workflow, and human review prebuilt reconfigurable category adds three specialized configurable agents:
+
+- AI Evaluation & Quality Reconfigurable Agent
+- Tool-Using Workflow Reconfigurable Agent
+- Human Review & Escalation Reconfigurable Agent
+
 For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see [Reconfigurable Agents Quick Start](reconfigurable-agents-quick-start.md). For an end-to-end mock project example, see [Reconfigurable Agents Walkthrough](reconfigurable-agents-walkthrough.md).
 
 ## How Reconfiguration Works
 
 1. The user starts with Azure AI Search Reconfigurable Orchestrator.
-2. The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, or missing enough detail.
+2. The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, or missing enough detail.
 3. The orchestrator extracts a shared requirements profile.
 4. The orchestrator routes to the most specific reconfigurable agent.
 5. The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.
@@ -237,6 +243,69 @@ VALIDATION_PLAN
 ```
 
 For example, if the user needs an enterprise RAG app to resist indirect prompt injection, require citations, redact PII, escalate risky answers, and monitor blocked prompts, the agent configures a layered guardrail baseline.
+
+## AI Evaluation And Quality Reconfiguration
+
+AI evaluation and quality reconfiguration is for reusable quality gates around Azure AI workflows, including datasets, metrics, thresholds, groundedness, citation accuracy, safety checks, regression testing, release gates, and validation evidence.
+
+The AI Evaluation & Quality Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+EVALUATION_OBJECTIVES
+DATASET_POLICY
+METRIC_SET
+THRESHOLDS_AND_GATES
+GROUNDING_AND_CITATION_CHECKS
+SAFETY_EVALUATION_POLICY
+REGRESSION_PLAN
+EVIDENCE_PACKAGE
+VALIDATION_PLAN
+```
+
+For example, if the user needs a RAG app release gate with groundedness scores, citation accuracy checks, regression replay, safety evaluation, and reviewer signoff, the agent configures a measurable quality baseline instead of a broad test checklist.
+
+## Tool-Using Workflow Reconfiguration
+
+Tool-using workflow reconfiguration is for AI workflows that call APIs, Azure Functions, business systems, queues, MCP tools, or actions and need clear contracts, authorization, retries, idempotency, approvals, audit logs, and error handling.
+
+The Tool-Using Workflow Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+TOOL_INVENTORY
+TOOL_CONTRACTS
+AUTHORIZATION_MODEL
+SIDE_EFFECT_POLICY
+RETRY_AND_IDEMPOTENCY_POLICY
+APPROVAL_AND_ESCALATION_POLICY
+AUDIT_AND_TRACE_POLICY
+ERROR_HANDLING_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs an assistant that can create support tickets, call inventory APIs, and request refunds with approval and audit evidence, the agent configures the tool-use baseline around explicit side-effect controls.
+
+## Human Review And Escalation Reconfiguration
+
+Human review and escalation reconfiguration is for human-in-the-loop workflows around uncertain, risky, low-confidence, policy-sensitive, or high-impact AI outputs.
+
+The Human Review & Escalation Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+REVIEW_TRIGGERS
+CONFIDENCE_POLICY
+REVIEW_QUEUE
+REVIEWER_ROLES
+EVIDENCE_PACKAGE
+OVERRIDE_POLICY
+FEEDBACK_CAPTURE
+AUDIT_AND_RETENTION_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs low-confidence document extractions and policy-sensitive generated answers routed to reviewers with an evidence package, SLA, override reason, and feedback capture, the agent configures a human review control path.
 
 ## What The Agents Produce
 
