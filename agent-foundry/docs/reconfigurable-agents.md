@@ -797,6 +797,39 @@ VALIDATION_PLAN
 
 For example, if the user needs personalized content recommendations with cold-start handling, diversity rules, consent controls, and evaluation metrics, the agent configures the recommendation baseline.
 
+## Serverless And Event-Driven Hosting Reconfiguration
+
+Serverless and event-driven hosting reconfiguration is about the *runtime* of an AI workload — where and how it actually runs — rather than what the AI does.
+
+New to the catalog? Here is the distinction. Most reconfigurable agents decide *what* the AI does: search, RAG, document extraction, generation, guardrails. The Serverless & Event-Driven Hosting Reconfigurable Agent decides *where and how that work executes* on Azure: which compute service hosts it, what event starts it, how it scales, and how it stays reliable and affordable. Reach for it whenever a scenario mentions triggers, events, queues, schedules, scale-to-zero, cold starts, concurrency, or long-running background jobs.
+
+What it decides, in plain terms:
+
+- The hosting service — Azure Functions (event-driven code), Azure Container Apps (containerized services/APIs that can scale to zero), Container Apps Jobs (finite or scheduled batch runs), or Durable Functions (multi-step stateful orchestration).
+- The trigger — HTTP request, timer/schedule, queue or topic message, event, or blob change that starts the workload.
+- Scaling — scale-to-zero, minimum/maximum instances, and how many requests each instance handles at once.
+- Reliability — retries, idempotency (safe re-processing of duplicate events), and dead-letter handling.
+- The tradeoffs — cold-start vs. always-warm latency, state and durability, security (managed identity, public vs. private), and cost.
+
+The Serverless & Event-Driven Hosting Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+WORKLOAD_SHAPE
+HOSTING_TARGET
+TRIGGERS_AND_BINDINGS
+SCALE_POLICY
+STATE_AND_DURABILITY
+COLD_START_AND_LATENCY_POLICY
+IDEMPOTENCY_AND_RETRY
+SECURITY_MODEL
+COST_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs a RAG scoring step that runs on Azure Functions whenever a message lands on a queue, scales to zero when idle, and safely retries duplicate messages, the agent configures the serverless hosting baseline. It hands the AI logic back to the capability agents, the release process to Deployment & Release, the source connectors to Data Ingestion, and cost/security to the governance agents.
+
+
 
 Observability and continuous improvement reconfiguration is for production AI applications that need traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs.
 

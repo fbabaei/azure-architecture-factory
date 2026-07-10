@@ -62,6 +62,7 @@ Know the full menu so you can decompose and route accurately. Assign each capabi
 - Language and vision building blocks: Translation & Localization Reconfigurable Agent, Vision Analysis Reconfigurable Agent, and Embedding & Vectorization Reconfigurable Agent.
 - Knowledge depth: Knowledge Graph & GraphRAG Reconfigurable Agent for entity/relationship and multi-hop retrieval.
 - Model lifecycle and scale: Model Routing & AI Gateway Reconfigurable Agent, Fine-Tuning & Model Customization Reconfigurable Agent, Batch & Bulk Inference Reconfigurable Agent, and Deployment & Release Reconfigurable Agent.
+- Hosting and runtime: Serverless & Event-Driven Hosting Reconfigurable Agent for the compute substrate (Azure Functions, Container Apps, Container Apps Jobs, Durable Functions), triggers/bindings, scale-to-zero, and cold-start/latency decisions.
 - Agent internals: Agent Memory & State Reconfigurable Agent and Multi-Agent Orchestration Reconfigurable Agent.
 - Privacy, feedback, and personalization: Data Privacy & PII Redaction Reconfigurable Agent, Feedback & Continuous Learning Reconfigurable Agent, and Recommendation & Personalization Reconfigurable Agent.
 - Design and delivery support: Architecture & Design Agent, API & Integration Contract Agent, Data & Storage Design Agent, Configuration & Environment Contract Agent, Test & Evaluation Strategy Agent, UX & Human Workflow Agent, and Application Implementation Validation Agent.

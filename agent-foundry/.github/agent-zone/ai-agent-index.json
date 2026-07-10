@@ -2205,6 +2205,43 @@
         "next best action",
         "cold start"
       ]
+    },
+    {
+      "id": "serverless-event-driven-hosting-reconfigurable-agent",
+      "name": "Serverless & Event-Driven Hosting Reconfigurable Agent",
+      "path": ".github/agents/serverless-event-driven-hosting-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "capabilities": [
+        "runtime substrate selection",
+        "Azure Functions",
+        "Azure Container Apps",
+        "Container Apps Jobs",
+        "Durable Functions",
+        "triggers and bindings",
+        "scale-to-zero and concurrency",
+        "cold-start and latency",
+        "idempotency and retry",
+        "state and durability"
+      ],
+      "keywords": [
+        "serverless",
+        "event-driven",
+        "Azure Functions",
+        "Container Apps",
+        "Container Apps Jobs",
+        "Durable Functions",
+        "trigger",
+        "binding",
+        "scale to zero",
+        "cold start",
+        "concurrency",
+        "queue trigger",
+        "timer trigger",
+        "event grid"
+      ]
     }
   ]
 }
