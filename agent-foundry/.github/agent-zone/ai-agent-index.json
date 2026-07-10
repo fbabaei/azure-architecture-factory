@@ -1055,6 +1055,94 @@
       ]
     },
     {
+      "id": "security-rbac-network-boundary-reconfigurable-agent",
+      "name": "Security, RBAC & Network Boundary Reconfigurable Agent",
+      "path": ".github/agents/security-rbac-network-boundary-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services",
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "security boundaries",
+        "identity model",
+        "RBAC policy",
+        "least privilege",
+        "private endpoints",
+        "firewalls",
+        "egress controls",
+        "Key Vault",
+        "data access boundaries",
+        "audit",
+        "compliance",
+        "validation"
+      ],
+      "keywords": [
+        "security reconfigurable",
+        "RBAC reconfigurable",
+        "network boundary",
+        "private endpoint",
+        "Private Link",
+        "firewall",
+        "egress",
+        "managed identity",
+        "least privilege",
+        "Key Vault",
+        "data access boundary",
+        "document-level security",
+        "tenant isolation"
+      ]
+    },
+    {
+      "id": "data-ingestion-source-connector-reconfigurable-agent",
+      "name": "Data Ingestion & Source Connector Reconfigurable Agent",
+      "path": ".github/agents/data-ingestion-source-connector-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search",
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"
+      ],
+      "capabilities": [
+        "data ingestion",
+        "source connectors",
+        "Blob Storage",
+        "SharePoint",
+        "OneLake",
+        "SQL",
+        "API polling",
+        "queues",
+        "file drops",
+        "metadata mapping",
+        "change detection",
+        "dead-letter handling",
+        "normalization",
+        "validation"
+      ],
+      "keywords": [
+        "data ingestion reconfigurable",
+        "source connector",
+        "source connectors",
+        "Blob ingestion",
+        "SharePoint connector",
+        "OneLake",
+        "SQL ingestion",
+        "API polling",
+        "file drop",
+        "queue ingestion",
+        "metadata mapping",
+        "dead letter",
+        "dead-letter",
+        "backfill",
+        "incremental ingestion"
+      ]
+    },
+    {
       "id": "classic-search-app-agent",
       "name": "Classic Search App Agent",
       "path": ".github/agents/classic-search-app-agent.agent.md",

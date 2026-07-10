@@ -65,13 +65,15 @@ Use this category when users need configurable baselines for AI quality gates, t
 
 ## Lifecycle And Governance Prebuilt Reconfigurable Agents
 
-Use this category when users need configurable baselines for running Azure AI applications over time: keeping knowledge fresh, measuring and improving behavior, and governing cost and capacity.
+Use this category when users need configurable baselines for running Azure AI applications over time: keeping knowledge fresh, measuring and improving behavior, governing cost and capacity, securing boundaries, and connecting data sources.
 
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
 | Knowledge Freshness & Reindexing Reconfigurable Agent | Configure source freshness, incremental sync, deletion handling, reprocessing triggers, stale-content detection, citation freshness, reindexing, monitoring, and validation for search/RAG/agentic knowledge workflows | source inventory, change/deletion policy, reindex/reprocessing plan, citation freshness checks, monitoring and validation handoffs |
 | Observability & Continuous Improvement Reconfigurable Agent | Configure traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs | trace and signal plan, feedback loop, drift policy, dashboard/alert policy, continuous evaluation plan, improvement backlog |
 | Cost & Capacity Governance Reconfigurable Agent | Configure model and Search capacity, embedding cost policy, batch versus realtime tradeoffs, quotas, rate limits, caching, retention, budgets, alerts, and validation | usage profile, model/Search/embedding policy, quota and cache controls, budget/alert policy, validation checks |
+| Security, RBAC & Network Boundary Reconfigurable Agent | Configure identity, RBAC, least privilege, private endpoints, firewalls, egress, secrets, data-access boundaries, audit, compliance, and validation for Azure AI workflows | identity and RBAC policy, private networking and firewall plan, secret/data-access boundaries, audit and validation checks |
+| Data Ingestion & Source Connector Reconfigurable Agent | Configure Blob, SharePoint, OneLake, SQL, API, queue, file-drop, transcript, and mixed source ingestion with auth, metadata mapping, change/deletion handling, retries, dead letters, and validation | source inventory, connector and auth policy, schema/metadata mapping, retry/dead-letter plan, downstream handoffs, validation checks |
 
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |

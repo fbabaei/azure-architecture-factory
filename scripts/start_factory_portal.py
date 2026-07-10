@@ -1121,6 +1121,40 @@ RECONFIGURABLE_AGENT_OPTIONS = {
             "VALIDATION_PLAN",
         ],
     },
+    "security-rbac-network-boundary-reconfigurable-agent": {
+        "name": "Security, RBAC & Network Boundary Reconfigurable Agent",
+        "summary": "Configure identity, RBAC, least privilege, private endpoints, firewalls, egress, secret handling, data-access boundaries, audit, compliance, and validation for Azure AI workflows.",
+        "contract": [
+            "AI_WORKFLOW",
+            "SECURITY_SCOPE",
+            "IDENTITY_MODEL",
+            "RBAC_POLICY",
+            "NETWORK_BOUNDARY",
+            "PRIVATE_ENDPOINT_POLICY",
+            "FIREWALL_AND_EGRESS_POLICY",
+            "SECRET_AND_CONFIGURATION_POLICY",
+            "DATA_ACCESS_BOUNDARIES",
+            "AUDIT_AND_COMPLIANCE_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "data-ingestion-source-connector-reconfigurable-agent": {
+        "name": "Data Ingestion & Source Connector Reconfigurable Agent",
+        "summary": "Configure source connectors, authentication, ingestion modes, schema and metadata mapping, change/deletion handling, retries, dead letters, normalization, observability, audit, and validation.",
+        "contract": [
+            "INGESTION_WORKFLOW",
+            "SOURCE_INVENTORY",
+            "CONNECTOR_TYPES",
+            "AUTH_AND_ACCESS_POLICY",
+            "INGESTION_MODE",
+            "SCHEMA_AND_METADATA_MAPPING",
+            "CHANGE_AND_DELETION_HANDLING",
+            "RETRY_AND_DEADLETTER_POLICY",
+            "NORMALIZATION_AND_HANDOFF",
+            "OBSERVABILITY_AND_AUDIT_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
 }
 
 
@@ -1395,6 +1429,52 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             "retention": 3,
             "token budget": 4,
         },
+        "security-rbac-network-boundary-reconfigurable-agent": {
+            "security": 4,
+            "security boundary": 5,
+            "security boundaries": 5,
+            "rbac": 5,
+            "least privilege": 5,
+            "managed identity": 4,
+            "identity model": 4,
+            "private endpoint": 5,
+            "private endpoints": 5,
+            "private link": 5,
+            "firewall": 4,
+            "firewalls": 4,
+            "egress": 4,
+            "key vault": 4,
+            "secret": 3,
+            "secrets": 3,
+            "data access boundary": 5,
+            "document-level security": 5,
+            "tenant isolation": 5,
+            "audit": 3,
+            "compliance": 3,
+        },
+        "data-ingestion-source-connector-reconfigurable-agent": {
+            "data ingestion": 5,
+            "ingestion": 4,
+            "source connector": 5,
+            "source connectors": 5,
+            "connector": 3,
+            "connectors": 3,
+            "blob ingestion": 5,
+            "sharepoint connector": 5,
+            "onelake": 4,
+            "sql ingestion": 5,
+            "api polling": 5,
+            "file drop": 4,
+            "file drops": 4,
+            "queue ingestion": 5,
+            "event-driven ingestion": 5,
+            "metadata mapping": 5,
+            "schema mapping": 4,
+            "dead letter": 4,
+            "dead-letter": 4,
+            "backfill": 4,
+            "incremental ingestion": 5,
+        },
     }
     scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
     matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
@@ -1463,6 +1543,18 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
         scores["cost-capacity-governance-reconfigurable-agent"] += 5
         matched["cost-capacity-governance-reconfigurable-agent"].append("cost/capacity controls plus AI workload requirements")
 
+    security_terms = ("security", "rbac", "least privilege", "managed identity", "private endpoint", "private link", "firewall", "egress", "key vault", "tenant isolation")
+    boundary_terms = ("network", "boundary", "data access", "document-level", "private", "audit", "compliance", "secret", "access")
+    if any(term in text for term in security_terms) and any(term in text for term in boundary_terms):
+        scores["security-rbac-network-boundary-reconfigurable-agent"] += 5
+        matched["security-rbac-network-boundary-reconfigurable-agent"].append("security/RBAC requirements plus network or data boundary controls")
+
+    ingestion_terms = ("ingestion", "source connector", "connector", "connectors", "file drop", "api polling", "queue", "backfill")
+    source_terms = ("blob", "sharepoint", "onelake", "sql", "source", "metadata", "schema", "dead letter", "incremental", "event-driven")
+    if any(term in text for term in ingestion_terms) and any(term in text for term in source_terms):
+        scores["data-ingestion-source-connector-reconfigurable-agent"] += 5
+        matched["data-ingestion-source-connector-reconfigurable-agent"].append("source connector plus ingestion pipeline requirements")
+
     if source_type == "learning-plan":
         recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
     else:
@@ -1477,7 +1569,7 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
     reasons = matched.get(recommended_agent, [])[:6]
     if not reasons:
         reasons = [
-            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, guardrails, evaluation/quality, tool workflows, human review, knowledge freshness, observability, or cost/capacity governance, so the orchestrator should route after more detail is provided."
+            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, guardrails, evaluation/quality, tool workflows, human review, knowledge freshness, observability, cost/capacity governance, security/RBAC/network boundaries, or ingestion/source connectors, so the orchestrator should route after more detail is provided."
         ]
 
     return {

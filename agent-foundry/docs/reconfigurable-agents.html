@@ -136,17 +136,19 @@
 <li>Tool-Using Workflow Reconfigurable Agent</li>
 <li>Human Review &amp; Escalation Reconfigurable Agent</li>
 </ul>
-<p>The lifecycle and governance prebuilt reconfigurable category adds three specialized configurable agents:</p>
+<p>The lifecycle and governance prebuilt reconfigurable category adds five specialized configurable agents:</p>
 <ul>
 <li>Knowledge Freshness &amp; Reindexing Reconfigurable Agent</li>
 <li>Observability &amp; Continuous Improvement Reconfigurable Agent</li>
 <li>Cost &amp; Capacity Governance Reconfigurable Agent</li>
+<li>Security, RBAC &amp; Network Boundary Reconfigurable Agent</li>
+<li>Data Ingestion &amp; Source Connector Reconfigurable Agent</li>
 </ul>
 <p>For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For an end-to-end mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
 <h2 id="how-reconfiguration-works">How Reconfiguration Works</h2>
 <ol>
 <li>The user starts with Azure AI Search Reconfigurable Orchestrator.</li>
-<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, freshness/reindexing, observability/improvement, cost/capacity, or missing enough detail.</li>
+<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, freshness/reindexing, observability/improvement, cost/capacity, security/RBAC/network boundaries, ingestion/source connectors, or missing enough detail.</li>
 <li>The orchestrator extracts a shared requirements profile.</li>
 <li>The orchestrator routes to the most specific reconfigurable agent.</li>
 <li>The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.</li>
@@ -398,6 +400,38 @@ BUDGET_AND_ALERT_POLICY
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs to control RAG costs across model calls, embeddings, semantic ranking, evaluation runs, traces, and peak query traffic, the agent configures cost and capacity policies with explicit quality and latency tradeoffs.</p>
+<h2 id="security-rbac-and-network-boundary-reconfiguration">Security, RBAC, And Network Boundary Reconfiguration</h2>
+<p>Security, RBAC, and network boundary reconfiguration is for Azure AI applications that need identity, least privilege, private networking, firewall and egress controls, secret handling, data-access boundaries, audit evidence, and compliance handoffs.</p>
+<p>The Security, RBAC &amp; Network Boundary Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+SECURITY_SCOPE
+IDENTITY_MODEL
+RBAC_POLICY
+NETWORK_BOUNDARY
+PRIVATE_ENDPOINT_POLICY
+FIREWALL_AND_EGRESS_POLICY
+SECRET_AND_CONFIGURATION_POLICY
+DATA_ACCESS_BOUNDARIES
+AUDIT_AND_COMPLIANCE_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs an enterprise RAG app that uses managed identity, private Storage and Search access, document-level security, Key Vault references, denied-access tests, and audit evidence, the agent configures the boundary baseline and hands off to security, auth, and implementation specialists.</p>
+<h2 id="data-ingestion-and-source-connector-reconfiguration">Data Ingestion And Source Connector Reconfiguration</h2>
+<p>Data ingestion and source connector reconfiguration is for Azure AI applications that need reusable connector patterns before data reaches search, RAG, document processing, analytics, or agent workflows.</p>
+<p>The Data Ingestion &amp; Source Connector Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">INGESTION_WORKFLOW
+SOURCE_INVENTORY
+CONNECTOR_TYPES
+AUTH_AND_ACCESS_POLICY
+INGESTION_MODE
+SCHEMA_AND_METADATA_MAPPING
+CHANGE_AND_DELETION_HANDLING
+RETRY_AND_DEADLETTER_POLICY
+NORMALIZATION_AND_HANDOFF
+OBSERVABILITY_AND_AUDIT_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs Blob, SharePoint, and SQL sources ingested into a RAG corpus with managed identity, metadata mapping, incremental updates, deletion handling, dead-letter replay, and downstream query validation, the agent configures the connector baseline and hands off to freshness, storage, search, and implementation specialists.</p>
 <h2 id="what-the-agents-produce">What The Agents Produce</h2>
 <p>Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:</p>
 <ul>

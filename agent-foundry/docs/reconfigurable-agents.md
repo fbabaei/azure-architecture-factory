@@ -26,18 +26,20 @@ The quality, workflow, and human review prebuilt reconfigurable category adds th
 - Tool-Using Workflow Reconfigurable Agent
 - Human Review & Escalation Reconfigurable Agent
 
-The lifecycle and governance prebuilt reconfigurable category adds three specialized configurable agents:
+The lifecycle and governance prebuilt reconfigurable category adds five specialized configurable agents:
 
 - Knowledge Freshness & Reindexing Reconfigurable Agent
 - Observability & Continuous Improvement Reconfigurable Agent
 - Cost & Capacity Governance Reconfigurable Agent
+- Security, RBAC & Network Boundary Reconfigurable Agent
+- Data Ingestion & Source Connector Reconfigurable Agent
 
 For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see [Reconfigurable Agents Quick Start](reconfigurable-agents-quick-start.md). For an end-to-end mock project example, see [Reconfigurable Agents Walkthrough](reconfigurable-agents-walkthrough.md).
 
 ## How Reconfiguration Works
 
 1. The user starts with Azure AI Search Reconfigurable Orchestrator.
-2. The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, freshness/reindexing, observability/improvement, cost/capacity, or missing enough detail.
+2. The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, freshness/reindexing, observability/improvement, cost/capacity, security/RBAC/network boundaries, ingestion/source connectors, or missing enough detail.
 3. The orchestrator extracts a shared requirements profile.
 4. The orchestrator routes to the most specific reconfigurable agent.
 5. The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.
@@ -375,6 +377,50 @@ VALIDATION_PLAN
 ```
 
 For example, if the user needs to control RAG costs across model calls, embeddings, semantic ranking, evaluation runs, traces, and peak query traffic, the agent configures cost and capacity policies with explicit quality and latency tradeoffs.
+
+## Security, RBAC, And Network Boundary Reconfiguration
+
+Security, RBAC, and network boundary reconfiguration is for Azure AI applications that need identity, least privilege, private networking, firewall and egress controls, secret handling, data-access boundaries, audit evidence, and compliance handoffs.
+
+The Security, RBAC & Network Boundary Reconfigurable Agent adapts these points:
+
+```text
+AI_WORKFLOW
+SECURITY_SCOPE
+IDENTITY_MODEL
+RBAC_POLICY
+NETWORK_BOUNDARY
+PRIVATE_ENDPOINT_POLICY
+FIREWALL_AND_EGRESS_POLICY
+SECRET_AND_CONFIGURATION_POLICY
+DATA_ACCESS_BOUNDARIES
+AUDIT_AND_COMPLIANCE_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs an enterprise RAG app that uses managed identity, private Storage and Search access, document-level security, Key Vault references, denied-access tests, and audit evidence, the agent configures the boundary baseline and hands off to security, auth, and implementation specialists.
+
+## Data Ingestion And Source Connector Reconfiguration
+
+Data ingestion and source connector reconfiguration is for Azure AI applications that need reusable connector patterns before data reaches search, RAG, document processing, analytics, or agent workflows.
+
+The Data Ingestion & Source Connector Reconfigurable Agent adapts these points:
+
+```text
+INGESTION_WORKFLOW
+SOURCE_INVENTORY
+CONNECTOR_TYPES
+AUTH_AND_ACCESS_POLICY
+INGESTION_MODE
+SCHEMA_AND_METADATA_MAPPING
+CHANGE_AND_DELETION_HANDLING
+RETRY_AND_DEADLETTER_POLICY
+NORMALIZATION_AND_HANDOFF
+OBSERVABILITY_AND_AUDIT_POLICY
+VALIDATION_PLAN
+```
+
+For example, if the user needs Blob, SharePoint, and SQL sources ingested into a RAG corpus with managed identity, metadata mapping, incremental updates, deletion handling, dead-letter replay, and downstream query validation, the agent configures the connector baseline and hands off to freshness, storage, search, and implementation specialists.
 
 ## What The Agents Produce
 
