@@ -57,6 +57,25 @@ GROUNDING_POLICY
 VALIDATION_PLAN
 ```
 
+## Coordinating Multiple Agents
+
+A real architecture usually needs more than one reconfigurable agent — for example a document-to-search pipeline plus a RAG agent plus a security/RBAC agent plus an observability agent. These agents do not run in parallel on a server. They are coordinated as an approval-gated, sequential handoff workflow that you drive in VS Code / Copilot.
+
+Here is how a single portal run handles that:
+
+1. **The orchestrator always leads as lead architect.** Every run starts with an orchestrator (the Azure AI Application Orchestrator for app scenarios, or the Azure AI Learning Orchestrator for learning plans) as the first owner agent. It decomposes the submission into capabilities, maps each to a single owner agent, owns cross-cutting concerns (security, cost, observability, responsible AI, freshness), sequences the handoffs, and records the key architecture decisions — before any specialist configuration begins. This holds whether you leave the agent field on **Route automatically** or explicitly pick a specialist.
+2. **A specialist is chosen as the configuration owner.** If you pick an agent, it becomes the configuration owner in its own step under the lead architect. If you leave **Route automatically**, the portal scores every agent against your source text, input type, and reconfiguration profile and selects the best-fitting one (falling back to the Azure AI Search Reconfigurable Orchestrator if nothing matches strongly).
+3. **The plan is built as a team.** Around the lead architect and specialist, the portal assembles a fixed supporting team of owner agents — planning companion, configuration/environment contract, security & compliance, test & evaluation, and implementation validation — plus an Architecture Design Agent when the input is a diagram.
+4. **Execution mode is `approval-gated-handoff`.** The plan is an ordered set of steps, each with its own owner agent, starting with the lead architect's decomposition. Nothing runs until you approve.
+5. **Agents hand off to each other.** Each reconfigurable agent's `Handoffs` section names the specialists it defers to (for example, an ingestion agent hands off to freshness, security, and document-to-search agents). Multi-agent composition happens through these handoffs, one approved step at a time.
+
+Two practical patterns for a multi-capability architecture:
+
+- **Orchestrator-first:** submit the whole architecture and let an orchestrator identify the needed capabilities and sequence the handoffs. The recommendation panel scores all agents, so secondary capabilities are visible in the reasons even though only the top agent is selected.
+- **One capability per run:** run the runner multiple times, one reconfigurable agent per capability, and let the planning companion and configuration-contract agents keep the contracts consistent across runs.
+
+> Note: `.agent.md` files are VS Code / Copilot customization files, not a hosted multi-agent runtime. "Multiple agents working together" means a coordinated, human-approved handoff workflow in the editor — not agents executing live in parallel on a server.
+
 ## Classic Search Reconfiguration
 
 Classic search reconfiguration is for direct index-first Azure AI Search experiences. Use it when the application primarily returns ranked results instead of generated answers.

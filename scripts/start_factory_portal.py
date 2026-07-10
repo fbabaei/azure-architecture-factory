@@ -1618,7 +1618,11 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str, select
         "Application Implementation Validation Agent",
     ]
     if selected_agent_info:
+        # The orchestrator always leads as lead architect: it decomposes the
+        # submission, owns cross-cutting concerns, and sequences handoffs. The
+        # selected specialist owns its own configuration step downstream.
         owner_agents = [
+            "Azure AI Application Orchestrator",
             selected_agent_info["name"],
             "Application Planning Companion Agent",
             "Configuration & Environment Contract Agent",
@@ -1639,12 +1643,12 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str, select
         {
             "id": "plan",
             "ownerAgent": owner_agents[0],
-            "action": f"Convert the submitted {source_label} into scoped work packages and agent handoffs.",
+            "action": f"As lead architect, decompose the submitted {source_label} into scoped capabilities, owner agents, and a sequenced handoff order before any specialist configuration.",
             "evidence": "Trace each generated step to submitted source text or bundled Agent Foundry documentation.",
         },
         {
             "id": "contract",
-            "ownerAgent": owner_agents[min(2, len(owner_agents) - 1)],
+            "ownerAgent": "Configuration & Environment Contract Agent" if "Configuration & Environment Contract Agent" in owner_agents else owner_agents[min(2, len(owner_agents) - 1)],
             "action": "Define configuration, environment, data, API, and approval boundaries before implementation.",
             "evidence": "Record required settings, missing decisions, validation gates, and blocked assumptions.",
         },
@@ -1699,7 +1703,7 @@ def _build_agent_foundry_plan(source_type: str, title: str, content: str, select
         "approvalRequired": True,
         "executionMode": "approval-gated-handoff",
         "handoffPrompts": {
-            "planning": f"{selected_agent_info['name'] if selected_agent_info else 'Application Planning Companion Agent'}, review this portal-created {source_label} plan one step at a time. Do not execute commands. Confirm assumptions, source evidence, selected configuration fields, owners, and approval gates before handing off.",
+            "planning": f"{owner_agents[0]}, as lead architect review this portal-created {source_label} plan one step at a time. Do not execute commands. Decompose it into capabilities, confirm the owner agents and handoff order, then confirm assumptions, source evidence, selected configuration fields, and approval gates before handing off to each specialist.",
             "implementation": "Application Implementation Validation Agent, execute only the approved current step, edit only named files, run focused validation, and summarize evidence plus remaining issues.",
         },
         "guardrails": [

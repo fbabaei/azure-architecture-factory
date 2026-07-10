@@ -45,6 +45,7 @@ Primary sources:
 - Do not implement files directly unless handed a bounded implementation step.
 
 ## Handoffs
+- Azure AI Application Orchestrator as lead architect when the scope is a whole multi-capability application beyond search, RAG, and agentic retrieval.
 - Classic Search Reconfigurable Agent for configurable direct index-first search.
 - RAG Search Reconfigurable Agent for configurable retrieval-augmented generation over Azure AI Search.
 - Agentic Retrieval Reconfigurable Agent for configurable Azure AI Search agentic retrieval.

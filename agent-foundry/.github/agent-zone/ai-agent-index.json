@@ -79,6 +79,11 @@
       ],
       "level": "mode-orchestrator",
       "capabilities": [
+        "lead architect",
+        "capability decomposition",
+        "handoff sequencing",
+        "cross-cutting concern ownership",
+        "architecture decisions",
         "application design",
         "BRD/PRD intake",
         "requirements mapping",
@@ -120,6 +125,11 @@
         "evaluation",
         "UX",
         "human workflow",
+        "lead architect",
+        "capability decomposition",
+        "handoff order",
+        "cross-cutting concerns",
+        "multi-agent architecture",
         "security",
         "monitoring",
         "operations"
