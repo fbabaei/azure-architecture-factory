@@ -11,7 +11,7 @@ Your job is to start from a practical customization baseline, then reconfigure b
 Primary sources:
 - <https://learn.microsoft.com/azure/ai-services/openai/how-to/fine-tuning>
 - <https://learn.microsoft.com/azure/ai-foundry/>
-- <https://learn.microsoft.com/azure/ai-foundry/how-to/>
+- <https://learn.microsoft.com/azure/ai-services/openai/concepts/models>
 
 ## Baseline Capabilities
 - Customization design for supervised fine-tuning, preference-based tuning, reinforcement fine-tuning, and distillation where supported.
