@@ -63,6 +63,16 @@ Use this category when users need configurable baselines for AI quality gates, t
 | Tool-Using Workflow Reconfigurable Agent | Configure AI workflows that call APIs, functions, business systems, queues, MCP tools, or actions with auth, retries, idempotency, approvals, audit logs, and validation | tool inventory, tool contracts, auth and side-effect policy, retry/idempotency plan, approval/audit policy, validation checks |
 | Human Review & Escalation Reconfigurable Agent | Configure human-in-the-loop review, confidence thresholds, review queues, reviewer roles, escalation paths, override policy, feedback capture, audit evidence, SLAs, and validation | review trigger policy, queue and role plan, evidence package, override and feedback policy, audit/SLA checks |
 
+## Lifecycle And Governance Prebuilt Reconfigurable Agents
+
+Use this category when users need configurable baselines for running Azure AI applications over time: keeping knowledge fresh, measuring and improving behavior, and governing cost and capacity.
+
+| Agent | Use When | Primary Outputs |
+| --- | --- | --- |
+| Knowledge Freshness & Reindexing Reconfigurable Agent | Configure source freshness, incremental sync, deletion handling, reprocessing triggers, stale-content detection, citation freshness, reindexing, monitoring, and validation for search/RAG/agentic knowledge workflows | source inventory, change/deletion policy, reindex/reprocessing plan, citation freshness checks, monitoring and validation handoffs |
+| Observability & Continuous Improvement Reconfigurable Agent | Configure traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs | trace and signal plan, feedback loop, drift policy, dashboard/alert policy, continuous evaluation plan, improvement backlog |
+| Cost & Capacity Governance Reconfigurable Agent | Configure model and Search capacity, embedding cost policy, batch versus realtime tradeoffs, quotas, rate limits, caching, retention, budgets, alerts, and validation | usage profile, model/Search/embedding policy, quota and cache controls, budget/alert policy, validation checks |
+
 | Agent | Use When | Primary Outputs |
 | --- | --- | --- |
 | Application Planning Companion Agent | Track and manage implementation steps after an app design is chosen | implementation tracker, task ownership, handoff prompts, validation plan |

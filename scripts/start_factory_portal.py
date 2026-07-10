@@ -1073,6 +1073,54 @@ RECONFIGURABLE_AGENT_OPTIONS = {
             "VALIDATION_PLAN",
         ],
     },
+    "knowledge-freshness-reindexing-reconfigurable-agent": {
+        "name": "Knowledge Freshness & Reindexing Reconfigurable Agent",
+        "summary": "Configure source freshness, incremental sync, deletion handling, stale-content detection, citation freshness, reindexing, reprocessing triggers, monitoring, and validation for search/RAG knowledge workflows.",
+        "contract": [
+            "KNOWLEDGE_WORKFLOW",
+            "SOURCE_INVENTORY",
+            "FRESHNESS_REQUIREMENTS",
+            "CHANGE_DETECTION_POLICY",
+            "DELETION_POLICY",
+            "REINDEXING_POLICY",
+            "REPROCESSING_TRIGGERS",
+            "CITATION_FRESHNESS_POLICY",
+            "MONITORING_AND_ALERTS",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "observability-continuous-improvement-reconfigurable-agent": {
+        "name": "Observability & Continuous Improvement Reconfigurable Agent",
+        "summary": "Configure traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs.",
+        "contract": [
+            "AI_WORKFLOW",
+            "OBSERVABILITY_OBJECTIVES",
+            "TRACE_POLICY",
+            "QUALITY_SIGNAL_POLICY",
+            "FEEDBACK_CAPTURE",
+            "DRIFT_DETECTION_POLICY",
+            "DASHBOARD_AND_ALERTS",
+            "CONTINUOUS_EVALUATION_POLICY",
+            "IMPROVEMENT_BACKLOG",
+            "VALIDATION_PLAN",
+        ],
+    },
+    "cost-capacity-governance-reconfigurable-agent": {
+        "name": "Cost & Capacity Governance Reconfigurable Agent",
+        "summary": "Configure model and Azure AI Search cost/capacity controls, embedding cost policy, batch versus realtime tradeoffs, quotas, rate limits, caching, retention, budgets, alerts, and validation.",
+        "contract": [
+            "AI_WORKFLOW",
+            "USAGE_PROFILE",
+            "MODEL_COST_POLICY",
+            "SEARCH_CAPACITY_POLICY",
+            "EMBEDDING_AND_INDEXING_COST_POLICY",
+            "BATCH_REALTIME_POLICY",
+            "QUOTA_AND_RATE_LIMIT_POLICY",
+            "CACHE_AND_RETENTION_POLICY",
+            "BUDGET_AND_ALERT_POLICY",
+            "VALIDATION_PLAN",
+        ],
+    },
 }
 
 
@@ -1284,6 +1332,69 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
             "sla": 3,
             "audit evidence": 4,
         },
+        "knowledge-freshness-reindexing-reconfigurable-agent": {
+            "freshness": 5,
+            "source freshness": 5,
+            "reindex": 5,
+            "reindexing": 5,
+            "incremental sync": 5,
+            "change detection": 5,
+            "deletion handling": 5,
+            "tombstone": 4,
+            "deleted documents": 4,
+            "embedding refresh": 4,
+            "stale content": 5,
+            "stale citation": 5,
+            "citation freshness": 5,
+            "indexer schedule": 4,
+            "reprocessing": 4,
+            "source drift": 4,
+            "orphaned chunks": 4,
+        },
+        "observability-continuous-improvement-reconfigurable-agent": {
+            "observability": 5,
+            "continuous improvement": 5,
+            "trace": 3,
+            "traces": 3,
+            "tracing": 4,
+            "quality telemetry": 5,
+            "telemetry": 3,
+            "user feedback": 5,
+            "failed answer": 5,
+            "failed-answer": 5,
+            "drift detection": 5,
+            "prompt drift": 4,
+            "model drift": 4,
+            "index drift": 4,
+            "dashboard": 3,
+            "dashboards": 3,
+            "alerts": 3,
+            "continuous evaluation": 5,
+            "improvement backlog": 5,
+            "production feedback": 4,
+        },
+        "cost-capacity-governance-reconfigurable-agent": {
+            "cost": 4,
+            "cost governance": 5,
+            "capacity": 4,
+            "capacity planning": 5,
+            "cost controls": 5,
+            "budget": 4,
+            "budget alerts": 5,
+            "quota": 4,
+            "quotas": 4,
+            "rate limit": 4,
+            "rate limits": 4,
+            "throttling": 4,
+            "search sku": 5,
+            "sku sizing": 5,
+            "embedding cost": 5,
+            "batch processing": 3,
+            "realtime processing": 3,
+            "caching": 3,
+            "retention": 3,
+            "token budget": 4,
+        },
     }
     scores: dict[str, int] = {agent_id: 0 for agent_id in keyword_sets}
     matched: dict[str, list[str]] = {agent_id: [] for agent_id in keyword_sets}
@@ -1334,6 +1445,24 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
         scores["human-review-escalation-reconfigurable-agent"] += 5
         matched["human-review-escalation-reconfigurable-agent"].append("human review plus escalation/control workflow")
 
+    freshness_terms = ("freshness", "reindex", "reindexing", "incremental sync", "change detection", "source drift", "deletion", "tombstone", "stale")
+    knowledge_lifecycle_terms = ("search", "rag", "index", "indexer", "knowledge", "citation", "embedding", "chunk")
+    if any(term in text for term in freshness_terms) and any(term in text for term in knowledge_lifecycle_terms):
+        scores["knowledge-freshness-reindexing-reconfigurable-agent"] += 5
+        matched["knowledge-freshness-reindexing-reconfigurable-agent"].append("knowledge lifecycle plus freshness/reindexing requirements")
+
+    observability_terms = ("observability", "trace", "tracing", "telemetry", "dashboard", "alerts", "feedback")
+    improvement_terms = ("continuous improvement", "drift", "failed answer", "quality", "evaluation", "backlog", "production")
+    if any(term in text for term in observability_terms) and any(term in text for term in improvement_terms):
+        scores["observability-continuous-improvement-reconfigurable-agent"] += 5
+        matched["observability-continuous-improvement-reconfigurable-agent"].append("observability plus continuous improvement requirements")
+
+    cost_terms = ("cost", "budget", "quota", "quotas", "capacity", "sku", "rate limit", "throttling")
+    workload_terms = ("model", "search", "embedding", "rag", "batch", "realtime", "token", "cache", "traffic")
+    if any(term in text for term in cost_terms) and any(term in text for term in workload_terms):
+        scores["cost-capacity-governance-reconfigurable-agent"] += 5
+        matched["cost-capacity-governance-reconfigurable-agent"].append("cost/capacity controls plus AI workload requirements")
+
     if source_type == "learning-plan":
         recommended_agent = "azure-ai-search-reconfigurable-orchestrator"
     else:
@@ -1348,7 +1477,7 @@ def _recommend_reconfigurable_agent(source_type: str, content: str, configuratio
     reasons = matched.get(recommended_agent, [])[:6]
     if not reasons:
         reasons = [
-            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, guardrails, evaluation/quality, tool workflows, or human review, so the orchestrator should route after more detail is provided."
+            "The requirements do not yet strongly indicate search, RAG, agentic retrieval, document extraction, document-to-search indexing, multimodal knowledge, speech intelligence, guardrails, evaluation/quality, tool workflows, human review, knowledge freshness, observability, or cost/capacity governance, so the orchestrator should route after more detail is provided."
         ]
 
     return {

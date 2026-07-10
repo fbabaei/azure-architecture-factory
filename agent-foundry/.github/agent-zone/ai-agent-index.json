@@ -29,457 +29,1609 @@
       "id": "azure-ai-agent-foundry-orchestrator",
       "name": "Azure AI Agent Foundry Orchestrator",
       "path": ".github/agents/azure-ai-agent-foundry-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "top-orchestrator",
-      "capabilities": ["agent discovery", "intent routing", "catalog search", "multi-agent coordination"],
-      "keywords": ["find agent", "browse catalog", "Azure AI", "application agent", "learning path", "orchestrator"]
+      "capabilities": [
+        "agent discovery",
+        "intent routing",
+        "catalog search",
+        "multi-agent coordination"
+      ],
+      "keywords": [
+        "find agent",
+        "browse catalog",
+        "Azure AI",
+        "application agent",
+        "learning path",
+        "orchestrator"
+      ]
     },
     {
       "id": "azure-ai-learning-orchestrator",
       "name": "Azure AI Learning Orchestrator",
       "path": ".github/agents/azure-ai-learning-orchestrator.agent.md",
-      "audience": ["learning"],
+      "audience": [
+        "learning"
+      ],
       "level": "mode-orchestrator",
-      "capabilities": ["module guidance", "lab routing", "learning plan"],
-      "keywords": ["learn", "module", "lab", "study", "exercise"]
+      "capabilities": [
+        "module guidance",
+        "lab routing",
+        "learning plan"
+      ],
+      "keywords": [
+        "learn",
+        "module",
+        "lab",
+        "study",
+        "exercise"
+      ]
     },
     {
       "id": "azure-ai-application-orchestrator",
       "name": "Azure AI Application Orchestrator",
       "path": ".github/agents/azure-ai-application-orchestrator.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "mode-orchestrator",
-      "capabilities": ["application design", "BRD/PRD intake", "requirements mapping", "architecture artifact intake", "diagram-to-design mapping", "architecture routing", "contract routing", "data design routing", "configuration routing", "test and evaluation routing", "UX workflow routing", "agent configuration", "integration planning", "production readiness routing"],
-      "keywords": ["build app", "BRD", "PRD", "requirements", "feature brief", "architecture diagram", "Markdown architecture", "Mermaid", "PlantUML", "draw.io", "Visio", "diagram to design", "plug in agent", "configure agent", "solution design", "architecture", "API contract", "data design", "storage", "configuration", "environment", "testing", "evaluation", "UX", "human workflow", "security", "monitoring", "operations"]
+      "capabilities": [
+        "application design",
+        "BRD/PRD intake",
+        "requirements mapping",
+        "architecture artifact intake",
+        "diagram-to-design mapping",
+        "architecture routing",
+        "contract routing",
+        "data design routing",
+        "configuration routing",
+        "test and evaluation routing",
+        "UX workflow routing",
+        "agent configuration",
+        "integration planning",
+        "production readiness routing"
+      ],
+      "keywords": [
+        "build app",
+        "BRD",
+        "PRD",
+        "requirements",
+        "feature brief",
+        "architecture diagram",
+        "Markdown architecture",
+        "Mermaid",
+        "PlantUML",
+        "draw.io",
+        "Visio",
+        "diagram to design",
+        "plug in agent",
+        "configure agent",
+        "solution design",
+        "architecture",
+        "API contract",
+        "data design",
+        "storage",
+        "configuration",
+        "environment",
+        "testing",
+        "evaluation",
+        "UX",
+        "human workflow",
+        "security",
+        "monitoring",
+        "operations"
+      ]
     },
     {
       "id": "application-planning-companion-agent",
       "name": "Application Planning Companion Agent",
       "path": ".github/agents/application-planning-companion-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "planning-companion",
-      "capabilities": ["implementation tracking", "design handoff", "task management", "planning artifacts", "validation planning"],
-      "keywords": ["tag along", "planning steps", "manage build", "designer helper", "handoff", "track tasks", "without execute"]
+      "capabilities": [
+        "implementation tracking",
+        "design handoff",
+        "task management",
+        "planning artifacts",
+        "validation planning"
+      ],
+      "keywords": [
+        "tag along",
+        "planning steps",
+        "manage build",
+        "designer helper",
+        "handoff",
+        "track tasks",
+        "without execute"
+      ]
     },
     {
       "id": "application-implementation-validation-agent",
       "name": "Application Implementation Validation Agent",
       "path": ".github/agents/application-implementation-validation-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "implementation-validation",
-      "capabilities": ["step implementation", "terminal execution", "test execution", "build validation", "validation evidence"],
-      "keywords": ["implement step", "run validation", "execute commands", "terminal", "tests", "local server", "validator"]
+      "capabilities": [
+        "step implementation",
+        "terminal execution",
+        "test execution",
+        "build validation",
+        "validation evidence"
+      ],
+      "keywords": [
+        "implement step",
+        "run validation",
+        "execute commands",
+        "terminal",
+        "tests",
+        "local server",
+        "validator"
+      ]
     },
     {
       "id": "architecture-design-agent",
       "name": "Architecture & Design Agent",
       "path": ".github/agents/architecture-design-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["application architecture", "component design", "request flow", "data flow", "design decisions"],
-      "keywords": ["architecture", "design", "components", "boundaries", "request flow", "data flow", "new app", "solution design"]
+      "capabilities": [
+        "application architecture",
+        "component design",
+        "request flow",
+        "data flow",
+        "design decisions"
+      ],
+      "keywords": [
+        "architecture",
+        "design",
+        "components",
+        "boundaries",
+        "request flow",
+        "data flow",
+        "new app",
+        "solution design"
+      ]
     },
     {
       "id": "api-integration-contract-agent",
       "name": "API & Integration Contract Agent",
       "path": ".github/agents/api-integration-contract-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["API contracts", "integration contracts", "schemas", "error handling", "retry policy"],
-      "keywords": ["API", "contract", "schema", "integration", "webhook", "event", "tool contract", "error shape", "idempotency"]
+      "capabilities": [
+        "API contracts",
+        "integration contracts",
+        "schemas",
+        "error handling",
+        "retry policy"
+      ],
+      "keywords": [
+        "API",
+        "contract",
+        "schema",
+        "integration",
+        "webhook",
+        "event",
+        "tool contract",
+        "error shape",
+        "idempotency"
+      ]
     },
     {
       "id": "data-storage-design-agent",
       "name": "Data & Storage Design Agent",
       "path": ".github/agents/data-storage-design-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["data design", "storage design", "indexing", "retention", "metadata", "embeddings"],
-      "keywords": ["data", "storage", "schema", "metadata", "embeddings", "generated media", "retention", "audit log", "indexing"]
+      "capabilities": [
+        "data design",
+        "storage design",
+        "indexing",
+        "retention",
+        "metadata",
+        "embeddings"
+      ],
+      "keywords": [
+        "data",
+        "storage",
+        "schema",
+        "metadata",
+        "embeddings",
+        "generated media",
+        "retention",
+        "audit log",
+        "indexing"
+      ]
     },
     {
       "id": "configuration-environment-contract-agent",
       "name": "Configuration & Environment Contract Agent",
       "path": ".github/agents/configuration-environment-contract-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["configuration contract", "environment variables", ".env guidance", "feature flags", "validation rules"],
-      "keywords": ["configuration", "environment", ".env", "settings", "feature flags", "endpoint placeholders", "validation", "local dev", "staging", "production"]
+      "capabilities": [
+        "configuration contract",
+        "environment variables",
+        ".env guidance",
+        "feature flags",
+        "validation rules"
+      ],
+      "keywords": [
+        "configuration",
+        "environment",
+        ".env",
+        "settings",
+        "feature flags",
+        "endpoint placeholders",
+        "validation",
+        "local dev",
+        "staging",
+        "production"
+      ]
     },
     {
       "id": "test-evaluation-strategy-agent",
       "name": "Test & Evaluation Strategy Agent",
       "path": ".github/agents/test-evaluation-strategy-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["test strategy", "AI evaluation planning", "mock strategy", "acceptance criteria", "regression datasets"],
-      "keywords": ["testing", "evaluation", "test strategy", "mock", "acceptance criteria", "regression", "dataset", "manual validation", "quality"]
+      "capabilities": [
+        "test strategy",
+        "AI evaluation planning",
+        "mock strategy",
+        "acceptance criteria",
+        "regression datasets"
+      ],
+      "keywords": [
+        "testing",
+        "evaluation",
+        "test strategy",
+        "mock",
+        "acceptance criteria",
+        "regression",
+        "dataset",
+        "manual validation",
+        "quality"
+      ]
     },
     {
       "id": "ux-human-workflow-agent",
       "name": "UX & Human Workflow Agent",
       "path": ".github/agents/ux-human-workflow-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-design-specialist",
-      "capabilities": ["user journeys", "human review", "confidence thresholds", "fallback states", "feedback capture"],
-      "keywords": ["UX", "user journey", "human workflow", "review queue", "confidence", "fallback", "feedback", "human in the loop", "operator"]
+      "capabilities": [
+        "user journeys",
+        "human review",
+        "confidence thresholds",
+        "fallback states",
+        "feedback capture"
+      ],
+      "keywords": [
+        "UX",
+        "user journey",
+        "human workflow",
+        "review queue",
+        "confidence",
+        "fallback",
+        "feedback",
+        "human in the loop",
+        "operator"
+      ]
     },
     {
       "id": "azure-ai-services-foundation-orchestrator",
       "name": "Azure AI Services Foundation Orchestrator",
       "path": ".github/agents/azure-ai-services-foundation-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
-      "capabilities": ["AI services provisioning", "security", "monitoring", "containers", "content safety"],
-      "keywords": ["Azure AI Services", "provision", "secure", "monitor", "container", "content safety"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"
+      ],
+      "capabilities": [
+        "AI services provisioning",
+        "security",
+        "monitoring",
+        "containers",
+        "content safety"
+      ],
+      "keywords": [
+        "Azure AI Services",
+        "provision",
+        "secure",
+        "monitor",
+        "container",
+        "content safety"
+      ]
     },
     {
       "id": "vision-solutions-orchestrator",
       "name": "Vision Solutions Orchestrator",
       "path": ".github/agents/vision-solutions-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/2 - Create computer vision solutions with Azure AI Vision", "external/mslearn-ai-vision/Instructions/Exercises"],
-      "capabilities": ["image analysis", "classification", "object detection", "OCR", "video", "generative vision"],
-      "keywords": ["vision", "image", "OCR", "video", "classification", "object detection", "Content Understanding"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/2 - Create computer vision solutions with Azure AI Vision",
+        "external/mslearn-ai-vision/Instructions/Exercises"
+      ],
+      "capabilities": [
+        "image analysis",
+        "classification",
+        "object detection",
+        "OCR",
+        "video",
+        "generative vision"
+      ],
+      "keywords": [
+        "vision",
+        "image",
+        "OCR",
+        "video",
+        "classification",
+        "object detection",
+        "Content Understanding"
+      ]
     },
     {
       "id": "nlp-solutions-orchestrator",
       "name": "NLP Solutions Orchestrator",
       "path": ".github/agents/nlp-solutions-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"],
-      "capabilities": ["text analytics", "translation", "speech", "conversational language", "Q&A", "bot integration"],
-      "keywords": ["NLP", "language", "translation", "speech", "CLU", "QnA", "bot"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"
+      ],
+      "capabilities": [
+        "text analytics",
+        "translation",
+        "speech",
+        "conversational language",
+        "Q&A",
+        "bot integration"
+      ],
+      "keywords": [
+        "NLP",
+        "language",
+        "translation",
+        "speech",
+        "CLU",
+        "QnA",
+        "bot"
+      ]
     },
     {
       "id": "knowledge-mining-search-orchestrator",
       "name": "Knowledge Mining Search Orchestrator",
       "path": ".github/agents/knowledge-mining-search-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["Azure AI Search", "indexing", "custom skills", "knowledge store", "retrieval", "classic search routing", "agentic retrieval routing"],
-      "keywords": ["AI Search", "knowledge mining", "index", "custom skill", "knowledge store", "RAG", "vector search", "classic search", "agentic retrieval", "knowledge base", "knowledge source"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "Azure AI Search",
+        "indexing",
+        "custom skills",
+        "knowledge store",
+        "retrieval",
+        "classic search routing",
+        "agentic retrieval routing"
+      ],
+      "keywords": [
+        "AI Search",
+        "knowledge mining",
+        "index",
+        "custom skill",
+        "knowledge store",
+        "RAG",
+        "vector search",
+        "classic search",
+        "agentic retrieval",
+        "knowledge base",
+        "knowledge source"
+      ]
     },
     {
       "id": "azure-ai-search-training-agent",
       "name": "Azure AI Search Training Agent",
       "path": ".github/agents/azure-ai-search-training-agent.agent.md",
-      "audience": ["learning"],
+      "audience": [
+        "learning"
+      ],
       "level": "learning-specialist",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["quickstarts", "classic search", "indexing", "querying", "vector search", "hybrid search", "multimodal search", "AI enrichment", "agentic retrieval", "security", "monitoring"],
-      "keywords": ["Azure AI Search training", "quickstart", "classic search", "indexing", "querying", "vector", "hybrid", "multimodal", "AI enrichment", "agentic retrieval", "knowledge base", "knowledge source", "serverless"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "quickstarts",
+        "classic search",
+        "indexing",
+        "querying",
+        "vector search",
+        "hybrid search",
+        "multimodal search",
+        "AI enrichment",
+        "agentic retrieval",
+        "security",
+        "monitoring"
+      ],
+      "keywords": [
+        "Azure AI Search training",
+        "quickstart",
+        "classic search",
+        "indexing",
+        "querying",
+        "vector",
+        "hybrid",
+        "multimodal",
+        "AI enrichment",
+        "agentic retrieval",
+        "knowledge base",
+        "knowledge source",
+        "serverless"
+      ]
     },
     {
       "id": "azure-ai-search-reconfigurable-orchestrator",
       "name": "Azure AI Search Reconfigurable Orchestrator",
       "path": ".github/agents/azure-ai-search-reconfigurable-orchestrator.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-orchestrator",
-      "capabilities": ["reconfigurable search routing", "common requirements profile", "classic search routing", "RAG search routing", "agentic retrieval routing", "security and validation routing"],
-      "keywords": ["prebuilt reconfigurable", "reconfigurable agent", "Azure AI Search reconfigurable", "classic search", "RAG search", "agentic retrieval", "customize search agent", "configure search agent", "requirements"]
+      "capabilities": [
+        "reconfigurable search routing",
+        "common requirements profile",
+        "classic search routing",
+        "RAG search routing",
+        "agentic retrieval routing",
+        "security and validation routing"
+      ],
+      "keywords": [
+        "prebuilt reconfigurable",
+        "reconfigurable agent",
+        "Azure AI Search reconfigurable",
+        "classic search",
+        "RAG search",
+        "agentic retrieval",
+        "customize search agent",
+        "configure search agent",
+        "requirements"
+      ]
     },
     {
       "id": "classic-search-reconfigurable-agent",
       "name": "Classic Search Reconfigurable Agent",
       "path": ".github/agents/classic-search-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["classic search baseline", "index schema", "ingestion", "query features", "filters", "facets", "autocomplete", "relevance tuning", "special-case configuration"],
-      "keywords": ["classic search reconfigurable", "direct search", "index-first", "configure classic search", "filters", "facets", "autocomplete", "synonyms", "semantic ranking", "vector search", "hybrid search"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "classic search baseline",
+        "index schema",
+        "ingestion",
+        "query features",
+        "filters",
+        "facets",
+        "autocomplete",
+        "relevance tuning",
+        "special-case configuration"
+      ],
+      "keywords": [
+        "classic search reconfigurable",
+        "direct search",
+        "index-first",
+        "configure classic search",
+        "filters",
+        "facets",
+        "autocomplete",
+        "synonyms",
+        "semantic ranking",
+        "vector search",
+        "hybrid search"
+      ]
     },
     {
       "id": "rag-search-reconfigurable-agent",
       "name": "RAG Search Reconfigurable Agent",
       "path": ".github/agents/rag-search-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "capabilities": ["RAG baseline", "retrieval", "chunking", "embeddings", "hybrid search", "vector search", "prompt assembly", "citations", "grounding", "evaluation"],
-      "keywords": ["RAG reconfigurable", "configure RAG", "retrieval augmented generation", "chunking", "embeddings", "citations", "grounded answer", "no-answer", "prompt assembly", "hybrid retrieval"]
+      "capabilities": [
+        "RAG baseline",
+        "retrieval",
+        "chunking",
+        "embeddings",
+        "hybrid search",
+        "vector search",
+        "prompt assembly",
+        "citations",
+        "grounding",
+        "evaluation"
+      ],
+      "keywords": [
+        "RAG reconfigurable",
+        "configure RAG",
+        "retrieval augmented generation",
+        "chunking",
+        "embeddings",
+        "citations",
+        "grounded answer",
+        "no-answer",
+        "prompt assembly",
+        "hybrid retrieval"
+      ]
     },
     {
       "id": "agentic-retrieval-reconfigurable-agent",
       "name": "Agentic Retrieval Reconfigurable Agent",
       "path": ".github/agents/agentic-retrieval-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "capabilities": ["agentic retrieval baseline", "knowledge bases", "knowledge sources", "indexed sources", "remote sources", "query planning", "query decomposition", "reasoning effort", "answer synthesis", "references", "activity logs"],
-      "keywords": ["agentic retrieval reconfigurable", "configure agentic retrieval", "knowledge base", "knowledge source", "remote source", "indexed source", "query planning", "reasoning effort", "answer synthesis", "activity log", "references"]
-    },
-    {
-      "id": "azure-knowledge-access-architect",
-      "name": "Azure Knowledge Access Architect",
-      "path": ".github/agents/azure-knowledge-access-architect.agent.md",
-      "audience": ["application"],
-      "level": "shared-specialist",
-      "capabilities": ["secure knowledge access", "resource reuse planning", "search pattern routing", "RBAC planning", "networking walkthrough", "validation checklist"],
-      "keywords": ["knowledge access", "secure search", "Azure Storage", "Azure AI Search", "Foundry IQ", "Foundry agent", "RBAC", "Private Link", "firewall", "reuse resources"]
+      "capabilities": [
+        "agentic retrieval baseline",
+        "knowledge bases",
+        "knowledge sources",
+        "indexed sources",
+        "remote sources",
+        "query planning",
+        "query decomposition",
+        "reasoning effort",
+        "answer synthesis",
+        "references",
+        "activity logs"
+      ],
+      "keywords": [
+        "agentic retrieval reconfigurable",
+        "configure agentic retrieval",
+        "knowledge base",
+        "knowledge source",
+        "remote source",
+        "indexed source",
+        "query planning",
+        "reasoning effort",
+        "answer synthesis",
+        "activity log",
+        "references"
+      ]
     },
     {
       "id": "document-intelligence-reconfigurable-agent",
       "name": "Document Intelligence Reconfigurable Agent",
       "path": ".github/agents/document-intelligence-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"],
-      "capabilities": ["document extraction baseline", "prebuilt models", "custom extraction", "custom classification", "composed models", "field schema", "confidence thresholds", "human review", "output contracts"],
-      "keywords": ["Document Intelligence reconfigurable", "configure document extraction", "invoice extraction", "receipt extraction", "form extraction", "custom model", "field schema", "confidence review", "human review", "JSON output"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"
+      ],
+      "capabilities": [
+        "document extraction baseline",
+        "prebuilt models",
+        "custom extraction",
+        "custom classification",
+        "composed models",
+        "field schema",
+        "confidence thresholds",
+        "human review",
+        "output contracts"
+      ],
+      "keywords": [
+        "Document Intelligence reconfigurable",
+        "configure document extraction",
+        "invoice extraction",
+        "receipt extraction",
+        "form extraction",
+        "custom model",
+        "field schema",
+        "confidence review",
+        "human review",
+        "JSON output"
+      ]
     },
     {
       "id": "document-to-search-pipeline-reconfigurable-agent",
       "name": "Document-to-Search Pipeline Reconfigurable Agent",
       "path": ".github/agents/document-to-search-pipeline-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence", "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["document-to-search baseline", "Document Intelligence extraction", "normalization", "metadata enrichment", "chunking", "Azure AI Search indexing", "vectorization", "citations", "RAG readiness"],
-      "keywords": ["document-to-search reconfigurable", "Document Intelligence search", "knowledge mining", "document indexing", "metadata enrichment", "chunking", "citations", "RAG ready", "search index"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence",
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "document-to-search baseline",
+        "Document Intelligence extraction",
+        "normalization",
+        "metadata enrichment",
+        "chunking",
+        "Azure AI Search indexing",
+        "vectorization",
+        "citations",
+        "RAG readiness"
+      ],
+      "keywords": [
+        "document-to-search reconfigurable",
+        "Document Intelligence search",
+        "knowledge mining",
+        "document indexing",
+        "metadata enrichment",
+        "chunking",
+        "citations",
+        "RAG ready",
+        "search index"
+      ]
     },
     {
       "id": "multimodal-knowledge-pipeline-reconfigurable-agent",
       "name": "Multimodal Knowledge Pipeline Reconfigurable Agent",
       "path": ".github/agents/multimodal-knowledge-pipeline-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/mslearn-ai-vision/Instructions/Exercises", "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["multimodal knowledge baseline", "OCR", "image understanding", "Content Understanding", "visual metadata", "layout preservation", "Azure AI Search indexing", "citations", "RAG readiness"],
-      "keywords": ["multimodal reconfigurable", "multimodal knowledge", "OCR", "image search", "visual metadata", "Content Understanding", "screenshots", "diagrams", "charts", "scanned PDFs", "visual assets", "multimodal RAG"]
+      "sourcePaths": [
+        "external/mslearn-ai-vision/Instructions/Exercises",
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "multimodal knowledge baseline",
+        "OCR",
+        "image understanding",
+        "Content Understanding",
+        "visual metadata",
+        "layout preservation",
+        "Azure AI Search indexing",
+        "citations",
+        "RAG readiness"
+      ],
+      "keywords": [
+        "multimodal reconfigurable",
+        "multimodal knowledge",
+        "OCR",
+        "image search",
+        "visual metadata",
+        "Content Understanding",
+        "screenshots",
+        "diagrams",
+        "charts",
+        "scanned PDFs",
+        "visual assets",
+        "multimodal RAG"
+      ]
     },
     {
       "id": "speech-conversation-intelligence-reconfigurable-agent",
       "name": "Speech & Conversation Intelligence Reconfigurable Agent",
       "path": ".github/agents/speech-conversation-intelligence-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"],
-      "capabilities": ["speech baseline", "conversation intelligence", "speech-to-text", "diarization", "translation", "transcript normalization", "summarization", "sentiment", "searchable transcript indexing", "conversation QA"],
-      "keywords": ["speech reconfigurable", "conversation intelligence", "speech to text", "transcription", "diarization", "call analytics", "meeting transcript", "audio ingestion", "sentiment", "transcript search", "conversation QA"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/3 - Develop natural language processing solutions with Azure AI Services"
+      ],
+      "capabilities": [
+        "speech baseline",
+        "conversation intelligence",
+        "speech-to-text",
+        "diarization",
+        "translation",
+        "transcript normalization",
+        "summarization",
+        "sentiment",
+        "searchable transcript indexing",
+        "conversation QA"
+      ],
+      "keywords": [
+        "speech reconfigurable",
+        "conversation intelligence",
+        "speech to text",
+        "transcription",
+        "diarization",
+        "call analytics",
+        "meeting transcript",
+        "audio ingestion",
+        "sentiment",
+        "transcript search",
+        "conversation QA"
+      ]
     },
     {
       "id": "responsible-ai-guardrail-reconfigurable-agent",
       "name": "Responsible AI Guardrail Reconfigurable Agent",
       "path": ".github/agents/responsible-ai-guardrail-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
-      "capabilities": ["Responsible AI guardrails", "content safety", "prompt-injection defense", "groundedness policy", "PII detection", "redaction", "human escalation", "protected-content handling", "safety evaluation", "abuse monitoring"],
-      "keywords": ["Responsible AI reconfigurable", "guardrails", "content safety", "prompt injection", "jailbreak", "groundedness", "PII", "redaction", "human escalation", "protected content", "safety evaluation", "abuse monitoring"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"
+      ],
+      "capabilities": [
+        "Responsible AI guardrails",
+        "content safety",
+        "prompt-injection defense",
+        "groundedness policy",
+        "PII detection",
+        "redaction",
+        "human escalation",
+        "protected-content handling",
+        "safety evaluation",
+        "abuse monitoring"
+      ],
+      "keywords": [
+        "Responsible AI reconfigurable",
+        "guardrails",
+        "content safety",
+        "prompt injection",
+        "jailbreak",
+        "groundedness",
+        "PII",
+        "redaction",
+        "human escalation",
+        "protected content",
+        "safety evaluation",
+        "abuse monitoring"
+      ]
     },
     {
       "id": "ai-evaluation-quality-reconfigurable-agent",
       "name": "AI Evaluation & Quality Reconfigurable Agent",
       "path": ".github/agents/ai-evaluation-quality-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
-      "capabilities": ["AI evaluation", "quality gates", "evaluation datasets", "metrics", "thresholds", "groundedness checks", "citation accuracy", "task completion", "safety evaluations", "regression tests", "release gates", "validation evidence"],
-      "keywords": ["AI evaluation reconfigurable", "quality gates", "evaluation dataset", "metrics", "thresholds", "groundedness", "citation accuracy", "task completion", "regression tests", "release gate", "validation evidence", "safety evaluation"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"
+      ],
+      "capabilities": [
+        "AI evaluation",
+        "quality gates",
+        "evaluation datasets",
+        "metrics",
+        "thresholds",
+        "groundedness checks",
+        "citation accuracy",
+        "task completion",
+        "safety evaluations",
+        "regression tests",
+        "release gates",
+        "validation evidence"
+      ],
+      "keywords": [
+        "AI evaluation reconfigurable",
+        "quality gates",
+        "evaluation dataset",
+        "metrics",
+        "thresholds",
+        "groundedness",
+        "citation accuracy",
+        "task completion",
+        "regression tests",
+        "release gate",
+        "validation evidence",
+        "safety evaluation"
+      ]
     },
     {
       "id": "tool-using-workflow-reconfigurable-agent",
       "name": "Tool-Using Workflow Reconfigurable Agent",
       "path": ".github/agents/tool-using-workflow-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service"],
-      "capabilities": ["tool-using workflow", "API tool contracts", "function calls", "business actions", "authentication", "side-effect policy", "retries", "idempotency", "approvals", "audit logs", "error handling", "validation"],
-      "keywords": ["tool workflow reconfigurable", "tool using agent", "API calls", "function calls", "business system", "actions", "idempotency", "retry policy", "approval", "audit log", "side effects", "tool contract"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service"
+      ],
+      "capabilities": [
+        "tool-using workflow",
+        "API tool contracts",
+        "function calls",
+        "business actions",
+        "authentication",
+        "side-effect policy",
+        "retries",
+        "idempotency",
+        "approvals",
+        "audit logs",
+        "error handling",
+        "validation"
+      ],
+      "keywords": [
+        "tool workflow reconfigurable",
+        "tool using agent",
+        "API calls",
+        "function calls",
+        "business system",
+        "actions",
+        "idempotency",
+        "retry policy",
+        "approval",
+        "audit log",
+        "side effects",
+        "tool contract"
+      ]
     },
     {
       "id": "human-review-escalation-reconfigurable-agent",
       "name": "Human Review & Escalation Reconfigurable Agent",
       "path": ".github/agents/human-review-escalation-reconfigurable-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "prebuilt-reconfigurable-agent",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"],
-      "capabilities": ["human review", "human-in-the-loop", "confidence thresholds", "review queues", "reviewer roles", "escalation", "override policy", "feedback capture", "audit evidence", "SLAs", "validation"],
-      "keywords": ["human review reconfigurable", "human in the loop", "human-in-the-loop", "review queue", "confidence threshold", "reviewer", "escalation", "override policy", "feedback capture", "audit evidence", "SLA", "manual review"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"
+      ],
+      "capabilities": [
+        "human review",
+        "human-in-the-loop",
+        "confidence thresholds",
+        "review queues",
+        "reviewer roles",
+        "escalation",
+        "override policy",
+        "feedback capture",
+        "audit evidence",
+        "SLAs",
+        "validation"
+      ],
+      "keywords": [
+        "human review reconfigurable",
+        "human in the loop",
+        "human-in-the-loop",
+        "review queue",
+        "confidence threshold",
+        "reviewer",
+        "escalation",
+        "override policy",
+        "feedback capture",
+        "audit evidence",
+        "SLA",
+        "manual review"
+      ]
+    },
+    {
+      "id": "knowledge-freshness-reindexing-reconfigurable-agent",
+      "name": "Knowledge Freshness & Reindexing Reconfigurable Agent",
+      "path": ".github/agents/knowledge-freshness-reindexing-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "knowledge freshness",
+        "reindexing",
+        "incremental sync",
+        "change detection",
+        "deletion handling",
+        "tombstones",
+        "embedding refresh",
+        "stale-content detection",
+        "citation freshness",
+        "indexer monitoring",
+        "validation"
+      ],
+      "keywords": [
+        "knowledge freshness reconfigurable",
+        "reindexing",
+        "reindex",
+        "incremental sync",
+        "change detection",
+        "deletion handling",
+        "tombstone",
+        "embedding refresh",
+        "stale content",
+        "citation freshness",
+        "indexer schedule",
+        "source freshness"
+      ]
+    },
+    {
+      "id": "observability-continuous-improvement-reconfigurable-agent",
+      "name": "Observability & Continuous Improvement Reconfigurable Agent",
+      "path": ".github/agents/observability-continuous-improvement-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/1 - Get started with Azure AI Services"
+      ],
+      "capabilities": [
+        "AI observability",
+        "tracing",
+        "quality telemetry",
+        "user feedback",
+        "failed-answer review",
+        "drift detection",
+        "dashboards",
+        "alerts",
+        "continuous evaluation",
+        "improvement backlog"
+      ],
+      "keywords": [
+        "observability reconfigurable",
+        "continuous improvement",
+        "tracing",
+        "quality telemetry",
+        "user feedback",
+        "failed answer",
+        "drift detection",
+        "dashboard",
+        "alerts",
+        "continuous evaluation",
+        "improvement backlog",
+        "production feedback"
+      ]
+    },
+    {
+      "id": "cost-capacity-governance-reconfigurable-agent",
+      "name": "Cost & Capacity Governance Reconfigurable Agent",
+      "path": ".github/agents/cost-capacity-governance-reconfigurable-agent.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "prebuilt-reconfigurable-agent",
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service",
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "cost governance",
+        "capacity planning",
+        "model cost controls",
+        "Search SKU sizing",
+        "embedding cost policy",
+        "batch versus realtime",
+        "quotas",
+        "rate limits",
+        "caching",
+        "retention",
+        "budgets",
+        "alerts"
+      ],
+      "keywords": [
+        "cost governance reconfigurable",
+        "capacity governance",
+        "cost controls",
+        "Search SKU",
+        "embedding cost",
+        "batch processing",
+        "realtime processing",
+        "quotas",
+        "rate limits",
+        "caching",
+        "retention",
+        "budget alerts"
+      ]
     },
     {
       "id": "classic-search-app-agent",
       "name": "Classic Search App Agent",
       "path": ".github/agents/classic-search-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"],
-      "capabilities": ["index-first search", "index schema", "data sources", "indexers", "skillsets", "push ingestion", "pull ingestion", "full-text search", "facets", "filters", "autocomplete", "relevance tuning"],
-      "keywords": ["classic search", "Azure AI Search app", "search index", "index schema", "indexer", "skillset", "push ingestion", "pull ingestion", "facets", "filters", "autocomplete", "synonyms", "semantic ranking"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/4 - Implement knowledge mining solutions with Azure AI Search"
+      ],
+      "capabilities": [
+        "index-first search",
+        "index schema",
+        "data sources",
+        "indexers",
+        "skillsets",
+        "push ingestion",
+        "pull ingestion",
+        "full-text search",
+        "facets",
+        "filters",
+        "autocomplete",
+        "relevance tuning"
+      ],
+      "keywords": [
+        "classic search",
+        "Azure AI Search app",
+        "search index",
+        "index schema",
+        "indexer",
+        "skillset",
+        "push ingestion",
+        "pull ingestion",
+        "facets",
+        "filters",
+        "autocomplete",
+        "synonyms",
+        "semantic ranking"
+      ]
     },
     {
       "id": "agentic-retrieval-app-agent",
       "name": "Agentic Retrieval App Agent",
       "path": ".github/agents/agentic-retrieval-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "capabilities": ["agentic retrieval", "knowledge bases", "knowledge sources", "query planning", "query decomposition", "parallel retrieval", "semantic reranking", "reasoning effort", "answer synthesis", "references", "activity logs"],
-      "keywords": ["agentic retrieval", "knowledge base", "knowledge source", "query planning", "query decomposition", "parallel retrieval", "reasoning effort", "answer synthesis", "activity log", "references", "Foundry IQ", "remote source", "indexed source"]
+      "capabilities": [
+        "agentic retrieval",
+        "knowledge bases",
+        "knowledge sources",
+        "query planning",
+        "query decomposition",
+        "parallel retrieval",
+        "semantic reranking",
+        "reasoning effort",
+        "answer synthesis",
+        "references",
+        "activity logs"
+      ],
+      "keywords": [
+        "agentic retrieval",
+        "knowledge base",
+        "knowledge source",
+        "query planning",
+        "query decomposition",
+        "parallel retrieval",
+        "reasoning effort",
+        "answer synthesis",
+        "activity log",
+        "references",
+        "Foundry IQ",
+        "remote source",
+        "indexed source"
+      ]
     },
     {
       "id": "document-intelligence-orchestrator",
       "name": "Document Intelligence Orchestrator",
       "path": ".github/agents/document-intelligence-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"],
-      "capabilities": ["document extraction", "custom models", "custom classification", "composed models", "form processing", "search integration", "training routing"],
-      "keywords": ["Document Intelligence", "forms", "OCR", "custom document model", "custom classification", "invoice", "receipt", "extraction", "training"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence"
+      ],
+      "capabilities": [
+        "document extraction",
+        "custom models",
+        "custom classification",
+        "composed models",
+        "form processing",
+        "search integration",
+        "training routing"
+      ],
+      "keywords": [
+        "Document Intelligence",
+        "forms",
+        "OCR",
+        "custom document model",
+        "custom classification",
+        "invoice",
+        "receipt",
+        "extraction",
+        "training"
+      ]
     },
     {
       "id": "document-intelligence-training-agent",
       "name": "Document Intelligence Training Agent",
       "path": ".github/agents/document-intelligence-training-agent.agent.md",
-      "audience": ["learning"],
+      "audience": [
+        "learning"
+      ],
       "level": "learning-specialist",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Instructions/Exercises"],
-      "capabilities": ["quickstarts", "tutorial routing", "Studio concepts", "prebuilt models", "custom extraction", "custom classification", "composed models", "batch analysis", "confidence scores", "responsible AI"],
-      "keywords": ["Document Intelligence training", "quickstart", "tutorial", "Studio", "prebuilt", "Layout", "Read", "custom extraction", "custom classification", "composed model", "batch analysis", "confidence"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Instructions/Exercises"
+      ],
+      "capabilities": [
+        "quickstarts",
+        "tutorial routing",
+        "Studio concepts",
+        "prebuilt models",
+        "custom extraction",
+        "custom classification",
+        "composed models",
+        "batch analysis",
+        "confidence scores",
+        "responsible AI"
+      ],
+      "keywords": [
+        "Document Intelligence training",
+        "quickstart",
+        "tutorial",
+        "Studio",
+        "prebuilt",
+        "Layout",
+        "Read",
+        "custom extraction",
+        "custom classification",
+        "composed model",
+        "batch analysis",
+        "confidence"
+      ]
     },
     {
       "id": "generative-ai-solutions-orchestrator",
       "name": "Generative AI Solutions Orchestrator",
       "path": ".github/agents/generative-ai-solutions-orchestrator.agent.md",
-      "audience": ["learning", "application"],
+      "audience": [
+        "learning",
+        "application"
+      ],
       "level": "capability-orchestrator",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service", "external/mslearn-ai-vision/Instructions/Exercises/01-gen-ai-vision.md", "external/mslearn-ai-vision/Instructions/Exercises/02-generate-image.md", "external/mslearn-ai-vision/Instructions/Exercises/03-generate-video.md"],
-      "capabilities": ["Azure OpenAI", "chat", "embeddings", "RAG", "image generation", "video generation"],
-      "keywords": ["Azure OpenAI", "chat", "embedding", "RAG", "gpt", "image generation", "Sora", "Foundry"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/6 - Develop Generative AI solutions with Azure OpenAI Service",
+        "external/mslearn-ai-vision/Instructions/Exercises/01-gen-ai-vision.md",
+        "external/mslearn-ai-vision/Instructions/Exercises/02-generate-image.md",
+        "external/mslearn-ai-vision/Instructions/Exercises/03-generate-video.md"
+      ],
+      "capabilities": [
+        "Azure OpenAI",
+        "chat",
+        "embeddings",
+        "RAG",
+        "image generation",
+        "video generation"
+      ],
+      "keywords": [
+        "Azure OpenAI",
+        "chat",
+        "embedding",
+        "RAG",
+        "gpt",
+        "image generation",
+        "Sora",
+        "Foundry"
+      ]
     },
     {
       "id": "foundry-integration-agent",
       "name": "Foundry Integration Agent",
       "path": ".github/agents/foundry-integration-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["Foundry project", "model deployment", "endpoint selection", "quota guidance"],
-      "keywords": ["Foundry", "model deployment", "endpoint", "quota", "project"]
+      "capabilities": [
+        "Foundry project",
+        "model deployment",
+        "endpoint selection",
+        "quota guidance"
+      ],
+      "keywords": [
+        "Foundry",
+        "model deployment",
+        "endpoint",
+        "quota",
+        "project"
+      ]
     },
     {
       "id": "auth-config-agent",
       "name": "Auth Config Agent",
       "path": ".github/agents/auth-config-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["Entra ID", "DefaultAzureCredential", ".env", "endpoint validation"],
-      "keywords": ["auth", "authentication", "DefaultAzureCredential", "az login", ".env", "endpoint"]
+      "capabilities": [
+        "Entra ID",
+        "DefaultAzureCredential",
+        ".env",
+        "endpoint validation"
+      ],
+      "keywords": [
+        "auth",
+        "authentication",
+        "DefaultAzureCredential",
+        "az login",
+        ".env",
+        "endpoint"
+      ]
     },
     {
       "id": "responsible-ai-safety-agent",
       "name": "Responsible AI Safety Agent",
       "path": ".github/agents/responsible-ai-safety-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["content safety", "moderation", "RAI policy", "safety evaluation"],
-      "keywords": ["responsible AI", "safety", "moderation", "content filter", "policy"]
+      "capabilities": [
+        "content safety",
+        "moderation",
+        "RAI policy",
+        "safety evaluation"
+      ],
+      "keywords": [
+        "responsible AI",
+        "safety",
+        "moderation",
+        "content filter",
+        "policy"
+      ]
     },
     {
       "id": "security-compliance-agent",
       "name": "Security & Compliance Agent",
       "path": ".github/agents/security-compliance-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["security posture", "threat modeling", "compliance readiness", "data protection", "least privilege"],
-      "keywords": ["security", "compliance", "threat model", "data protection", "RBAC", "least privilege", "secrets", "privacy"]
+      "capabilities": [
+        "security posture",
+        "threat modeling",
+        "compliance readiness",
+        "data protection",
+        "least privilege"
+      ],
+      "keywords": [
+        "security",
+        "compliance",
+        "threat model",
+        "data protection",
+        "RBAC",
+        "least privilege",
+        "secrets",
+        "privacy"
+      ]
     },
     {
       "id": "operations-readiness-agent",
       "name": "Operations Readiness Agent",
       "path": ".github/agents/operations-readiness-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["production readiness", "runbooks", "rollback planning", "incident response", "quota and cost guardrails"],
-      "keywords": ["operations", "production readiness", "runbook", "rollback", "incident", "support handoff", "quota", "cost guardrails"]
+      "capabilities": [
+        "production readiness",
+        "runbooks",
+        "rollback planning",
+        "incident response",
+        "quota and cost guardrails"
+      ],
+      "keywords": [
+        "operations",
+        "production readiness",
+        "runbook",
+        "rollback",
+        "incident",
+        "support handoff",
+        "quota",
+        "cost guardrails"
+      ]
     },
     {
       "id": "monitoring-evaluation-agent",
       "name": "Monitoring & Evaluation Agent",
       "path": ".github/agents/monitoring-evaluation-agent.agent.md",
-      "audience": ["application", "learning"],
+      "audience": [
+        "application",
+        "learning"
+      ],
       "level": "shared-specialist",
-      "capabilities": ["monitoring", "telemetry", "tracing", "evaluation", "alerting", "quality signals"],
-      "keywords": ["monitoring", "observability", "telemetry", "tracing", "Application Insights", "Azure Monitor", "evaluation", "alerts", "quality"]
+      "capabilities": [
+        "monitoring",
+        "telemetry",
+        "tracing",
+        "evaluation",
+        "alerting",
+        "quality signals"
+      ],
+      "keywords": [
+        "monitoring",
+        "observability",
+        "telemetry",
+        "tracing",
+        "Application Insights",
+        "Azure Monitor",
+        "evaluation",
+        "alerts",
+        "quality"
+      ]
     },
     {
       "id": "vision-chat-app-agent",
       "name": "Vision Chat App Agent",
       "path": ".github/agents/vision-chat-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/gen-ai-vision/python/image-chat-app.py"],
-      "capabilities": ["image-aware chat", "visual Q&A", "OpenAI responses API", "image input"],
-      "keywords": ["vision chat", "image chat", "visual question answering", "gpt-4.1", "image input"]
+      "sourcePaths": [
+        "external/mslearn-ai-vision/Labfiles/gen-ai-vision/python/image-chat-app.py"
+      ],
+      "capabilities": [
+        "image-aware chat",
+        "visual Q&A",
+        "OpenAI responses API",
+        "image input"
+      ],
+      "keywords": [
+        "vision chat",
+        "image chat",
+        "visual question answering",
+        "gpt-4.1",
+        "image input"
+      ]
     },
     {
       "id": "image-generation-app-agent",
       "name": "Image Generation App Agent",
       "path": ".github/agents/image-generation-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/image-client/python/image-client.py"],
-      "capabilities": ["text-to-image", "prompt refinement", "base64 image output", "asset generation"],
-      "keywords": ["image generation", "gpt-image", "text to image", "base64", "generated images"]
+      "sourcePaths": [
+        "external/mslearn-ai-vision/Labfiles/image-client/python/image-client.py"
+      ],
+      "capabilities": [
+        "text-to-image",
+        "prompt refinement",
+        "base64 image output",
+        "asset generation"
+      ],
+      "keywords": [
+        "image generation",
+        "gpt-image",
+        "text to image",
+        "base64",
+        "generated images"
+      ]
     },
     {
       "id": "video-generation-app-agent",
       "name": "Video Generation App Agent",
       "path": ".github/agents/video-generation-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/video-generation/python/video-app.py"],
-      "capabilities": ["text-to-video", "image-to-video", "async polling", "download", "remix"],
-      "keywords": ["video generation", "Sora", "polling", "remix", "mp4"]
+      "sourcePaths": [
+        "external/mslearn-ai-vision/Labfiles/video-generation/python/video-app.py"
+      ],
+      "capabilities": [
+        "text-to-video",
+        "image-to-video",
+        "async polling",
+        "download",
+        "remix"
+      ],
+      "keywords": [
+        "video generation",
+        "Sora",
+        "polling",
+        "remix",
+        "mp4"
+      ]
     },
     {
       "id": "content-understanding-metadata-agent",
       "name": "Content Understanding Metadata Agent",
       "path": ".github/agents/content-understanding-metadata-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/mslearn-ai-vision/Labfiles/content-understanding/python/analyze-image.py"],
-      "capabilities": ["image metadata", "analyzer schema", "description", "tags", "structured output"],
-      "keywords": ["Content Understanding", "metadata", "analyzer", "description", "tags", "digital asset management"]
+      "sourcePaths": [
+        "external/mslearn-ai-vision/Labfiles/content-understanding/python/analyze-image.py"
+      ],
+      "capabilities": [
+        "image metadata",
+        "analyzer schema",
+        "description",
+        "tags",
+        "structured output"
+      ],
+      "keywords": [
+        "Content Understanding",
+        "metadata",
+        "analyzer",
+        "description",
+        "tags",
+        "digital asset management"
+      ]
     },
     {
       "id": "rag-search-app-agent",
       "name": "RAG Search App Agent",
       "path": ".github/agents/rag-search-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "capabilities": ["retrieval augmented generation", "Azure AI Search", "hybrid search", "vector search", "grounding"],
-      "keywords": ["RAG", "AI Search", "vector", "hybrid", "retrieval", "grounding"]
+      "capabilities": [
+        "retrieval augmented generation",
+        "Azure AI Search",
+        "hybrid search",
+        "vector search",
+        "grounding"
+      ],
+      "keywords": [
+        "RAG",
+        "AI Search",
+        "vector",
+        "hybrid",
+        "retrieval",
+        "grounding"
+      ]
     },
     {
       "id": "document-processing-app-agent",
       "name": "Document Processing App Agent",
       "path": ".github/agents/document-processing-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "capabilities": ["document extraction", "forms", "layout", "custom models", "confidence review"],
-      "keywords": ["Document Intelligence", "forms", "extract", "layout", "custom model", "confidence"]
+      "capabilities": [
+        "document extraction",
+        "forms",
+        "layout",
+        "custom models",
+        "confidence review"
+      ],
+      "keywords": [
+        "Document Intelligence",
+        "forms",
+        "extract",
+        "layout",
+        "custom model",
+        "confidence"
+      ]
     },
     {
       "id": "document-extraction-app-agent",
       "name": "Document Extraction App Agent",
       "path": ".github/agents/document-extraction-app-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/01-prebuild-models/Python/document-analysis.py", "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/02-custom-document-intelligence/Python/test-model.py"],
-      "capabilities": ["prebuilt extraction", "custom field extraction", "custom classification", "composed models", "schema contract", "confidence review", "human review"],
-      "keywords": ["Document Intelligence app", "invoice extraction", "receipt extraction", "form extraction", "field extraction", "custom classifier", "composed model", "human review", "JSON output"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/01-prebuild-models/Python/document-analysis.py",
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/02-custom-document-intelligence/Python/test-model.py"
+      ],
+      "capabilities": [
+        "prebuilt extraction",
+        "custom field extraction",
+        "custom classification",
+        "composed models",
+        "schema contract",
+        "confidence review",
+        "human review"
+      ],
+      "keywords": [
+        "Document Intelligence app",
+        "invoice extraction",
+        "receipt extraction",
+        "form extraction",
+        "field extraction",
+        "custom classifier",
+        "composed model",
+        "human review",
+        "JSON output"
+      ]
     },
     {
       "id": "document-knowledge-pipeline-agent",
       "name": "Document Knowledge Pipeline Agent",
       "path": ".github/agents/document-knowledge-pipeline-agent.agent.md",
-      "audience": ["application"],
+      "audience": [
+        "application"
+      ],
       "level": "application-blueprint",
-      "sourcePaths": ["external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/04-custom-skill/customskill"],
-      "capabilities": ["document-to-search", "batch analysis", "metadata enrichment", "RAG grounding", "citation policy", "custom skills", "reprocessing"],
-      "keywords": ["Document Intelligence search", "document-to-search", "knowledge mining", "RAG", "metadata enrichment", "batch analysis", "custom skill", "citations", "search index"]
+      "sourcePaths": [
+        "external/Azure-AI-Engineer-Associate-Notes/5 - Develop solutions with Azure AI Document Intelligence/mslearn-ai-document-intelligence/Labfiles/04-custom-skill/customskill"
+      ],
+      "capabilities": [
+        "document-to-search",
+        "batch analysis",
+        "metadata enrichment",
+        "RAG grounding",
+        "citation policy",
+        "custom skills",
+        "reprocessing"
+      ],
+      "keywords": [
+        "Document Intelligence search",
+        "document-to-search",
+        "knowledge mining",
+        "RAG",
+        "metadata enrichment",
+        "batch analysis",
+        "custom skill",
+        "citations",
+        "search index"
+      ]
+    },
+    {
+      "id": "azure-knowledge-access-architect",
+      "name": "Azure Knowledge Access Architect",
+      "path": ".github/agents/azure-knowledge-access-architect.agent.md",
+      "audience": [
+        "application"
+      ],
+      "level": "shared-specialist",
+      "capabilities": [
+        "secure knowledge access",
+        "Storage inventory",
+        "Azure AI Search inventory",
+        "Foundry IQ routing",
+        "RBAC",
+        "Private Link",
+        "firewall planning"
+      ],
+      "keywords": [
+        "knowledge access",
+        "storage firewall",
+        "private endpoint",
+        "Foundry IQ",
+        "secure search",
+        "RBAC",
+        "knowledge source"
+      ]
     }
   ]
 }

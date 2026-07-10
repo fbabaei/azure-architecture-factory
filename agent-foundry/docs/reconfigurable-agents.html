@@ -136,11 +136,17 @@
 <li>Tool-Using Workflow Reconfigurable Agent</li>
 <li>Human Review &amp; Escalation Reconfigurable Agent</li>
 </ul>
+<p>The lifecycle and governance prebuilt reconfigurable category adds three specialized configurable agents:</p>
+<ul>
+<li>Knowledge Freshness &amp; Reindexing Reconfigurable Agent</li>
+<li>Observability &amp; Continuous Improvement Reconfigurable Agent</li>
+<li>Cost &amp; Capacity Governance Reconfigurable Agent</li>
+</ul>
 <p>For a step-by-step user manual with starter prompts, examples, handoffs, and validation checks, see <a href="reconfigurable-agents-quick-start.md">Reconfigurable Agents Quick Start</a>. For an end-to-end mock project example, see <a href="reconfigurable-agents-walkthrough.md">Reconfigurable Agents Walkthrough</a>.</p>
 <h2 id="how-reconfiguration-works">How Reconfiguration Works</h2>
 <ol>
 <li>The user starts with Azure AI Search Reconfigurable Orchestrator.</li>
-<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, or missing enough detail.</li>
+<li>The orchestrator decides whether the request is classic search, RAG search, agentic retrieval, mixed, evaluation/quality, tool workflow, human review, freshness/reindexing, observability/improvement, cost/capacity, or missing enough detail.</li>
 <li>The orchestrator extracts a shared requirements profile.</li>
 <li>The orchestrator routes to the most specific reconfigurable agent.</li>
 <li>The selected agent starts from its baseline capabilities and fills in the relevant reconfiguration points.</li>
@@ -347,6 +353,51 @@ AUDIT_AND_RETENTION_POLICY
 VALIDATION_PLAN
 </code></pre>
 <p>For example, if the user needs low-confidence document extractions and policy-sensitive generated answers routed to reviewers with an evidence package, SLA, override reason, and feedback capture, the agent configures a human review control path.</p>
+<h2 id="knowledge-freshness-and-reindexing-reconfiguration">Knowledge Freshness And Reindexing Reconfiguration</h2>
+<p>Knowledge freshness and reindexing reconfiguration is for keeping Azure AI Search, RAG, agentic retrieval, document-to-search, multimodal, and transcript knowledge workflows current after the first index is built.</p>
+<p>The Knowledge Freshness &amp; Reindexing Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">KNOWLEDGE_WORKFLOW
+SOURCE_INVENTORY
+FRESHNESS_REQUIREMENTS
+CHANGE_DETECTION_POLICY
+DELETION_POLICY
+REINDEXING_POLICY
+REPROCESSING_TRIGGERS
+CITATION_FRESHNESS_POLICY
+MONITORING_AND_ALERTS
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs a RAG corpus to pick up changed files hourly, remove deleted documents, refresh embeddings after chunking changes, and warn on stale citations, the agent configures the freshness and reindexing baseline.</p>
+<h2 id="observability-and-continuous-improvement-reconfiguration">Observability And Continuous Improvement Reconfiguration</h2>
+<p>Observability and continuous improvement reconfiguration is for production AI applications that need traces, quality telemetry, user feedback, failed-answer review, drift detection, dashboards, alerts, continuous evaluation, and improvement backlog handoffs.</p>
+<p>The Observability &amp; Continuous Improvement Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+OBSERVABILITY_OBJECTIVES
+TRACE_POLICY
+QUALITY_SIGNAL_POLICY
+FEEDBACK_CAPTURE
+DRIFT_DETECTION_POLICY
+DASHBOARD_AND_ALERTS
+CONTINUOUS_EVALUATION_POLICY
+IMPROVEMENT_BACKLOG
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs a support assistant to capture retrieval traces, track no-answer rates, review failed answers, detect index drift, and feed fixes into a monthly prompt/index improvement cycle, the agent configures the improvement loop.</p>
+<h2 id="cost-and-capacity-governance-reconfiguration">Cost And Capacity Governance Reconfiguration</h2>
+<p>Cost and capacity governance reconfiguration is for Azure AI applications that need model cost controls, Azure AI Search capacity planning, embedding cost policy, batch versus realtime tradeoffs, quotas, rate limits, caching, retention, budgets, and alerts.</p>
+<p>The Cost &amp; Capacity Governance Reconfigurable Agent adapts these points:</p>
+<pre><code class="language-text">AI_WORKFLOW
+USAGE_PROFILE
+MODEL_COST_POLICY
+SEARCH_CAPACITY_POLICY
+EMBEDDING_AND_INDEXING_COST_POLICY
+BATCH_REALTIME_POLICY
+QUOTA_AND_RATE_LIMIT_POLICY
+CACHE_AND_RETENTION_POLICY
+BUDGET_AND_ALERT_POLICY
+VALIDATION_PLAN
+</code></pre>
+<p>For example, if the user needs to control RAG costs across model calls, embeddings, semantic ranking, evaluation runs, traces, and peak query traffic, the agent configures cost and capacity policies with explicit quality and latency tradeoffs.</p>
 <h2 id="what-the-agents-produce">What The Agents Produce</h2>
 <p>Reconfigurable agents are requirements-driven. They do not invent Azure resources or silently assume endpoints, indexes, models, or knowledge sources. They produce a plan with:</p>
 <ul>
