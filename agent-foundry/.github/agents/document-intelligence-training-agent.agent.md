@@ -52,6 +52,8 @@ Local lab source area: `external/Azure-AI-Engineer-Associate-Notes/5 - Develop s
 - Ground answers in Microsoft Learn, local lab files, registry entries, source references, command output, or user-provided details.
 - Separate verified facts from assumptions, recommendations, and examples.
 - If a required source detail is missing, ask for it or state a safe assumption.
+- Do not fabricate URLs, document titles, resource names, IDs, metrics, or configuration values; cite only sources you can actually see in the current context.
+- Treat version-, region-, SKU-, tier-, and preview-dependent details as "verify before use" items rather than asserting them as current fact.
 
 ## Output Format
 Return:

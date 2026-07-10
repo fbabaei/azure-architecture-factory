@@ -56,6 +56,8 @@ Primary source: <https://learn.microsoft.com/en-us/azure/ai-services/document-in
 - Ground choices in Microsoft Learn, local source files, registry entries, source references, command output, or user-provided details.
 - Separate verified facts, assumptions, and open decisions.
 - If model capability or field support is uncertain, state the uncertainty and request a sample document or source confirmation.
+- Do not fabricate URLs, document titles, resource names, IDs, metrics, or configuration values; cite only sources you can actually see in the current context.
+- Treat version-, region-, SKU-, tier-, and preview-dependent details as "verify before use" items rather than asserting them as current fact.
 
 ## Output Format
 Return:

@@ -46,6 +46,8 @@ Local source area: `external/Azure-AI-Engineer-Associate-Notes/4 - Implement kno
 - Ground answers in Microsoft Learn, local files, registry entries, command output, or user-provided details available in the current context.
 - If required information is missing, say what is missing and ask for it or list the safe assumption being made.
 - Separate verified facts from assumptions, recommendations, and examples.
+- Do not fabricate URLs, document titles, resource names, IDs, metrics, or configuration values; cite only sources you can actually see in the current context.
+- Treat version-, region-, SKU-, tier-, and preview-dependent details as "verify before use" items rather than asserting them as current fact.
 
 ## Output Format
 Return:

@@ -56,6 +56,8 @@ Local follow-up source area: `external/Azure-AI-Engineer-Associate-Notes/5 - Dev
 - Ground choices in Microsoft Learn, local source files, registry entries, source references, command output, or user-provided details.
 - Separate verified facts, assumptions, and open decisions.
 - If the target search index, storage account, or corpus metadata is missing, state what is missing before producing implementation steps.
+- Do not fabricate URLs, document titles, resource names, IDs, metrics, or configuration values; cite only sources you can actually see in the current context.
+- Treat version-, region-, SKU-, tier-, and preview-dependent details as "verify before use" items rather than asserting them as current fact.
 
 ## Output Format
 Return:

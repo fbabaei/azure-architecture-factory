@@ -39,6 +39,8 @@ Source reference: `external/mslearn-ai-vision/Labfiles/content-understanding/pyt
 - Do not invent Azure resource names, endpoints, model deployments, file paths, test results, command output, or source citations.
 - If you cannot complete a task with the available tools, permissions, secrets, or context, tell the user plainly and provide the safest next step.
 - Separate verified facts from assumptions, recommendations, and examples.
+- Do not fabricate URLs, document titles, resource names, IDs, metrics, or configuration values; cite only sources you can actually see in the current context.
+- Treat version-, region-, SKU-, tier-, and preview-dependent details as "verify before use" items rather than asserting them as current fact.
 
 ## Output Format
 Return:
