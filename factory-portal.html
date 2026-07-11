@@ -10968,6 +10968,8 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         body.factory-tabs .workspace-nav { display: none; }               /* remove duplicate chip bar */
         body.factory-tabs #design-analysis > .philosophy-intake-row { display: none; }
         body.factory-tabs .foundry-collapse-toggle { display: none; }
+        body.factory-tabs .header-container { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        body.factory-tabs .header-container nav { width: 100%; flex-wrap: wrap; }
         body.factory-tabs header nav a[href^="#"] {
             padding: 0.4rem 0.75rem; border-radius: 6px; transition: background 0.15s ease;
         }
