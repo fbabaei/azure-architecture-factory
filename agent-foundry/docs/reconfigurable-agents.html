@@ -827,7 +827,7 @@ VALIDATION_PLAN
       function ready(fn) { if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', fn); } else { fn(); } }
       ready(function () {
         try {
-          var heads = Array.prototype.slice.call(document.querySelectorAll('.guide h2[id$="-reconfiguration"]'));
+          var heads = Array.prototype.slice.call(document.querySelectorAll('.guide h2')).filter(function (h) { return /reconfiguration\s*$/i.test((h.textContent || '').trim()); });
           if (!heads.length) return;
           var bodies = [];
           heads.forEach(function (h2) {
