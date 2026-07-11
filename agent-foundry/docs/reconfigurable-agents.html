@@ -813,5 +813,54 @@ VALIDATION_PLAN
 
     </article>
   </main>
+  <style>
+    .rc-collapse-head { cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .rc-collapse-head::before { content: '\25B8'; color: #0078d4; font-size: 0.8em; transition: transform 0.15s ease; flex: 0 0 auto; }
+    .rc-collapse-head:not(.collapsed)::before { transform: rotate(90deg); }
+    .rc-collapse-body { margin-bottom: 1rem; }
+    .rc-allbar { margin: 1rem 0 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .rc-allbar button { font: inherit; cursor: pointer; border: 1px solid #bfdbfe; background: #eaf3fc; color: #0078d4; border-radius: 6px; padding: 0.35rem 0.8rem; font-weight: 600; }
+    .rc-allbar button:hover { background: #d9ecfb; }
+  </style>
+  <script>
+    (function () {
+      function ready(fn) { if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', fn); } else { fn(); } }
+      ready(function () {
+        try {
+          var heads = Array.prototype.slice.call(document.querySelectorAll('.guide h2[id$="-reconfiguration"]'));
+          if (!heads.length) return;
+          var bodies = [];
+          heads.forEach(function (h2) {
+            var body = document.createElement('div');
+            body.className = 'rc-collapse-body';
+            var n = h2.nextSibling;
+            while (n && !(n.nodeType === 1 && n.tagName === 'H2')) { var nx = n.nextSibling; body.appendChild(n); n = nx; }
+            h2.classList.add('rc-collapse-head', 'collapsed');
+            h2.setAttribute('role', 'button');
+            h2.setAttribute('tabindex', '0');
+            h2.setAttribute('aria-expanded', 'false');
+            h2.insertAdjacentElement('afterend', body);
+            body.style.display = 'none';
+            bodies.push(body);
+            function toggle() {
+              var collapsed = h2.classList.toggle('collapsed');
+              body.style.display = collapsed ? 'none' : '';
+              h2.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            }
+            h2.addEventListener('click', toggle);
+            h2.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+          });
+          var bar = document.createElement('div');
+          bar.className = 'rc-allbar';
+          var expandBtn = document.createElement('button'); expandBtn.type = 'button'; expandBtn.textContent = 'Expand all';
+          var collapseBtn = document.createElement('button'); collapseBtn.type = 'button'; collapseBtn.textContent = 'Collapse all';
+          expandBtn.addEventListener('click', function () { heads.forEach(function (h, i) { h.classList.remove('collapsed'); h.setAttribute('aria-expanded', 'true'); bodies[i].style.display = ''; }); });
+          collapseBtn.addEventListener('click', function () { heads.forEach(function (h, i) { h.classList.add('collapsed'); h.setAttribute('aria-expanded', 'false'); bodies[i].style.display = 'none'; }); });
+          bar.appendChild(expandBtn); bar.appendChild(collapseBtn);
+          heads[0].parentNode.insertBefore(bar, heads[0]);
+        } catch (e) { console.error('reconfigurable collapse enhancement failed', e); }
+      });
+    })();
+  </script>
 </body>
 </html>
