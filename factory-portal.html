@@ -3168,6 +3168,7 @@
             <nav>
                 <a href="#build-workspace" class="active">Create &amp; Modernize Apps</a>
                 <a href="#ai-agent-foundry-panel">AI Agent Foundry</a>
+                <a href="#reconfigurable-agents-workspace">Reconfigurable Agents</a>
                 <a href="#projects-workspace">Projects</a>
                 <a href="#application-zone-workspace">Application Zone</a>
                 <a href="#analyze-workspace">Analyze</a>
@@ -3214,7 +3215,7 @@
             <p>Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.</p>
             <div class="foundry-action-list" aria-label="Azure AI Agent Foundry actions">
                 <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Foundry Browser</a>
-                <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Open Reconfigurable Search Agents</a>
+                <a href="#reconfigurable-agents-workspace">Open Reconfigurable Search Agents</a>
                 <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
                 <a href="agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
                 <a href="agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
@@ -3226,7 +3227,7 @@
                 <div class="foundry-action-list" aria-label="Reconfigurable search agent actions">
                     <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Quick Start</a>
                     <a href="agent-foundry/docs/reconfigurable-agents-walkthrough.html" target="_blank" rel="noopener noreferrer">Walkthrough Example</a>
-                    <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Browse Reconfigurable Agents</a>
+                    <a href="#reconfigurable-agents-workspace">Browse Reconfigurable Agents</a>
                     <button type="button" onclick="selectReconfigurableAgent('azure-ai-search-reconfigurable-orchestrator')">Configure In Portal</button>
                 </div>
             </div>
@@ -11139,8 +11140,31 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         }
                     });
 
+                    // Inject the Reconfigurable Agents catalog as an in-portal tab panel (embeds the catalog page).
+                    if (!document.getElementById('reconfigurable-agents-workspace')) {
+                        var rcContainer = document.querySelector('.container');
+                        if (rcContainer) {
+                            var rcSec = document.createElement('section');
+                            rcSec.id = 'reconfigurable-agents-workspace';
+                            rcSec.className = 'workspace-card';
+                            rcSec.setAttribute('aria-label', 'Reconfigurable Agents workspace');
+                            rcSec.innerHTML =
+                                '<div class="workspace-card-header">' +
+                                    '<div>' +
+                                        '<h3 class="workspace-card-title">Reconfigurable Agents Catalog</h3>' +
+                                        '<p class="workspace-card-subtitle">Prebuilt Azure AI baselines you can reconfigure \u2014 Search, RAG, Agentic Retrieval, Document Intelligence, multimodal, speech, Responsible AI, evaluation, and more.</p>' +
+                                    '</div>' +
+                                    '<a class="hero-cta secondary" href="agent-foundry/docs/reconfigurable-agents.html" target="_blank" rel="noopener" style="text-decoration:none;">Open full page \u2197</a>' +
+                                '</div>' +
+                                '<div class="workspace-card-body" style="padding:0;">' +
+                                    '<iframe title="Reconfigurable Agents Catalog" src="agent-foundry/docs/reconfigurable-agents.html" loading="lazy" style="width:100%; height:78vh; border:0; background:#fff; border-radius:0 0 8px 8px;"></iframe>' +
+                                '</div>';
+                            rcContainer.appendChild(rcSec);
+                        }
+                    }
+
                     // ===== Single top tab bar: show one workspace at a time =====
-                    var TABS = ['build-workspace', 'projects-workspace', 'application-zone-workspace', 'analyze-workspace', 'assist-workspace', 'ai-agent-foundry-panel'];
+                    var TABS = ['build-workspace', 'projects-workspace', 'application-zone-workspace', 'analyze-workspace', 'assist-workspace', 'ai-agent-foundry-panel', 'reconfigurable-agents-workspace'];
                     function workspaceForAnchor(id) {
                         if (!id) return null;
                         if (TABS.indexOf(id) !== -1) return id;
