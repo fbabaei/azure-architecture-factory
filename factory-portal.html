@@ -3524,6 +3524,7 @@
                                         <span class="intake-start-badge">Fill the form below</span>
                                         <span style="font-size:0.72rem; color:var(--text-secondary);">— or</span>
                                         <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleBrdChat();" style="display:inline-flex; align-items:center; gap:0.3rem; background:linear-gradient(135deg,#1c7a33,#2aa84a); color:#fff; border:none; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(28,122,51,0.3);">💬 Draft with BRD Copilot Here</button>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); headerAnalyzeFoundry(event);" title="Map your requirements to reusable Azure AI agents" style="display:inline-flex; align-items:center; gap:0.3rem; background:#eaf3fc; color:var(--primary); border:1px solid var(--primary); padding:0.2rem 0.6rem; border-radius:999px; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; cursor:pointer;">🧭 Analyze with AI Foundry</button>
                                     </span>
                                     <span class="intake-toggle-description">Expand the form to submit your Business Requirements and generate a new architecture project.</span>
                                 </span>
@@ -11329,6 +11330,25 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             } catch (e) {
                 renderFallback('Backend analysis is not reachable here \u2014 here is a prompt you can run in Copilot / the AI Agent Foundry instead.');
             }
+        };
+        window.headerAnalyzeFoundry = function (e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            var ta = document.getElementById('brd-content');
+            var needsExpand = !ta || ta.offsetParent === null;
+            if (needsExpand) {
+                var toggle = document.querySelector('#intake .intake-toggle-link');
+                if (toggle) toggle.click();
+            }
+            setTimeout(function () {
+                var t = document.getElementById('brd-content');
+                var content = t && t.value ? t.value.trim() : '';
+                if (content.length > 0 && typeof window.analyzeBrdWithFoundry === 'function') {
+                    window.analyzeBrdWithFoundry();
+                } else if (t) {
+                    t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    t.focus();
+                }
+            }, 160);
         };
     </script>
     <!-- ========== /Portal Reorg Enhancements ========== -->
