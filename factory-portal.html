@@ -3632,6 +3632,11 @@
                                                     <p id="brd-content-hint" style="margin-top:0.35rem; color:var(--text-secondary); font-size:0.8rem;">
                                                         Paste the BRD, architecture notes, or a summary of the uploaded artifact. For Visio and Lucidchart, this summary is required.
                                                     </p>
+                                                    <div class="foundry-analyze-bar" style="margin-top:0.6rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                                                        <button type="button" id="analyze-foundry-btn" onclick="analyzeBrdWithFoundry()" title="Map your requirements to reusable Azure AI agents before you build." style="background:#eaf3fc; color:var(--primary); border:1px solid var(--primary); padding:0.5rem 0.95rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.88rem;">🧭 Analyze with AI Agent Foundry</button>
+                                                        <span style="font-size:0.8rem; color:var(--text-secondary);">Not sure which AI capabilities you need? Analyze your requirements first.</span>
+                                                    </div>
+                                                    <div id="foundry-analysis-result" style="display:none; margin-top:0.7rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.15rem;"></div>
                                                 </div>
                                             </div>
                                         </details>
@@ -3724,9 +3729,7 @@
                                     </div>
                                     <div class="button-group">
                                         <button type="submit" class="btn-primary" id="submit-brd-btn">🚀 Generate or Update Project</button>
-                                        <button type="button" id="analyze-foundry-btn" onclick="analyzeBrdWithFoundry()" title="Map your requirements to reusable Azure AI agents before you build." style="background:#fff; color:var(--primary); border:1px solid var(--primary); padding:0.6rem 1.1rem; border-radius:6px; font-weight:600; cursor:pointer; font-size:0.9rem;">🧭 Analyze with AI Agent Foundry</button>
                                     </div>
-                                    <div id="foundry-analysis-result" style="display:none; margin-top:0.85rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.15rem;"></div>
                                     <p class="brd-submit-hint">After generation completes, use <strong>&#9655; Open in GitHub Copilot</strong> on the project card to continue in VS Code or iterate on the refreshed architecture.</p>
                                     <div class="status-message" id="brd-intake-status"></div>
                                 </form>
