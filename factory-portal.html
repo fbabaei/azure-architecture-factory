@@ -11227,39 +11227,105 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         })();
     </script>
     <script>
-        window.analyzeBrdWithFoundry = function () {
+        window.analyzeBrdWithFoundry = async function () {
             var contentEl = document.getElementById('brd-content');
             var nameEl = document.getElementById('brd-file-name');
             var brd = contentEl && contentEl.value ? contentEl.value.trim() : '';
             var name = nameEl && nameEl.value ? nameEl.value.trim() : '';
-            var source = brd || '<paste or fill in your Business Requirements above, then click Analyze again>';
-            var prompt = '/implement-from-brd-prd' + (name ? ' (' + name + ')' : '') + '\n\n' + source +
-                '\n\nUse Azure AI Agent Foundry agents to extract verified requirements, map each requirement to the right specialist or blueprint, assess Microsoft Agent Framework fit, and recommend which reusable Azure AI agents (Classic/RAG/Agentic Search, Document Intelligence, multimodal, speech, Responsible AI guardrails, evaluation, tool-using workflows, etc.) this application needs. Return a concise requirement-to-agent map I can bring back into the Azure Architecture Factory BRD. Mark missing requirements; do not invent Azure resources, endpoints, model deployments, or results.';
             var result = document.getElementById('foundry-analysis-result');
-            if (result) {
-                result.style.display = 'block';
+            if (!result) return;
+            result.style.display = 'block';
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+            function deepPrompt() {
+                var src = brd || '<paste or fill in your Business Requirements above, then click Analyze again>';
+                return '/implement-from-brd-prd' + (name ? ' (' + name + ')' : '') + '\n\n' + src +
+                    '\n\nUse Azure AI Agent Foundry agents to extract verified requirements, map each requirement to the right specialist or blueprint, assess Microsoft Agent Framework fit, and recommend which reusable Azure AI agents this application needs. Return a concise requirement-to-agent map I can bring back into the Azure Architecture Factory BRD. Mark missing requirements; do not invent Azure resources, endpoints, model deployments, or results.';
+            }
+
+            function wireCommon() {
+                var openTab = result.querySelector('.foundry-open-tab');
+                if (openTab) openTab.addEventListener('click', function () { var l = document.querySelector('header nav a[href="#ai-agent-foundry-panel"]'); if (l) l.click(); });
+                var copyBtn = result.querySelector('.foundry-copy-prompt');
+                if (copyBtn) copyBtn.addEventListener('click', function () { var b = this; if (navigator.clipboard) navigator.clipboard.writeText(deepPrompt()).catch(function () {}); b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy deep-analysis prompt'; }, 1200); });
+            }
+
+            function renderFallback(note) {
+                var prompt = deepPrompt();
                 result.innerHTML =
-                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">Analyze requirements with AI Agent Foundry</h4>' +
-                    '<p style="margin:0 0 0.6rem; font-size:0.85rem; color:#334155;">This maps your requirements to reusable Azure AI agents <em>before</em> you generate the project. The prompt below was copied to your clipboard \u2014 run it in GitHub Copilot (or the AI Agent Foundry), then bring the recommended agents back into the BRD above.</p>' +
+                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">Analyze with AI Agent Foundry</h4>' +
+                    (note ? '<p style="margin:0 0 0.5rem; font-size:0.82rem; color:#64748b;">' + esc(note) + '</p>' : '') +
+                    '<p style="margin:0 0 0.6rem; font-size:0.85rem; color:#334155;">Run this prompt in GitHub Copilot (or the AI Agent Foundry) to map your requirements to reusable Azure AI agents, then bring the recommendations back into the BRD above. It was copied to your clipboard.</p>' +
                     '<pre class="foundry-analysis-pre" style="white-space:pre-wrap; background:#fff; border:1px solid var(--border); border-radius:6px; padding:0.75rem; font-size:0.8rem; max-height:180px; overflow:auto; margin:0;"></pre>' +
                     '<div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.6rem;">' +
-                        '<button type="button" class="foundry-copy-prompt" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Copy prompt again</button>' +
+                        '<button type="button" class="foundry-copy-prompt" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Copy deep-analysis prompt</button>' +
                         '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open AI Agent Foundry tab</button>' +
                     '</div>';
                 result.querySelector('.foundry-analysis-pre').textContent = prompt;
-                result.querySelector('.foundry-copy-prompt').addEventListener('click', function () {
-                    var btn = this;
-                    if (navigator.clipboard) { navigator.clipboard.writeText(prompt).catch(function () {}); }
-                    btn.textContent = 'Copied';
-                    setTimeout(function () { btn.textContent = 'Copy prompt again'; }, 1200);
-                });
-                result.querySelector('.foundry-open-tab').addEventListener('click', function () {
-                    var link = document.querySelector('header nav a[href="#ai-agent-foundry-panel"]');
-                    if (link) link.click();
-                });
-                result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                wireCommon();
+                if (navigator.clipboard) navigator.clipboard.writeText(prompt).catch(function () {});
             }
-            if (navigator.clipboard) { navigator.clipboard.writeText(prompt).catch(function () {}); }
+
+            function buildSection(data, top) {
+                var lines = ['## Recommended Azure AI Agents (via AI Agent Foundry)'];
+                lines.push('Best fit: ' + (data.recommendedAgentName || '') + ' (confidence: ' + (data.confidence || '') + ')');
+                if (top.length) { lines.push('Candidate reusable agents:'); top.forEach(function (a) { lines.push('- ' + a.name + ' (match score ' + a.score + ')'); }); }
+                if (data.reasons && data.reasons.length) { lines.push('Rationale: ' + data.reasons.join('; ')); }
+                lines.push('Next: use the AI Agent Foundry / Reconfigurable Agents tab to configure the selected agent(s), then plug them into the generated app.');
+                return lines.join('\n');
+            }
+
+            function renderRecommendations(data) {
+                var top = (data.alternatives || []).filter(function (a) { return a.score > 0; }).slice(0, 5);
+                var reasons = data.reasons || [];
+                var listHtml = top.length
+                    ? '<ol style="margin:0.3rem 0 0.7rem 1.1rem; font-size:0.85rem; color:#334155;">' + top.map(function (a) { return '<li><strong>' + esc(a.name) + '</strong> <span style="color:#64748b;">(match ' + a.score + ')</span></li>'; }).join('') + '</ol>'
+                    : '<p style="font-size:0.85rem; color:#64748b; margin:0.3rem 0 0.6rem;">No strong AI-capability signals yet \u2014 add detail about search, RAG, documents, vision, or speech, then Analyze again.</p>';
+                result.innerHTML =
+                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">AI Agent Foundry recommendations</h4>' +
+                    '<p style="margin:0 0 0.35rem; font-size:0.85rem; color:#334155;">Best fit: <strong>' + esc(data.recommendedAgentName || '\u2014') + '</strong> \u00b7 confidence: <strong>' + esc(data.confidence || '\u2014') + '</strong></p>' +
+                    (reasons.length ? '<p style="margin:0 0 0.4rem; font-size:0.82rem; color:#475569;">Why: ' + esc(reasons.join('; ')) + '</p>' : '') +
+                    '<div style="font-weight:600; font-size:0.85rem;">Top matching reusable agents:</div>' + listHtml +
+                    '<div style="display:flex; gap:0.5rem; flex-wrap:wrap;">' +
+                        '<button type="button" class="foundry-insert-brd" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Insert recommendations into BRD</button>' +
+                        '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open AI Agent Foundry tab</button>' +
+                        '<button type="button" class="foundry-copy-prompt" style="background:#fff; color:#475569; border:1px solid var(--border); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Copy deep-analysis prompt</button>' +
+                    '</div>';
+                wireCommon();
+                var section = buildSection(data, top);
+                var insertBtn = result.querySelector('.foundry-insert-brd');
+                if (insertBtn) insertBtn.addEventListener('click', function () {
+                    if (contentEl) {
+                        contentEl.value = contentEl.value.replace(/\s+$/, '') + '\n\n' + section + '\n';
+                        contentEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        contentEl.focus();
+                    }
+                    var b = this; b.textContent = 'Inserted \u2713';
+                    setTimeout(function () { b.textContent = 'Insert recommendations into BRD'; }, 1500);
+                });
+            }
+
+            result.innerHTML = '<p style="margin:0; font-size:0.9rem; color:#334155;">Analyzing requirements with AI Agent Foundry\u2026</p>';
+            try {
+                var resp = await fetch('/api/agent-foundry/recommend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sourceType: 'brd-prd', content: brd })
+                });
+                if (!resp.ok) {
+                    var note = resp.status === 400
+                        ? 'Add a bit more requirement detail for an automatic recommendation \u2014 here is a prompt you can run instead.'
+                        : 'Backend analysis unavailable (status ' + resp.status + ') \u2014 here is a prompt you can run instead.';
+                    renderFallback(note);
+                    return;
+                }
+                var data = await resp.json();
+                renderRecommendations(data);
+            } catch (e) {
+                renderFallback('Backend analysis is not reachable here \u2014 here is a prompt you can run in Copilot / the AI Agent Foundry instead.');
+            }
         };
     </script>
     <!-- ========== /Portal Reorg Enhancements ========== -->
