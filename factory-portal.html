@@ -3558,7 +3558,7 @@
                             <div class="build-panels-row">
                             <div class="brd-intake-panel" style="border-left:4px solid #7fba00;">
                                 <h3>📋 Architecture Intake</h3>
-                                <form onsubmit="return submitBrd(event)">
+                                <form onsubmit="return submitBrdWithFoundry(event)">
                                     <div class="intake-subsections">
                                         <details class="intake-subsection" open>
                                             <summary>Project and Source</summary>
@@ -3637,6 +3637,10 @@
                                                         <button type="button" id="analyze-foundry-btn" onclick="analyzeBrdWithFoundry()" title="Map your requirements to reusable Azure AI agents before you build." style="background:#eaf3fc; color:var(--primary); border:1px solid var(--primary); padding:0.5rem 0.95rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.88rem;">🧭 Analyze with AI Agent Foundry</button>
                                                         <span style="font-size:0.8rem; color:var(--text-secondary);">Not sure which AI capabilities you need? Analyze your requirements first.</span>
                                                     </div>
+                                                    <label style="display:flex; align-items:center; gap:0.45rem; margin-top:0.5rem; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                                                        <input type="checkbox" id="brd-auto-foundry" checked>
+                                                        Automatically include AI Agent Foundry recommendations when I generate the project
+                                                    </label>
                                                     <div id="foundry-analysis-result" style="display:none; margin-top:0.7rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.15rem;"></div>
                                                 </div>
                                             </div>
@@ -11349,6 +11353,36 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     t.focus();
                 }
             }, 160);
+        };
+        window.submitBrdWithFoundry = async function (event) {
+            if (event) event.preventDefault();
+            var auto = document.getElementById('brd-auto-foundry');
+            var contentEl = document.getElementById('brd-content');
+            var brd = contentEl && contentEl.value ? contentEl.value.trim() : '';
+            if (auto && auto.checked && brd && !/Recommended Azure AI Agents \(via AI Agent Foundry\)/.test(brd)) {
+                var submitBtn = document.getElementById('submit-brd-btn');
+                var prevLabel = submitBtn ? submitBtn.textContent : '';
+                if (submitBtn) { submitBtn.textContent = 'Consulting AI Agent Foundry\u2026'; submitBtn.disabled = true; }
+                try {
+                    var resp = await fetch('/api/agent-foundry/recommend', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sourceType: 'brd-prd', content: brd })
+                    });
+                    if (resp.ok) {
+                        var data = await resp.json();
+                        var top = (data.alternatives || []).filter(function (a) { return a.score > 0; }).slice(0, 5);
+                        var lines = ['## Recommended Azure AI Agents (via AI Agent Foundry)'];
+                        lines.push('Best fit: ' + (data.recommendedAgentName || '') + ' (confidence: ' + (data.confidence || '') + ')');
+                        if (top.length) { lines.push('Candidate reusable agents:'); top.forEach(function (a) { lines.push('- ' + a.name + ' (match score ' + a.score + ')'); }); }
+                        if (data.reasons && data.reasons.length) { lines.push('Rationale: ' + data.reasons.join('; ')); }
+                        contentEl.value = contentEl.value.replace(/\s+$/, '') + '\n\n' + lines.join('\n') + '\n';
+                        contentEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } catch (e) { /* analysis is best-effort; proceed with generation */ }
+                if (submitBtn) { submitBtn.textContent = prevLabel; submitBtn.disabled = false; }
+            }
+            return window.submitBrd(event);
         };
     </script>
     <!-- ========== /Portal Reorg Enhancements ========== -->
