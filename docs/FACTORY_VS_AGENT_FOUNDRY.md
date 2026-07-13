@@ -60,3 +60,40 @@ That's why the Factory portal embeds the Foundry directly — via the **AI Agent
 1. Start in the Factory: submit a BRD (or modernize a legacy app) → get architecture, code, and infrastructure.
 2. Where the app needs intelligence, open the **AI Agent Foundry** tab and pick a blueprint, or open **Reconfigurable Agents** and configure a prebuilt baseline (e.g., RAG search over your documents).
 3. Plug the configured agent into the generated app, then let the Factory handle deployment and observability.
+
+## Analyze with AI Agent Foundry (in the BRD intake)
+
+The **Create & Modernize Apps** tab has an **Analyze with AI Agent Foundry** action that maps your Business Requirements to the reusable Azure AI agents the app is likely to need — *before* you build. There are two entry points to the same analysis:
+
+- **Header pill** — "🧭 Analyze with AI Foundry", next to *Draft with BRD Copilot* in the "Submit Business Requirements" header (visible even while the form is collapsed). Clicking it expands the form; if you've already entered requirements it runs the analysis, otherwise it drops you into the requirements box.
+- **In-form button** — under the "Architecture Source or Summary" textarea, with the nudge *"Not sure which AI capabilities you need? Analyze your requirements first."*
+
+**What the analysis does:** it sends your requirements to the portal's `/api/agent-foundry/recommend` endpoint (a deterministic keyword scorer — no LLM call), and returns:
+
+- the **best-fit** reusable agent and a **confidence** level,
+- a **ranked list** of candidate agents with match scores,
+- a short **rationale**.
+
+You can then click **Insert recommendations into BRD** to append a `## Recommended Azure AI Agents (via AI Agent Foundry)` section to your requirements, so the generated project carries that guidance. If the backend is unreachable (e.g., the page is opened as a local file), it falls back to copying a ready-to-run `/implement-from-brd-prd` prompt and offers to open the AI Agent Foundry tab.
+
+### Two ways to run it
+
+**Manual (review-first):**
+
+1. Enter your requirements.
+2. Click **Analyze with AI Agent Foundry** → review the ranked recommendations.
+3. (Optional) **Insert recommendations into BRD**.
+4. Click **🚀 Generate or Update Project**.
+
+**One-click (auto-analyze on Generate)** — controlled by the checkbox **"Automatically include AI Agent Foundry recommendations when I generate the project"** (default **on**), located under the Analyze button:
+
+1. Enter your requirements.
+2. Click **🚀 Generate or Update Project**.
+3. The portal first consults AI Agent Foundry, **auto-inserts** the recommendations into the BRD, then continues into generation — one click. (The Generate button briefly shows *"Consulting AI Agent Foundry…"*.)
+
+Notes:
+
+- **Analyze and Generate are separate by default.** Analyze is an advisory "which AI agents do I need?" step; it does **not** trigger a build on its own. The auto-analyze checkbox is what chains them.
+- **Opt-out:** uncheck the box to generate without the analysis.
+- **No double-insert:** if the recommendations section is already present, it won't be added again.
+- **Best-effort:** if the analysis call fails, generation proceeds anyway — it never blocks your build.
