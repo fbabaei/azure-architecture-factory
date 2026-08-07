@@ -69,3 +69,11 @@ def test_portal_links_to_aaf_workflow_diagram():
     assert "Greenfield mode" in diagram
     assert "Update mode" in diagram
     assert "ACA Express" in diagram
+
+
+def test_docs_shortcut_expands_portal_documentation():
+    html = _portal_html()
+
+    assert "function expandAnchorPanel(anchorId, source)" in html
+    assert "anchorId === 'docs-quick-links' && !source.closest('#docs-quick-links')" in html
+    assert "expandAnchorPanel(raw, a)" in html

@@ -12054,6 +12054,11 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         setActiveNav(id);
                         return true;
                     }
+                    function expandAnchorPanel(anchorId, source) {
+                        if (anchorId === 'docs-quick-links' && !source.closest('#docs-quick-links')) {
+                            toggleDocsPanel(null, true);
+                        }
+                    }
                     document.body.classList.add('factory-tabs');
                     document.addEventListener('click', function (e) {
                         var a = e.target.closest('a[href^="#"]');
@@ -12063,15 +12068,22 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         if (!ws) return;
                         e.preventDefault();
                         activateWorkspace(ws);
+                        expandAnchorPanel(raw, a);
                         var scrollId = (raw !== ws) ? raw : ws;
                         var target = document.getElementById(scrollId);
                         setTimeout(function () { scrollToEl(target); }, 40);
                     });
-                    var initial = workspaceForAnchor((location.hash || '').slice(1)) || 'build-workspace';
+                    var initialAnchor = (location.hash || '').slice(1);
+                    var initial = workspaceForAnchor(initialAnchor) || 'build-workspace';
                     activateWorkspace(initial);
+                    if (initialAnchor === 'docs-quick-links') toggleDocsPanel(null, true);
                     window.addEventListener('hashchange', function () {
-                        var ws = workspaceForAnchor((location.hash || '').slice(1));
-                        if (ws) activateWorkspace(ws);
+                        var anchor = (location.hash || '').slice(1);
+                        var ws = workspaceForAnchor(anchor);
+                        if (ws) {
+                            activateWorkspace(ws);
+                            if (anchor === 'docs-quick-links') toggleDocsPanel(null, true);
+                        }
                     });
                 } catch (e) {
                     console.error('portalUxEnhancements failed', e);
