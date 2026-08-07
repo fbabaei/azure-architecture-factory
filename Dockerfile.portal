@@ -40,9 +40,10 @@ COPY factory-portal.html ./
 COPY factory-projects.generated.json ./
 COPY README.md ./
 COPY docs/ docs/
+COPY diagrams/ diagrams/
 COPY assets/ assets/
 COPY factory-templates/ factory-templates/
-COPY agent-foundry/ agent-foundry/
+COPY agent-application-factory/ agent-application-factory/
 # Note: projects/ directory NOT included in minimal Docker build context.
 # Snapshot of the project feed baked into the image at build time
 # (factory-projects.generated.json will be served without directory filtering).

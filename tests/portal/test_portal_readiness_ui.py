@@ -59,6 +59,7 @@ def test_portal_links_to_aaf_workflow_diagram():
     root = Path(__file__).resolve().parents[2]
 
     assert 'href="diagrams/azure-architecture-factory-flow.mmd"' in html
+    assert "COPY diagrams/ diagrams/" in (root / "Dockerfile.portal").read_text(encoding="utf-8")
 
     diagram = (root / "diagrams" / "azure-architecture-factory-flow.mmd").read_text(encoding="utf-8")
     assert "flowchart TB" in diagram
