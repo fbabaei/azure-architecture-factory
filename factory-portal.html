@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure Architecture Factory | Project Hub</title>
+    <title>Azure Architecture and Agent Factory | Project Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         html {
@@ -102,6 +102,54 @@
             backdrop-filter: blur(12px);
         }
 
+        .companion-strip {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid #c8dff2;
+            box-shadow: 0 6px 18px rgba(15, 45, 68, 0.08);
+        }
+
+        .companion-strip-inner {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 0.7rem 1.5rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .companion-overview {
+            color: #27465c;
+            font-size: 0.84rem;
+            line-height: 1.45;
+            max-width: 620px;
+        }
+
+        .companion-overview p {
+            margin: 0 0 0.4rem;
+        }
+
+        .companion-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .companion-steps li {
+            background: #eef6ff;
+            border: 1px solid #c8dff2;
+            border-radius: 999px;
+            color: #0f3d63;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 0.24rem 0.58rem;
+        }
+
         .container {
             position: relative;
             z-index: 1;
@@ -116,6 +164,13 @@
             align-items: center;
         }
 
+        .brand-lockup {
+            display: grid;
+            grid-template-columns: auto;
+            align-items: start;
+            row-gap: 0.45rem;
+        }
+
         .logo {
             display: flex;
             align-items: center;
@@ -123,6 +178,63 @@
             color: #ffffff;
             font-size: 1.25rem;
             font-weight: 700;
+        }
+
+        .brand-product-link {
+            display: inline-grid;
+            grid-template-columns: 54px auto;
+            align-items: center;
+            gap: 0.85rem;
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-size: 1.08rem;
+            font-weight: 700;
+            padding: 0.75rem 1.05rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(234, 246, 255, 0.94));
+            box-shadow: 0 10px 24px rgba(15, 45, 68, 0.2);
+            justify-self: start;
+            min-width: 360px;
+            white-space: nowrap;
+        }
+
+        .brand-product-logo {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            box-shadow: 0 8px 18px rgba(0, 90, 158, 0.18);
+        }
+
+        .brand-product-copy {
+            display: grid;
+            gap: 0.12rem;
+        }
+
+        .companion-strip .brand-product-link {
+            width: fit-content;
+            margin-left: 0;
+            border-color: #c8dff2;
+        }
+
+        .brand-product-link .brand-product-eyebrow {
+            color: #456579;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .brand-product-link .brand-product-title {
+            font-size: 1.35rem;
+            line-height: 1.12;
+        }
+
+        .brand-product-link:hover,
+        .brand-product-link.is-active {
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(15, 45, 68, 0.26), inset 0 -3px 0 var(--secondary);
         }
 
         .logo svg, .logo img {
@@ -234,6 +346,18 @@
 
         section {
             margin-bottom: 2rem;
+        }
+
+        .factory-top-pair {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 1rem;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .factory-top-pair > section {
+            margin-bottom: 0;
         }
 
         .workspace-nav {
@@ -767,14 +891,172 @@
             border-left: 4px solid var(--primary);
             border-radius: 10px;
             padding: 1rem 1.1rem;
-            margin: -0.3rem 0 1.5rem;
+            margin: 0;
+            order: -2;
             box-shadow: 0 14px 30px rgba(19, 50, 74, 0.07);
+            text-align: center;
+        }
+
+        .agent-factory-feature {
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(115deg, rgba(255, 255, 255, 0.98) 0%, rgba(232, 245, 255, 0.96) 62%, rgba(240, 250, 238, 0.96) 100%);
+            border: 1px solid #9cc9e9;
+            border-top: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 1.35rem 1.45rem;
+            margin: 0 0 1.25rem;
+            box-shadow: 0 14px 34px rgba(15, 61, 99, 0.1);
+        }
+
+        .agent-factory-feature::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--ms-red) 0 25%, var(--ms-green) 25% 50%, var(--ms-blue) 50% 75%, var(--ms-yellow) 75% 100%);
+        }
+
+        .agent-factory-feature-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .agent-factory-feature-eyebrow {
+            color: #365f7d;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0 0 0.35rem;
+        }
+
+        .agent-factory-feature h2 {
+            color: #0f3d63;
+            font-size: 1.65rem;
+            line-height: 1.15;
+            margin: 0 0 0.45rem;
+        }
+
+        .agent-factory-feature h2::before { display: none; }
+
+        .agent-factory-feature-lead {
+            max-width: 720px;
+            color: #334155;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .agent-factory-feature-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            min-height: 44px;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.86rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .agent-factory-feature-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .agent-factory-paths {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+            margin-top: 1.15rem;
+            border-top: 1px solid rgba(0, 120, 212, 0.18);
+            border-bottom: 1px solid rgba(0, 120, 212, 0.18);
+        }
+
+        .agent-factory-path {
+            display: grid;
+            gap: 0.2rem;
+            padding: 0.85rem 1rem;
+            color: #0f3d63;
+            text-decoration: none;
+            border-right: 1px solid rgba(0, 120, 212, 0.18);
+        }
+
+        .agent-factory-path:first-child { padding-left: 0; }
+        .agent-factory-path:last-child { border-right: 0; }
+        .agent-factory-path:hover strong { color: var(--primary); text-decoration: underline; }
+        .agent-factory-path strong { font-size: 0.84rem; }
+        .agent-factory-path span { color: #5b6775; font-size: 0.76rem; line-height: 1.4; }
+
+        .agent-factory-feature-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .agent-factory-feature-meta {
+            color: #4b5d6b;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .agent-factory-feature-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+        }
+
+        .agent-factory-feature-links a {
+            color: var(--primary-dark);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .agent-factory-feature-links a:hover { text-decoration: underline; }
+
+        @media (max-width: 820px) {
+            .agent-factory-feature-header { grid-template-columns: 1fr; gap: 0.85rem; }
+            .agent-factory-feature-primary { justify-self: start; }
+            .agent-factory-paths { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .agent-factory-path:nth-child(2) { border-right: 0; }
+            .agent-factory-path:nth-child(n + 3) { border-top: 1px solid rgba(0, 120, 212, 0.18); }
+            .agent-factory-path:nth-child(3) { padding-left: 0; }
+        }
+
+        @media (max-width: 520px) {
+            .agent-factory-feature { padding: 1.05rem 1.15rem; }
+            .agent-factory-feature h2 { font-size: 1.35rem; }
+            .agent-factory-paths { grid-template-columns: 1fr; }
+            .agent-factory-path { padding: 0.75rem 0; border-right: 0; border-top: 1px solid rgba(0, 120, 212, 0.18); }
+            .agent-factory-path:first-child { border-top: 0; }
+            .agent-factory-feature-footer { align-items: flex-start; flex-direction: column; }
         }
 
         .foundry-portal-panel h2 {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;
             color: var(--primary);
-            font-size: 1.15rem;
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 0.45rem;
+            text-align: center;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .foundry-portal-panel h2::before {
@@ -784,8 +1066,168 @@
         .foundry-portal-panel p {
             color: var(--text-secondary);
             font-size: 0.88rem;
+            margin-left: auto;
+            margin-right: auto;
             margin-bottom: 0.85rem;
             max-width: 820px;
+        }
+
+        .foundry-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin: 1rem 0;
+        }
+
+        .foundry-overview-card {
+            background: #ffffff;
+            border: 1px solid #c8dff2;
+            border-radius: 8px;
+            padding: 0.9rem;
+            box-shadow: 0 8px 18px rgba(15, 45, 68, 0.06);
+        }
+
+        .foundry-overview-card h3 {
+            color: #0f3d63;
+            font-size: 0.92rem;
+            margin: 0 0 0.4rem;
+        }
+
+        .foundry-overview-card p {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .foundry-use-list {
+            display: grid;
+            gap: 0.35rem;
+            margin: 0.2rem 0 0;
+            padding-left: 1.05rem;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .foundry-dynamic-panel {
+            display: grid;
+            grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1fr);
+            gap: 0.9rem;
+            align-items: stretch;
+            margin: 1rem 0;
+            padding: 0.9rem;
+            border: 1px solid #b7d8f3;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #eef7ff 100%);
+            box-shadow: 0 12px 26px rgba(15, 45, 68, 0.08);
+        }
+
+        .foundry-dynamic-menu {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .foundry-dynamic-menu button {
+            border: 1px solid #c8dff2;
+            background: #ffffff;
+            color: #0f3d63;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.25;
+            padding: 0.62rem 0.75rem;
+            text-align: left;
+            transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        .foundry-dynamic-menu button:hover,
+        .foundry-dynamic-menu button.is-active {
+            background: #eaf3fc;
+            border-color: var(--primary);
+            box-shadow: inset 3px 0 0 var(--primary), 0 8px 18px rgba(0, 120, 212, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .foundry-dynamic-content {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+        }
+
+        .foundry-dynamic-kicker {
+            color: #456579;
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.28rem;
+            text-transform: uppercase;
+        }
+
+        .foundry-dynamic-content h3 {
+            color: #0f3d63;
+            font-size: 1.02rem;
+            margin: 0 0 0.42rem;
+        }
+
+        .foundry-dynamic-content p {
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            line-height: 1.5;
+            margin: 0 0 0.75rem;
+        }
+
+        .foundry-dynamic-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .foundry-dynamic-chips span {
+            background: #eef6ff;
+            border: 1px solid #c8dff2;
+            border-radius: 999px;
+            color: #0f3d63;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.24rem 0.55rem;
+        }
+
+        .foundry-dynamic-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+
+        .foundry-dynamic-actions button,
+        .foundry-dynamic-actions a {
+            align-items: center;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0.42rem 0.78rem;
+            text-decoration: none;
+        }
+
+        .foundry-dynamic-primary {
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            color: #ffffff;
+        }
+
+        .foundry-dynamic-secondary {
+            background: #ffffff;
+            border: 1px solid #bfd8ee;
+            color: var(--primary-dark);
         }
 
         .foundry-action-list {
@@ -1304,6 +1746,28 @@
             background: transparent;
             color: inherit;
             padding: 0;
+        }
+
+        .doc-content .mermaid-diagram {
+            margin: 1rem 0;
+            padding: 1rem;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .doc-content .mermaid-diagram svg {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        .doc-content .mermaid-error {
+            text-align: left;
+            color: var(--danger);
         }
 
         .doc-status {
@@ -2157,6 +2621,49 @@
                 flex-direction: column;
                 gap: 0.75rem;
                 text-align: center;
+            }
+
+            .brand-lockup {
+                justify-content: center;
+                grid-template-columns: 1fr;
+                justify-items: center;
+            }
+
+            .brand-product-link {
+                grid-template-columns: 46px auto;
+                margin-left: 0;
+                min-width: min(100%, 300px);
+            }
+
+            .brand-product-logo {
+                width: 46px;
+                height: 46px;
+            }
+
+            .companion-strip-inner {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+            }
+
+            .companion-steps {
+                justify-content: center;
+            }
+
+            .factory-top-pair {
+                grid-template-columns: 1fr;
+            }
+
+            .foundry-overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .foundry-dynamic-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .foundry-dynamic-menu {
+                grid-template-columns: 1fr 1fr;
             }
 
             nav {
@@ -3161,13 +3668,14 @@
 <body>
     <header>
         <div class="header-container">
-            <div class="logo">
-                <img src="assets/factory-icon.svg" alt="Azure Architecture Factory icon" width="32" height="32" style="display:block;">
-                Azure Architecture Factory
+            <div class="brand-lockup" aria-label="Factory portals">
+                <div class="logo">
+                    <img src="assets/factory-icon.svg" alt="Azure Architecture and Agent Factory icon" width="32" height="32" style="display:block;">
+                    Azure Architecture and Agent Factory
+                </div>
             </div>
             <nav>
                 <a href="#build-workspace" class="active" title="Submit a Business Requirements Document to generate a new Azure app — or point it at a legacy codebase to modernize.">Create &amp; Modernize Apps</a>
-                <a href="#ai-agent-foundry-panel" title="Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.">AI Agent Foundry</a>
                 <a href="#reconfigurable-agents-workspace" title="Prebuilt Azure AI baselines you can reconfigure — Classic/RAG/Agentic Search, Document Intelligence, multimodal, speech, Responsible AI, evaluation, and more.">Reconfigurable Agents</a>
                 <a href="#projects-workspace" title="Browse generated projects and per-project actions: explore, deploy, analyze, and estimate cost.">Projects</a>
                 <a href="#application-zone-workspace" title="Build independent app bundles from App Packs (CaseWright) without an AAF runtime dependency.">Application Zone</a>
@@ -3189,14 +3697,34 @@
         </div>
     </header>
 
+    <div class="companion-strip" aria-label="Companion portal shortcut">
+        <div class="companion-strip-inner">
+            <a class="brand-product-link" href="#ai-agent-foundry-panel" title="Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.">
+                <img class="brand-product-logo" src="assets/agent-application-factory-logo.svg" alt="Agent Application Factory logo" width="54" height="54">
+                <span class="brand-product-copy">
+                    <span class="brand-product-eyebrow">Companion Portal</span>
+                    <span class="brand-product-title">Agent Application Factory</span>
+                </span>
+            </a>
+            <div class="companion-overview">
+                <p><strong>Find, configure, and reuse Azure AI agent patterns</strong> before you build or modernize an app.</p>
+                <ol class="companion-steps" aria-label="Agent Application Factory quick steps">
+                    <li>Choose an agent</li>
+                    <li>Tailor the configuration</li>
+                    <li>Bring the plan into the factory</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Hero Section -->
         <section style="text-align:center;">
-            <h1>Azure Architecture Factory</h1>
+            <h1>Architecture Factory</h1>
             <p class="section-subtitle hero-flow-subtitle">
                 End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment → Observability (with Traceability across all stages)
             </p>
-            <p class="portal-orientation" style="max-width:820px; margin:0.35rem auto 0; color:var(--text-secondary); font-size:0.9rem; line-height:1.5;"><strong>Architecture Factory</strong> turns requirements — or a legacy app — into a deployed Azure solution (architecture, code, infrastructure, deployment, observability). <strong>AI Agent Foundry</strong> and <strong>Reconfigurable Agents</strong> supply the AI building blocks (search, RAG, vision, NLP, Document Intelligence, Responsible AI) to plug in. <a href="docs/FACTORY_VS_AGENT_FOUNDRY.md" class="doc-preview-link" data-doc-title="Factory vs AI Agent Foundry" rel="noopener noreferrer">Learn more →</a></p>
+            <p class="portal-orientation" style="max-width:820px; margin:0.35rem auto 0; color:var(--text-secondary); font-size:0.9rem; line-height:1.5;"><strong>Architecture Factory</strong> turns requirements — or a legacy app — into a deployed Azure solution (architecture, code, infrastructure, deployment, observability). <strong>Agent Application Factory</strong> and <strong>Reconfigurable Agents</strong> supply the AI building blocks (search, RAG, vision, NLP, Document Intelligence, Responsible AI) to plug in. <a href="docs/FACTORY_VS_AGENT_FOUNDRY.md" class="doc-preview-link" data-doc-title="Factory vs Agent Application Factory" rel="noopener noreferrer">Learn more →</a></p>
             <hr class="section-divider">
             <div class="factory-philosophy-panel" style="margin-top:1rem; text-align:left; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
                 <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
@@ -3211,30 +3739,107 @@
             </div>
         </section>
 
+        <section id="agent-factory-feature" class="agent-factory-feature" aria-labelledby="agent-factory-feature-title">
+            <div class="agent-factory-feature-header">
+                <div>
+                    <p class="agent-factory-feature-eyebrow">Reusable AI application capabilities</p>
+                    <h2 id="agent-factory-feature-title">Agent Application Factory</h2>
+                    <p class="agent-factory-feature-lead">Choose, configure, and implement reusable Azure AI agents for search, RAG, documents, vision, speech, safety, evaluation, and multi-agent workflows. Start from requirements or architecture and leave with an approval-ready implementation plan.</p>
+                </div>
+                <a class="agent-factory-feature-primary" href="agent-application-factory/browser/index.html" target="_blank" rel="noopener noreferrer">Browse the agent catalog <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="agent-factory-paths" aria-label="Agent Application Factory starting paths">
+                <a class="agent-factory-path" href="agent-application-factory/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">
+                    <strong>Implement from BRD or PRD</strong>
+                    <span>Map verified requirements to agents, contracts, and validation evidence.</span>
+                </a>
+                <a class="agent-factory-path" href="agent-application-factory/browser/index.html" target="_blank" rel="noopener noreferrer">
+                    <strong>Design from architecture</strong>
+                    <span>Turn diagrams and architecture notes into an agent-owned design handoff.</span>
+                </a>
+                <a class="agent-factory-path" href="agent-application-factory/docs/reconfigurable-agents.html" target="_blank" rel="noopener noreferrer">
+                    <strong>Configure a reusable agent</strong>
+                    <span>Adapt production baselines for retrieval, governance, operations, and quality.</span>
+                </a>
+                <a class="agent-factory-path" href="agent-application-factory/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">
+                    <strong>Follow a learning path</strong>
+                    <span>Build Azure AI capability through guided modules and specialist agents.</span>
+                </a>
+            </div>
+            <div class="agent-factory-feature-footer">
+                <span class="agent-factory-feature-meta">55 specialist agents · 6 guided entry prompts · reusable application blueprints</span>
+                <div class="agent-factory-feature-links">
+                    <a href="#ai-agent-foundry-panel">Open planning workspace</a>
+                    <a href="#ai-agent-foundry-panel" onclick="toggleAgentFoundryRunner(event, true)">Run with Agent Assistant</a>
+                </div>
+            </div>
+        </section>
+
         <section id="ai-agent-foundry-panel" class="foundry-portal-panel" aria-labelledby="ai-agent-foundry-title">
-            <h2 id="ai-agent-foundry-title">Azure AI Agent Foundry</h2>
-            <p>Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.</p>
-            <div class="foundry-action-list" aria-label="Azure AI Agent Foundry actions">
-                <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Foundry Browser</a>
+            <h2 id="ai-agent-foundry-title">Agent Application Factory</h2>
+            <p><strong>Agent Application Factory</strong> is the companion catalog for reusable Azure AI agents, learning orchestrators, and application blueprints. Use it to decide which AI capability belongs in your solution, configure the agent pattern, and bring that plan back into Azure Architecture Factory.</p>
+            <div class="foundry-overview-grid" aria-label="Agent Application Factory overview">
+                <article class="foundry-overview-card">
+                    <h3>What it gives you</h3>
+                    <p>Curated agents for Foundry, Azure AI Search, RAG, Vision, NLP, Document Intelligence, Responsible AI, evaluation, governance, and operations.</p>
+                </article>
+                <article class="foundry-overview-card">
+                    <h3>When to use it</h3>
+                    <ul class="foundry-use-list">
+                        <li>You need the right AI building block for a BRD.</li>
+                        <li>You want a reconfigurable baseline instead of starting from scratch.</li>
+                        <li>You need learning guidance or an implementation plan.</li>
+                    </ul>
+                </article>
+                <article class="foundry-overview-card">
+                    <h3>How to use it</h3>
+                    <p>Open the browser, filter by capability or scenario, pick an agent, describe your data and security needs, then create or export the plan for the factory workflow.</p>
+                </article>
+            </div>
+            <div class="foundry-dynamic-panel" aria-label="Agent Application Factory dynamic guide">
+                <div class="foundry-dynamic-menu" role="tablist" aria-label="Choose an Agent Application Factory starting point">
+                    <button type="button" class="is-active" role="tab" aria-selected="true" data-aaf-scenario="rag">Ground answers in knowledge</button>
+                    <button type="button" role="tab" aria-selected="false" data-aaf-scenario="document">Extract from documents</button>
+                    <button type="button" role="tab" aria-selected="false" data-aaf-scenario="vision">Analyze images or media</button>
+                    <button type="button" role="tab" aria-selected="false" data-aaf-scenario="governance">Add guardrails and quality gates</button>
+                </div>
+                <div class="foundry-dynamic-content" id="aaf-dynamic-content" aria-live="polite">
+                    <span class="foundry-dynamic-kicker" id="aaf-dynamic-kicker">Recommended path</span>
+                    <h3 id="aaf-dynamic-title">Start with a RAG or agentic retrieval baseline</h3>
+                    <p id="aaf-dynamic-description">Use Agent Application Factory to choose a search pattern, define data sources, set grounding and citation rules, and bring the retrieval plan back into the factory build.</p>
+                    <div class="foundry-dynamic-chips" id="aaf-dynamic-chips" aria-label="Suggested capabilities">
+                        <span>Azure AI Search</span>
+                        <span>RAG</span>
+                        <span>Agentic retrieval</span>
+                        <span>Citations</span>
+                    </div>
+                    <div class="foundry-dynamic-actions">
+                        <button type="button" class="foundry-dynamic-primary" id="aaf-dynamic-use">Use this path</button>
+                        <a class="foundry-dynamic-secondary" id="aaf-dynamic-doc" href="agent-application-factory/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Open guide</a>
+                    </div>
+                </div>
+            </div>
+            <div class="foundry-action-list" aria-label="Agent Application Factory actions">
+                                <a href="agent-application-factory/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Application Factory Browser</a>
                 <a href="#reconfigurable-agents-workspace">Open Reconfigurable Search Agents</a>
-                <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
-                <a href="agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
-                <a href="agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
+                <a href="https://github.com/fbabaei_microsoft/agent-application-factory" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
+                <a href="agent-application-factory/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
+                <a href="agent-application-factory/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
                 <button type="button" onclick="toggleAgentFoundryRunner(event)">Run With Agent Assistant</button>
             </div>
             <div class="foundry-reconfigurable-callout" style="margin-top:1rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.25rem;">
                 <h3 style="margin:0 0 0.4rem; color:var(--primary); font-size:1rem;">Prebuilt Reconfigurable Agents</h3>
                 <p style="margin:0 0 0.75rem; font-size:0.9rem; color:#334155;">Use reconfigurable agents to configure reusable Azure AI baselines for Classic Search, RAG Search, Agentic Retrieval, Document Intelligence extraction, document-to-search, multimodal knowledge, speech intelligence, Responsible AI guardrails, evaluation quality gates, tool-using workflows, human review escalation, knowledge freshness, observability, cost/capacity governance, security/RBAC/network boundaries, and data ingestion/source connectors. Start with the quick start, then open the browser and filter by <strong>reconfigurable</strong>.</p>
                 <div class="foundry-action-list" aria-label="Reconfigurable search agent actions">
-                    <a href="agent-foundry/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Quick Start</a>
-                    <a href="agent-foundry/docs/reconfigurable-agents-walkthrough.html" target="_blank" rel="noopener noreferrer">Walkthrough Example</a>
+                    <a href="agent-application-factory/docs/reconfigurable-agents-quick-start.html" target="_blank" rel="noopener noreferrer">Quick Start</a>
+                    <a href="agent-application-factory/docs/reconfigurable-agents-walkthrough.html" target="_blank" rel="noopener noreferrer">Walkthrough Example</a>
                     <a href="#reconfigurable-agents-workspace">Browse Reconfigurable Agents</a>
                     <button type="button" onclick="selectReconfigurableAgent('azure-ai-search-reconfigurable-orchestrator')">Configure In Portal</button>
                 </div>
             </div>
             <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
                 <form onsubmit="return submitAgentFoundryRun(event)">
-                    <details id="agent-foundry-flow-guide" class="foundry-flow-guide" open>
+                    <details id="agent-foundry-flow-guide" class="foundry-flow-guide">
                         <summary>
                             <span>End-to-end portal flow</span>
                             <small id="agent-foundry-flow-next">Next: enter requirements and configuration.</small>
@@ -3437,7 +4042,7 @@
                 <p>Start here if you need setup guidance, workflow instructions, or a high-level repo overview.</p>
                 <div class="docs-link-list">
                     <a href="README.md" class="doc-preview-link" data-doc-title="README" rel="noopener noreferrer">📘 README</a>
-                    <a href="docs/FACTORY_VS_AGENT_FOUNDRY.md" class="doc-preview-link" data-doc-title="Factory vs AI Agent Foundry" rel="noopener noreferrer">🧭 Factory vs AI Agent Foundry</a>
+                    <a href="docs/FACTORY_VS_AGENT_FOUNDRY.md" class="doc-preview-link" data-doc-title="Factory vs Agent Application Factory" rel="noopener noreferrer">🧭 Factory vs Agent Application Factory</a>
                     <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">⚡ Quick Start</a>
                     <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Getting Started" rel="noopener noreferrer">🧭 Getting Started</a>
                     <a href="docs/WORKFLOW_GUIDE.md#network-isolation-option-new" class="doc-preview-link" data-doc-title="Network Isolation Guide (Public vs VNet-integrated vs Private)" rel="noopener noreferrer">🔐 Network Isolation</a>
@@ -3447,6 +4052,7 @@
                     <a href="docs/TRACEABILITY_GUIDE.md" class="doc-preview-link" data-doc-title="Traceability Guide" rel="noopener noreferrer">🔗 Traceability</a>
                     <a href="docs/AI_MODEL_COST_GUIDE.md" class="doc-preview-link" data-doc-title="AI Model Cost Calculator Guide" rel="noopener noreferrer">🤖 AI Model Costs</a>
                     <a href="docs/WORKFLOW_GUIDE.md" class="doc-preview-link" data-doc-title="Workflow Guide — How to Use the Factory Step by Step" rel="noopener noreferrer">🧭 Workflow Guide</a>
+                    <a href="diagrams/azure-architecture-factory-flow.mmd" class="doc-preview-link" data-doc-title="Azure Architecture Factory Current Orchestrator Flow" rel="noopener noreferrer">🔀 Factory Flow Diagram</a>
                 </div>
             </div>
         </section>
@@ -3492,7 +4098,7 @@
             <a class="workspace-chip" href="#application-zone-workspace">Application Zone</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
-            <a class="workspace-chip" href="#ai-agent-foundry-panel">AI Agent Foundry</a>
+            <a class="workspace-chip" href="#ai-agent-foundry-panel">Agent Application Factory</a>
         </div>
 
         <!-- Design Analysis -->
@@ -3634,12 +4240,12 @@
                                                         Paste the BRD, architecture notes, or a summary of the uploaded artifact. For Visio and Lucidchart, this summary is required.
                                                     </p>
                                                     <div class="foundry-analyze-bar" style="margin-top:0.6rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-                                                        <button type="button" id="analyze-foundry-btn" onclick="analyzeBrdWithFoundry()" title="Map your requirements to reusable Azure AI agents before you build." style="background:#eaf3fc; color:var(--primary); border:1px solid var(--primary); padding:0.5rem 0.95rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.88rem;">🧭 Analyze with AI Agent Foundry</button>
+                                                        <button type="button" id="analyze-foundry-btn" onclick="analyzeBrdWithFoundry()" title="Map your requirements to reusable Azure AI agents before you build." style="background:#eaf3fc; color:var(--primary); border:1px solid var(--primary); padding:0.5rem 0.95rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.88rem;">🧭 Analyze with Agent Application Factory</button>
                                                         <span style="font-size:0.8rem; color:var(--text-secondary);">Not sure which AI capabilities you need? Analyze your requirements first.</span>
                                                     </div>
                                                     <label style="display:flex; align-items:center; gap:0.45rem; margin-top:0.5rem; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
                                                         <input type="checkbox" id="brd-auto-foundry" checked>
-                                                        Automatically include AI Agent Foundry recommendations when I generate the project
+                                                        Automatically include Agent Application Factory recommendations when I generate the project
                                                     </label>
                                                     <div id="foundry-analysis-result" style="display:none; margin-top:0.7rem; text-align:left; background:#f7fbff; border:1px solid #bfdbfe; border-left:4px solid var(--primary); border-radius:6px; padding:1rem 1.15rem;"></div>
                                                 </div>
@@ -4641,7 +5247,7 @@
     </div>
 
     <footer>
-        <p>Azure Architecture Factory | <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" style="color: var(--primary);">View on GitHub</a></p>
+        <p>Azure Architecture and Agent Factory | <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" style="color: var(--primary);">View on GitHub</a></p>
         <p style="margin-top: 0.5rem; font-size: 0.85rem;">Powered by automated architecture generation, AI-driven design, and comprehensive testing</p>
     </footer>
 
@@ -4902,6 +5508,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
         const API_APPZONE_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -5749,6 +6356,10 @@
         function renderMarkdownPreview(docPath, content) {
             const { requestPath } = splitDocPath(docPath);
             const isMarkdown = /\.md$/i.test(requestPath || '');
+            const isMermaid = /\.(mmd|mermaid)$/i.test(requestPath || '');
+            if (isMermaid) {
+                return `<pre><code class="language-mermaid">${escapeHtml(content)}</code></pre>`;
+            }
             if (isMarkdown && window.marked && typeof window.marked.parse === 'function') {
                 return window.marked.parse(content);
             }
@@ -5797,9 +6408,40 @@
                 : '';
         }
 
+        async function renderDocMermaidDiagrams() {
+            if (!docContent || !window.mermaid || typeof window.mermaid.render !== 'function') return;
+
+            window.mermaid.initialize({
+                startOnLoad: false,
+                securityLevel: 'strict',
+                theme: 'default',
+            });
+
+            const blocks = Array.from(docContent.querySelectorAll('code.language-mermaid'));
+            for (const [index, block] of blocks.entries()) {
+                const container = document.createElement('div');
+                container.className = 'mermaid-diagram';
+                container.setAttribute('role', 'img');
+                container.setAttribute('aria-label', 'Mermaid diagram');
+                block.parentElement.replaceWith(container);
+
+                try {
+                    const diagramId = `doc-mermaid-${Date.now()}-${index}`;
+                    const { svg, bindFunctions } = await window.mermaid.render(diagramId, block.textContent || '');
+                    container.innerHTML = svg;
+                    if (typeof bindFunctions === 'function') bindFunctions(container);
+                } catch (error) {
+                    container.classList.add('mermaid-error');
+                    container.removeAttribute('role');
+                    container.removeAttribute('aria-label');
+                    container.textContent = `Unable to render Mermaid diagram: ${error.message}`;
+                }
+            }
+        }
+
         function highlightDocCodeBlocks() {
             if (!docContent || !window.hljs || typeof window.hljs.highlightElement !== 'function') return;
-            docContent.querySelectorAll('pre code').forEach(block => {
+            docContent.querySelectorAll('pre code:not(.language-mermaid)').forEach(block => {
                 window.hljs.highlightElement(block);
             });
         }
@@ -5858,6 +6500,7 @@
                 const content = await response.text();
                 docContent.innerHTML = renderMarkdownPreview(requestPath, content);
                 buildDocToc();
+                await renderDocMermaidDiagrams();
                 highlightDocCodeBlocks();
                 if (anchorId) {
                     const targetHeading = docContent.querySelector(`#${CSS.escape(anchorId)}`);
@@ -6920,7 +7563,7 @@
             updateAgentFoundryFlowGuide(getAgentFoundryFlowStageFromRun(run), run);
 
             output.innerHTML = `
-                <h4>${escapeHtml(plan.title || run?.title || 'Agent Foundry run')}</h4>
+                <h4>${escapeHtml(plan.title || run?.title || 'Agent Application Factory run')}</h4>
                 <p><strong>Status:</strong> ${escapeHtml(run?.status || 'unknown')} · <strong>Mode:</strong> ${escapeHtml(plan.executionMode || 'approval-gated-handoff')}</p>
                 ${run?.diagramFileName || plan.diagramFileName ? `<p><strong>Diagram file:</strong> ${escapeHtml(run?.diagramFileName || plan.diagramFileName)}</p>` : ''}
                 ${plan.selectedAgentName ? `<p><strong>Selected agent:</strong> ${escapeHtml(plan.selectedAgentName)}</p>` : ''}
@@ -7011,7 +7654,7 @@
             const executeButton = document.getElementById('agent-foundry-execute-btn');
             if (executeButton) executeButton.disabled = true;
             updateAgentFoundryFlowGuide('run');
-            setAgentFoundryStatus('<span class="loading"></span> Running approved Agent Foundry package...', false);
+            setAgentFoundryStatus('<span class="loading"></span> Running approved Agent Application Factory package...', false);
             try {
                 const response = await fetch(API_AGENT_FOUNDRY_EXECUTE(currentAgentFoundryRunId), {
                     method: 'POST',
@@ -10971,18 +11614,53 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         .factory-stage-label { font-weight: 600; }
         .factory-stage-sep { color: var(--primary); font-weight: 700; }
         .foundry-collapse-toggle {
-            float: right; font-size: 0.8rem; font-weight: 600; color: var(--primary);
-            background: #eaf3fc; border: 1px solid #bfdbfe; border-radius: 6px;
-            padding: 0.2rem 0.6rem; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin: 0 auto 0.85rem; font-size: 0.8rem; font-weight: 700; color: var(--primary);
+            background: #eaf3fc; border: 1px solid #bfdbfe; border-radius: 999px;
+            padding: 0.35rem 0.8rem; cursor: pointer;
         }
-        .foundry-collapsible.collapsed > :not(h2):not(p) { display: none !important; }
+        .foundry-collapsible.collapsed > :not(h2):not(.foundry-collapse-toggle) { display: none !important; }
+        .foundry-subsection {
+            margin: 0.75rem 0;
+            border: 1px solid #d7e8f7;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.72);
+            overflow: hidden;
+            text-align: left;
+        }
+        .foundry-subsection-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            border: 0;
+            background: #f4faff;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-align: left;
+        }
+        .foundry-subsection-toggle:hover { background: #eaf3fc; }
+        .foundry-subsection-toggle span:last-child {
+            flex: 0 0 auto;
+            color: #39729e;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .foundry-subsection-body { padding: 0.8rem; }
+        .foundry-subsection-body > :first-child { margin-top: 0; }
+        .foundry-subsection-body > :last-child { margin-bottom: 0; }
+        .foundry-subsection.is-collapsed .foundry-subsection-body { display: none !important; }
         /* ===== Single top tab bar (Option B) ===== */
         body.factory-tabs .workspace-nav { display: none; }               /* remove duplicate chip bar */
         body.factory-tabs #design-analysis > .philosophy-intake-row { display: none; }
-        body.factory-tabs .foundry-collapse-toggle { display: none; }
         body.factory-tabs .header-container { flex-direction: column; align-items: flex-start; gap: 0.9rem; }
         body.factory-tabs .header-container nav { width: 100%; flex-wrap: wrap; }
         body.factory-tabs .header-container .logo { font-size: 1.9rem; font-weight: 700; }
+        body.factory-tabs .header-container .brand-product-link { font-size: 1.08rem; }
         body.factory-tabs header nav a[href^="#"] {
             padding: 0.45rem 0.8rem; border-radius: 6px; transition: background 0.15s ease;
         }
@@ -11026,6 +11704,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     var design = document.getElementById('design-analysis');
                     var assist = document.getElementById('assist-workspace');
                     var foundry = document.getElementById('ai-agent-foundry-panel');
+                    var agentFactoryFeature = document.getElementById('agent-factory-feature');
 
                     // Informational pipeline stage strip (mirrors the hero flow).
                     var stageStrip = document.querySelector('.factory-stage-strip');
@@ -11039,27 +11718,71 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                         }).join('<span class="factory-stage-sep">\u2192</span>');
                     }
 
-                    // Reorder to pipeline IA: hero -> chip -> stages -> workspaces -> assist -> AI foundry (last).
-                    var seq = [chip, stageStrip, design, assist, foundry].filter(Boolean);
-                    var ref = hero;
+                    // Keep Agent Application Factory and Azure Architecture Factory paired at the top.
+                    var topPair = document.querySelector('.factory-top-pair');
+                    if (foundry && hero && !topPair) {
+                        topPair = document.createElement('div');
+                        topPair.className = 'factory-top-pair';
+                        container.insertBefore(topPair, hero);
+                        topPair.appendChild(foundry);
+                        topPair.appendChild(hero);
+                    } else if (foundry && hero && topPair) {
+                        if (foundry.parentNode !== topPair) topPair.appendChild(foundry);
+                        if (hero.parentNode !== topPair) topPair.appendChild(hero);
+                    }
+                    var seq = [chip, stageStrip, design, assist].filter(Boolean);
+                    var ref = topPair || hero;
                     seq.forEach(function (node) {
                         if (ref) { container.insertBefore(node, ref.nextSibling); ref = node; }
                     });
 
-                    // Make the AI Agent Foundry panel collapsible, collapsed by default.
                     if (foundry && !foundry.dataset.collapsibleReady) {
                         foundry.dataset.collapsibleReady = '1';
-                        foundry.classList.add('foundry-collapsible', 'collapsed');
+                        foundry.classList.add('foundry-collapsible');
                         var h2 = foundry.querySelector('h2');
                         var btn = document.createElement('button');
                         btn.type = 'button';
                         btn.className = 'foundry-collapse-toggle';
-                        btn.textContent = 'Show';
-                        btn.addEventListener('click', function () {
-                            var collapsed = foundry.classList.toggle('collapsed');
-                            btn.textContent = collapsed ? 'Show' : 'Hide';
+                        btn.textContent = 'Collapse';
+                        btn.setAttribute('aria-expanded', 'true');
+                        btn.onclick = function (event) {
+                            if (event) event.preventDefault();
+                            var shouldExpand = foundry.classList.contains('collapsed');
+                            foundry.classList.toggle('collapsed', !shouldExpand);
+                            btn.textContent = shouldExpand ? 'Collapse' : 'Expand';
+                            btn.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+                        };
+                        if (h2 && h2.parentNode) { h2.parentNode.insertBefore(btn, h2.nextSibling); }
+
+                        [
+                            { selector: '.foundry-overview-grid', title: 'Overview' },
+                            { selector: '.foundry-dynamic-panel', title: 'Choose a starting point' },
+                            { selector: '.foundry-action-list[aria-label="Agent Application Factory actions"]', title: 'Portal actions' },
+                            { selector: '.foundry-reconfigurable-callout', title: 'Prebuilt Reconfigurable Agents' }
+                        ].forEach(function (item) {
+                            var target = foundry.querySelector(item.selector);
+                            if (!target || target.closest('.foundry-subsection')) return;
+                            var wrapper = document.createElement('div');
+                            wrapper.className = 'foundry-subsection is-collapsed';
+                            var toggle = document.createElement('button');
+                            toggle.type = 'button';
+                            toggle.className = 'foundry-subsection-toggle';
+                            toggle.setAttribute('aria-expanded', 'false');
+                            toggle.innerHTML = '<span>' + item.title + '</span><span>Expand</span>';
+                            var body = document.createElement('div');
+                            body.className = 'foundry-subsection-body';
+                            target.parentNode.insertBefore(wrapper, target);
+                            wrapper.appendChild(toggle);
+                            wrapper.appendChild(body);
+                            body.appendChild(target);
+                            toggle.onclick = function (event) {
+                                if (event) event.preventDefault();
+                                var shouldExpand = wrapper.classList.contains('is-collapsed');
+                                wrapper.classList.toggle('is-collapsed', !shouldExpand);
+                                toggle.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+                                toggle.querySelector('span:last-child').textContent = shouldExpand ? 'Collapse' : 'Expand';
+                            };
                         });
-                        if (h2) { h2.appendChild(btn); }
                     }
                 } catch (e) {
                     console.error('reorgFactoryPortal failed', e);
@@ -11107,6 +11830,125 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                             '<a class="hero-cta secondary" href="#modernization" data-expand="build-workspace">\uD83D\uDD04 Modernize a Legacy App</a>' +
                             '<a class="hero-cta secondary" href="#projects-workspace" data-expand="projects-workspace">\uD83D\uDCE6 Browse Projects</a>';
                         if (subtitle && subtitle.parentNode) { subtitle.parentNode.insertBefore(row, subtitle.nextSibling); }
+                    }
+
+                    var aafScenarios = {
+                        rag: {
+                            title: 'Start with a RAG or agentic retrieval baseline',
+                            description: 'Use Agent Application Factory to choose a search pattern, define data sources, set grounding and citation rules, and bring the retrieval plan back into the factory build.',
+                            chips: ['Azure AI Search', 'RAG', 'Agentic retrieval', 'Citations'],
+                            agentId: 'azure-ai-search-reconfigurable-orchestrator',
+                            runTitle: 'Grounded knowledge assistant',
+                            profile: [
+                                'Data sources: documents, web pages, SharePoint, Blob Storage, or existing indexes',
+                                'Retrieval pattern: classic search / RAG / agentic retrieval',
+                                'Grounding and citation policy:',
+                                'Freshness and reindexing needs:',
+                                'Security model:',
+                                'Validation checks: groundedness, citation coverage, no-answer behavior'
+                            ],
+                            doc: 'agent-foundry/docs/reconfigurable-agents-quick-start.html'
+                        },
+                        document: {
+                            title: 'Route documents into extraction and review',
+                            description: 'Start from Document Intelligence agents when users upload forms, receipts, contracts, PDFs, or scanned records that need structured fields, confidence checks, and review.',
+                            chips: ['Document Intelligence', 'Extraction', 'Human review', 'Search indexing'],
+                            agentId: 'document-intelligence-reconfigurable-agent',
+                            runTitle: 'Document extraction workflow',
+                            profile: [
+                                'Document types:',
+                                'Fields to extract:',
+                                'Confidence thresholds and review policy:',
+                                'Downstream system or search index:',
+                                'Security and retention constraints:',
+                                'Validation checks: field accuracy, review routing, export contract'
+                            ],
+                            doc: 'agent-foundry/docs/document-intelligence-agents-step-by-step.html'
+                        },
+                        vision: {
+                            title: 'Use multimodal and vision agents for visual inputs',
+                            description: 'Choose this path for image-aware chat, screenshots, diagrams, visual asset metadata, OCR, or multimodal knowledge pipelines that combine text and visual evidence.',
+                            chips: ['Vision', 'OCR', 'Image chat', 'Multimodal knowledge'],
+                            agentId: 'multimodal-knowledge-pipeline-reconfigurable-agent',
+                            runTitle: 'Visual knowledge workflow',
+                            profile: [
+                                'Visual inputs: images, diagrams, screenshots, PDFs, or mixed media',
+                                'Analysis goal: OCR / visual Q&A / metadata / indexing',
+                                'Output contract:',
+                                'Grounding and citation needs:',
+                                'Privacy constraints:',
+                                'Validation checks: image coverage, OCR quality, answer traceability'
+                            ],
+                            doc: 'agent-foundry/docs/learning-paths-step-by-step.html'
+                        },
+                        governance: {
+                            title: 'Add responsible AI, evaluation, and operations controls',
+                            description: 'Use governance agents when the application needs safety filters, evaluation datasets, quality gates, monitoring, cost controls, RBAC, or operational readiness before release.',
+                            chips: ['Responsible AI', 'Evaluation', 'Observability', 'Security'],
+                            agentId: 'responsible-ai-guardrail-reconfigurable-agent',
+                            runTitle: 'AI governance and release controls',
+                            profile: [
+                                'AI workflow and user population:',
+                                'Safety and abuse risks:',
+                                'Evaluation metrics and thresholds:',
+                                'Monitoring and alerting needs:',
+                                'RBAC, network, and data-access boundaries:',
+                                'Validation checks: safety, quality gate, audit evidence'
+                            ],
+                            doc: 'agent-foundry/docs/reconfigurable-agents-walkthrough.html'
+                        }
+                    };
+
+                    function renderAafScenario(key) {
+                        var scenario = aafScenarios[key] || aafScenarios.rag;
+                        var title = document.getElementById('aaf-dynamic-title');
+                        var description = document.getElementById('aaf-dynamic-description');
+                        var chips = document.getElementById('aaf-dynamic-chips');
+                        var guide = document.getElementById('aaf-dynamic-doc');
+                        var useButton = document.getElementById('aaf-dynamic-use');
+                        if (title) title.textContent = scenario.title;
+                        if (description) description.textContent = scenario.description;
+                        if (chips) chips.innerHTML = scenario.chips.map(function (chip) { return '<span>' + chip + '</span>'; }).join('');
+                        if (guide) guide.href = scenario.doc;
+                        if (useButton) useButton.dataset.aafScenario = key;
+                        Array.prototype.forEach.call(document.querySelectorAll('[data-aaf-scenario]'), function (button) {
+                            var active = button.dataset.aafScenario === key;
+                            button.classList.toggle('is-active', active);
+                            if (button.getAttribute('role') === 'tab') button.setAttribute('aria-selected', active ? 'true' : 'false');
+                        });
+                    }
+
+                    function useAafScenario(key) {
+                        var scenario = aafScenarios[key] || aafScenarios.rag;
+                        var selectedAgent = document.getElementById('agent-foundry-selected-agent');
+                        var sourceType = document.getElementById('agent-foundry-source-type');
+                        var titleBox = document.getElementById('agent-foundry-run-title');
+                        var profileBox = document.getElementById('agent-foundry-configuration-profile');
+                        var contentBox = document.getElementById('agent-foundry-run-content');
+                        if (selectedAgent) selectedAgent.value = scenario.agentId;
+                        if (sourceType) sourceType.value = key === 'vision' ? 'architecture-diagram' : 'brd-prd';
+                        if (titleBox) {
+                            titleBox.value = scenario.runTitle;
+                            titleBox.title = scenario.runTitle;
+                        }
+                        if (profileBox) profileBox.value = scenario.profile.join('\n');
+                        if (contentBox && !contentBox.value.trim()) {
+                            contentBox.value = 'Describe the business requirement, user workflow, existing architecture, or learning objective here. The selected Agent Application Factory path will turn it into an approval-gated agent plan.';
+                        }
+                        if (typeof toggleAgentFoundryRunner === 'function') toggleAgentFoundryRunner(null, true);
+                        if (typeof updateAgentFoundryFlowGuide === 'function') updateAgentFoundryFlowGuide('prepare');
+                    }
+
+                    if (!document.body.dataset.aafDynamicReady) {
+                        document.body.dataset.aafDynamicReady = '1';
+                        Array.prototype.forEach.call(document.querySelectorAll('.foundry-dynamic-menu [data-aaf-scenario]'), function (button) {
+                            button.addEventListener('click', function () { renderAafScenario(button.dataset.aafScenario); });
+                        });
+                        var useAafButton = document.getElementById('aaf-dynamic-use');
+                        if (useAafButton) {
+                            useAafButton.addEventListener('click', function () { useAafScenario(useAafButton.dataset.aafScenario || 'rag'); });
+                        }
+                        renderAafScenario('rag');
                     }
 
                     // Auto-expand a collapsed workspace card (or the AI Foundry panel) when navigated to.
@@ -11169,17 +12011,17 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                                         '<h3 class="workspace-card-title">Reconfigurable Agents Catalog</h3>' +
                                         '<p class="workspace-card-subtitle">Prebuilt Azure AI baselines you can reconfigure \u2014 Search, RAG, Agentic Retrieval, Document Intelligence, multimodal, speech, Responsible AI, evaluation, and more.</p>' +
                                     '</div>' +
-                                    '<a class="hero-cta secondary" href="agent-foundry/docs/reconfigurable-agents.html" target="_blank" rel="noopener" style="text-decoration:none;">Open full page \u2197</a>' +
+                                    '<a class="hero-cta secondary" href="agent-application-factory/docs/reconfigurable-agents.html" target="_blank" rel="noopener" style="text-decoration:none;">Open full page \u2197</a>' +
                                 '</div>' +
                                 '<div class="workspace-card-body" style="padding:0;">' +
-                                    '<iframe title="Reconfigurable Agents Catalog" src="agent-foundry/docs/reconfigurable-agents.html" loading="lazy" style="width:100%; height:78vh; border:0; background:#fff; border-radius:0 0 8px 8px;"></iframe>' +
+                                    '<iframe title="Reconfigurable Agents Catalog" src="agent-application-factory/docs/reconfigurable-agents.html" loading="lazy" style="width:100%; height:78vh; border:0; background:#fff; border-radius:0 0 8px 8px;"></iframe>' +
                                 '</div>';
                             rcContainer.appendChild(rcSec);
                         }
                     }
 
                     // ===== Single top tab bar: show one workspace at a time =====
-                    var TABS = ['build-workspace', 'projects-workspace', 'application-zone-workspace', 'analyze-workspace', 'assist-workspace', 'ai-agent-foundry-panel', 'reconfigurable-agents-workspace'];
+                    var TABS = ['build-workspace', 'projects-workspace', 'application-zone-workspace', 'analyze-workspace', 'assist-workspace', 'reconfigurable-agents-workspace'];
                     function workspaceForAnchor(id) {
                         if (!id) return null;
                         if (TABS.indexOf(id) !== -1) return id;
@@ -11190,6 +12032,9 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     }
                     function setActiveNav(wsId) {
                         Array.prototype.forEach.call(document.querySelectorAll('header nav a[href^="#"]'), function (a) {
+                            a.classList.toggle('is-active', a.getAttribute('href').slice(1) === wsId);
+                        });
+                        Array.prototype.forEach.call(document.querySelectorAll('header .brand-product-link[href^="#"]'), function (a) {
                             a.classList.toggle('is-active', a.getAttribute('href').slice(1) === wsId);
                         });
                     }
@@ -11250,12 +12095,12 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             function deepPrompt() {
                 var src = brd || '<paste or fill in your Business Requirements above, then click Analyze again>';
                 return '/implement-from-brd-prd' + (name ? ' (' + name + ')' : '') + '\n\n' + src +
-                    '\n\nUse Azure AI Agent Foundry agents to extract verified requirements, map each requirement to the right specialist or blueprint, assess Microsoft Agent Framework fit, and recommend which reusable Azure AI agents this application needs. Return a concise requirement-to-agent map I can bring back into the Azure Architecture Factory BRD. Mark missing requirements; do not invent Azure resources, endpoints, model deployments, or results.';
+                    '\n\nUse Agent Application Factory agents to extract verified requirements, map each requirement to the right specialist or blueprint, assess Microsoft Agent Framework fit, and recommend which reusable Azure AI agents this application needs. Return a concise requirement-to-agent map I can bring back into the Azure Architecture Factory BRD. Mark missing requirements; do not invent Azure resources, endpoints, model deployments, or results.';
             }
 
             function wireCommon() {
                 var openTab = result.querySelector('.foundry-open-tab');
-                if (openTab) openTab.addEventListener('click', function () { var l = document.querySelector('header nav a[href="#ai-agent-foundry-panel"]'); if (l) l.click(); });
+                if (openTab) openTab.addEventListener('click', function () { var l = document.querySelector('header .brand-product-link[href="#ai-agent-foundry-panel"], header nav a[href="#ai-agent-foundry-panel"]'); if (l) l.click(); });
                 var copyBtn = result.querySelector('.foundry-copy-prompt');
                 if (copyBtn) copyBtn.addEventListener('click', function () { var b = this; if (navigator.clipboard) navigator.clipboard.writeText(deepPrompt()).catch(function () {}); b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy deep-analysis prompt'; }, 1200); });
             }
@@ -11263,13 +12108,13 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             function renderFallback(note) {
                 var prompt = deepPrompt();
                 result.innerHTML =
-                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">Analyze with AI Agent Foundry</h4>' +
+                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">Analyze with Agent Application Factory</h4>' +
                     (note ? '<p style="margin:0 0 0.5rem; font-size:0.82rem; color:#64748b;">' + esc(note) + '</p>' : '') +
-                    '<p style="margin:0 0 0.6rem; font-size:0.85rem; color:#334155;">Run this prompt in GitHub Copilot (or the AI Agent Foundry) to map your requirements to reusable Azure AI agents, then bring the recommendations back into the BRD above. It was copied to your clipboard.</p>' +
+                    '<p style="margin:0 0 0.6rem; font-size:0.85rem; color:#334155;">Run this prompt in GitHub Copilot (or the Agent Application Factory) to map your requirements to reusable Azure AI agents, then bring the recommendations back into the BRD above. It was copied to your clipboard.</p>' +
                     '<pre class="foundry-analysis-pre" style="white-space:pre-wrap; background:#fff; border:1px solid var(--border); border-radius:6px; padding:0.75rem; font-size:0.8rem; max-height:180px; overflow:auto; margin:0;"></pre>' +
                     '<div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.6rem;">' +
                         '<button type="button" class="foundry-copy-prompt" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Copy deep-analysis prompt</button>' +
-                        '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open AI Agent Foundry tab</button>' +
+                        '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open Agent Application Factory tab</button>' +
                     '</div>';
                 result.querySelector('.foundry-analysis-pre').textContent = prompt;
                 wireCommon();
@@ -11277,11 +12122,11 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             }
 
             function buildSection(data, top) {
-                var lines = ['## Recommended Azure AI Agents (via AI Agent Foundry)'];
+                var lines = ['## Recommended Azure AI Agents (via Agent Application Factory)'];
                 lines.push('Best fit: ' + (data.recommendedAgentName || '') + ' (confidence: ' + (data.confidence || '') + ')');
                 if (top.length) { lines.push('Candidate reusable agents:'); top.forEach(function (a) { lines.push('- ' + a.name + ' (match score ' + a.score + ')'); }); }
                 if (data.reasons && data.reasons.length) { lines.push('Rationale: ' + data.reasons.join('; ')); }
-                lines.push('Next: use the AI Agent Foundry / Reconfigurable Agents tab to configure the selected agent(s), then plug them into the generated app.');
+                lines.push('Next: use the Agent Application Factory / Reconfigurable Agents tab to configure the selected agent(s), then plug them into the generated app.');
                 return lines.join('\n');
             }
 
@@ -11292,13 +12137,13 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     ? '<ol style="margin:0.3rem 0 0.7rem 1.1rem; font-size:0.85rem; color:#334155;">' + top.map(function (a) { return '<li><strong>' + esc(a.name) + '</strong> <span style="color:#64748b;">(match ' + a.score + ')</span></li>'; }).join('') + '</ol>'
                     : '<p style="font-size:0.85rem; color:#64748b; margin:0.3rem 0 0.6rem;">No strong AI-capability signals yet \u2014 add detail about search, RAG, documents, vision, or speech, then Analyze again.</p>';
                 result.innerHTML =
-                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">AI Agent Foundry recommendations</h4>' +
+                    '<h4 style="margin:0 0 0.4rem; color:var(--primary); font-size:0.95rem;">Agent Application Factory recommendations</h4>' +
                     '<p style="margin:0 0 0.35rem; font-size:0.85rem; color:#334155;">Best fit: <strong>' + esc(data.recommendedAgentName || '\u2014') + '</strong> \u00b7 confidence: <strong>' + esc(data.confidence || '\u2014') + '</strong></p>' +
                     (reasons.length ? '<p style="margin:0 0 0.4rem; font-size:0.82rem; color:#475569;">Why: ' + esc(reasons.join('; ')) + '</p>' : '') +
                     '<div style="font-weight:600; font-size:0.85rem;">Top matching reusable agents:</div>' + listHtml +
                     '<div style="display:flex; gap:0.5rem; flex-wrap:wrap;">' +
                         '<button type="button" class="foundry-insert-brd" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Insert recommendations into BRD</button>' +
-                        '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open AI Agent Foundry tab</button>' +
+                        '<button type="button" class="foundry-open-tab" style="background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Open Agent Application Factory tab</button>' +
                         '<button type="button" class="foundry-copy-prompt" style="background:#fff; color:#475569; border:1px solid var(--border); border-radius:6px; padding:0.4rem 0.8rem; font-weight:600; cursor:pointer;">Copy deep-analysis prompt</button>' +
                     '</div>';
                 wireCommon();
@@ -11315,7 +12160,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 });
             }
 
-            result.innerHTML = '<p style="margin:0; font-size:0.9rem; color:#334155;">Analyzing requirements with AI Agent Foundry\u2026</p>';
+            result.innerHTML = '<p style="margin:0; font-size:0.9rem; color:#334155;">Analyzing requirements with Agent Application Factory\u2026</p>';
             try {
                 var resp = await fetch('/api/agent-foundry/recommend', {
                     method: 'POST',
@@ -11332,7 +12177,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                 var data = await resp.json();
                 renderRecommendations(data);
             } catch (e) {
-                renderFallback('Backend analysis is not reachable here \u2014 here is a prompt you can run in Copilot / the AI Agent Foundry instead.');
+                renderFallback('Backend analysis is not reachable here \u2014 here is a prompt you can run in Copilot / the Agent Application Factory instead.');
             }
         };
         window.headerAnalyzeFoundry = function (e) {
@@ -11359,10 +12204,10 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             var auto = document.getElementById('brd-auto-foundry');
             var contentEl = document.getElementById('brd-content');
             var brd = contentEl && contentEl.value ? contentEl.value.trim() : '';
-            if (auto && auto.checked && brd && !/Recommended Azure AI Agents \(via AI Agent Foundry\)/.test(brd)) {
+            if (auto && auto.checked && brd && !/Recommended Azure AI Agents \(via Agent Application Factory\)/.test(brd)) {
                 var submitBtn = document.getElementById('submit-brd-btn');
                 var prevLabel = submitBtn ? submitBtn.textContent : '';
-                if (submitBtn) { submitBtn.textContent = 'Consulting AI Agent Foundry\u2026'; submitBtn.disabled = true; }
+                if (submitBtn) { submitBtn.textContent = 'Consulting Agent Application Factory\u2026'; submitBtn.disabled = true; }
                 try {
                     var resp = await fetch('/api/agent-foundry/recommend', {
                         method: 'POST',
@@ -11372,7 +12217,7 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
                     if (resp.ok) {
                         var data = await resp.json();
                         var top = (data.alternatives || []).filter(function (a) { return a.score > 0; }).slice(0, 5);
-                        var lines = ['## Recommended Azure AI Agents (via AI Agent Foundry)'];
+                        var lines = ['## Recommended Azure AI Agents (via Agent Application Factory)'];
                         lines.push('Best fit: ' + (data.recommendedAgentName || '') + ' (confidence: ' + (data.confidence || '') + ')');
                         if (top.length) { lines.push('Candidate reusable agents:'); top.forEach(function (a) { lines.push('- ' + a.name + ' (match score ' + a.score + ')'); }); }
                         if (data.reasons && data.reasons.length) { lines.push('Rationale: ' + data.reasons.join('; ')); }

@@ -1,0 +1,127 @@
+---
+title: Azure Architecture Factory - Current Orchestrator Flow
+---
+flowchart TB
+    subgraph Intake["Intake and mode selection"]
+        direction LR
+        Portal["Portal intake<br/>BRD or PRD + generation options"]
+        Chat["Copilot wake-up or CLI<br/>Inline or file requirements"]
+        ExistingDiagram["Existing Draw.io diagram<br/>or hybrid intake"]
+        Mode{"Invocation mode?"}
+        Portal --> Mode
+        Chat --> Mode
+        ExistingDiagram --> Mode
+    end
+
+    subgraph Greenfield["Greenfield mode - Phases 0 to 7"]
+        direction TB
+        P0["Phase 0 - Project setup<br/>Manifest, folders, logs, requirements"]
+        P1["Phase 1 - Architecture<br/>Generate or import Draw.io + notes"]
+        AgentWorkload{"Foundry agents declared<br/>or synthesized?"}
+        P15["Phase 1.5 - Agent tooling advisory<br/>Capabilities, tools, prompts, contract validation"]
+        ToolingGate{"Tooling advisory<br/>can proceed?"}
+        ToolingReview["Resolve missing templates<br/>or confirm low-confidence agents"]
+        P2["Phase 2 - Implementation scaffolding<br/>Language specialist + application IaC"]
+        RetrievalWorkload{"Retrieval or RAG signals?"}
+        P2r["Phase 2r - Retrieval pipeline<br/>Search design, ingestion, query, RBAC"]
+        DriftCheck["Code and architecture drift check<br/>Sync missing components"]
+        P25["Phase 2.5 - Alignment convergence<br/>BRD + diagram + code + IaC, 3-5 iterations"]
+        AlignmentGate{"Alignment converged?"}
+        AlignmentReview["Resolve remaining gaps<br/>or explicitly override"]
+        P26["Phase 2.6 - Security and compliance<br/>Audit + remediation, up to 3 iterations"]
+        SecurityGate{"Critical and major<br/>findings cleared?"}
+        P27["Phase 2.7 - Error-handling gate<br/>Audit + remediation, up to 3 iterations"]
+        ErrorGate{"Error-handling<br/>gate passed?"}
+        P28["Phase 2.8 - Scalability gate<br/>Code + IaC + load profile, up to 3 iterations"]
+        ScaleGate{"Scalability<br/>gate passed?"}
+        P3["Phase 3 - Infrastructure validation<br/>Bicep or Terraform self-healing"]
+        P37["Phase 3.7 - Test convergence<br/>Coverage + full suite, 3-5 iterations"]
+        TestGate{"Tests converged?"}
+        P4["Phase 4 - Production readiness<br/>Runtime, identity, network, secrets, monitoring"]
+        DeployRequested{"Deploy requested?"}
+        P45["Phase 4.5 - Human approval<br/>Ready-for-review deployment summary"]
+        Approved{"Deployment approved?"}
+        DeploymentPath{"Eligible for ACA Express?"}
+        P5Express["Phase 5 - ACA Express<br/>HTTP-only preview path"]
+        P5Standard["Phase 5 - Standard deployment<br/>Validated infrastructure path"]
+        FactoryRequested{"Factory handoff requested?"}
+        P6["Phase 6 - Factory handoff<br/>Promote project to factory portal"]
+        P7["Phase 7 - Project finalization<br/>README, DEPLOY guide, manifest summary"]
+
+        P0 --> P1 --> AgentWorkload
+        AgentWorkload -->|"Yes"| P15 --> ToolingGate
+        ToolingGate -->|"Block or review"| ToolingReview --> P15
+        ToolingGate -->|"Proceed"| P2
+        AgentWorkload -->|"No"| P2
+        P2 --> RetrievalWorkload
+        RetrievalWorkload -->|"Yes"| P2r --> DriftCheck
+        RetrievalWorkload -->|"No"| DriftCheck
+        DriftCheck --> P25 --> AlignmentGate
+        AlignmentGate -->|"Unresolved"| AlignmentReview --> P25
+        AlignmentGate -->|"Converged"| P26 --> SecurityGate
+        SecurityGate -->|"Fix and retry"| P26
+        SecurityGate -->|"Pass"| P27 --> ErrorGate
+        ErrorGate -->|"Fix and retry"| P27
+        ErrorGate -->|"Pass"| P28 --> ScaleGate
+        ScaleGate -->|"Fix and retry"| P28
+        ScaleGate -->|"Pass"| P3 --> P37 --> TestGate
+        TestGate -->|"Fix and retry"| P37
+        TestGate -->|"Converged"| P4 --> DeployRequested
+        DeployRequested -->|"Yes"| P45 --> Approved
+        Approved -->|"No"| FactoryRequested
+        Approved -->|"Yes"| DeploymentPath
+        DeploymentPath -->|"Yes"| P5Express --> FactoryRequested
+        DeploymentPath -->|"No"| P5Standard --> FactoryRequested
+        DeployRequested -->|"No"| FactoryRequested
+        FactoryRequested -->|"Yes"| P6 --> P7
+        FactoryRequested -->|"No"| P7
+    end
+
+    subgraph Update["Update mode - Targeted re-architecture"]
+        direction TB
+        U0["Phase U0 - Classify and snapshot<br/>Version requirements, diagram, and manifest"]
+        U1["Phase U1 - BRD diff<br/>Added, removed, modified, impact hints"]
+        MaterialChange{"Material change?"}
+        NoOp["No-op update<br/>Restore prior status"]
+        U2["Phase U2 - Current architecture inventory<br/>Components, edges, and groups"]
+        U3["Phase U3 - Targeted architecture regeneration<br/>Preserve unchanged components"]
+        U4["Phase U4 - Incremental implementation<br/>Add, modify, or retire services safely"]
+        U4b["Phase U4b - Infrastructure delta<br/>Add, update, or archive IaC modules"]
+        U5["Phase U5 - Re-validation<br/>Infrastructure + production readiness"]
+        Redeploy{"Redeploy update?"}
+        UpdateComplete["Update summary<br/>Version history + rollback artifacts"]
+
+        U0 --> U1 --> MaterialChange
+        MaterialChange -->|"No"| NoOp --> UpdateComplete
+        MaterialChange -->|"Yes"| U2 --> U3 --> U4 --> U4b --> U5 --> Redeploy
+        Redeploy -->|"No"| UpdateComplete
+    end
+
+    Mode -->|"New project"| P0
+    Mode -->|"Existing project, marker, or drift"| U0
+    Redeploy -->|"Yes - explicit approval"| P45
+
+    SharedState["Shared control plane<br/>project-state-manager + manifest + orchestration log"]
+    SharedState -.-> P0
+    SharedState -.-> P25
+    SharedState -.-> U0
+    SharedState -.-> U5
+
+    P7 --> Complete["Project artifacts complete"]
+    UpdateComplete --> Complete
+
+    classDef entry fill:#e8f4fd,stroke:#0078d4,color:#17324d,stroke-width:1.5px;
+    classDef phase fill:#eaf6ef,stroke:#107c10,color:#174d17,stroke-width:1.5px;
+    classDef update fill:#e5f3f2,stroke:#008272,color:#12433d,stroke-width:1.5px;
+    classDef decision fill:#fff4ce,stroke:#8a6d1d,color:#4f3f12,stroke-width:1.5px;
+    classDef review fill:#fde7e9,stroke:#c50f1f,color:#6e1018,stroke-width:1.5px;
+    classDef optional fill:#f3f2f1,stroke:#605e5c,color:#242424,stroke-width:1.25px;
+    classDef complete fill:#dff6dd,stroke:#0b6a0b,color:#174d17,stroke-width:2px;
+
+    class Portal,Chat,ExistingDiagram entry;
+    class P0,P1,P15,P2,P2r,DriftCheck,P25,P26,P27,P28,P3,P37,P4,P45,P5Express,P5Standard,P6,P7 phase;
+    class U0,U1,U2,U3,U4,U4b,U5,UpdateComplete update;
+    class Mode,AgentWorkload,ToolingGate,RetrievalWorkload,AlignmentGate,SecurityGate,ErrorGate,ScaleGate,TestGate,DeployRequested,Approved,DeploymentPath,FactoryRequested,MaterialChange,Redeploy decision;
+    class ToolingReview,AlignmentReview review;
+    class NoOp,SharedState optional;
+    class Complete complete;

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Application Factory logo</title>
+  <desc id="desc">A blue agent node inside a factory gear and application window mark.</desc>
+  <defs>
+    <linearGradient id="panel" x1="14" y1="10" x2="82" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#50e6ff"/>
+      <stop offset="0.58" stop-color="#0078d4"/>
+      <stop offset="1" stop-color="#005a9e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="28" y1="20" x2="70" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dff7ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#0f2f4a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="20" fill="url(#panel)" filter="url(#shadow)"/>
+  <path d="M26 30c0-5.5 4.5-10 10-10h24c5.5 0 10 4.5 10 10v7H26v-7Z" fill="#ffffff" opacity="0.94"/>
+  <circle cx="34" cy="29" r="2.3" fill="#f25022"/>
+  <circle cx="42" cy="29" r="2.3" fill="#ffb900"/>
+  <circle cx="50" cy="29" r="2.3" fill="#7fba00"/>
+  <path d="M26 37h44v27c0 5.5-4.5 10-10 10H36c-5.5 0-10-4.5-10-10V37Z" fill="url(#accent)" opacity="0.98"/>
+  <path d="M48 43c8.4 0 15.2 6.8 15.2 15.2S56.4 73.4 48 73.4s-15.2-6.8-15.2-15.2S39.6 43 48 43Z" fill="#0078d4" opacity="0.96"/>
+  <path d="M48 45.8v-5.4M48 76v-5.4M60.4 50.6l3.8-3.8M31.8 79.2l3.8-3.8M65.6 63h5.4M25 63h5.4M60.4 75.4l3.8 3.8M31.8 46.8l3.8 3.8" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity="0.95"/>
+  <circle cx="48" cy="56" r="5.2" fill="#ffffff"/>
+  <path d="M38.2 66.6c1.8-4.1 5.3-6.7 9.8-6.7s8 2.6 9.8 6.7" fill="none" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M22 68h12M62 68h12M22 76h18M56 76h18" stroke="#005a9e" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+</svg>
