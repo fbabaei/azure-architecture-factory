@@ -4689,6 +4689,10 @@
                             </div>
                             <div id="appzone-catalog-status" class="status-message info visible">Loading catalog...</div>
                             <div id="appzone-catalog-list" class="appzone-list"></div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>AAPAAS Evidence</h4>
+                            <p class="appzone-note">Live AI Apps as a Service instance, health, scheduler, and certification evidence.</p>
+                            <div id="appzone-aapaas-summary" class="appzone-output">Loading AAPAAS evidence...</div>
                         </div>
 
                         <div class="appzone-panel">
@@ -5511,9 +5515,7 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
-        const API_APPZONE_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://${window.location.hostname}:5000`
-            : API_BASE;
+        const API_APPZONE_BASE = API_BASE;
         const IS_HOSTED_PORTAL = !['127.0.0.1', 'localhost'].includes(window.location.hostname);
         const API_BRD_INTAKE = `${API_BASE}/api/brd-intake`;
         const API_BRD_UPLOAD = `${API_BASE}/api/brd-upload`;
@@ -8376,9 +8378,18 @@
             listEl.innerHTML = '';
 
             try {
-                const response = await fetch(API_APPZONE_PACKS, { cache: 'no-store' });
+                const [response, aapaasResponse] = await Promise.all([
+                    fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
+                ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                if (aapaasResponse && aapaasResponse.ok) {
+                    const aapaas = await aapaasResponse.json();
+                    renderAapaasSummary(aapaas);
+                } else {
+                    renderAapaasSummary(null);
+                }
 
                 const packs = data.packs || [];
                 if (!packs.length) {
@@ -8400,10 +8411,13 @@
                         const packId = pack.packId || '';
                         const version = pack.latestVersion || '';
                         const active = packId === (packSelect?.value || 'casewright') ? 'active' : '';
+                        const cert = pack.certificationStatus ? ` · cert: ${pack.certificationStatus}` : '';
+                        const instances = Number(pack.instanceCount || 0);
                         return `
                         <div class="appzone-item ${active}" onclick="selectAppZonePack('${escapeHtml(packId)}', '${escapeHtml(version)}')">
                             <div class="appzone-item-title">${escapeHtml(pack.displayName || pack.packId || 'unknown')}</div>
-                            <div class="appzone-meta">${escapeHtml(pack.packId || '')} · v${escapeHtml(pack.latestVersion || '')} · ${escapeHtml(pack.status || '')}</div>
+                            <div class="appzone-meta">${escapeHtml(pack.packId || '')} · v${escapeHtml(pack.latestVersion || '')} · ${escapeHtml(pack.status || '')}${escapeHtml(cert)}</div>
+                            <div class="appzone-meta">Source: ${escapeHtml(pack.source || 'aaf')} · Instances: ${escapeHtml(String(instances))} · Warnings: ${escapeHtml(String(pack.certificationWarnings ?? 0))}</div>
                             <div class="appzone-meta">Regions: ${escapeHtml((pack.supportedRegions || []).join(', '))}</div>
                             <div class="appzone-meta">Required inputs: ${escapeHtml(String(pack.requiredInputCount ?? 0))}</div>
                         </div>
@@ -8422,6 +8436,41 @@
                 statusEl.className = 'status-message error visible';
                 statusEl.textContent = `Catalog load failed: ${error.message}`;
             }
+        }
+
+        function renderAapaasSummary(data) {
+            const el = document.getElementById('appzone-aapaas-summary');
+            if (!el) return;
+            if (!data) {
+                el.textContent = 'AAPAAS evidence endpoint is not available.';
+                return;
+            }
+            const summary = data.summary || {};
+            const instances = Array.isArray(data.instances) ? data.instances : [];
+            const scheduler = data.scheduler || {};
+            const schedulerResult = scheduler.syncResult || {};
+            const instanceRows = instances.map(instance => `
+                <tr>
+                    <td>${escapeHtml(instance.displayName || instance.instanceId || '')}</td>
+                    <td>${escapeHtml(instance.status || '')}</td>
+                    <td>${escapeHtml(instance.healthStatus || '')}</td>
+                    <td>${instance.apiBaseUrl ? `<a href="${escapeHtml(instance.apiBaseUrl)}" target="_blank" rel="noopener">API</a>` : '-'}</td>
+                </tr>
+            `).join('');
+            el.innerHTML = `
+                <div class="appzone-kpi-row">
+                    <div class="appzone-kpi"><div class="appzone-kpi-label">Instances</div><div class="appzone-kpi-value">${escapeHtml(String(summary.instanceCount ?? 0))}</div></div>
+                    <div class="appzone-kpi"><div class="appzone-kpi-label">Healthy</div><div class="appzone-kpi-value">${escapeHtml(String(summary.healthyInstanceCount ?? 0))}</div></div>
+                    <div class="appzone-kpi"><div class="appzone-kpi-label">Ready Packs</div><div class="appzone-kpi-value">${escapeHtml(String(summary.certificationReadyCount ?? 0))}</div></div>
+                    <div class="appzone-kpi"><div class="appzone-kpi-label">Scheduler</div><div class="appzone-kpi-value">${escapeHtml(schedulerResult.status || summary.schedulerStatus || '-')}</div></div>
+                </div>
+                <div class="appzone-meta">Workspace: ${escapeHtml(data.workspace || '')}</div>
+                <div class="appzone-meta">Scheduler body: ${escapeHtml(schedulerResult.body || '')}</div>
+                <table style="width:100%; border-collapse:collapse; margin-top:0.5rem; font-size:0.85rem;">
+                    <thead><tr><th style="text-align:left;">Instance</th><th style="text-align:left;">Status</th><th style="text-align:left;">Health</th><th style="text-align:left;">Endpoint</th></tr></thead>
+                    <tbody>${instanceRows || '<tr><td colspan="4">No instances registered.</td></tr>'}</tbody>
+                </table>
+            `;
         }
 
         function selectAppZonePack(packId, version) {

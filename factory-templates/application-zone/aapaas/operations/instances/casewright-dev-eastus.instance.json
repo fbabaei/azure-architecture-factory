@@ -1,0 +1,52 @@
+{
+  "apiVersion": "aiapps.service/v1",
+  "kind": "AppInstance",
+  "metadata": {
+    "instanceId": "casewright-dev-eastus",
+    "packId": "casewright",
+    "packVersion": "1.0.0",
+    "displayName": "CaseWright dev",
+    "status": "healthy-api-worker-scheduler-succeeds-sharepoint-skipped"
+  },
+  "source": {
+    "appPackManifest": "..\\..\\app-packs\\casewright\\1.0.0\\manifest.json",
+    "sourceRepo": "C:\\dev\\workspace\\casewright",
+    "azdEnvironment": "dev"
+  },
+  "azure": {
+    "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+    "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+    "resourceGroup": "rg-dev",
+    "location": "eastus2",
+    "searchLocation": "eastus"
+  },
+  "knownResources": {
+    "containerRegistry": "casewrightacrzhauoubl",
+    "keyVault": "casewrightkvzhauoubl",
+    "search": "casewright-search-zhauoubl",
+    "foundry": "casewright-foundry-zhauoubl",
+    "foundryProject": "casewright-proj",
+    "openAi": "casewright-openai-zhauoubl",
+    "applicationInsights": "casewright-appi-zhauoubl",
+    "serviceBus": "casewright-sb-zhauoubl",
+    "cosmos": "casewright-cosmos-zhauoubl",
+    "schedulerFunction": "casewright-scheduler-zhauoubl"
+  },
+  "runtime": {
+    "apiContainerApp": "casewright-api",
+    "workerContainerApp": "casewright-worker",
+    "apiBaseUrl": "https://casewright-api.bluesand-957fb9f7.eastus2.azurecontainerapps.io",
+    "apiImage": "casewrightacrzhauoubl.azurecr.io/casewright/casewright-api-dev:azd-deploy-1786386717",
+    "workerImage": "casewrightacrzhauoubl.azurecr.io/casewright/casewright-worker-dev:azd-deploy-1786387320",
+    "healthStatus": "passed",
+    "notes": "API and worker Container Apps are running on real CaseWright images, and AAPAAS health checks pass. The original Function App scheduler package deployment is blocked by storage public network policy, so a Container Apps scheduled job was created as a policy-compatible scheduler. The scheduled sync endpoint now succeeds and reports skipped when SharePoint/Graph is unavailable or not configured."
+  },
+  "operations": {
+    "healthChecks": [
+      "/api/health",
+      "/docs"
+    ],
+    "lastDiscoveryReport": "casewright-discovered-resources.generated.json",
+    "nextAction": "For production SharePoint sync, set GRAPH_TENANT_ID and GRAPH_CLIENT_ID, grant required Graph app permissions, then rerun scripts\\Test-CaseWrightScheduler.ps1."
+  }
+}

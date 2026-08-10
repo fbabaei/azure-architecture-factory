@@ -1,0 +1,119 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AppPack",
+  "metadata": {
+    "packId": "supply-chain-control-tower",
+    "displayName": "Supply Chain Control Tower",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate"
+  },
+  "compatibility": {
+    "minimumAAFVersion": "0.9.0",
+    "supportedRegions": [
+      "eastus",
+      "westeurope",
+      "westus3"
+    ],
+    "requiredServices": [
+      "azure-ai-foundry",
+      "azure-openai",
+      "application-insights"
+    ]
+  },
+  "inputs": {
+    "required": [
+      {
+        "name": "environmentName",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "enum",
+        "allowedValues": [
+          "eastus",
+          "westeurope",
+          "westus3"
+        ]
+      },
+      {
+        "name": "planningProfile",
+        "type": "enum",
+        "allowedValues": [
+          "make-to-stock",
+          "make-to-order",
+          "distribution"
+        ]
+      }
+    ],
+    "optional": [
+      {
+        "name": "approvalThreshold",
+        "type": "integer"
+      },
+      {
+        "name": "erpAdapterMode",
+        "type": "enum",
+        "allowedValues": [
+          "mock",
+          "sap",
+          "oracle",
+          "d365",
+          "csv"
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "runtimeProfiles": [
+      "dev",
+      "test",
+      "prod"
+    ],
+    "defaultProfile": "dev"
+  },
+  "security": {
+    "managedIdentityRequired": true,
+    "keyVaultRequired": true,
+    "requiredPolicies": [
+      "rbac-least-privilege",
+      "diagnostic-logs-enabled",
+      "human-approval-for-material-orders"
+    ]
+  },
+  "operations": {
+    "healthChecks": [
+      "/health"
+    ],
+    "sloTargets": {
+      "availability": "99.5%",
+      "p95LatencyMs": 3000
+    }
+  },
+  "lifecycle": {
+    "upgradeStrategy": "precheck-then-roll",
+    "rollbackSupported": true
+  },
+  "packaging": {
+    "executionModel": "independent",
+    "sourceProjectSlug": "supply-chain-control-tower",
+    "sourceProjectPath": "C:\\dev\\workspace\\supply-chain-control-tower",
+    "exportIncludes": [
+      "README.md",
+      "azure.yaml",
+      "src",
+      "docs",
+      "examples",
+      "portal",
+      "tests",
+      "evals"
+    ]
+  },
+  "verification": {
+    "smokeTests": [
+      "tests"
+    ],
+    "evaluationPlan": "evals/starter-eval-plan.json"
+  }
+}

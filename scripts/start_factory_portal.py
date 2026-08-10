@@ -179,9 +179,301 @@ CSA_COPILOT_API_BASE = os.environ.get("CSA_COPILOT_API_BASE", "").strip().rstrip
 CSA_COPILOT_API_KEY = os.environ.get("CSA_COPILOT_API_KEY", "").strip()
 CSA_COPILOT_TIMEOUT_SECONDS = int(os.environ.get("CSA_COPILOT_TIMEOUT_SECONDS", "20"))
 SERVICE_START_EPOCH = time.time()
+AAPAAS_ROOT = pathlib.Path(
+    os.environ.get(
+        "AAPAAS_ROOT",
+        str(FACTORY_REPO_ROOT / "factory-templates" / "application-zone" / "aapaas"),
+    )
+)
+AAPAAS_APP_PACKS_DIR = AAPAAS_ROOT / "app-packs"
+AAPAAS_CERTIFICATION_FILE = AAPAAS_ROOT / "certification" / "reports" / "certification-summary.generated.json"
+AAPAAS_INSTANCES_DIR = AAPAAS_ROOT / "operations" / "instances"
+AAPAAS_HEALTH_DIR = AAPAAS_ROOT / "operations" / "health"
+AAPAAS_SCHEDULER_REPORT = AAPAAS_ROOT / "operations" / "scheduler" / "casewright-scheduler.generated.json"
+APPLICATION_ZONE_RUNTIME_INSTANCES: dict[str, dict] = {}
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
+
+
+def _portal_read_json(path: pathlib.Path):
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _portal_app_pack_key(pack_id: str, version: str) -> str:
+    return f"{pack_id}:{version}"
+
+
+def _portal_load_app_packs() -> dict:
+    registry: dict = {}
+    roots = (
+        (FACTORY_REPO_ROOT / "factory-templates" / "application-zone" / "packs", "aaf"),
+        (AAPAAS_APP_PACKS_DIR, "aapaas"),
+    )
+    for root, source in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.glob("**/manifest.json")):
+            doc = _portal_read_json(path)
+            if not isinstance(doc, dict):
+                continue
+            metadata = doc.get("metadata") or {}
+            pack_id = metadata.get("packId")
+            version = metadata.get("version")
+            if not pack_id or not version:
+                continue
+            doc = dict(doc)
+            doc["_portal"] = {"source": source, "manifestPath": str(path)}
+            registry[_portal_app_pack_key(str(pack_id), str(version))] = doc
+    return registry
+
+
+def _portal_load_aapaas_certifications() -> dict:
+    records = _portal_read_json(AAPAAS_CERTIFICATION_FILE)
+    if not isinstance(records, list):
+        return {}
+    result: dict = {}
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        pack_id = item.get("PackId")
+        version = item.get("Version")
+        if pack_id and version:
+            result[_portal_app_pack_key(str(pack_id), str(version))] = item
+    return result
+
+
+def _portal_load_aapaas_instances() -> list:
+    instances: list = []
+    if not AAPAAS_INSTANCES_DIR.exists():
+        return instances
+    for path in sorted(AAPAAS_INSTANCES_DIR.glob("*.instance.json")):
+        doc = _portal_read_json(path)
+        if not isinstance(doc, dict):
+            continue
+        metadata = doc.get("metadata") or {}
+        runtime = doc.get("runtime") or {}
+        azure = doc.get("azure") or {}
+        instances.append({
+            "instanceId": metadata.get("instanceId"),
+            "packId": metadata.get("packId"),
+            "packVersion": metadata.get("packVersion"),
+            "displayName": metadata.get("displayName"),
+            "status": metadata.get("status"),
+            "resourceGroup": azure.get("resourceGroup"),
+            "location": azure.get("location"),
+            "apiBaseUrl": runtime.get("apiBaseUrl"),
+            "healthStatus": runtime.get("healthStatus"),
+            "manifestPath": str(path),
+        })
+    return instances
+
+
+def _portal_load_aapaas_health() -> dict:
+    result: dict = {}
+    if not AAPAAS_HEALTH_DIR.exists():
+        return result
+    for path in sorted(AAPAAS_HEALTH_DIR.glob("*.health.generated.json")):
+        doc = _portal_read_json(path)
+        if not doc:
+            continue
+        checks = doc if isinstance(doc, list) else [doc]
+        instance_id = checks[0].get("instanceId") if checks and isinstance(checks[0], dict) else None
+        if instance_id:
+            result[str(instance_id)] = {"checks": checks, "path": str(path)}
+    return result
+
+
+def _portal_load_aapaas_scheduler_report() -> dict:
+    doc = _portal_read_json(AAPAAS_SCHEDULER_REPORT)
+    return doc if isinstance(doc, dict) else {}
+
+
+def _portal_build_pack_catalog() -> list:
+    registry = _portal_load_app_packs()
+    certs = _portal_load_aapaas_certifications()
+    instances = _portal_load_aapaas_instances()
+    grouped: dict = {}
+    for pack in registry.values():
+        pack_id = (pack.get("metadata") or {}).get("packId")
+        if pack_id:
+            grouped.setdefault(pack_id, []).append(pack)
+
+    catalog = []
+    for pack_id, versions in grouped.items():
+        versions.sort(key=lambda item: (item.get("metadata") or {}).get("version", ""), reverse=True)
+        latest = versions[0]
+        metadata = latest.get("metadata") or {}
+        compatibility = latest.get("compatibility") or {}
+        inputs = latest.get("inputs") or {}
+        key = _portal_app_pack_key(str(pack_id), str(metadata.get("version", "")))
+        certification = certs.get(key, {})
+        pack_instances = [
+            item for item in instances
+            if item.get("packId") == pack_id and item.get("packVersion") == metadata.get("version")
+        ]
+        catalog.append({
+            "packId": pack_id,
+            "displayName": metadata.get("displayName", pack_id),
+            "latestVersion": metadata.get("version"),
+            "status": metadata.get("status", "unknown"),
+            "owner": metadata.get("owner", "unknown"),
+            "supportTier": metadata.get("supportTier", "unknown"),
+            "source": (latest.get("_portal") or {}).get("source", "aaf"),
+            "certificationStatus": certification.get("Status"),
+            "certificationWarnings": certification.get("Warnings", 0),
+            "certificationBlockers": certification.get("Blockers", 0),
+            "instanceCount": len(pack_instances),
+            "instances": pack_instances,
+            "supportedRegions": compatibility.get("supportedRegions", []),
+            "requiredInputCount": len(inputs.get("required", [])),
+            "requiredServices": compatibility.get("requiredServices", []),
+            "versions": [(item.get("metadata") or {}).get("version") for item in versions],
+        })
+    catalog.sort(key=lambda item: item.get("packId", ""))
+    return catalog
+
+
+def _portal_list_pack_versions(pack_id: str) -> list:
+    registry = _portal_load_app_packs()
+    versions = [
+        item for item in registry.values()
+        if (item.get("metadata") or {}).get("packId") == pack_id
+    ]
+    versions.sort(key=lambda item: (item.get("metadata") or {}).get("version", ""), reverse=True)
+    return versions
+
+
+def _portal_get_pack_or_none(pack_id: str, version: str) -> dict | None:
+    return _portal_load_app_packs().get(_portal_app_pack_key(pack_id, version))
+
+
+def _portal_parse_json_payload(handler) -> tuple[dict | None, bool]:
+    content_length = handler._safe_content_length()
+    if content_length is None:
+        return None, False
+    try:
+        body = handler.rfile.read(content_length).decode("utf-8")
+        payload = json.loads(body) if body else {}
+    except Exception as exc:
+        handler._send_json({"error": f"Invalid request: {exc}"}, 400)
+        return None, False
+    if not isinstance(payload, dict):
+        handler._send_json({"error": "Request body must be a JSON object"}, 400)
+        return None, False
+    return payload, True
+
+
+def _portal_validate_app_pack_inputs(payload: dict) -> dict:
+    pack_id = str(payload.get("packId", "") or "").strip()
+    version = str(payload.get("version", "") or "").strip()
+    profile = str(payload.get("profile", "dev") or "dev").strip()
+    inputs = payload.get("inputs") if isinstance(payload.get("inputs"), dict) else {}
+    errors: list[dict] = []
+    warnings: list[dict] = []
+
+    if not pack_id:
+        errors.append({"field": "packId", "message": "packId is required"})
+    if not version:
+        errors.append({"field": "version", "message": "version is required"})
+
+    pack = _portal_get_pack_or_none(pack_id, version) if pack_id and version else None
+    if not pack:
+        errors.append({
+            "field": "packId",
+            "message": f"App Pack version not found: {pack_id}@{version}",
+        })
+        return {
+            "ok": False,
+            "valid": False,
+            "errors": errors,
+            "warnings": warnings,
+            "pack": {"packId": pack_id, "version": version},
+        }
+
+    metadata = pack.get("metadata") or {}
+    deployment = pack.get("deployment") or {}
+    runtime_profiles = deployment.get("runtimeProfiles") or []
+    if runtime_profiles and profile not in runtime_profiles:
+        errors.append({
+            "field": "profile",
+            "message": f"profile must be one of: {', '.join(map(str, runtime_profiles))}",
+        })
+
+    for spec in (pack.get("inputs") or {}).get("required", []):
+        if not isinstance(spec, dict):
+            continue
+        name = str(spec.get("name", "") or "").strip()
+        expected_type = str(spec.get("type", "string") or "string")
+        value = inputs.get(name)
+        if value in (None, ""):
+            errors.append({"field": f"inputs.{name}", "message": f"{name} is required"})
+            continue
+        if expected_type == "enum":
+            allowed = [str(item) for item in spec.get("allowedValues", [])]
+            if allowed and str(value) not in allowed:
+                errors.append({
+                    "field": f"inputs.{name}",
+                    "message": f"{name} must be one of: {', '.join(allowed)}",
+                })
+        elif expected_type == "object":
+            if not isinstance(value, dict):
+                errors.append({"field": f"inputs.{name}", "message": f"{name} must be an object"})
+                continue
+            for required_field in spec.get("requiredFields", []):
+                if value.get(required_field) in (None, ""):
+                    errors.append({
+                        "field": f"inputs.{name}.{required_field}",
+                        "message": f"{name}.{required_field} is required",
+                    })
+        elif expected_type == "integer" and not isinstance(value, int):
+            errors.append({"field": f"inputs.{name}", "message": f"{name} must be an integer"})
+        elif expected_type == "boolean" and not isinstance(value, bool):
+            errors.append({"field": f"inputs.{name}", "message": f"{name} must be a boolean"})
+        elif expected_type == "string" and not isinstance(value, str):
+            errors.append({"field": f"inputs.{name}", "message": f"{name} must be a string"})
+
+    runtime = inputs.get("runtime")
+    if runtime is not None and not isinstance(runtime, dict):
+        errors.append({"field": "inputs.runtime", "message": "runtime must be an object when provided"})
+    elif isinstance(runtime, dict):
+        base_url = str(runtime.get("baseUrl", "") or "").strip()
+        if base_url and not re.match(r"^https?://", base_url):
+            errors.append({"field": "inputs.runtime.baseUrl", "message": "runtime baseUrl must start with http:// or https://"})
+
+    return {
+        "ok": not errors,
+        "valid": not errors,
+        "errors": errors,
+        "warnings": warnings,
+        "pack": {
+            "packId": pack_id,
+            "version": version,
+            "displayName": metadata.get("displayName", pack_id),
+            "source": (pack.get("_portal") or {}).get("source", "aaf"),
+            "profile": profile,
+        },
+    }
+
+
+def _portal_summarize_instance(instance: dict) -> dict:
+    pack = instance.get("pack") or {}
+    runtime = instance.get("runtime") or {}
+    return {
+        "instanceId": instance.get("instanceId"),
+        "packId": pack.get("packId"),
+        "packVersion": pack.get("version"),
+        "displayName": instance.get("displayName"),
+        "profile": instance.get("profile"),
+        "status": instance.get("status"),
+        "createdAt": instance.get("createdAt"),
+        "runtimeConnected": bool(runtime.get("baseUrl")),
+        "runtimeBaseUrl": runtime.get("baseUrl"),
+    }
 
 
 class _SlidingWindowRateLimiter:
@@ -4121,9 +4413,10 @@ def _commit_and_push_all_changes(
 
 def _http_json_request(url: str, *, method: str, headers: dict[str, str], payload: dict) -> tuple[dict | None, str | None]:
     """POST JSON and return parsed JSON or an error string."""
-    data = json.dumps(payload).encode("utf-8")
+    data = None if method.upper() == "GET" else json.dumps(payload).encode("utf-8")
     request = Request(url, data=data, method=method)
-    request.add_header("Content-Type", "application/json")
+    if data is not None:
+        request.add_header("Content-Type", "application/json")
     for key, value in headers.items():
         request.add_header(key, value)
     try:
@@ -4819,6 +5112,38 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return
             return self._handle_csa_copilot_tools()
 
+        if request_path == "/api/application-zone/packs":
+            return self._handle_application_zone_packs()
+
+        if request_path == "/api/application-zone/aapaas/summary":
+            return self._handle_aapaas_summary()
+
+        appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
+        if appzone_match:
+            return self._handle_application_zone_pack_versions(appzone_match.group(1))
+
+        appzone_version_match = re.fullmatch(
+            r"/api/application-zone/packs/([^/]+)/versions/([^/]+)",
+            request_path,
+        )
+        if appzone_version_match:
+            return self._handle_application_zone_pack_manifest(
+                appzone_version_match.group(1),
+                appzone_version_match.group(2),
+            )
+
+        appzone_instance_match = re.fullmatch(
+            r"/api/application-zone/instances/([^/]+)(?:/(.*))?",
+            request_path,
+        )
+        if appzone_instance_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_application_zone_instance_action(
+                appzone_instance_match.group(1),
+                appzone_instance_match.group(2) or "",
+            )
+
         if (
             request_path.startswith("/api/brd-runs/")
             or request_path.startswith("/api/runs/")
@@ -5016,6 +5341,23 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_csa_copilot_ask()
+        if path == "/api/application-zone/validate-inputs":
+            return self._handle_application_zone_validate_inputs()
+        if path == "/api/application-zone/instances":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_application_zone_create_instance()
+        appzone_runtime_match = re.fullmatch(
+            r"/api/application-zone/instances/([^/]+)(?:/(.*))?",
+            path,
+        )
+        if appzone_runtime_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_application_zone_instance_action(
+                appzone_runtime_match.group(1),
+                appzone_runtime_match.group(2) or "",
+            )
         if path == "/api/brd-chat":
             if not self._require_auth_for_mutation():
                 return
@@ -8496,6 +8838,211 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "checklist": checklist,
             "links": project.get("links", {}),
         }
+
+    def _handle_application_zone_packs(self):
+        """Return Application Zone App Packs, including AAPAAS workspace packs."""
+        return self._send_json({
+            "updated_at": _utcnow_iso(),
+            "packs": _portal_build_pack_catalog(),
+        }, 200)
+
+    def _handle_application_zone_pack_versions(self, pack_id: str):
+        """Return available versions for a given App Pack."""
+        versions = _portal_list_pack_versions(pack_id)
+        if not versions:
+            return self._send_json({"error": f"App pack not found: {pack_id}"}, 404)
+        return self._send_json({
+            "packId": pack_id,
+            "versions": [(item.get("metadata") or {}).get("version") for item in versions],
+        }, 200)
+
+    def _handle_application_zone_pack_manifest(self, pack_id: str, version: str):
+        """Return one App Pack manifest."""
+        pack = _portal_get_pack_or_none(pack_id, version)
+        if not pack:
+            return self._send_json(
+                {"error": f"App pack version not found: {pack_id}@{version}"},
+                404,
+            )
+        return self._send_json(pack, 200)
+
+    def _handle_aapaas_summary(self):
+        """Return AAPAAS instance, health, scheduler, and certification evidence."""
+        instances = _portal_load_aapaas_instances()
+        health = _portal_load_aapaas_health()
+        scheduler = _portal_load_aapaas_scheduler_report()
+        certifications = list(_portal_load_aapaas_certifications().values())
+        healthy_instances = [
+            instance for instance in instances
+            if str(instance.get("healthStatus", "")).lower() in {"passed", "healthy"}
+        ]
+        return self._send_json({
+            "updated_at": _utcnow_iso(),
+            "workspace": str(AAPAAS_ROOT),
+            "instances": instances,
+            "health": health,
+            "scheduler": scheduler,
+            "certifications": certifications,
+            "summary": {
+                "instanceCount": len(instances),
+                "healthyInstanceCount": len(healthy_instances),
+                "certificationReadyCount": len([
+                    item for item in certifications
+                    if item.get("Status") == "certification-ready"
+                ]),
+                "candidateWithGapsCount": len([
+                    item for item in certifications
+                    if item.get("Status") == "candidate-with-gaps"
+                ]),
+                "schedulerStatus": (scheduler.get("syncResult") or {}).get("status"),
+            },
+        }, 200)
+
+    def _handle_application_zone_validate_inputs(self):
+        """Validate a Quick Launch payload against the selected App Pack manifest."""
+        payload, ok = _portal_parse_json_payload(self)
+        if not ok:
+            return
+        result = _portal_validate_app_pack_inputs(payload or {})
+        return self._send_json(result, 200 if result.get("valid") else 400)
+
+    def _handle_application_zone_create_instance(self):
+        """Create a portal-side Application Zone instance for runtime testing."""
+        payload, ok = _portal_parse_json_payload(self)
+        if not ok:
+            return
+        validation = _portal_validate_app_pack_inputs(payload or {})
+        if not validation.get("valid"):
+            return self._send_json(validation, 400)
+
+        pack_info = validation.get("pack") or {}
+        inputs = payload.get("inputs") if isinstance(payload.get("inputs"), dict) else {}
+        env_name = str(inputs.get("environmentName", "") or "appzone").strip()
+        safe_env = re.sub(r"[^a-zA-Z0-9-]+", "-", env_name).strip("-").lower() or "appzone"
+        instance_id = f"{safe_env}-{pack_info.get('packId', 'pack')}-{uuid.uuid4().hex[:8]}"
+        runtime = inputs.get("runtime") if isinstance(inputs.get("runtime"), dict) else {}
+        instance = {
+            "instanceId": instance_id,
+            "displayName": f"{pack_info.get('displayName', pack_info.get('packId', 'App Pack'))} ({env_name})",
+            "status": "ready-for-runtime",
+            "profile": str(payload.get("profile", "dev") or "dev"),
+            "createdAt": _utcnow_iso(),
+            "pack": pack_info,
+            "inputs": inputs,
+            "runtime": dict(runtime),
+        }
+        APPLICATION_ZONE_RUNTIME_INSTANCES[instance_id] = instance
+        return self._send_json({
+            "ok": True,
+            "mode": "portal-runtime-workspace",
+            "message": "Instance workspace created. Connect a runtime URL to invoke live agents.",
+            "instance": _portal_summarize_instance(instance),
+        }, 201)
+
+    def _handle_application_zone_instance_action(self, instance_id: str, action_path: str):
+        """Handle runtime connection, discovery, and proxy actions for a portal instance."""
+        instance = APPLICATION_ZONE_RUNTIME_INSTANCES.get(instance_id)
+        if not instance:
+            return self._send_json({"error": f"Application Zone instance not found: {instance_id}"}, 404)
+
+        action_path = (action_path or "").strip("/")
+        if action_path == "connect-runtime":
+            payload, ok = _portal_parse_json_payload(self)
+            if not ok:
+                return
+            base_url = str((payload or {}).get("baseUrl", "") or "").strip().rstrip("/")
+            if not base_url:
+                return self._send_json({"error": "baseUrl is required"}, 400)
+            if not re.match(r"^https?://", base_url):
+                return self._send_json({"error": "baseUrl must start with http:// or https://"}, 400)
+            runtime = {"baseUrl": base_url}
+            api_key = str((payload or {}).get("apiKey", "") or "").strip()
+            if api_key:
+                runtime["apiKey"] = api_key
+            instance["runtime"] = runtime
+            return self._send_json({
+                "ok": True,
+                "instance": _portal_summarize_instance(instance),
+            }, 200)
+
+        if action_path == "agents":
+            pack = _portal_get_pack_or_none(
+                str((instance.get("pack") or {}).get("packId", "")),
+                str((instance.get("pack") or {}).get("version", "")),
+            ) or {}
+            return self._send_json({
+                "ok": True,
+                "connected": bool((instance.get("runtime") or {}).get("baseUrl")),
+                "instance": _portal_summarize_instance(instance),
+                "agents": pack.get("agents", []),
+                "services": pack.get("services", []),
+            }, 200)
+
+        if action_path.startswith("agents/") and action_path.endswith("/invoke"):
+            parts = action_path.split("/")
+            agent_id = parts[1] if len(parts) >= 3 else ""
+            payload, ok = _portal_parse_json_payload(self)
+            if not ok:
+                return
+            pack = _portal_get_pack_or_none(
+                str((instance.get("pack") or {}).get("packId", "")),
+                str((instance.get("pack") or {}).get("version", "")),
+            ) or {}
+            agents = pack.get("agents", [])
+            agent = next((item for item in agents if item.get("agentId") == agent_id), None)
+            if not agent:
+                return self._send_json({"error": f"Agent not found: {agent_id}"}, 404)
+            endpoint = ((payload or {}).get("endpoint") or (agent.get("endpoints") or {}).get("query") or "").strip()
+            method = str((payload or {}).get("method") or "POST").upper()
+            body = (payload or {}).get("body")
+            return self._proxy_application_zone_runtime(instance, endpoint, method, body)
+
+        if action_path == "invoke":
+            payload, ok = _portal_parse_json_payload(self)
+            if not ok:
+                return
+            endpoint = str((payload or {}).get("path", "") or "").strip()
+            method = str((payload or {}).get("method", "POST") or "POST").upper()
+            body = (payload or {}).get("body")
+            return self._proxy_application_zone_runtime(instance, endpoint, method, body)
+
+        if action_path == "casewright/chat-query":
+            payload, ok = _portal_parse_json_payload(self)
+            if not ok:
+                return
+            return self._proxy_application_zone_runtime(instance, "/api/chat/query", "POST", payload)
+
+        return self._send_json({"error": "Invalid Application Zone instance action"}, 400)
+
+    def _proxy_application_zone_runtime(self, instance: dict, endpoint: str, method: str, body):
+        runtime = instance.get("runtime") or {}
+        base_url = str(runtime.get("baseUrl", "") or "").strip().rstrip("/")
+        if not base_url:
+            return self._send_json({"error": "Runtime is not connected. Use Connect Runtime first."}, 400)
+        if not endpoint.startswith("/"):
+            endpoint = "/" + endpoint
+        headers = {}
+        if runtime.get("apiKey"):
+            headers["x-api-key"] = str(runtime["apiKey"])
+        data, error = _http_json_request(
+            base_url + endpoint,
+            method=method,
+            headers=headers,
+            payload=body if isinstance(body, dict) else {},
+        )
+        if error:
+            return self._send_json({
+                "ok": False,
+                "runtimeBaseUrl": base_url,
+                "endpoint": endpoint,
+                "error": error,
+            }, 502)
+        return self._send_json({
+            "ok": True,
+            "runtimeBaseUrl": base_url,
+            "endpoint": endpoint,
+            "response": data,
+        }, 200)
 
     def _send_json(self, payload, status=200):
         """Send JSON response"""
