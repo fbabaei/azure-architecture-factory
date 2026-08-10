@@ -1,0 +1,714 @@
+{
+  "apiVersion": "aiapps.service/v1",
+  "kind": "DiscoveredResourceSet",
+  "metadata": {
+    "packId": "casewright",
+    "generatedAt": "2026-08-10T11:06:30.1001313-07:00",
+    "source": "Azure CLI discovery"
+  },
+  "discoveredSets": [
+    {
+      "resourceGroup": "rg-dev",
+      "location": "eastus2",
+      "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+      "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+      "tags": {
+        "azd-env-name": "dev"
+      },
+      "resourceCount": 18,
+      "runtime": {
+        "containerApps": [],
+        "webApps": []
+      },
+      "deployments": [
+        {
+          "name": "Failure-Anomalies-Alert-Rule-Deployment-aa9bdacf",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:24:44.30244-07:00"
+        },
+        {
+          "name": "PolicyDeployment_2940404491576223354",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:16:20.118976-07:00"
+        },
+        {
+          "name": "dev-1781201642",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:16:14.034685-07:00"
+        },
+        {
+          "name": "cosmos",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:16:12.970109-07:00"
+        },
+        {
+          "name": "PolicyDeployment_256625153423781733",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:16:01.110053-07:00"
+        },
+        {
+          "name": "PolicyDeployment_10051796120261948663",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:15:56.687964-07:00"
+        },
+        {
+          "name": "functionApp",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:15:30.635721-07:00"
+        },
+        {
+          "name": "openai",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:15:10.02687-07:00"
+        },
+        {
+          "name": "foundry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:51.31281-07:00"
+        },
+        {
+          "name": "monitoring",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:41.734018-07:00"
+        },
+        {
+          "name": "storage",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:39.753024-07:00"
+        },
+        {
+          "name": "serviceBus",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:39.586114-07:00"
+        },
+        {
+          "name": "keyVault",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:37.487752-07:00"
+        },
+        {
+          "name": "registry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:36.971941-07:00"
+        },
+        {
+          "name": "aiServices",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:23.449186-07:00"
+        },
+        {
+          "name": "search",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:14:21.725761-07:00"
+        },
+        {
+          "name": "apiIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:21.402946-07:00"
+        },
+        {
+          "name": "workerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:21.094148-07:00"
+        },
+        {
+          "name": "schedulerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:14:20.613756-07:00"
+        }
+      ],
+      "resources": [
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/microsoft.alertsmanagement/smartDetectorAlertRules/Failure Anomalies - casewright-appi-zhauoubl",
+          "kind": null,
+          "location": "global",
+          "name": "Failure Anomalies - casewright-appi-zhauoubl",
+          "type": "microsoft.alertsmanagement/smartDetectorAlertRules"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.CognitiveServices/accounts/casewright-aiservices-zhauoubl",
+          "kind": "CognitiveServices",
+          "location": "eastus2",
+          "name": "casewright-aiservices-zhauoubl",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-zhauoubl",
+          "kind": "AIServices",
+          "location": "eastus2",
+          "name": "casewright-foundry-zhauoubl",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.CognitiveServices/accounts/casewright-openai-zhauoubl",
+          "kind": "OpenAI",
+          "location": "eastus2",
+          "name": "casewright-openai-zhauoubl",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-zhauoubl/projects/casewright-proj",
+          "kind": "AIServices",
+          "location": "eastus2",
+          "name": "casewright-foundry-zhauoubl/casewright-proj",
+          "type": "Microsoft.CognitiveServices/accounts/projects"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.ContainerRegistry/registries/casewrightacrzhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewrightacrzhauoubl",
+          "type": "Microsoft.ContainerRegistry/registries"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.DocumentDB/databaseAccounts/casewright-cosmos-zhauoubl",
+          "kind": "GlobalDocumentDB",
+          "location": "eastus2",
+          "name": "casewright-cosmos-zhauoubl",
+          "type": "Microsoft.DocumentDB/databaseAccounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.EventGrid/systemTopics/casewrightstzhauoubl-c6222c72-8b23-4b24-afd8-a7545cb9772c",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewrightstzhauoubl-c6222c72-8b23-4b24-afd8-a7545cb9772c",
+          "type": "Microsoft.EventGrid/systemTopics"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.Insights/components/casewright-appi-zhauoubl",
+          "kind": "web",
+          "location": "eastus2",
+          "name": "casewright-appi-zhauoubl",
+          "type": "Microsoft.Insights/components"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.KeyVault/vaults/casewrightkvzhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewrightkvzhauoubl",
+          "type": "Microsoft.KeyVault/vaults"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-api-id-zhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewright-api-id-zhauoubl",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-sched-id-zhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewright-sched-id-zhauoubl",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-worker-id-zhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewright-worker-id-zhauoubl",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.OperationalInsights/workspaces/casewright-log-zhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewright-log-zhauoubl",
+          "type": "Microsoft.OperationalInsights/workspaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.ServiceBus/namespaces/casewright-sb-zhauoubl",
+          "kind": null,
+          "location": "eastus2",
+          "name": "casewright-sb-zhauoubl",
+          "type": "Microsoft.ServiceBus/namespaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.Storage/storageAccounts/casewrightstzhauoubl",
+          "kind": "StorageV2",
+          "location": "eastus2",
+          "name": "casewrightstzhauoubl",
+          "type": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.Web/serverFarms/casewright-fc-zhauoubl",
+          "kind": "functionapp",
+          "location": "eastus2",
+          "name": "casewright-fc-zhauoubl",
+          "type": "Microsoft.Web/serverFarms"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.Web/sites/casewright-scheduler-zhauoubl",
+          "kind": "functionapp,linux",
+          "location": "eastus2",
+          "name": "casewright-scheduler-zhauoubl",
+          "type": "Microsoft.Web/sites"
+        }
+      ]
+    },
+    {
+      "resourceGroup": "rg-dev-eastus",
+      "location": "eastus",
+      "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+      "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+      "tags": {
+        "azd-env-name": "dev-eastus"
+      },
+      "resourceCount": 17,
+      "runtime": {
+        "containerApps": [],
+        "webApps": []
+      },
+      "deployments": [
+        {
+          "name": "Failure-Anomalies-Alert-Rule-Deployment-2081b32a",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:27:28.940423-07:00"
+        },
+        {
+          "name": "dev-eastus-1781201809",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:25:12.865459-07:00"
+        },
+        {
+          "name": "search",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:25:11.967946-07:00"
+        },
+        {
+          "name": "PolicyDeployment_15831876572353045133",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:18:49.694488-07:00"
+        },
+        {
+          "name": "PolicyDeployment_8914536824897547020",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:18:27.551516-07:00"
+        },
+        {
+          "name": "PolicyDeployment_4519901800204126742",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:18:27.383505-07:00"
+        },
+        {
+          "name": "functionApp",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:18:16.347881-07:00"
+        },
+        {
+          "name": "openai",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:56.12042-07:00"
+        },
+        {
+          "name": "cosmos",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:17:53.616302-07:00"
+        },
+        {
+          "name": "foundry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:39.303289-07:00"
+        },
+        {
+          "name": "monitoring",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:27.41896-07:00"
+        },
+        {
+          "name": "storage",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:25.291581-07:00"
+        },
+        {
+          "name": "serviceBus",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:24.217742-07:00"
+        },
+        {
+          "name": "registry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:23.193684-07:00"
+        },
+        {
+          "name": "keyVault",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:22.502492-07:00"
+        },
+        {
+          "name": "aiServices",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:07.838426-07:00"
+        },
+        {
+          "name": "workerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:06.554813-07:00"
+        },
+        {
+          "name": "apiIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:06.158643-07:00"
+        },
+        {
+          "name": "schedulerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:17:06.057172-07:00"
+        }
+      ],
+      "resources": [
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/microsoft.alertsmanagement/smartDetectorAlertRules/Failure Anomalies - casewright-appi-wbpivj3o",
+          "kind": null,
+          "location": "global",
+          "name": "Failure Anomalies - casewright-appi-wbpivj3o",
+          "type": "microsoft.alertsmanagement/smartDetectorAlertRules"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.CognitiveServices/accounts/casewright-aiservices-wbpivj3o",
+          "kind": "CognitiveServices",
+          "location": "eastus",
+          "name": "casewright-aiservices-wbpivj3o",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-wbpivj3o",
+          "kind": "AIServices",
+          "location": "eastus",
+          "name": "casewright-foundry-wbpivj3o",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.CognitiveServices/accounts/casewright-openai-wbpivj3o",
+          "kind": "OpenAI",
+          "location": "eastus",
+          "name": "casewright-openai-wbpivj3o",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-wbpivj3o/projects/casewright-proj",
+          "kind": "AIServices",
+          "location": "eastus",
+          "name": "casewright-foundry-wbpivj3o/casewright-proj",
+          "type": "Microsoft.CognitiveServices/accounts/projects"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.ContainerRegistry/registries/casewrightacrwbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewrightacrwbpivj3o",
+          "type": "Microsoft.ContainerRegistry/registries"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.DocumentDB/databaseAccounts/casewright-cosmos-wbpivj3o",
+          "kind": "GlobalDocumentDB",
+          "location": "eastus",
+          "name": "casewright-cosmos-wbpivj3o",
+          "type": "Microsoft.DocumentDB/databaseAccounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.Insights/components/casewright-appi-wbpivj3o",
+          "kind": "web",
+          "location": "eastus",
+          "name": "casewright-appi-wbpivj3o",
+          "type": "Microsoft.Insights/components"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.KeyVault/vaults/casewrightkvwbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewrightkvwbpivj3o",
+          "type": "Microsoft.KeyVault/vaults"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-api-id-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-api-id-wbpivj3o",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-sched-id-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-sched-id-wbpivj3o",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-worker-id-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-worker-id-wbpivj3o",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.OperationalInsights/workspaces/casewright-log-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-log-wbpivj3o",
+          "type": "Microsoft.OperationalInsights/workspaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.Search/searchServices/casewright-search-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-search-wbpivj3o",
+          "type": "Microsoft.Search/searchServices"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.ServiceBus/namespaces/casewright-sb-wbpivj3o",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-sb-wbpivj3o",
+          "type": "Microsoft.ServiceBus/namespaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.Web/serverFarms/casewright-fc-wbpivj3o",
+          "kind": "functionapp",
+          "location": "eastus",
+          "name": "casewright-fc-wbpivj3o",
+          "type": "Microsoft.Web/serverFarms"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus/providers/Microsoft.Web/sites/casewright-scheduler-wbpivj3o",
+          "kind": "functionapp,linux",
+          "location": "eastus",
+          "name": "casewright-scheduler-wbpivj3o",
+          "type": "Microsoft.Web/sites"
+        }
+      ]
+    },
+    {
+      "resourceGroup": "rg-dev-eastus-r2",
+      "location": "eastus",
+      "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+      "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+      "tags": {
+        "azd-env-name": "dev-eastus-r2"
+      },
+      "resourceCount": 17,
+      "runtime": {
+        "containerApps": [],
+        "webApps": []
+      },
+      "deployments": [
+        {
+          "name": "Failure-Anomalies-Alert-Rule-Deployment-0627a756",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:32:29.608637-07:00"
+        },
+        {
+          "name": "dev-eastus-r2-1781202110",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:28:56.681379-07:00"
+        },
+        {
+          "name": "search",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:28:54.723357-07:00"
+        },
+        {
+          "name": "PolicyDeployment_8728340481908627826",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:24:04.682679-07:00"
+        },
+        {
+          "name": "PolicyDeployment_10528412614057785870",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:24:02.37643-07:00"
+        },
+        {
+          "name": "PolicyDeployment_9544803141131299260",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:23:22.353945-07:00"
+        },
+        {
+          "name": "functionApp",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:23:15.639971-07:00"
+        },
+        {
+          "name": "openai",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:55.453828-07:00"
+        },
+        {
+          "name": "cosmos",
+          "provisioningState": "Failed",
+          "timestamp": "2026-06-11T11:22:53.418157-07:00"
+        },
+        {
+          "name": "keyVault",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:49.570139-07:00"
+        },
+        {
+          "name": "foundry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:34.819586-07:00"
+        },
+        {
+          "name": "monitoring",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:28.439631-07:00"
+        },
+        {
+          "name": "storage",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:25.173117-07:00"
+        },
+        {
+          "name": "serviceBus",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:24.361218-07:00"
+        },
+        {
+          "name": "registry",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:23.195569-07:00"
+        },
+        {
+          "name": "schedulerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:18.930813-07:00"
+        },
+        {
+          "name": "aiServices",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:08.27947-07:00"
+        },
+        {
+          "name": "apiIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:06.244828-07:00"
+        },
+        {
+          "name": "workerIdentity",
+          "provisioningState": "Succeeded",
+          "timestamp": "2026-06-11T11:22:06.142106-07:00"
+        }
+      ],
+      "resources": [
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/microsoft.alertsmanagement/smartDetectorAlertRules/Failure Anomalies - casewright-appi-5zthw4dp",
+          "kind": null,
+          "location": "global",
+          "name": "Failure Anomalies - casewright-appi-5zthw4dp",
+          "type": "microsoft.alertsmanagement/smartDetectorAlertRules"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.CognitiveServices/accounts/casewright-aiservices-5zthw4dp",
+          "kind": "CognitiveServices",
+          "location": "eastus",
+          "name": "casewright-aiservices-5zthw4dp",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-5zthw4dp",
+          "kind": "AIServices",
+          "location": "eastus",
+          "name": "casewright-foundry-5zthw4dp",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.CognitiveServices/accounts/casewright-openai-5zthw4dp",
+          "kind": "OpenAI",
+          "location": "eastus",
+          "name": "casewright-openai-5zthw4dp",
+          "type": "Microsoft.CognitiveServices/accounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.CognitiveServices/accounts/casewright-foundry-5zthw4dp/projects/casewright-proj",
+          "kind": "AIServices",
+          "location": "eastus",
+          "name": "casewright-foundry-5zthw4dp/casewright-proj",
+          "type": "Microsoft.CognitiveServices/accounts/projects"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.ContainerRegistry/registries/casewrightacr5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewrightacr5zthw4dp",
+          "type": "Microsoft.ContainerRegistry/registries"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.DocumentDB/databaseAccounts/casewright-cosmos-5zthw4dp",
+          "kind": "GlobalDocumentDB",
+          "location": "eastus",
+          "name": "casewright-cosmos-5zthw4dp",
+          "type": "Microsoft.DocumentDB/databaseAccounts"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.Insights/components/casewright-appi-5zthw4dp",
+          "kind": "web",
+          "location": "eastus",
+          "name": "casewright-appi-5zthw4dp",
+          "type": "Microsoft.Insights/components"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.KeyVault/vaults/casewrightkv5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewrightkv5zthw4dp",
+          "type": "Microsoft.KeyVault/vaults"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-api-id-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-api-id-5zthw4dp",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-sched-id-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-sched-id-5zthw4dp",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.ManagedIdentity/userAssignedIdentities/casewright-worker-id-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-worker-id-5zthw4dp",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.OperationalInsights/workspaces/casewright-log-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-log-5zthw4dp",
+          "type": "Microsoft.OperationalInsights/workspaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.Search/searchServices/casewright-search-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-search-5zthw4dp",
+          "type": "Microsoft.Search/searchServices"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.ServiceBus/namespaces/casewright-sb-5zthw4dp",
+          "kind": null,
+          "location": "eastus",
+          "name": "casewright-sb-5zthw4dp",
+          "type": "Microsoft.ServiceBus/namespaces"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.Web/serverFarms/casewright-fc-5zthw4dp",
+          "kind": "functionapp",
+          "location": "eastus",
+          "name": "casewright-fc-5zthw4dp",
+          "type": "Microsoft.Web/serverFarms"
+        },
+        {
+          "id": "/subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev-eastus-r2/providers/Microsoft.Web/sites/casewright-scheduler-5zthw4dp",
+          "kind": "functionapp,linux",
+          "location": "eastus",
+          "name": "casewright-scheduler-5zthw4dp",
+          "type": "Microsoft.Web/sites"
+        }
+      ]
+    }
+  ]
+}

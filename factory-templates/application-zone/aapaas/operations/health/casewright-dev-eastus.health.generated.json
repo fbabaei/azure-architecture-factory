@@ -1,0 +1,14 @@
+[
+  {
+    "instanceId": "casewright-dev-eastus",
+    "status": "passed",
+    "check": "/api/health",
+    "statusCode": 200
+  },
+  {
+    "instanceId": "casewright-dev-eastus",
+    "status": "passed",
+    "check": "/docs",
+    "statusCode": 200
+  }
+]

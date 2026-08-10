@@ -1,0 +1,115 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AppPack",
+  "metadata": {
+    "packId": "compliance-agent",
+    "displayName": "Compliance Agent",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate"
+  },
+  "compatibility": {
+    "minimumAAFVersion": "0.9.0",
+    "supportedRegions": [
+      "eastus",
+      "westeurope",
+      "westus3"
+    ],
+    "requiredServices": [
+      "azure-ai-foundry",
+      "azure-openai",
+      "app-service-or-container-apps",
+      "application-insights"
+    ]
+  },
+  "inputs": {
+    "required": [
+      {
+        "name": "environmentName",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "enum",
+        "allowedValues": [
+          "eastus",
+          "westeurope",
+          "westus3"
+        ]
+      },
+      {
+        "name": "modelProfile",
+        "type": "enum",
+        "allowedValues": [
+          "balanced",
+          "quality",
+          "cost"
+        ]
+      }
+    ],
+    "optional": [
+      {
+        "name": "retentionDays",
+        "type": "integer"
+      },
+      {
+        "name": "enableHumanReview",
+        "type": "boolean"
+      }
+    ]
+  },
+  "deployment": {
+    "runtimeProfiles": [
+      "dev",
+      "test",
+      "prod"
+    ],
+    "defaultProfile": "dev"
+  },
+  "security": {
+    "managedIdentityRequired": true,
+    "keyVaultRequired": true,
+    "requiredPolicies": [
+      "rbac-least-privilege",
+      "diagnostic-logs-enabled",
+      "human-in-the-loop-for-regulated-decisions"
+    ]
+  },
+  "operations": {
+    "healthChecks": [
+      "/health",
+      "/swagger"
+    ],
+    "sloTargets": {
+      "availability": "99.5%",
+      "p95LatencyMs": 3000
+    }
+  },
+  "lifecycle": {
+    "upgradeStrategy": "precheck-then-roll",
+    "rollbackSupported": true
+  },
+  "packaging": {
+    "executionModel": "independent",
+    "sourceProjectSlug": "compliance-agent",
+    "sourceProjectPath": "C:\\dev\\workspace\\compliance-agent",
+    "exportIncludes": [
+      "README.md",
+      "QUICKSTART.md",
+      "compliance-agent.sln",
+      "src",
+      "docs",
+      "tests",
+      "tools",
+      "data"
+    ]
+  },
+  "verification": {
+    "smokeTests": [
+      "scripts/smoke-all.ps1",
+      "scripts/smoke-hitl.ps1"
+    ],
+    "evaluationPlan": "evals/starter-eval-plan.json"
+  }
+}

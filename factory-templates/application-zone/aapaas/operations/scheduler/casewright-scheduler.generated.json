@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-08-10T14:05:25.2268316-07:00",
+  "schedulerJob": {
+    "args": [
+      "-fsS",
+      "-X",
+      "POST",
+      "https://casewright-api.bluesand-957fb9f7.eastus2.azurecontainerapps.io/api/sharepoint/sites/sync"
+    ],
+    "cron": "0 */6 * * *",
+    "name": "casewright-sync-scheduler",
+    "provisioningState": "Succeeded",
+    "triggerType": "Schedule"
+  },
+  "syncEndpoint": "https://casewright-api.bluesand-957fb9f7.eastus2.azurecontainerapps.io/api/sharepoint/sites/sync",
+  "syncResult": {
+    "status": "passed",
+    "statusCode": 200,
+    "body": "{\"queued\":0,\"status\":\"skipped\",\"reason\":\"sharepoint_unavailable_or_not_configured\"}"
+  },
+  "interpretation": "Scheduler target is callable."
+}

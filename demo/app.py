@@ -30,6 +30,17 @@ ORDER_MGMT_ROOT = REPO_ROOT / "projects" / "order-management-platform"
 STORAGE_SELF_SERVICE_ROOT = REPO_ROOT / "projects" / "storage-self-service-provisioning"
 FABRIC_MEDALLION_ROOT = REPO_ROOT / "projects" / "fabric-medallion-pipeline"
 APP_PACKS_DIR = REPO_ROOT / "factory-templates" / "application-zone" / "packs"
+AAPAAS_ROOT = Path(
+    os.environ.get(
+        "AAPAAS_ROOT",
+        str(REPO_ROOT / "factory-templates" / "application-zone" / "aapaas"),
+    )
+)
+AAPAAS_APP_PACKS_DIR = AAPAAS_ROOT / "app-packs"
+AAPAAS_CERTIFICATION_FILE = AAPAAS_ROOT / "certification" / "reports" / "certification-summary.generated.json"
+AAPAAS_INSTANCES_DIR = AAPAAS_ROOT / "operations" / "instances"
+AAPAAS_HEALTH_DIR = AAPAAS_ROOT / "operations" / "health"
+AAPAAS_SCHEDULER_REPORT = AAPAAS_ROOT / "operations" / "scheduler" / "casewright-scheduler.generated.json"
 
 APP_ZONE_INSTANCES: dict[str, dict] = {}
 APP_ZONE_RUNS: dict[str, list[dict]] = {}
@@ -105,23 +116,99 @@ def _app_pack_key(pack_id: str, version: str) -> str:
 
 def _load_app_packs() -> dict[str, dict]:
     registry: dict[str, dict] = {}
-    if not APP_PACKS_DIR.exists():
-        return registry
 
-    for path in sorted(APP_PACKS_DIR.glob("**/manifest.json")):
+    # Load built-in AAF packs first, then let the AAPAAS workspace overlay/enrich them.
+    for root, source in ((APP_PACKS_DIR, "aaf"), (AAPAAS_APP_PACKS_DIR, "aapaas")):
+        if not root.exists():
+            continue
+        for path in sorted(root.glob("**/manifest.json")):
+            doc = _read_json(path)
+            if not doc:
+                continue
+
+            metadata = doc.get("metadata", {})
+            pack_id = metadata.get("packId")
+            version = metadata.get("version")
+            if not pack_id or not version:
+                continue
+
+            doc = dict(doc)
+            doc["_portal"] = {
+                "source": source,
+                "manifestPath": str(path),
+            }
+            registry[_app_pack_key(pack_id, version)] = doc
+
+    return registry
+
+
+def _load_aapaas_certifications() -> dict[str, dict]:
+    """Return certification records keyed by packId:version."""
+    records = _read_json(AAPAAS_CERTIFICATION_FILE)
+    if not isinstance(records, list):
+        return {}
+
+    result: dict[str, dict] = {}
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        pack_id = item.get("PackId")
+        version = item.get("Version")
+        if pack_id and version:
+            result[_app_pack_key(str(pack_id), str(version))] = item
+    return result
+
+
+def _load_aapaas_instances() -> list[dict]:
+    instances: list[dict] = []
+    if not AAPAAS_INSTANCES_DIR.exists():
+        return instances
+
+    for path in sorted(AAPAAS_INSTANCES_DIR.glob("*.instance.json")):
+        doc = _read_json(path)
+        if not isinstance(doc, dict):
+            continue
+        metadata = doc.get("metadata", {})
+        runtime = doc.get("runtime", {})
+        azure = doc.get("azure", {})
+        instances.append({
+            "instanceId": metadata.get("instanceId"),
+            "packId": metadata.get("packId"),
+            "packVersion": metadata.get("packVersion"),
+            "displayName": metadata.get("displayName"),
+            "status": metadata.get("status"),
+            "resourceGroup": azure.get("resourceGroup"),
+            "location": azure.get("location"),
+            "apiBaseUrl": runtime.get("apiBaseUrl"),
+            "healthStatus": runtime.get("healthStatus"),
+            "manifestPath": str(path),
+        })
+    return instances
+
+
+def _load_aapaas_health() -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    if not AAPAAS_HEALTH_DIR.exists():
+        return result
+    for path in sorted(AAPAAS_HEALTH_DIR.glob("*.health.generated.json")):
         doc = _read_json(path)
         if not doc:
             continue
+        checks = doc if isinstance(doc, list) else [doc]
+        instance_id = None
+        if checks and isinstance(checks[0], dict):
+            instance_id = checks[0].get("instanceId")
+        if instance_id:
+            result[str(instance_id)] = {
+                "checks": checks,
+                "path": str(path),
+            }
+    return result
 
-        metadata = doc.get("metadata", {})
-        pack_id = metadata.get("packId")
-        version = metadata.get("version")
-        if not pack_id or not version:
-            continue
 
-        registry[_app_pack_key(pack_id, version)] = doc
-
-    return registry
+def _load_aapaas_scheduler_report() -> dict:
+    doc = _read_json(AAPAAS_SCHEDULER_REPORT)
+    return doc if isinstance(doc, dict) else {}
 
 
 def _get_pack_or_none(pack_id: str, version: str) -> dict | None:
@@ -142,6 +229,8 @@ def _list_pack_versions(pack_id: str) -> list[dict]:
 
 def _build_pack_catalog() -> list[dict]:
     registry = _load_app_packs()
+    certs = _load_aapaas_certifications()
+    instances = _load_aapaas_instances()
     grouped: dict[str, list[dict]] = {}
     for pack in registry.values():
         pack_id = pack.get("metadata", {}).get("packId")
@@ -154,6 +243,14 @@ def _build_pack_catalog() -> list[dict]:
         versions.sort(key=lambda item: item.get("metadata", {}).get("version", ""), reverse=True)
         latest = versions[0]
         required_inputs = latest.get("inputs", {}).get("required", [])
+        key = _app_pack_key(pack_id, latest.get("metadata", {}).get("version", ""))
+        certification = certs.get(key, {})
+        pack_instances = [
+            item
+            for item in instances
+            if item.get("packId") == pack_id
+            and item.get("packVersion") == latest.get("metadata", {}).get("version")
+        ]
 
         catalog.append({
             "packId": pack_id,
@@ -162,6 +259,12 @@ def _build_pack_catalog() -> list[dict]:
             "status": latest.get("metadata", {}).get("status", "unknown"),
             "owner": latest.get("metadata", {}).get("owner", "unknown"),
             "supportTier": latest.get("metadata", {}).get("supportTier", "unknown"),
+            "source": latest.get("_portal", {}).get("source", "aaf"),
+            "certificationStatus": certification.get("Status"),
+            "certificationWarnings": certification.get("Warnings", 0),
+            "certificationBlockers": certification.get("Blockers", 0),
+            "instanceCount": len(pack_instances),
+            "instances": pack_instances,
             "supportedRegions": latest.get("compatibility", {}).get("supportedRegions", []),
             "requiredInputCount": len(required_inputs),
             "requiredServices": latest.get("compatibility", {}).get("requiredServices", []),
@@ -1076,6 +1179,42 @@ def get_application_zone_packs():
     return jsonify({
         "updated_at": datetime.now().isoformat(),
         "packs": _build_pack_catalog(),
+    })
+
+
+@app.route('/api/application-zone/aapaas/summary')
+def get_aapaas_summary():
+    """Return AAPAAS service evidence for the Application Zone dashboard."""
+    instances = _load_aapaas_instances()
+    health = _load_aapaas_health()
+    scheduler = _load_aapaas_scheduler_report()
+    certifications = list(_load_aapaas_certifications().values())
+
+    healthy_instances = [
+        instance for instance in instances
+        if str(instance.get("healthStatus", "")).lower() in {"passed", "healthy"}
+    ]
+
+    return jsonify({
+        "updated_at": datetime.now().isoformat(),
+        "workspace": str(AAPAAS_ROOT),
+        "instances": instances,
+        "health": health,
+        "scheduler": scheduler,
+        "certifications": certifications,
+        "summary": {
+            "instanceCount": len(instances),
+            "healthyInstanceCount": len(healthy_instances),
+            "certificationReadyCount": len([
+                item for item in certifications
+                if item.get("Status") == "certification-ready"
+            ]),
+            "candidateWithGapsCount": len([
+                item for item in certifications
+                if item.get("Status") == "candidate-with-gaps"
+            ]),
+            "schedulerStatus": scheduler.get("syncResult", {}).get("status"),
+        },
     })
 
 
