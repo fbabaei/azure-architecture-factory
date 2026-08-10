@@ -1,0 +1,29 @@
+id: /subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.App/jobs/casewright-sync-scheduler
+identity:
+  type: None
+location: East US 2
+name: casewright-sync-scheduler
+properties:
+  configuration:
+    replicaRetryLimit: 1
+    replicaTimeout: 600
+    scheduleTriggerConfig:
+      cronExpression: "0 */6 * * *"
+      parallelism: 1
+      replicaCompletionCount: 1
+    triggerType: Schedule
+  environmentId: /subscriptions/729fcdbd-c547-48df-a749-dbee6cdb50b0/resourceGroups/rg-dev/providers/Microsoft.App/managedEnvironments/casewright-cae-zhauoubl
+  template:
+    containers:
+      - args:
+          - "-fsS"
+          - "-X"
+          - "POST"
+          - "https://casewright-api.bluesand-957fb9f7.eastus2.azurecontainerapps.io/api/sharepoint/sites/sync"
+        image: curlimages/curl:8.10.1
+        name: casewright-sync-scheduler
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+resourceGroup: rg-dev
+type: Microsoft.App/jobs

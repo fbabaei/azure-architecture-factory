@@ -1,0 +1,451 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AppPack",
+  "metadata": {
+    "packId": "casewright",
+    "displayName": "CaseWright",
+    "version": "1.0.0",
+    "owner": "aaf-core",
+    "supportTier": "standard",
+    "status": "preview"
+  },
+  "compatibility": {
+    "minimumAAFVersion": "0.9.0",
+    "supportedRegions": ["eastus", "westeurope", "westus3"],
+    "requiredServices": [
+      "azure-openai",
+      "azure-ai-search",
+      "key-vault",
+      "application-insights"
+    ]
+  },
+  "inputs": {
+    "required": [
+      { "name": "environmentName", "type": "string" },
+      { "name": "region", "type": "enum", "allowedValues": ["eastus", "westeurope", "westus3"] },
+      { "name": "identityMode", "type": "enum", "allowedValues": ["system-assigned", "user-assigned"] },
+      { "name": "documentSource", "type": "object", "requiredFields": ["type", "resourceId"] },
+      { "name": "modelProfile", "type": "enum", "allowedValues": ["balanced", "quality", "cost"] }
+    ],
+    "optional": [
+      { "name": "channelMode", "type": "enum", "allowedValues": ["web", "teams"] },
+      { "name": "retentionDays", "type": "integer" },
+      { "name": "strictCitationMode", "type": "boolean" }
+    ]
+  },
+  "deployment": {
+    "runtimeProfiles": ["dev", "test", "prod"],
+    "defaultProfile": "dev"
+  },
+  "security": {
+    "managedIdentityRequired": true,
+    "keyVaultRequired": true,
+    "requiredPolicies": [
+      "rbac-least-privilege",
+      "diagnostic-logs-enabled"
+    ]
+  },
+  "operations": {
+    "healthChecks": ["/api/health", "/docs"],
+    "sloTargets": {
+      "availability": "99.9%",
+      "p95LatencyMs": 2000
+    }
+  },
+  "lifecycle": {
+    "upgradeStrategy": "precheck-then-roll",
+    "rollbackSupported": true
+  },
+  "agents": [
+    {
+      "agentId": "case-knowledge-agent",
+      "displayName": "Case Knowledge Agent (Agentic RAG)",
+      "description": "AI-powered case and policy assistant with grounded retrieval over SharePoint documents using Foundry orchestration",
+      "category": "knowledge",
+      "useCases": [
+        "Case summarization",
+        "Policy lookup",
+        "Document retrieval",
+        "Legal research",
+        "Citation tracking",
+        "Multi-turn conversation"
+      ],
+      "endpoints": {
+        "query": "/api/chat/query",
+        "history": "/api/chat/history/{session_id}",
+        "conversations": "/api/chat/conversations/{user_id}",
+        "conversation-detail": "/api/chat/conversations/{user_id}/{session_id}",
+        "delete-conversation": "/api/chat/conversations/{user_id}/{session_id}",
+        "delete-all-conversations": "/api/chat/conversations/{user_id}"
+      },
+      "methods": {
+        "query": "POST",
+        "history": "GET",
+        "conversations": "GET",
+        "conversation-detail": "GET",
+        "delete-conversation": "DELETE",
+        "delete-all-conversations": "DELETE"
+      },
+      "parameters": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "Natural language question about cases or policies"
+        },
+        "session_id": {
+          "type": "string",
+          "required": true,
+          "description": "Conversation session identifier"
+        },
+        "user_id": {
+          "type": "string",
+          "required": true,
+          "description": "User identifier"
+        },
+        "chat_history": {
+          "type": "array",
+          "required": false,
+          "description": "Previous chat turns for context"
+        },
+        "filters": {
+          "type": "object",
+          "required": false,
+          "description": "Filter criteria for document search"
+        }
+      },
+      "capabilities": [
+        "grounded-retrieval",
+        "citation-tracking",
+        "conversation-memory",
+        "multi-turn-chat",
+        "foundry-orchestration",
+        "hybrid-search",
+        "semantic-ranking"
+      ],
+      "samplePayload": {
+        "query": "Summarize the key contract dispute factors in this case.",
+        "user_id": "user@contoso.com",
+        "session_id": "conv-20260630-abc123"
+      }
+    },
+    {
+      "agentId": "case-chat-fallback",
+      "displayName": "Case Chat Agent (Fallback)",
+      "description": "Direct chat interface without agentic orchestration; used when Foundry is unavailable",
+      "category": "knowledge",
+      "useCases": [
+        "Quick answers",
+        "Offline fallback",
+        "Simple Q&A"
+      ],
+      "endpoints": {
+        "chat": "/api/chat",
+        "history": "/api/chat/{conversation_id}"
+      },
+      "methods": {
+        "chat": "POST",
+        "history": "GET"
+      },
+      "parameters": {
+        "query": {"type": "string", "required": true},
+        "conversation_id": {"type": "string", "required": false}
+      },
+      "capabilities": [
+        "direct-rag",
+        "conversation-history",
+        "hybrid-search"
+      ]
+    },
+    {
+      "agentId": "health-agent",
+      "displayName": "Runtime Health Agent",
+      "description": "Checks service health and readiness status",
+      "category": "operations",
+      "useCases": [
+        "Health probes",
+        "Liveness checks",
+        "Readiness verification"
+      ],
+      "endpoints": {
+        "health": "/api/health"
+      },
+      "methods": {
+        "health": "GET"
+      },
+      "capabilities": [
+        "health-check",
+        "status-reporting"
+      ]
+    },
+    {
+      "agentId": "sharepoint-discovery-agent",
+      "displayName": "SharePoint Site Discovery Agent",
+      "description": "Discovers and lists SharePoint sites accessible to the service identity",
+      "category": "ingestion",
+      "useCases": [
+        "Site listing",
+        "User site discovery",
+        "Member-of checks",
+        "Site resolution"
+      ],
+      "endpoints": {
+        "all-sites": "/api/sharepoint/sites",
+        "member-sites": "/api/sharepoint/sites/member-of",
+        "user-member-sites": "/api/sharepoint/sites/member-of/{user_id}",
+        "resolve-site": "/api/sharepoint/sites/resolve",
+        "list-members": "/api/sharepoint/sites/members"
+      },
+      "methods": {
+        "all-sites": "GET",
+        "member-sites": "GET",
+        "user-member-sites": "GET",
+        "resolve-site": "GET",
+        "list-members": "GET"
+      },
+      "parameters": {
+        "user_id": {"type": "string", "required": false},
+        "site_id": {"type": "string", "required": false}
+      },
+      "capabilities": [
+        "site-discovery",
+        "site-listing",
+        "member-enumeration"
+      ]
+    },
+    {
+      "agentId": "sharepoint-sync-agent",
+      "displayName": "SharePoint Sync Agent",
+      "description": "Triggers SharePoint document synchronization workflows with delta detection",
+      "category": "ingestion",
+      "useCases": [
+        "Document ingestion",
+        "Incremental sync",
+        "Site sync",
+        "Index refresh"
+      ],
+      "endpoints": {
+        "sync-site": "/api/sharepoint/sites/sync-site",
+        "sync-all": "/api/sharepoint/sites/sync"
+      },
+      "methods": {
+        "sync-site": "POST",
+        "sync-all": "POST"
+      },
+      "parameters": {
+        "site_id": {"type": "string", "required": true},
+        "force": {"type": "boolean", "required": false, "default": false}
+      },
+      "capabilities": [
+        "delta-sync",
+        "incremental-indexing",
+        "event-driven-processing"
+      ],
+      "samplePayload": {
+        "site_id": "contoso.sharepoint.com/sites/legal",
+        "force": false
+      }
+    },
+    {
+      "agentId": "indexer-agent",
+      "displayName": "Search Index Agent",
+      "description": "Manages Azure AI Search indexer pipeline for document retrieval",
+      "category": "pipeline",
+      "useCases": [
+        "Index setup",
+        "Index refresh",
+        "Index status monitoring",
+        "Pipeline management"
+      ],
+      "endpoints": {
+        "setup": "/api/pipeline/setup-pipeline",
+        "run": "/api/pipeline/run-indexer",
+        "status": "/api/pipeline/indexer-status"
+      },
+      "methods": {
+        "setup": "POST",
+        "run": "POST",
+        "status": "GET"
+      },
+      "parameters": {
+        "indexer_name": {
+          "type": "string",
+          "required": false,
+          "default": "casewright-multimodal-indexer"
+        }
+      },
+      "capabilities": [
+        "pipeline-setup",
+        "indexer-execution",
+        "status-monitoring",
+        "multimodal-indexing"
+      ]
+    }
+  ],
+  "services": [
+    {
+      "serviceId": "sharepoint-ingestion",
+      "displayName": "SharePoint Document Ingestion",
+      "description": "Event-driven ingestion pipeline that syncs documents from SharePoint to Azure AI Search with delta detection",
+      "category": "ingestion",
+      "endpoints": {
+        "sync": "/api/sharepoint/sites/sync",
+        "sync-site": "/api/sharepoint/sites/sync-site"
+      },
+      "relatedAgents": ["sharepoint-sync-agent", "indexer-agent"]
+    },
+    {
+      "serviceId": "search-retrieval",
+      "displayName": "Hybrid + Semantic Search Retrieval",
+      "description": "Azure AI Search index with hybrid (vector + keyword) and semantic ranking for case material discovery",
+      "category": "retrieval",
+      "endpoints": {
+        "indexer-status": "/api/pipeline/indexer-status"
+      },
+      "relatedAgents": ["case-knowledge-agent", "indexer-agent"]
+    },
+    {
+      "serviceId": "conversation-history",
+      "displayName": "Conversation History & State",
+      "description": "Cosmos DB backed conversation storage with hierarchical partitioning (/tenantId, /userId, /conversationId) and TTL",
+      "category": "storage",
+      "endpoints": {
+        "history": "/api/chat/history/{session_id}",
+        "conversations": "/api/chat/conversations/{user_id}"
+      },
+      "relatedAgents": ["case-knowledge-agent"]
+    },
+    {
+      "serviceId": "foundry-knowledge-base",
+      "displayName": "Foundry IQ Knowledge Base",
+      "description": "Managed knowledge base layer over Azure AI Search index for agentic orchestration and MCP-based retrieval",
+      "category": "orchestration",
+      "endpoints": {
+        "query": "/api/chat/query"
+      },
+      "relatedAgents": ["case-knowledge-agent"]
+    }
+  ],
+  "channels": [
+    {
+      "channelId": "teams-bot",
+      "displayName": "Microsoft Teams Bot",
+      "description": "Interactive Teams channel for grounded chat with Adaptive Card responses and inline citations",
+      "type": "teams-incoming",
+      "framework": "microsoft-365-agents-toolkit",
+      "language": "TypeScript",
+      "location": "frontend/teams-bot",
+      "features": [
+        "SSO authentication with MSAL",
+        "Adaptive Card responses with citations",
+        "Rich site picker UI",
+        "User profile commands",
+        "Conversation context routing"
+      ],
+      "deployment": {
+        "host": "app-service",
+        "requiresTeamsAppRegistration": true,
+        "requiresAADRegistration": true,
+        "messagingEndpoint": "/api/messages"
+      },
+      "connectedAgents": [
+        "case-knowledge-agent",
+        "case-chat-fallback"
+      ],
+      "testingOptions": [
+        {
+          "method": "M365 Agents Playground",
+          "description": "Local testing without Teams tenant",
+          "command": "agentsplayground -e http://localhost:3978/api/messages -c msteams"
+        },
+        {
+          "method": "Teams Client",
+          "description": "Full Teams app installation",
+          "appPackageLocation": "frontend/teams-bot/appPackage"
+        }
+      ],
+      "documentation": "docs/demo-deployed-and-teams.md"
+    },
+    {
+      "channelId": "web-chat-ui",
+      "displayName": "Web Chat UI",
+      "description": "Lightweight static HTML/JavaScript chat client for developer testing and quick manual verification",
+      "type": "web-embedded",
+      "framework": "vanilla-html-js",
+      "location": "served from /",
+      "features": [
+        "No external dependencies",
+        "Session-based conversations",
+        "Direct API calls",
+        "Citation display"
+      ],
+      "deployment": {
+        "host": "container-apps",
+        "port": 8000,
+        "path": "/"
+      },
+      "connectedAgents": [
+        "case-knowledge-agent",
+        "case-chat-fallback"
+      ],
+      "accessMethod": "http://localhost:8000/ (dev) or deployed container URL",
+      "documentation": "README.md"
+    },
+    {
+      "channelId": "app-zone-portal",
+      "displayName": "App Zone Portal",
+      "description": "Multi-tenant application zone for discovering and invoking CaseWright agents through a unified interface",
+      "type": "api-based-discovery",
+      "framework": "manifest-driven",
+      "location": "factory-portal.html",
+      "features": [
+        "Agent discovery from manifest",
+        "Multi-agent invocation UI",
+        "Grouped use case organization",
+        "JSON payload builder",
+        "Runtime proxy to backend"
+      ],
+      "deployment": {
+        "host": "static-hosting",
+        "port": 5501,
+        "apiBackend": "http://localhost:5000 (dev)"
+      },
+      "connectedAgents": [
+        "case-knowledge-agent",
+        "case-chat-fallback",
+        "sharepoint-discovery-agent",
+        "sharepoint-sync-agent",
+        "health-agent",
+        "indexer-agent"
+      ],
+      "discoveryMechanism": "manifest-driven",
+      "documentation": "factory-templates/application-zone/README.md"
+    }
+  ],
+  "packaging": {
+    "executionModel": "independent",
+    "sourceProjectSlug": "casewright",
+    "sourceProjectPath": "C:\\dev\\workspace\\casewright",
+    "exportIncludes": [
+      "README.md",
+      "DEPLOY.md",
+      "pyproject.toml",
+      "azure.yaml",
+      ".env.example",
+      "src",
+      "infra",
+      "docs",
+      "scripts",
+      "tests",
+      "diagrams",
+      "frontend",
+      "teams-messaging-app"
+    ]
+  },
+  "verification": {
+    "smokeTests": [
+      "tests",
+      "scripts"
+    ],
+    "evaluationPlan": "evals/starter-eval-plan.json"
+  }
+}

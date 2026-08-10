@@ -1,0 +1,65 @@
+[
+  {
+    "PackId": "casewright",
+    "Version": "1.0.0",
+    "Manifest": "C:\\dev\\workspace\\ai-apps-as-a-service\\app-packs\\casewright\\1.0.0\\manifest.json",
+    "SourceProjectPath": "C:\\dev\\workspace\\casewright",
+    "Status": "certification-ready",
+    "Blockers": 0,
+    "Warnings": 0,
+    "Findings": []
+  },
+  {
+    "PackId": "compliance-agent",
+    "Version": "0.1.0",
+    "Manifest": "C:\\dev\\workspace\\ai-apps-as-a-service\\app-packs\\compliance-agent\\0.1.0\\manifest.json",
+    "SourceProjectPath": "C:\\dev\\workspace\\compliance-agent",
+    "Status": "candidate-with-gaps",
+    "Blockers": 0,
+    "Warnings": 1,
+    "Findings": [
+      {
+        "Severity": "warning",
+        "Area": "certification",
+        "Finding": "Pack is still marked candidate; review the markdown certification report before promotion."
+      }
+    ]
+  },
+  {
+    "PackId": "mailer-automation",
+    "Version": "0.1.0",
+    "Manifest": "C:\\dev\\workspace\\ai-apps-as-a-service\\app-packs\\mailer-automation\\0.1.0\\manifest.json",
+    "SourceProjectPath": "C:\\dev\\workspace\\Mailer-Automation",
+    "Status": "candidate-with-gaps",
+    "Blockers": 0,
+    "Warnings": 2,
+    "Findings": [
+      {
+        "Severity": "warning",
+        "Area": "certification",
+        "Finding": "Pack is still marked candidate; review the markdown certification report before promotion."
+      },
+      {
+        "Severity": "warning",
+        "Area": "security",
+        "Finding": "Source contains ACR admin-enabled true; managed-identity image pull should be used for production certification."
+      }
+    ]
+  },
+  {
+    "PackId": "supply-chain-control-tower",
+    "Version": "0.1.0",
+    "Manifest": "C:\\dev\\workspace\\ai-apps-as-a-service\\app-packs\\supply-chain-control-tower\\0.1.0\\manifest.json",
+    "SourceProjectPath": "C:\\dev\\workspace\\supply-chain-control-tower",
+    "Status": "candidate-with-gaps",
+    "Blockers": 0,
+    "Warnings": 1,
+    "Findings": [
+      {
+        "Severity": "warning",
+        "Area": "certification",
+        "Finding": "Pack is still marked candidate; review the markdown certification report before promotion."
+      }
+    ]
+  }
+]
