@@ -186,6 +186,7 @@ AAPAAS_ROOT = pathlib.Path(
     )
 )
 AAPAAS_APP_PACKS_DIR = AAPAAS_ROOT / "app-packs"
+AAPAAS_AGENT_PACKS_DIR = AAPAAS_ROOT / "agent-packs"
 AAPAAS_CERTIFICATION_FILE = AAPAAS_ROOT / "certification" / "reports" / "certification-summary.generated.json"
 AAPAAS_INSTANCES_DIR = AAPAAS_ROOT / "operations" / "instances"
 AAPAAS_HEALTH_DIR = AAPAAS_ROOT / "operations" / "health"
@@ -206,6 +207,10 @@ def _portal_read_json(path: pathlib.Path):
 
 def _portal_app_pack_key(pack_id: str, version: str) -> str:
     return f"{pack_id}:{version}"
+
+
+def _portal_agent_pack_key(agent_pack_id: str, version: str) -> str:
+    return f"{agent_pack_id}:{version}"
 
 
 def _portal_load_app_packs() -> dict:
@@ -229,6 +234,29 @@ def _portal_load_app_packs() -> dict:
             doc = dict(doc)
             doc["_portal"] = {"source": source, "manifestPath": str(path)}
             registry[_portal_app_pack_key(str(pack_id), str(version))] = doc
+    return registry
+
+
+def _portal_load_agent_packs() -> dict:
+    registry: dict = {}
+    roots = (
+        (AAPAAS_AGENT_PACKS_DIR, "aapaas"),
+    )
+    for root, source in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.glob("**/manifest.json")):
+            doc = _portal_read_json(path)
+            if not isinstance(doc, dict) or doc.get("kind") != "AgentPack":
+                continue
+            metadata = doc.get("metadata") or {}
+            agent_pack_id = metadata.get("agentPackId")
+            version = metadata.get("version")
+            if not agent_pack_id or not version:
+                continue
+            doc = dict(doc)
+            doc["_portal"] = {"source": source, "manifestPath": str(path)}
+            registry[_portal_agent_pack_key(str(agent_pack_id), str(version))] = doc
     return registry
 
 
@@ -335,6 +363,46 @@ def _portal_build_pack_catalog() -> list:
             "versions": [(item.get("metadata") or {}).get("version") for item in versions],
         })
     catalog.sort(key=lambda item: item.get("packId", ""))
+    return catalog
+
+
+def _portal_build_agent_pack_catalog() -> list:
+    registry = _portal_load_agent_packs()
+    grouped: dict = {}
+    for pack in registry.values():
+        agent_pack_id = (pack.get("metadata") or {}).get("agentPackId")
+        if agent_pack_id:
+            grouped.setdefault(agent_pack_id, []).append(pack)
+
+    catalog = []
+    for agent_pack_id, versions in grouped.items():
+        versions.sort(key=lambda item: (item.get("metadata") or {}).get("version", ""), reverse=True)
+        latest = versions[0]
+        metadata = latest.get("metadata") or {}
+        runtime = latest.get("runtime") or {}
+        contract = latest.get("contract") or {}
+        governance = latest.get("governance") or {}
+        catalog.append({
+            "offeringType": "agent-pack",
+            "agentPackId": agent_pack_id,
+            "displayName": metadata.get("displayName", agent_pack_id),
+            "latestVersion": metadata.get("version"),
+            "status": metadata.get("status", "unknown"),
+            "owner": metadata.get("owner", "unknown"),
+            "supportTier": metadata.get("supportTier", "unknown"),
+            "source": (latest.get("_portal") or {}).get("source", "aapaas"),
+            "parentAppPackId": metadata.get("parentAppPackId"),
+            "canonicalSource": metadata.get("canonicalSource", "casewright"),
+            "executionMode": runtime.get("executionMode", "unknown"),
+            "runtimeEndpoint": runtime.get("defaultRuntimeEndpoint"),
+            "toolCount": len(contract.get("tools", [])),
+            "capabilities": contract.get("capabilities", []),
+            "dataBoundary": governance.get("dataBoundary", ""),
+            "certificationStatus": governance.get("certificationStatus"),
+            "requiredEvidence": governance.get("requiredEvidence", []),
+            "versions": [(item.get("metadata") or {}).get("version") for item in versions],
+        })
+    catalog.sort(key=lambda item: item.get("agentPackId", ""))
     return catalog
 
 
@@ -7012,10 +7080,17 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         }
 
     def _handle_application_zone_packs(self):
-        """Return Application Zone App Packs, including AAPAAS workspace packs."""
+        """Return Application Zone offerings, including App Packs and Agent Packs."""
+        packs = _portal_build_pack_catalog()
+        agent_packs = _portal_build_agent_pack_catalog()
         return self._send_json({
             "updated_at": _utcnow_iso(),
-            "packs": _portal_build_pack_catalog(),
+            "packs": packs,
+            "agentPacks": agent_packs,
+            "offerings": (
+                [dict(item, offeringType="app-pack") for item in packs]
+                + agent_packs
+            ),
         }, 200)
 
     def _handle_application_zone_pack_versions(self, pack_id: str):
@@ -7044,6 +7119,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         health = _portal_load_aapaas_health()
         scheduler = _portal_load_aapaas_scheduler_report()
         certifications = list(_portal_load_aapaas_certifications().values())
+        agent_packs = _portal_build_agent_pack_catalog()
         healthy_instances = [
             instance for instance in instances
             if str(instance.get("healthStatus", "")).lower() in {"passed", "healthy"}
@@ -7055,6 +7131,7 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             "health": health,
             "scheduler": scheduler,
             "certifications": certifications,
+            "agentPacks": agent_packs,
             "summary": {
                 "instanceCount": len(instances),
                 "healthyInstanceCount": len(healthy_instances),
@@ -7065,6 +7142,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "candidateWithGapsCount": len([
                     item for item in certifications
                     if item.get("Status") == "candidate-with-gaps"
+                ]),
+                "agentPackCount": len(agent_packs),
+                "hostedAgentPackCount": len([
+                    item for item in agent_packs
+                    if item.get("executionMode") == "hosted"
                 ]),
                 "schedulerStatus": (scheduler.get("syncResult") or {}).get("status"),
             },
