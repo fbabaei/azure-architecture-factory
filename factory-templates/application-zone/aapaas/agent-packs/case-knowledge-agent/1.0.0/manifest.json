@@ -1,0 +1,117 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AgentPack",
+  "metadata": {
+    "agentPackId": "case-knowledge-agent",
+    "displayName": "Case Knowledge Agent",
+    "version": "1.0.0",
+    "owner": "aaf-core",
+    "supportTier": "standard",
+    "status": "preview",
+    "parentAppPackId": "casewright",
+    "parentAppPackVersion": "1.0.0",
+    "canonicalSource": "casewright"
+  },
+  "positioning": {
+    "offeringType": "agent-pack",
+    "serviceFamily": "AI Apps & Agents as a Service",
+    "summary": "Reusable CaseWright hosted agent for grounded case and policy retrieval.",
+    "notForPromotion": [
+      "local-only personal automation",
+      "single-user desktop scripts",
+      "ungoverned MCP demos"
+    ]
+  },
+  "runtime": {
+    "executionMode": "hosted",
+    "hostingModel": "casewright-runtime",
+    "defaultRuntimeEndpoint": "/api/chat/query",
+    "healthChecks": [
+      "/api/health"
+    ],
+    "requiresManagedIdentity": true,
+    "requiresKeyVault": true
+  },
+  "contract": {
+    "tools": [
+      {
+        "toolId": "case-query",
+        "displayName": "Grounded Case Query",
+        "method": "POST",
+        "endpoint": "/api/chat/query",
+        "description": "Answer natural-language questions using CaseWright's grounded retrieval pipeline.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "query",
+            "user_id",
+            "session_id"
+          ],
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Question about cases, policies, or indexed documents."
+            },
+            "user_id": {
+              "type": "string",
+              "description": "Caller/user identifier for conversation state."
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Conversation session identifier."
+            },
+            "chat_history": {
+              "type": "array",
+              "description": "Optional prior chat turns."
+            },
+            "filters": {
+              "type": "object",
+              "description": "Optional retrieval filters."
+            }
+          }
+        },
+        "samplePayload": {
+          "query": "Summarize the key contract dispute factors in this case.",
+          "user_id": "user@contoso.com",
+          "session_id": "conv-20260630-abc123"
+        }
+      }
+    ],
+    "capabilities": [
+      "grounded-retrieval",
+      "citation-tracking",
+      "conversation-memory",
+      "multi-turn-chat",
+      "foundry-orchestration",
+      "hybrid-search",
+      "semantic-ranking"
+    ]
+  },
+  "governance": {
+    "certificationStatus": "candidate-agent-pack",
+    "dataBoundary": "Uses CaseWright runtime data boundaries and configured tenant/document access controls.",
+    "authModel": "Runtime API and managed identity controls inherited from the CaseWright App Pack.",
+    "allowedOutbound": [
+      "CaseWright runtime",
+      "configured Azure AI Search",
+      "configured Azure OpenAI or Foundry resources",
+      "configured SharePoint sources"
+    ],
+    "requiredEvidence": [
+      "runtime-health",
+      "tool-contract",
+      "data-boundary",
+      "auth-model",
+      "sample-invocation"
+    ],
+    "promotionRules": [
+      "Must remain tied to canonical CaseWright runtime until split as an independently hosted service.",
+      "Must not be confused with local-only personal tools or unmanaged MCP demos.",
+      "Must document tenant/data boundary before customer-facing promotion."
+    ]
+  },
+  "lifecycle": {
+    "upgradeStrategy": "inherit-from-parent-app-pack",
+    "rollbackSupported": true
+  }
+}

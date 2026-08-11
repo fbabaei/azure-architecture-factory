@@ -3813,7 +3813,7 @@
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('application-zone-workspace', event)">
                     <div>
                         <h3 class="workspace-card-title">Application Zone Workspace</h3>
-                        <p class="workspace-card-subtitle">Build independent app bundles from App Packs (CaseWright) without AAF runtime dependency.</p>
+                        <p class="workspace-card-subtitle">Build independent app bundles and reusable agent offerings from AAPAAS catalog evidence.</p>
                     </div>
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('application-zone-workspace', event)">Hide</button>
                 </div>
@@ -3828,7 +3828,7 @@
                         <div class="appzone-grid">
                         <div class="appzone-panel">
                             <h4>Catalog</h4>
-                            <p class="appzone-note">Shows App Packs loaded from factory templates.</p>
+                            <p class="appzone-note">Shows App Packs and Agent Packs loaded from factory templates.</p>
                             <div class="appzone-kpi-row">
                                 <div class="appzone-kpi">
                                     <div class="appzone-kpi-label">Selected Pack</div>
@@ -3848,6 +3848,10 @@
                             </div>
                             <div id="appzone-catalog-status" class="status-message info visible">Loading catalog...</div>
                             <div id="appzone-catalog-list" class="appzone-list"></div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>Agent Packs</h4>
+                            <p class="appzone-note">Reusable hosted agents promoted from canonical App Packs. Personal/local tools stay out of the governed service catalog.</p>
+                            <div id="appzone-agentpack-list" class="appzone-list"></div>
                             <div style="height:0.75rem;"></div>
                             <h4>AAPAAS Evidence</h4>
                             <p class="appzone-note">Live AI Apps as a Service instance, health, scheduler, and certification evidence.</p>
@@ -7200,11 +7204,13 @@
         async function refreshAppZoneCatalog(showToast = false) {
             const statusEl = document.getElementById('appzone-catalog-status');
             const listEl = document.getElementById('appzone-catalog-list');
+            const agentPackListEl = document.getElementById('appzone-agentpack-list');
             if (!statusEl || !listEl) return;
 
             statusEl.className = 'status-message info visible';
             statusEl.textContent = 'Loading catalog...';
             listEl.innerHTML = '';
+            if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
                 const [response, aapaasResponse] = await Promise.all([
@@ -7221,6 +7227,7 @@
                 }
 
                 const packs = data.packs || [];
+                const agentPacks = data.agentPacks || [];
                 if (!packs.length) {
                     listEl.innerHTML = '<div class="appzone-item"><div class="appzone-meta">No App Packs found.</div></div>';
                 } else {
@@ -7256,8 +7263,28 @@
                     await onAppZonePackChanged();
                 }
 
+                if (agentPackListEl) {
+                    if (!agentPacks.length) {
+                        agentPackListEl.innerHTML = '<div class="appzone-item"><div class="appzone-meta">No governed Agent Packs found.</div></div>';
+                    } else {
+                        agentPackListEl.innerHTML = agentPacks.map(agentPack => {
+                            const capabilities = (agentPack.capabilities || []).slice(0, 5).join(', ');
+                            const evidence = (agentPack.requiredEvidence || []).join(', ');
+                            return `
+                                <div class="appzone-item">
+                                    <div class="appzone-item-title">${escapeHtml(agentPack.displayName || agentPack.agentPackId || 'unknown agent')}</div>
+                                    <div class="appzone-meta">${escapeHtml(agentPack.agentPackId || '')} · v${escapeHtml(agentPack.latestVersion || '')} · ${escapeHtml(agentPack.executionMode || 'unknown')} · ${escapeHtml(agentPack.certificationStatus || agentPack.status || '')}</div>
+                                    <div class="appzone-meta">Canonical source: ${escapeHtml(agentPack.canonicalSource || 'casewright')} · Parent App Pack: ${escapeHtml(agentPack.parentAppPackId || '-')} · Tools: ${escapeHtml(String(agentPack.toolCount ?? 0))}</div>
+                                    <div class="appzone-meta">Capabilities: ${escapeHtml(capabilities || '-')}</div>
+                                    <div class="appzone-meta">Required evidence: ${escapeHtml(evidence || '-')}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+
                 statusEl.className = 'status-message success visible';
-                statusEl.textContent = `Loaded ${packs.length} App Pack(s).`;
+                statusEl.textContent = `Loaded ${packs.length} App Pack(s) and ${agentPacks.length} Agent Pack(s).`;
                 if (showToast && typeof showStatus === 'function') {
                     showStatus('Application Zone catalog refreshed.', 'success');
                 }
@@ -7291,6 +7318,7 @@
                     <div class="appzone-kpi"><div class="appzone-kpi-label">Instances</div><div class="appzone-kpi-value">${escapeHtml(String(summary.instanceCount ?? 0))}</div></div>
                     <div class="appzone-kpi"><div class="appzone-kpi-label">Healthy</div><div class="appzone-kpi-value">${escapeHtml(String(summary.healthyInstanceCount ?? 0))}</div></div>
                     <div class="appzone-kpi"><div class="appzone-kpi-label">Ready Packs</div><div class="appzone-kpi-value">${escapeHtml(String(summary.certificationReadyCount ?? 0))}</div></div>
+                    <div class="appzone-kpi"><div class="appzone-kpi-label">Agent Packs</div><div class="appzone-kpi-value">${escapeHtml(String(summary.agentPackCount ?? 0))}</div></div>
                     <div class="appzone-kpi"><div class="appzone-kpi-label">Scheduler</div><div class="appzone-kpi-value">${escapeHtml(schedulerResult.status || summary.schedulerStatus || '-')}</div></div>
                 </div>
                 <div class="appzone-meta">Workspace: ${escapeHtml(data.workspace || '')}</div>
