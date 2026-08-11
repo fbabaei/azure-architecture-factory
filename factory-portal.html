@@ -3017,8 +3017,9 @@
                 Azure Architecture Factory
             </div>
             <nav>
-                <a href="#projects" class="active">Projects</a>
                 <a href="#build-workspace">Build</a>
+                <a href="#application-zone-workspace" class="active">Apps & Agents</a>
+                <a href="#projects">Projects</a>
                 <a href="#assist-workspace">Assist</a>
                 <a href="https://github.com/fbabaei/csa-helper" target="_blank" rel="noopener noreferrer" title="Open the CSA Helper agents repo on GitHub">CSA Helper ↗</a>
                 <details class="nav-more">
@@ -3263,8 +3264,8 @@
 
         <div class="workspace-nav" aria-label="Portal workspaces">
             <a class="workspace-chip workspace-chip-build" href="#build-workspace">Build Here</a>
+            <a class="workspace-chip workspace-chip-build" href="#application-zone-workspace">Apps & Agents</a>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
-            <a class="workspace-chip" href="#application-zone-workspace">Application Zone</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
             <a class="workspace-chip" href="#ai-agent-foundry-panel">AI Agent Foundry</a>
@@ -3809,10 +3810,10 @@
                 </div>
             </section>
 
-            <section id="application-zone-workspace" class="workspace-card collapsed" aria-label="Application Zone workspace">
+            <section id="application-zone-workspace" class="workspace-card" aria-label="Apps and Agents workspace">
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('application-zone-workspace', event)">
                     <div>
-                        <h3 class="workspace-card-title">Application Zone Workspace</h3>
+                        <h3 class="workspace-card-title">Apps & Agents Workspace</h3>
                         <p class="workspace-card-subtitle">Build independent app bundles and reusable agent offerings from AAPAAS catalog evidence.</p>
                     </div>
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('application-zone-workspace', event)">Hide</button>
@@ -3860,7 +3861,7 @@
 
                         <div class="appzone-panel">
                             <h4>Quick Launch (Local)</h4>
-                            <p class="appzone-note">Validate + create an instance using the local Application Zone APIs.</p>
+                            <p class="appzone-note">Validate + create an instance using the local Apps & Agents APIs.</p>
                             <div class="appzone-form-grid">
                                 <div class="appzone-field">
                                     <label for="appzone-pack-id">App Pack</label>
@@ -7286,7 +7287,7 @@
                 statusEl.className = 'status-message success visible';
                 statusEl.textContent = `Loaded ${packs.length} App Pack(s) and ${agentPacks.length} Agent Pack(s).`;
                 if (showToast && typeof showStatus === 'function') {
-                    showStatus('Application Zone catalog refreshed.', 'success');
+                    showStatus('Apps & Agents catalog refreshed.', 'success');
                 }
             } catch (error) {
                 statusEl.className = 'status-message error visible';
@@ -7711,6 +7712,14 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
+        function promoteAppsAgentsWorkspace() {
+            const appsAgents = document.getElementById('application-zone-workspace');
+            const projects = document.getElementById('projects-workspace');
+            if (appsAgents && projects && projects.parentNode && appsAgents.nextElementSibling !== projects) {
+                projects.parentNode.insertBefore(appsAgents, projects);
+            }
+        }
+
         // Load projects on page load
         document.addEventListener('DOMContentLoaded', () => {
             // Ensure intake starts collapsed on every page load
@@ -7718,6 +7727,7 @@
             if (intakeSection) intakeSection.classList.remove('expanded');
 
             initHeaderMoreMenu();
+            promoteAppsAgentsWorkspace();
             syncWorkspaceFromHash();
             loadProjects();
             openAnalysisFromHash();
