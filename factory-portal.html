@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure Architecture Factory | Project Hub</title>
+    <title>AI Factory Services | Azure Architecture Factory | Agent Application Factory | AI Apps & Agents as a Service</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         html {
@@ -121,8 +121,27 @@
             align-items: center;
             gap: 0.65rem;
             color: #ffffff;
-            font-size: 1.25rem;
             font-weight: 700;
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.12;
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .brand-subtitle {
+            margin-top: 0.12rem;
+            font-size: 0.68rem;
+            font-weight: 650;
+            color: rgba(255, 255, 255, 0.82);
+            max-width: 520px;
         }
 
         .logo svg, .logo img {
@@ -134,6 +153,8 @@
             display: flex;
             gap: 0.7rem;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         nav a {
@@ -2010,6 +2031,14 @@
                 text-align: center;
             }
 
+            .logo {
+                justify-content: center;
+            }
+
+            .brand-subtitle {
+                max-width: 92vw;
+            }
+
             nav {
                 flex-direction: column;
                 gap: 0.75rem;
@@ -3013,8 +3042,11 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <img src="assets/factory-icon.svg" alt="Azure Architecture Factory icon" width="32" height="32" style="display:block;">
-                Azure Architecture Factory
+                <img src="assets/factory-icon.svg" alt="AI Factory Services icon" width="32" height="32" style="display:block;">
+                <div class="brand-copy">
+                    <span class="brand-title">AI Factory Services</span>
+                    <span class="brand-subtitle">Azure Architecture Factory | Agent Application Factory | AI Apps & Agents as a Service</span>
+                </div>
             </div>
             <nav>
                 <a href="#build-workspace">Azure Architecture Factory</a>
@@ -3043,9 +3075,9 @@
     <div class="container">
         <!-- Hero Section -->
         <section style="text-align:center;">
-            <h1>Architecture Factory</h1>
+            <h1>AI Factory Services</h1>
             <p class="section-subtitle hero-flow-subtitle">
-                End-to-end orchestration: Business Requirements → Architecture Design → Implementation → Testing → Deployment → Observability (with Traceability across all stages)
+                Azure Architecture Factory + Agent Application Factory + AI Apps & Agents as a Service: from requirements to reusable agents, app packs, deployment, and operational evidence.
             </p>
             <hr class="section-divider">
             <div class="factory-philosophy-panel" style="margin-top:1rem; text-align:left; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
@@ -4423,7 +4455,7 @@
     </div>
 
     <footer>
-        <p>Azure Architecture Factory | <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" style="color: var(--primary);">View on GitHub</a></p>
+        <p>AI Factory Services: Azure Architecture Factory | Agent Application Factory | AI Apps & Agents as a Service | <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" style="color: var(--primary);">View on GitHub</a></p>
         <p style="margin-top: 0.5rem; font-size: 0.85rem;">Powered by automated architecture generation, AI-driven design, and comprehensive testing</p>
     </footer>
 
