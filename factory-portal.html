@@ -281,6 +281,23 @@
             white-space: nowrap;
         }
 
+        .workspace-nav.service-tab-row {
+            justify-content: center;
+            margin: 1rem 0 1.25rem;
+        }
+
+        .workspace-nav.service-tab-row .service-tabs {
+            border-radius: 14px;
+        }
+
+        .workspace-nav.service-tab-row > .workspace-chip:not(.service-tab) {
+            display: none;
+        }
+
+        .primary-service-card.collapsed {
+            display: none;
+        }
+
         .workspace-chip {
             display: inline-flex;
             align-items: center;
@@ -3146,7 +3163,7 @@
             </div>
         </section>
 
-        <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card collapsed" aria-labelledby="ai-agent-foundry-title">
+        <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card primary-service-card collapsed" aria-labelledby="ai-agent-foundry-title">
             <div class="workspace-card-header" onclick="selectPrimaryServiceTab('ai-agent-foundry-panel', event)">
                 <div>
                     <h3 id="ai-agent-foundry-title" class="workspace-card-title">Agent Application Factory</h3>
@@ -3372,7 +3389,7 @@
                 <hr class="section-divider">
             </div>
 
-            <section id="build-workspace" class="workspace-card" aria-label="Build workspace">
+            <section id="build-workspace" class="workspace-card primary-service-card" aria-label="Build workspace">
                 <div class="workspace-card-header" onclick="selectPrimaryServiceTab('build-workspace', event)">
                     <div>
                         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
@@ -3905,7 +3922,7 @@
                 </div>
             </section>
 
-            <section id="application-zone-workspace" class="workspace-card" aria-label="AI Apps and Agents as a Service workspace">
+            <section id="application-zone-workspace" class="workspace-card primary-service-card" aria-label="AI Apps and Agents as a Service workspace">
                 <div class="workspace-card-header" onclick="selectPrimaryServiceTab('application-zone-workspace', event)">
                     <div>
                         <h3 class="workspace-card-title">AI Apps & Agents as a Service</h3>
@@ -7860,6 +7877,12 @@
             const appsAgents = document.getElementById('application-zone-workspace');
             const projects = document.getElementById('projects-workspace');
             const assist = document.getElementById('assist-workspace');
+            const workspaceNav = document.querySelector('.workspace-nav');
+            const heading = document.querySelector('.design-analysis-heading');
+            if (workspaceNav && heading && workspaceNav.previousElementSibling !== heading) {
+                workspaceNav.classList.add('service-tab-row');
+                heading.insertAdjacentElement('afterend', workspaceNav);
+            }
             if (agentFactory && azureFactory && appsAgents && assist && assist.parentNode) {
                 assist.parentNode.insertBefore(agentFactory, assist);
                 assist.parentNode.insertBefore(azureFactory, assist);
