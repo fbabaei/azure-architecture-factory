@@ -3017,8 +3017,8 @@
                 Azure Architecture Factory
             </div>
             <nav>
-                <a href="#build-workspace">Build</a>
-                <a href="#application-zone-workspace" class="active">Apps & Agents</a>
+                <a href="#build-workspace">Azure Architecture Factory</a>
+                <a href="#application-zone-workspace" class="active">AI Apps & Agents as a Service</a>
                 <a href="#projects">Projects</a>
                 <a href="#assist-workspace">Assist</a>
                 <a href="https://github.com/fbabaei/csa-helper" target="_blank" rel="noopener noreferrer" title="Open the CSA Helper agents repo on GitHub">CSA Helper ↗</a>
@@ -3029,7 +3029,7 @@
                         <a href="#intake">BRD Intake</a>
                         <a href="#intake" onclick="return launchAcaExpress(event)" title="Skip Bicep — deploy an HTTP container to ACA in under a minute (westcentralus / eastasia only)">⚡ ACA Express Deploy</a>
                         <a href="#csa-companion">CSA Copilot</a>
-                        <a href="#ai-agent-foundry-panel">AI Agent Foundry</a>
+                        <a href="#ai-agent-foundry-panel">Agent Application Factory</a>
                         <a href="docs/QUICKSTART.md" class="doc-preview-link" data-doc-title="Quick Start" rel="noopener noreferrer">Quick Start</a>
                         <a href="docs/GETTING_STARTED.md" class="doc-preview-link" data-doc-title="Documentation" rel="noopener noreferrer">Docs</a>
                         <a href="https://github.com/fbabaei_microsoft/azure-architecture-factory" target="_blank">GitHub</a>
@@ -3061,51 +3061,59 @@
             </div>
         </section>
 
-        <section id="ai-agent-foundry-panel" class="foundry-portal-panel" aria-labelledby="ai-agent-foundry-title">
-            <h2 id="ai-agent-foundry-title">Azure AI Agent Foundry</h2>
-            <p>Discover reusable Azure AI agents, learning orchestrators, and application blueprints for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI.</p>
-            <div class="foundry-action-list" aria-label="Azure AI Agent Foundry actions">
-                <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Foundry Browser</a>
-                <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
-                <a href="agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
-                <a href="agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
-                <button type="button" onclick="toggleAgentFoundryRunner(event)">Run With Agent Assistant</button>
+        <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card collapsed" aria-labelledby="ai-agent-foundry-title">
+            <div class="workspace-card-header" onclick="expandWorkspaceCard('ai-agent-foundry-panel', event)">
+                <div>
+                    <h3 id="ai-agent-foundry-title" class="workspace-card-title">Agent Application Factory</h3>
+                    <p class="workspace-card-subtitle">Discover reusable Azure AI agents, learning orchestrators, and application blueprints.</p>
+                </div>
+                <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('ai-agent-foundry-panel', event)">Hide</button>
             </div>
-            <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
-                <form onsubmit="return submitAgentFoundryRun(event)">
-                    <div class="foundry-runner-grid">
-                        <label>
-                            Input type
-                            <select id="agent-foundry-source-type">
-                                <option value="brd-prd">BRD / PRD</option>
-                                <option value="architecture-markdown">Architecture markdown</option>
-                                <option value="architecture-mermaid">Architecture diagram - Mermaid</option>
-                                <option value="architecture-drawio">Architecture diagram - draw.io XML</option>
-                                <option value="architecture-visio">Architecture diagram - Visio</option>
-                                <option value="learning-plan">Learning plan</option>
-                            </select>
-                        </label>
-                        <label>
-                            Title
-                            <input id="agent-foundry-run-title" type="text" maxlength="120" placeholder="AI support assistant implementation" />
-                        </label>
-                        <label style="grid-column: 1 / -1;">
-                            Diagram file
-                            <input id="agent-foundry-diagram-file" type="file" accept=".mmd,.mermaid,.drawio,.xml,.vsdx,.vsd" onchange="loadAgentFoundryDiagramFile(event)" />
-                            <span class="foundry-runner-hint">Mermaid and draw.io files are read into the source text. For Visio, add exported text, SVG/XML, or a short component/connector summary so the agents have evidence to work from.</span>
-                        </label>
-                        <label style="grid-column: 1 / -1;">
-                            Source text
-                            <textarea id="agent-foundry-run-content" placeholder="Paste the BRD, PRD, Mermaid diagram, draw.io XML, Visio export/notes, architecture markdown, or learning objective. The portal creates an approval-gated plan with owner agents and evidence requirements."></textarea>
-                        </label>
-                    </div>
-                    <div class="foundry-runner-actions">
-                        <button type="submit" id="agent-foundry-create-btn" class="button">Create Plan</button>
-                        <button type="button" id="agent-foundry-approve-btn" class="button" onclick="approveAgentFoundryRun()" disabled>Approve Execution Package</button>
-                    </div>
-                    <div id="agent-foundry-status" class="status-message" role="status" aria-live="polite"></div>
-                    <div id="agent-foundry-output" class="foundry-runner-output"></div>
-                </form>
+            <div class="workspace-card-body">
+                <p>Use Agent Application Factory to choose reusable agent patterns for Foundry, Search, Vision, NLP, Document Intelligence, RAG, and Responsible AI before plugging them into app designs.</p>
+                <div class="foundry-action-list" aria-label="Agent Application Factory actions">
+                    <a href="agent-foundry/browser/index.html" target="_blank" rel="noopener noreferrer">Open Agent Browser</a>
+                    <a href="https://github.com/fbabaei_microsoft/azure-ai-agent-foundry" target="_blank" rel="noopener noreferrer">View GitHub Repo</a>
+                    <a href="agent-foundry/docs/application-implementation-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Application Flow</a>
+                    <a href="agent-foundry/docs/learning-paths-step-by-step.html" target="_blank" rel="noopener noreferrer">Start Learning Path</a>
+                    <button type="button" onclick="toggleAgentFoundryRunner(event)">Run With Agent Assistant</button>
+                </div>
+                <div id="agent-foundry-runner" class="foundry-runner-panel" aria-label="Run with Agent Assistant">
+                    <form onsubmit="return submitAgentFoundryRun(event)">
+                        <div class="foundry-runner-grid">
+                            <label>
+                                Input type
+                                <select id="agent-foundry-source-type">
+                                    <option value="brd-prd">BRD / PRD</option>
+                                    <option value="architecture-markdown">Architecture markdown</option>
+                                    <option value="architecture-mermaid">Architecture diagram - Mermaid</option>
+                                    <option value="architecture-drawio">Architecture diagram - draw.io XML</option>
+                                    <option value="architecture-visio">Architecture diagram - Visio</option>
+                                    <option value="learning-plan">Learning plan</option>
+                                </select>
+                            </label>
+                            <label>
+                                Title
+                                <input id="agent-foundry-run-title" type="text" maxlength="120" placeholder="AI support assistant implementation" />
+                            </label>
+                            <label style="grid-column: 1 / -1;">
+                                Diagram file
+                                <input id="agent-foundry-diagram-file" type="file" accept=".mmd,.mermaid,.drawio,.xml,.vsdx,.vsd" onchange="loadAgentFoundryDiagramFile(event)" />
+                                <span class="foundry-runner-hint">Mermaid and draw.io files are read into the source text. For Visio, add exported text, SVG/XML, or a short component/connector summary so the agents have evidence to work from.</span>
+                            </label>
+                            <label style="grid-column: 1 / -1;">
+                                Source text
+                                <textarea id="agent-foundry-run-content" placeholder="Paste the BRD, PRD, Mermaid diagram, draw.io XML, Visio export/notes, architecture markdown, or learning objective. The portal creates an approval-gated plan with owner agents and evidence requirements."></textarea>
+                            </label>
+                        </div>
+                        <div class="foundry-runner-actions">
+                            <button type="submit" id="agent-foundry-create-btn" class="button">Create Plan</button>
+                            <button type="button" id="agent-foundry-approve-btn" class="button" onclick="approveAgentFoundryRun()" disabled>Approve Execution Package</button>
+                        </div>
+                        <div id="agent-foundry-status" class="status-message" role="status" aria-live="polite"></div>
+                        <div id="agent-foundry-output" class="foundry-runner-output"></div>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -3263,12 +3271,12 @@
         <hr class="section-divider">
 
         <div class="workspace-nav" aria-label="Portal workspaces">
-            <a class="workspace-chip workspace-chip-build" href="#build-workspace">Build Here</a>
-            <a class="workspace-chip workspace-chip-build" href="#application-zone-workspace">Apps & Agents</a>
+            <a class="workspace-chip workspace-chip-build" href="#build-workspace">Azure Architecture Factory</a>
+            <a class="workspace-chip workspace-chip-build" href="#application-zone-workspace">AI Apps & Agents as a Service</a>
+            <a class="workspace-chip" href="#ai-agent-foundry-panel">Agent Application Factory</a>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
-            <a class="workspace-chip" href="#ai-agent-foundry-panel">AI Agent Foundry</a>
         </div>
 
         <!-- Design Analysis -->
@@ -3281,10 +3289,10 @@
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('build-workspace', event)">
                     <div>
                         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                            <h3 class="workspace-card-title">Build Workspace</h3>
+                            <h3 class="workspace-card-title">Azure Architecture Factory</h3>
                             <span class="workspace-start-pill">Here</span>
                         </div>
-                        <p class="workspace-card-subtitle">BRD intake and legacy modernization actions.</p>
+                        <p class="workspace-card-subtitle">Turn business requirements into architecture, code, infrastructure, deployment guidance, and operations evidence.</p>
                     </div>
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('build-workspace', event)">Hide</button>
                 </div>
@@ -3810,10 +3818,10 @@
                 </div>
             </section>
 
-            <section id="application-zone-workspace" class="workspace-card" aria-label="Apps and Agents workspace">
+            <section id="application-zone-workspace" class="workspace-card" aria-label="AI Apps and Agents as a Service workspace">
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('application-zone-workspace', event)">
                     <div>
-                        <h3 class="workspace-card-title">Apps & Agents Workspace</h3>
+                        <h3 class="workspace-card-title">AI Apps & Agents as a Service</h3>
                         <p class="workspace-card-subtitle">Build independent app bundles and reusable agent offerings from AAPAAS catalog evidence.</p>
                     </div>
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('application-zone-workspace', event)">Hide</button>
@@ -7125,6 +7133,11 @@
                 return;
             }
 
+            if (hash === '#ai-agent-foundry-panel') {
+                toggleWorkspaceCard('ai-agent-foundry-panel', true);
+                return;
+            }
+
             if (hash === '#design-analysis' || hash.startsWith('#analysis-') || hash === '#analyze-workspace') {
                 toggleWorkspaceCard('analyze-workspace', true);
             }
@@ -7712,9 +7725,18 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        function promoteAppsAgentsWorkspace() {
+        function promoteServiceWorkspaces() {
+            const agentFactory = document.getElementById('ai-agent-foundry-panel');
+            const azureFactory = document.getElementById('build-workspace');
             const appsAgents = document.getElementById('application-zone-workspace');
             const projects = document.getElementById('projects-workspace');
+            const assist = document.getElementById('assist-workspace');
+            if (agentFactory && azureFactory && appsAgents && assist && assist.parentNode) {
+                assist.parentNode.insertBefore(agentFactory, assist);
+                assist.parentNode.insertBefore(azureFactory, assist);
+                assist.parentNode.insertBefore(appsAgents, assist);
+                return;
+            }
             if (appsAgents && projects && projects.parentNode && appsAgents.nextElementSibling !== projects) {
                 projects.parentNode.insertBefore(appsAgents, projects);
             }
@@ -7727,7 +7749,7 @@
             if (intakeSection) intakeSection.classList.remove('expanded');
 
             initHeaderMoreMenu();
-            promoteAppsAgentsWorkspace();
+            promoteServiceWorkspaces();
             syncWorkspaceFromHash();
             loadProjects();
             openAnalysisFromHash();
