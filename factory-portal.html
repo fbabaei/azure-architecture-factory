@@ -261,7 +261,19 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
+            align-items: center;
             margin-bottom: 1.1rem;
+        }
+
+        .service-tabs {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            padding: 0.25rem;
+            border: 1px solid #bfd8ee;
+            border-radius: 999px;
+            background: rgba(243, 249, 255, 0.9);
+            box-shadow: 0 8px 18px rgba(19, 50, 74, 0.06);
         }
 
         .workspace-chip {
@@ -276,6 +288,26 @@
             font-size: 0.78rem;
             font-weight: 600;
             text-decoration: none;
+        }
+
+        .service-tab {
+            border-color: transparent;
+            background: transparent;
+            font-size: 0.92rem;
+            font-weight: 800;
+            padding: 0.56rem 1rem;
+        }
+
+        .service-tab.active {
+            color: #ffffff;
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 6px 14px rgba(0, 120, 212, 0.22);
+        }
+
+        .service-tab:not(.active):hover {
+            background: #e8f2ff;
+            border-color: #8eb8de;
         }
 
         .workspace-chip:hover {
@@ -3108,7 +3140,7 @@
         </section>
 
         <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card collapsed" aria-labelledby="ai-agent-foundry-title">
-            <div class="workspace-card-header" onclick="expandWorkspaceCard('ai-agent-foundry-panel', event)">
+            <div class="workspace-card-header" onclick="selectPrimaryServiceTab('ai-agent-foundry-panel', event)">
                 <div>
                     <h3 id="ai-agent-foundry-title" class="workspace-card-title">Agent Application Factory</h3>
                     <p class="workspace-card-subtitle">Discover reusable Azure AI agents, learning orchestrators, and application blueprints.</p>
@@ -3317,9 +3349,11 @@
         <hr class="section-divider">
 
         <div class="workspace-nav" aria-label="Portal workspaces">
-            <a class="workspace-chip workspace-chip-build" href="#build-workspace">Azure Architecture Factory</a>
-            <a class="workspace-chip workspace-chip-build" href="#application-zone-workspace">AI Apps & Agents as a Service</a>
-            <a class="workspace-chip" href="#ai-agent-foundry-panel">Agent Application Factory</a>
+            <div class="service-tabs" role="tablist" aria-label="Primary AI Factory services">
+                <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)">Agent Application Factory</a>
+                <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)">Azure Architecture Factory</a>
+                <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)">AI Apps & Agents as a Service</a>
+            </div>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
@@ -3332,7 +3366,7 @@
             </div>
 
             <section id="build-workspace" class="workspace-card" aria-label="Build workspace">
-                <div class="workspace-card-header" onclick="expandWorkspaceCard('build-workspace', event)">
+                <div class="workspace-card-header" onclick="selectPrimaryServiceTab('build-workspace', event)">
                     <div>
                         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                             <h3 class="workspace-card-title">Azure Architecture Factory</h3>
@@ -3865,7 +3899,7 @@
             </section>
 
             <section id="application-zone-workspace" class="workspace-card" aria-label="AI Apps and Agents as a Service workspace">
-                <div class="workspace-card-header" onclick="expandWorkspaceCard('application-zone-workspace', event)">
+                <div class="workspace-card-header" onclick="selectPrimaryServiceTab('application-zone-workspace', event)">
                     <div>
                         <h3 class="workspace-card-title">AI Apps & Agents as a Service</h3>
                         <p class="workspace-card-subtitle">Build independent app bundles and reusable agent offerings from AAPAAS catalog evidence.</p>
@@ -6694,9 +6728,51 @@
             return false;
         }
 
+        const PRIMARY_SERVICE_CARD_IDS = ['ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
+
+        function setPrimaryServiceTab(cardId, options = {}) {
+            const selectedId = PRIMARY_SERVICE_CARD_IDS.includes(cardId)
+                ? cardId
+                : 'application-zone-workspace';
+            const shouldScroll = options.scroll !== false;
+            const shouldUpdateHash = options.updateHash === true;
+
+            PRIMARY_SERVICE_CARD_IDS.forEach(id => {
+                const card = document.getElementById(id);
+                if (card) {
+                    card.classList.toggle('collapsed', id !== selectedId);
+                }
+            });
+
+            document.querySelectorAll('[data-service-tab]').forEach(tab => {
+                const isActive = tab.getAttribute('data-service-tab') === selectedId;
+                tab.classList.toggle('active', isActive);
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            if (shouldUpdateHash) {
+                history.pushState(null, '', `#${selectedId}`);
+            }
+
+            if (shouldScroll) {
+                document.getElementById(selectedId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return false;
+        }
+
+        function selectPrimaryServiceTab(cardId, event = null) {
+            if (event) {
+                event.preventDefault();
+            }
+            return setPrimaryServiceTab(cardId, { updateHash: true, scroll: true });
+        }
+
         function expandWorkspaceCard(cardId, event = null) {
             if (event) {
                 event.preventDefault();
+            }
+            if (PRIMARY_SERVICE_CARD_IDS.includes(cardId)) {
+                return selectPrimaryServiceTab(cardId, event);
             }
             return toggleWorkspaceCard(cardId, true);
         }
@@ -7160,7 +7236,7 @@
             if (!hash) return;
 
             if (hash === '#intake' || hash === '#modernization' || hash === '#build-workspace') {
-                toggleWorkspaceCard('build-workspace', true);
+                setPrimaryServiceTab('build-workspace', { scroll: true });
                 return;
             }
 
@@ -7175,12 +7251,12 @@
             }
 
             if (hash === '#application-zone-workspace') {
-                toggleWorkspaceCard('application-zone-workspace', true);
+                setPrimaryServiceTab('application-zone-workspace', { scroll: true });
                 return;
             }
 
             if (hash === '#ai-agent-foundry-panel') {
-                toggleWorkspaceCard('ai-agent-foundry-panel', true);
+                setPrimaryServiceTab('ai-agent-foundry-panel', { scroll: true });
                 return;
             }
 
@@ -7788,6 +7864,15 @@
             }
         }
 
+        function initializePrimaryServiceTabs() {
+            const hash = (window.location.hash || '').replace(/^#/, '');
+            if (PRIMARY_SERVICE_CARD_IDS.includes(hash)) {
+                setPrimaryServiceTab(hash, { scroll: false });
+                return;
+            }
+            setPrimaryServiceTab('application-zone-workspace', { scroll: false });
+        }
+
         // Load projects on page load
         document.addEventListener('DOMContentLoaded', () => {
             // Ensure intake starts collapsed on every page load
@@ -7796,6 +7881,7 @@
 
             initHeaderMoreMenu();
             promoteServiceWorkspaces();
+            initializePrimaryServiceTabs();
             syncWorkspaceFromHash();
             loadProjects();
             openAnalysisFromHash();
