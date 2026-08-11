@@ -263,17 +263,22 @@
             gap: 0.5rem;
             align-items: center;
             margin-bottom: 1.1rem;
+            overflow-x: auto;
         }
 
         .service-tabs {
             display: inline-flex;
-            flex-wrap: wrap;
-            gap: 0.45rem;
+            flex-wrap: nowrap;
+            gap: 0.35rem;
+            flex: 0 0 auto;
+            max-width: 100%;
+            overflow-x: auto;
             padding: 0.25rem;
             border: 1px solid #bfd8ee;
             border-radius: 999px;
             background: rgba(243, 249, 255, 0.9);
             box-shadow: 0 8px 18px rgba(19, 50, 74, 0.06);
+            white-space: nowrap;
         }
 
         .workspace-chip {
@@ -293,9 +298,11 @@
         .service-tab {
             border-color: transparent;
             background: transparent;
-            font-size: 0.92rem;
+            flex: 0 0 auto;
+            font-size: 0.84rem;
             font-weight: 800;
-            padding: 0.56rem 1rem;
+            padding: 0.5rem 0.82rem;
+            white-space: nowrap;
         }
 
         .service-tab.active {
