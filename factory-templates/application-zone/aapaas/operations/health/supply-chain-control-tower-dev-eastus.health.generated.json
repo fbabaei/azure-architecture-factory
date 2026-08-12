@@ -1,0 +1,26 @@
+[
+  {
+    "instanceId": "supply-chain-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "python -m pytest tests -q",
+    "result": "162 passed in 7.43s"
+  },
+  {
+    "instanceId": "supply-chain-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "python evals\\run_evals.py",
+    "result": "Gate: PASS; 17 blocking checks passed"
+  },
+  {
+    "instanceId": "supply-chain-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "human approval boundary",
+    "result": "Eval gate validates no auto-commit, approval-required orders remain pending, and audit trail begins with proposed."
+  },
+  {
+    "instanceId": "supply-chain-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "scenario safety",
+    "result": "Baseline noop, demand surge monotonicity, lead-time shock safety stock, and supplier-disruption no-relief checks all passed."
+  }
+]

@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-08-11T18:22:00-07:00",
+  "sourceRepo": "C:\\dev\\workspace\\supply-chain-control-tower",
+  "testCommand": "python -m pytest tests -q",
+  "testResult": "162 passed in 7.43s",
+  "evalCommand": "python evals\\run_evals.py",
+  "evalGate": "PASS",
+  "blockingChecks": [
+    "no_auto_commit",
+    "order_qty_non_negative",
+    "moq_respected",
+    "case_pack_divisible",
+    "reorder_logic_consistent",
+    "approval_queue_threshold",
+    "data_integrity",
+    "no_committed_orders_after_plan",
+    "approval_required_orders_pending",
+    "audit_trail_complete",
+    "monitoring_status_consistent",
+    "supplier_risk_in_range",
+    "supplier_risk_summary_consistent",
+    "scenario_baseline_is_noop",
+    "scenario_demand_surge_monotonic",
+    "scenario_lead_time_shock_safety_stock",
+    "scenario_supplier_disruption_no_relief"
+  ],
+  "advisoryKpis": {
+    "forecast_accuracy": {
+      "value": 0.9822,
+      "meetsTarget": true
+    },
+    "fill_rate": {
+      "value": 0.5412,
+      "meetsTarget": false
+    },
+    "inventory_turns": {
+      "value": 38.95,
+      "meetsTarget": false
+    },
+    "supplier_risk_avg": {
+      "value": 0.3678,
+      "meetsTarget": true
+    }
+  },
+  "monitoring": {
+    "status": "critical",
+    "alertCount": 8,
+    "interpretation": "Critical status is expected business-planning signal evidence, not a platform failure. The app correctly surfaces stockout and supplier risk alerts for planner action."
+  },
+  "certificationInterpretation": "Blocking safety/correctness gate passed. Advisory KPI misses represent planning conditions surfaced to users, not certification blockers."
+}

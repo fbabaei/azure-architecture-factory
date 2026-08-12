@@ -30,5 +30,5 @@ After that, run:
 | Pack | Next action |
 | --- | --- |
 | Compliance Agent | Add/confirm IaC, rollback runbook, Key Vault production mapping, and app-pack eval plan. |
-| Supply Chain Control Tower | Define hosted-agent health/readiness checks and day-2 operations model. |
+| Supply Chain Control Tower | Certified baseline complete; next capture live hosted-agent endpoint evidence after target deployment. |
 | Mailer Automation | Replace ACR admin credentials with managed identity, add smoke tests, rollback, and eval plan. |

@@ -68,7 +68,8 @@ Expected result:
 Explain:
 
 - CaseWright is the reference pack.
-- Compliance Agent, Supply Chain Control Tower, and Mailer Automation are candidates.
+- Compliance Agent and Mailer Automation are candidates.
+- Supply Chain Control Tower is certification-ready with offline/dev readiness evidence and human-approval guardrails.
 - Candidate gaps are tracked in `certification\reports`.
 
 ### 6. Show app-pack export

@@ -1,0 +1,41 @@
+{
+  "apiVersion": "aiapps.service/v1",
+  "kind": "AppInstance",
+  "metadata": {
+    "instanceId": "supply-chain-control-tower-dev-eastus",
+    "packId": "supply-chain-control-tower",
+    "packVersion": "0.1.0",
+    "displayName": "Supply Chain Control Tower dev baseline",
+    "status": "certified-offline-foundry-ready"
+  },
+  "source": {
+    "appPackManifest": "..\\..\\app-packs\\supply-chain-control-tower\\0.1.0\\manifest.json",
+    "sourceRepo": "C:\\dev\\workspace\\supply-chain-control-tower",
+    "azdEnvironment": "dev"
+  },
+  "azure": {
+    "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+    "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+    "resourceGroup": "supply-chain-control-tower-dev",
+    "location": "eastus"
+  },
+  "knownResources": {
+    "foundryHostedAgent": "supply-chain-control-tower",
+    "modelDeployment": "gpt-4.1-mini",
+    "localPortal": "portal/app.py",
+    "offlineCore": "src/supply-chain-control-tower"
+  },
+  "runtime": {
+    "apiBaseUrl": null,
+    "healthStatus": "passed",
+    "notes": "This evidence records the certified offline and Foundry-ready baseline. The source repo defines a Foundry hosted agent in azure.yaml. Offline tests and eval gate passed; production endpoint URL should be captured after the hosted agent is deployed in the target environment."
+  },
+  "operations": {
+    "healthChecks": [
+      "python -m pytest tests -q",
+      "python evals\\run_evals.py"
+    ],
+    "lastEvalReport": "supply-chain-control-tower-eval.generated.json",
+    "nextAction": "Deploy hosted Foundry agent with azd, then capture azd ai agent show/invoke evidence and update apiBaseUrl/runtime endpoint metadata."
+  }
+}
