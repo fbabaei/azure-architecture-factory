@@ -3459,8 +3459,7 @@
                             <button type="button" onclick="return zoomPortalNavigationGuide(0.1)">Zoom in</button>
                             <button type="button" onclick="return resetPortalNavigationGuideZoom()">Reset</button>
                         </div>
-                        <div class="portal-navigation-diagram mermaid" aria-label="Portal navigation Mermaid diagram">
-flowchart TD
+                        <pre id="portal-navigation-mermaid-source" hidden>flowchart TD
     Start["Open AI Factory Services Portal"]
     Tabs["Choose one top service tab"]
     Start --> Tabs
@@ -3506,7 +3505,9 @@ flowchart TD
     RT --> CH
     RT --> EVID
     CH --> Done
-    EVID --> Done
+    EVID --> Done</pre>
+                        <div class="portal-navigation-diagram" aria-label="Portal navigation Mermaid diagram">
+                            Rendering User Map...
                         </div>
                     </div>
                 </div>
@@ -7119,15 +7120,23 @@ flowchart TD
                 label.textContent = `${Math.round(portalNavigationZoom * 100)}%`;
             }
             if (!svg) return;
-            svg.style.transform = `scale(${portalNavigationZoom})`;
-            svg.style.transformOrigin = 'top left';
-            const baseWidth = Number(svg.dataset.baseWidth || svg.getBoundingClientRect().width / portalNavigationZoom || 0);
-            const baseHeight = Number(svg.dataset.baseHeight || svg.getBoundingClientRect().height / portalNavigationZoom || 0);
+            const viewBox = svg.viewBox?.baseVal;
+            const viewBoxWidth = Number(viewBox?.width || 0);
+            const viewBoxHeight = Number(viewBox?.height || 0);
+            const renderedWidth = Number(svg.getBoundingClientRect().width || 0);
+            const renderedHeight = Number(svg.getBoundingClientRect().height || 0);
+            const baseWidth = Number(svg.dataset.baseWidth || Math.max(1500, viewBoxWidth, renderedWidth / portalNavigationZoom || 0));
+            const aspectRatio = viewBoxWidth && viewBoxHeight
+                ? viewBoxHeight / viewBoxWidth
+                : (renderedWidth ? renderedHeight / renderedWidth : 0.45);
+            const baseHeight = Number(svg.dataset.baseHeight || Math.max(520, Math.round(baseWidth * aspectRatio)));
             if (baseWidth && baseHeight) {
                 svg.dataset.baseWidth = String(baseWidth);
                 svg.dataset.baseHeight = String(baseHeight);
-                svg.style.width = `${baseWidth}px`;
-                svg.style.height = `${baseHeight}px`;
+                svg.style.maxWidth = 'none';
+                svg.style.transform = 'none';
+                svg.style.width = `${Math.ceil(baseWidth * portalNavigationZoom)}px`;
+                svg.style.height = `${Math.ceil(baseHeight * portalNavigationZoom)}px`;
                 diagram.style.minWidth = `${Math.ceil(baseWidth * portalNavigationZoom) + 32}px`;
                 diagram.style.minHeight = `${Math.ceil(baseHeight * portalNavigationZoom) + 32}px`;
             }
@@ -7146,9 +7155,10 @@ flowchart TD
         }
 
         function renderPortalNavigationGuide() {
-            const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram.mermaid');
+            const source = document.getElementById('portal-navigation-mermaid-source');
+            const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram');
             if (!diagram || typeof mermaid === 'undefined') return;
-            if (diagram.dataset.processed) {
+            if (diagram.dataset.rendered === 'true') {
                 applyPortalNavigationGuideZoom();
                 return;
             }
@@ -7156,8 +7166,17 @@ flowchart TD
                 mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' });
                 portalNavigationMermaidInitialized = true;
             }
-            mermaid.run({ nodes: [diagram] })
-                .then(() => applyPortalNavigationGuideZoom())
+            const mermaidSource = source?.textContent?.trim();
+            if (!mermaidSource) {
+                diagram.textContent = 'User Map diagram source is unavailable.';
+                return;
+            }
+            mermaid.render(`portal-navigation-mermaid-${Date.now()}`, mermaidSource)
+                .then(result => {
+                    diagram.innerHTML = result.svg;
+                    diagram.dataset.rendered = 'true';
+                    requestAnimationFrame(() => applyPortalNavigationGuideZoom());
+                })
                 .catch(error => {
                     diagram.textContent = `Mermaid render failed: ${error.message || error}`;
                 });
