@@ -3232,32 +3232,52 @@
                     </div>
                     <div class="portal-navigation-diagram mermaid" aria-label="Portal navigation Mermaid diagram">
 flowchart TD
-    Start([Open AI Factory Services Portal])
-    Start --&gt; Tabs{Choose a primary service tab}
+    Start["Open AI Factory Services Portal"]
+    Tabs["Choose one top service tab"]
+    Start --> Tabs
 
-    Tabs --&gt; AAF[Azure Architecture Factory]
-    Tabs --&gt; AAFac[Agent Application Factory]
-    Tabs --&gt; AAPAAS[AI Apps &amp; Agents as a Service]
+    AAF["Azure Architecture Factory"]
+    AAFac["Agent Application Factory"]
+    AAPAAS["AI Apps and Agents as a Service"]
+    Tabs --> AAF
+    Tabs --> AAFac
+    Tabs --> AAPAAS
 
-    AAF --&gt; AAF1[Submit Business Requirements]
-    AAF1 --&gt; AAF2[Generate architecture project]
-    AAF2 --&gt; AAF3[Review docs, code, diagrams, Bicep]
+    AAF1["Submit business requirements"]
+    AAF2["Generate architecture project"]
+    AAF3["Review docs, code, diagrams, and Bicep"]
+    AAF --> AAF1
+    AAF1 --> AAF2
+    AAF2 --> AAF3
 
-    AAFac --&gt; AF1[Open Agent Browser]
-    AF1 --&gt; AF2[Choose reusable agent pattern]
-    AF2 --&gt; AF3[Create plan with Agent Assistant]
+    AF1["Open Agent Browser"]
+    AF2["Choose reusable agent pattern"]
+    AF3["Create plan with Agent Assistant"]
+    AAFac --> AF1
+    AF1 --> AF2
+    AF2 --> AF3
 
-    AAPAAS --&gt; AP1[Review App Pack and Agent Pack catalog]
-    AP1 --&gt; AP2[Review certification and runtime evidence]
-    AP2 --&gt; QL[Use Quick Launch]
-    QL --&gt; V[Validate Inputs]
-    V --&gt; CI[Create runtime workspace]
-    CI --&gt; LA[Load available agents]
-    LA --&gt; RT{Connect live runtime?}
-    RT --&gt;|Yes| CH[Check Health and run sample query]
-    RT --&gt;|No| EVID[Use evidence for readiness review]
-    CH --&gt; Done([Validated app or agent offering])
-    EVID --&gt; Done
+    AP1["Review App Pack and Agent Pack catalog"]
+    AP2["Review certification and runtime evidence"]
+    QL["Use Quick Launch"]
+    V["Validate inputs"]
+    CI["Create runtime workspace"]
+    LA["Load available agents"]
+    RT["Connect live runtime if available"]
+    CH["Check health and run sample query"]
+    EVID["Use evidence for readiness review"]
+    Done["Validated app or agent offering"]
+    AAPAAS --> AP1
+    AP1 --> AP2
+    AP2 --> QL
+    QL --> V
+    V --> CI
+    CI --> LA
+    LA --> RT
+    RT --> CH
+    RT --> EVID
+    CH --> Done
+    EVID --> Done
                     </div>
                 </div>
             </div>
