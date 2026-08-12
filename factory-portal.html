@@ -290,7 +290,7 @@
             border-radius: 14px;
         }
 
-        .workspace-nav.service-tab-row > .workspace-chip:not(.service-tab) {
+        .workspace-nav.service-tab-row > .workspace-chip:not(.service-tab):not(.user-map-helper) {
             display: none;
         }
 
@@ -415,6 +415,83 @@
         .service-tab:not(.active):hover {
             background: #e8f2ff;
             border-color: #8eb8de;
+        }
+
+        .user-map-helper {
+            border-color: #a9c9e6;
+            background: #ffffff;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .user-map-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            background: rgba(8, 31, 48, 0.58);
+        }
+
+        .user-map-modal[hidden] {
+            display: none;
+        }
+
+        .user-map-modal-dialog {
+            width: min(1120px, 96vw);
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #b7d5ef;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 28px 70px rgba(8, 31, 48, 0.32);
+        }
+
+        .user-map-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem;
+            border-bottom: 1px solid #d6e5f3;
+            background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+        }
+
+        .user-map-modal-title {
+            margin: 0;
+            color: #124267;
+            font-size: 1.35rem;
+            font-weight: 850;
+        }
+
+        .user-map-modal-subtitle {
+            margin: 0.25rem 0 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .user-map-modal-close {
+            border: 1px solid #9cc1e2;
+            background: #ffffff;
+            color: #124267;
+            border-radius: 999px;
+            padding: 0.34rem 0.8rem;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .user-map-modal-body {
+            padding: 1rem 1.15rem 1.15rem;
+            overflow: auto;
+        }
+
+        body.user-map-modal-open {
+            overflow: hidden;
         }
 
         .workspace-chip:hover {
@@ -3356,15 +3433,16 @@
             </div>
         </section>
 
-        <section id="user-map-panel" class="workspace-card primary-service-card collapsed" aria-label="User Map">
-            <div class="workspace-card-header" onclick="selectPrimaryServiceTab('user-map-panel', event)">
-                <div>
-                    <h3 class="workspace-card-title">User Map</h3>
-                    <p class="workspace-card-subtitle">A guided map for choosing the right AI Factory service and next action.</p>
+        <div id="user-map-panel" class="user-map-modal" role="dialog" aria-modal="true" aria-labelledby="user-map-title" hidden onclick="closeUserMapModal(event)">
+            <div class="user-map-modal-dialog" onclick="event.stopPropagation()">
+                <div class="user-map-modal-header">
+                    <div>
+                        <h3 id="user-map-title" class="user-map-modal-title">User Map</h3>
+                        <p class="user-map-modal-subtitle">A guided map for choosing the right AI Factory service and next action.</p>
+                    </div>
+                    <button type="button" class="user-map-modal-close" onclick="return closeUserMapModal(event)">Close</button>
                 </div>
-                <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('user-map-panel', event)">Hide</button>
-            </div>
-            <div class="workspace-card-body">
+                <div class="user-map-modal-body">
                 <div class="portal-navigation-guide-body">
                     <div>
                         <p>Use the service tabs like browser tabs. Selecting one tab opens that service and hides the others.</p>
@@ -3432,8 +3510,10 @@ flowchart TD
                         </div>
                     </div>
                 </div>
+
+                </div>
             </div>
-        </section>
+        </div>
 
         <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card primary-service-card collapsed" aria-labelledby="ai-agent-foundry-title">
             <div class="workspace-card-header" onclick="selectPrimaryServiceTab('ai-agent-foundry-panel', event)">
@@ -3646,11 +3726,11 @@ flowchart TD
 
         <div class="workspace-nav" aria-label="Portal workspaces">
             <div class="service-tabs" role="tablist" aria-label="Primary AI Factory services">
-                <a class="workspace-chip service-tab" data-service-tab="user-map-panel" href="#user-map-panel" role="tab" aria-controls="user-map-panel" onclick="return selectPrimaryServiceTab('user-map-panel', event)"><span class="service-tab-icon" aria-hidden="true">🗺️</span>User Map</a>
                 <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)"><span class="service-tab-icon" aria-hidden="true">🤖</span>Agent Application Factory</a>
                 <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)"><span class="service-tab-icon" aria-hidden="true">🏗️</span>Azure Architecture Factory</a>
                 <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)"><span class="service-tab-icon" aria-hidden="true">📦</span>AI Apps & Agents as a Service</a>
             </div>
+            <button type="button" class="workspace-chip user-map-helper" onclick="return openUserMapModal(event)" aria-haspopup="dialog" aria-controls="user-map-panel"><span class="service-tab-icon" aria-hidden="true">🗺️</span>User Map</button>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
@@ -7026,9 +7106,10 @@ flowchart TD
             return false;
         }
 
-        const PRIMARY_SERVICE_CARD_IDS = ['user-map-panel', 'ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
+        const PRIMARY_SERVICE_CARD_IDS = ['ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
         let portalNavigationMermaidInitialized = false;
         let portalNavigationZoom = 1;
+        let userMapReturnFocus = null;
 
         function applyPortalNavigationGuideZoom() {
             const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram');
@@ -7082,12 +7163,54 @@ flowchart TD
                 });
         }
 
+        function openUserMapModal(event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('user-map-panel');
+            if (!modal) return false;
+            userMapReturnFocus = event?.currentTarget instanceof HTMLElement
+                ? event.currentTarget
+                : document.activeElement;
+            modal.hidden = false;
+            document.body.classList.add('user-map-modal-open');
+            history.pushState(null, '', '#user-map-panel');
+            renderPortalNavigationGuide();
+            modal.querySelector('.user-map-modal-close')?.focus();
+            return false;
+        }
+
+        function closeUserMapModal(event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('user-map-panel');
+            if (!modal) return false;
+            modal.hidden = true;
+            document.body.classList.remove('user-map-modal-open');
+            const activeTab = document.querySelector('[data-service-tab].active')?.getAttribute('data-service-tab') || 'application-zone-workspace';
+            if (window.location.hash === '#user-map-panel') {
+                history.pushState(null, '', `#${activeTab}`);
+            }
+            if (userMapReturnFocus && typeof userMapReturnFocus.focus === 'function') {
+                userMapReturnFocus.focus();
+            }
+            return false;
+        }
+
         function setPrimaryServiceTab(cardId, options = {}) {
             const selectedId = PRIMARY_SERVICE_CARD_IDS.includes(cardId)
                 ? cardId
                 : 'application-zone-workspace';
             const shouldScroll = options.scroll !== false;
             const shouldUpdateHash = options.updateHash === true;
+            const userMapModal = document.getElementById('user-map-panel');
+            if (userMapModal && !userMapModal.hidden) {
+                userMapModal.hidden = true;
+                document.body.classList.remove('user-map-modal-open');
+            }
 
             PRIMARY_SERVICE_CARD_IDS.forEach(id => {
                 const card = document.getElementById(id);
@@ -7104,10 +7227,6 @@ flowchart TD
 
             if (shouldUpdateHash) {
                 history.pushState(null, '', `#${selectedId}`);
-            }
-
-            if (selectedId === 'user-map-panel') {
-                renderPortalNavigationGuide();
             }
 
             if (shouldScroll) {
@@ -7607,7 +7726,7 @@ flowchart TD
             }
 
             if (hash === '#user-map-panel') {
-                setPrimaryServiceTab('user-map-panel', { scroll: true });
+                openUserMapModal();
                 return;
             }
 
@@ -8263,6 +8382,14 @@ flowchart TD
             initHeaderMoreMenu();
             promoteServiceWorkspaces();
             initializePrimaryServiceTabs();
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    const modal = document.getElementById('user-map-panel');
+                    if (modal && !modal.hidden) {
+                        closeUserMapModal(event);
+                    }
+                }
+            });
             syncWorkspaceFromHash();
             loadProjects();
             openAnalysisFromHash();
