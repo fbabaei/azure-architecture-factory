@@ -7602,6 +7602,16 @@ flowchart TD
             };
         }
 
+        function renderAppZoneDocumentationLinks(links) {
+            const docs = Array.isArray(links) ? links.filter(link => link && link.href) : [];
+            if (!docs.length) return '';
+            const anchors = docs.map(link => {
+                const label = link.label || 'Docs';
+                return `<a href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+            }).join('');
+            return `<div class="appzone-doc-links" onclick="event.stopPropagation()" aria-label="Documentation links">${anchors}</div>`;
+        }
+
         async function refreshAppZoneCatalog(showToast = false) {
             const statusEl = document.getElementById('appzone-catalog-status');
             const listEl = document.getElementById('appzone-catalog-list');
@@ -7657,6 +7667,7 @@ flowchart TD
                             <div class="appzone-meta">Source: ${escapeHtml(pack.source || 'aaf')} · Instances: ${escapeHtml(String(instances))} · Warnings: ${escapeHtml(String(pack.certificationWarnings ?? 0))}</div>
                             <div class="appzone-meta">Regions: ${escapeHtml((pack.supportedRegions || []).join(', '))}</div>
                             <div class="appzone-meta">Required inputs: ${escapeHtml(String(pack.requiredInputCount ?? 0))}</div>
+                            ${renderAppZoneDocumentationLinks(pack.documentationLinks)}
                         </div>
                     `;
                     }).join('');
@@ -7678,6 +7689,7 @@ flowchart TD
                                     <div class="appzone-meta">Canonical source: ${escapeHtml(agentPack.canonicalSource || 'casewright')} · Parent App Pack: ${escapeHtml(agentPack.parentAppPackId || '-')} · Tools: ${escapeHtml(String(agentPack.toolCount ?? 0))}</div>
                                     <div class="appzone-meta">Capabilities: ${escapeHtml(capabilities || '-')}</div>
                                     <div class="appzone-meta">Required evidence: ${escapeHtml(evidence || '-')}</div>
+                                    ${renderAppZoneDocumentationLinks(agentPack.documentationLinks)}
                                 </div>
                             `;
                         }).join('');
@@ -9468,6 +9480,29 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
         .appzone-meta {
             font-size: 0.74rem;
             color: #4b6478;
+        }
+
+        .appzone-doc-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.35rem;
+        }
+
+        .appzone-doc-links a {
+            border-radius: 999px;
+            background: #e7f1fb;
+            color: #005a9e;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.12rem 0.45rem;
+            text-decoration: none;
+        }
+
+        .appzone-doc-links a:hover,
+        .appzone-doc-links a:focus {
+            background: #d0e7fb;
+            text-decoration: underline;
         }
 
         .appzone-kpi-row {

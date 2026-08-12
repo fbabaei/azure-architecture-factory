@@ -213,6 +213,115 @@ def _portal_agent_pack_key(agent_pack_id: str, version: str) -> str:
     return f"{agent_pack_id}:{version}"
 
 
+def _portal_factory_template_url(path: pathlib.Path) -> str | None:
+    templates_root = (FACTORY_REPO_ROOT / "factory-templates").resolve()
+    try:
+        resolved = path.resolve()
+        relative = resolved.relative_to(templates_root)
+    except (OSError, ValueError):
+        return None
+    if not resolved.is_file():
+        return None
+    return f"/factory-templates/{relative.as_posix()}"
+
+
+def _portal_add_documentation_link(links: list[dict], label: str, path: pathlib.Path) -> None:
+    href = _portal_factory_template_url(path)
+    if not href or any(item.get("href") == href for item in links):
+        return
+    links.append({"label": label, "href": href})
+
+
+def _portal_documentation_path_candidates(value: str, manifest_path: pathlib.Path) -> list[pathlib.Path]:
+    normalized = value.strip().replace("\\", "/").lstrip("/")
+    if not normalized or "://" in normalized:
+        return []
+    candidates: list[pathlib.Path] = []
+    if normalized.startswith("factory-templates/"):
+        candidates.append(FACTORY_REPO_ROOT / normalized)
+    else:
+        candidates.extend([
+            manifest_path.parent / normalized,
+            FACTORY_REPO_ROOT / normalized,
+        ])
+    return candidates
+
+
+def _portal_collect_manifest_documentation_links(manifest: dict, manifest_path: pathlib.Path) -> list[dict]:
+    links: list[dict] = []
+
+    def visit(value):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "documentation":
+                    docs = child if isinstance(child, list) else [child]
+                    for doc in docs:
+                        if not isinstance(doc, str):
+                            continue
+                        for candidate in _portal_documentation_path_candidates(doc, manifest_path):
+                            if candidate.is_file():
+                                _portal_add_documentation_link(links, "Docs", candidate)
+                                break
+                else:
+                    visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(manifest)
+    return links
+
+
+def _portal_app_pack_documentation_links(pack: dict, certification: dict) -> list[dict]:
+    links: list[dict] = []
+    manifest_path = pathlib.Path((pack.get("_portal") or {}).get("manifestPath", ""))
+    if manifest_path:
+        _portal_add_documentation_link(links, "Manifest", manifest_path)
+        links.extend(_portal_collect_manifest_documentation_links(pack, manifest_path))
+
+    pack_id = (pack.get("metadata") or {}).get("packId")
+    report_name = certification.get("ReportPath") or (f"{pack_id}-certification.md" if pack_id else "")
+    if report_name:
+        _portal_add_documentation_link(
+            links,
+            "Certification",
+            AAPAAS_ROOT / "certification" / "reports" / str(report_name),
+        )
+    return links
+
+
+def _portal_agent_pack_documentation_links(agent_pack: dict) -> list[dict]:
+    links: list[dict] = []
+    manifest_path = pathlib.Path((agent_pack.get("_portal") or {}).get("manifestPath", ""))
+    if manifest_path:
+        _portal_add_documentation_link(links, "AgentPack manifest", manifest_path)
+
+    metadata = agent_pack.get("metadata") or {}
+    agent_pack_id = metadata.get("agentPackId")
+    if agent_pack_id:
+        _portal_add_documentation_link(
+            links,
+            "Certification",
+            AAPAAS_ROOT / "certification" / "reports" / f"{agent_pack_id}-certification.md",
+        )
+
+    parent_pack_id = metadata.get("parentAppPackId")
+    parent_version = metadata.get("parentAppPackVersion") or metadata.get("version")
+    if parent_pack_id:
+        parent_manifest = AAPAAS_APP_PACKS_DIR / str(parent_pack_id) / str(parent_version) / "manifest.json"
+        if not parent_manifest.is_file():
+            parent_manifest = AAPAAS_APP_PACKS_DIR / str(parent_pack_id) / "1.0.0" / "manifest.json"
+        _portal_add_documentation_link(links, "Parent manifest", parent_manifest)
+        _portal_add_documentation_link(
+            links,
+            "Parent certification",
+            AAPAAS_ROOT / "certification" / "reports" / f"{parent_pack_id}-certification.md",
+        )
+
+    _portal_add_documentation_link(links, "AgentPack schema", AAPAAS_ROOT / "docs" / "AGENTPACK_SCHEMA.md")
+    return links
+
+
 def _portal_load_app_packs() -> dict:
     registry: dict = {}
     roots = (
@@ -360,6 +469,7 @@ def _portal_build_pack_catalog() -> list:
             "supportedRegions": compatibility.get("supportedRegions", []),
             "requiredInputCount": len(inputs.get("required", [])),
             "requiredServices": compatibility.get("requiredServices", []),
+            "documentationLinks": _portal_app_pack_documentation_links(latest, certification),
             "versions": [(item.get("metadata") or {}).get("version") for item in versions],
         })
     catalog.sort(key=lambda item: item.get("packId", ""))
@@ -400,6 +510,7 @@ def _portal_build_agent_pack_catalog() -> list:
             "dataBoundary": governance.get("dataBoundary", ""),
             "certificationStatus": governance.get("certificationStatus"),
             "requiredEvidence": governance.get("requiredEvidence", []),
+            "documentationLinks": _portal_agent_pack_documentation_links(latest),
             "versions": [(item.get("metadata") or {}).get("version") for item in versions],
         })
     catalog.sort(key=lambda item: item.get("agentPackId", ""))

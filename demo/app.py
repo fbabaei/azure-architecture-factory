@@ -119,6 +119,112 @@ def _agent_pack_key(agent_pack_id: str, version: str) -> str:
     return f"{agent_pack_id}:{version}"
 
 
+def _factory_template_url(path: Path) -> str | None:
+    templates_root = (REPO_ROOT / "factory-templates").resolve()
+    try:
+        resolved = path.resolve()
+        relative = resolved.relative_to(templates_root)
+    except (OSError, ValueError):
+        return None
+    if not resolved.is_file():
+        return None
+    return f"/factory-templates/{relative.as_posix()}"
+
+
+def _add_documentation_link(links: list[dict], label: str, path: Path) -> None:
+    href = _factory_template_url(path)
+    if not href or any(item.get("href") == href for item in links):
+        return
+    links.append({"label": label, "href": href})
+
+
+def _documentation_path_candidates(value: str, manifest_path: Path) -> list[Path]:
+    normalized = value.strip().replace("\\", "/").lstrip("/")
+    if not normalized or "://" in normalized:
+        return []
+    if normalized.startswith("factory-templates/"):
+        return [REPO_ROOT / normalized]
+    return [
+        manifest_path.parent / normalized,
+        REPO_ROOT / normalized,
+    ]
+
+
+def _collect_manifest_documentation_links(manifest: dict, manifest_path: Path) -> list[dict]:
+    links: list[dict] = []
+
+    def visit(value):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "documentation":
+                    docs = child if isinstance(child, list) else [child]
+                    for doc in docs:
+                        if not isinstance(doc, str):
+                            continue
+                        for candidate in _documentation_path_candidates(doc, manifest_path):
+                            if candidate.is_file():
+                                _add_documentation_link(links, "Docs", candidate)
+                                break
+                else:
+                    visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(manifest)
+    return links
+
+
+def _app_pack_documentation_links(pack: dict, certification: dict) -> list[dict]:
+    links: list[dict] = []
+    manifest_path = Path(pack.get("_portal", {}).get("manifestPath", ""))
+    if manifest_path:
+        _add_documentation_link(links, "Manifest", manifest_path)
+        links.extend(_collect_manifest_documentation_links(pack, manifest_path))
+
+    pack_id = pack.get("metadata", {}).get("packId")
+    report_name = certification.get("ReportPath") or (f"{pack_id}-certification.md" if pack_id else "")
+    if report_name:
+        _add_documentation_link(
+            links,
+            "Certification",
+            AAPAAS_ROOT / "certification" / "reports" / str(report_name),
+        )
+    return links
+
+
+def _agent_pack_documentation_links(agent_pack: dict) -> list[dict]:
+    links: list[dict] = []
+    manifest_path = Path(agent_pack.get("_portal", {}).get("manifestPath", ""))
+    if manifest_path:
+        _add_documentation_link(links, "AgentPack manifest", manifest_path)
+
+    metadata = agent_pack.get("metadata", {})
+    agent_pack_id = metadata.get("agentPackId")
+    if agent_pack_id:
+        _add_documentation_link(
+            links,
+            "Certification",
+            AAPAAS_ROOT / "certification" / "reports" / f"{agent_pack_id}-certification.md",
+        )
+
+    parent_pack_id = metadata.get("parentAppPackId")
+    parent_version = metadata.get("parentAppPackVersion") or metadata.get("version")
+    if parent_pack_id:
+        parent_manifest = AAPAAS_APP_PACKS_DIR / str(parent_pack_id) / str(parent_version) / "manifest.json"
+        if not parent_manifest.is_file():
+            parent_manifest = AAPAAS_APP_PACKS_DIR / str(parent_pack_id) / "1.0.0" / "manifest.json"
+        _add_documentation_link(links, "Parent manifest", parent_manifest)
+        _add_documentation_link(
+            links,
+            "Parent certification",
+            AAPAAS_ROOT / "certification" / "reports" / f"{parent_pack_id}-certification.md",
+        )
+
+    _add_documentation_link(links, "AgentPack schema", AAPAAS_ROOT / "docs" / "AGENTPACK_SCHEMA.md")
+    return links
+
+
 def _load_app_packs() -> dict[str, dict]:
     registry: dict[str, dict] = {}
 
@@ -296,6 +402,7 @@ def _build_pack_catalog() -> list[dict]:
             "supportedRegions": latest.get("compatibility", {}).get("supportedRegions", []),
             "requiredInputCount": len(required_inputs),
             "requiredServices": latest.get("compatibility", {}).get("requiredServices", []),
+            "documentationLinks": _app_pack_documentation_links(latest, certification),
             "versions": [v.get("metadata", {}).get("version") for v in versions],
         })
 
@@ -338,6 +445,7 @@ def _build_agent_pack_catalog() -> list[dict]:
             "dataBoundary": governance.get("dataBoundary", ""),
             "certificationStatus": governance.get("certificationStatus"),
             "requiredEvidence": governance.get("requiredEvidence", []),
+            "documentationLinks": _agent_pack_documentation_links(latest),
             "versions": [v.get("metadata", {}).get("version") for v in versions],
         })
 
@@ -1177,6 +1285,12 @@ def serve_repo_assets(asset_path):
 def serve_repo_docs(doc_path):
     """Serve root-level docs used by the deployed-style portal previews."""
     return send_from_directory(REPO_ROOT / "docs", doc_path)
+
+
+@app.route('/factory-templates/<path:template_path>')
+def serve_factory_template(template_path):
+    """Serve factory template evidence linked from the local catalog preview."""
+    return send_from_directory(REPO_ROOT / "factory-templates", template_path)
 
 
 @app.route('/factory-projects.generated.json')
