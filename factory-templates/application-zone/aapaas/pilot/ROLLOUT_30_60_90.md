@@ -11,7 +11,7 @@
 ## Days 31-60: Candidate pack promotion
 
 1. Close Compliance Agent certification gaps.
-2. Close Supply Chain Control Tower health/readiness gaps.
+2. Use the certified Supply Chain Control Tower baseline for planner-facing demos, then capture live hosted-agent endpoint evidence after target deployment.
 3. Close Mailer Automation security and rollback gaps.
 4. Promote at least one candidate pack to preview.
 5. Add portal or lightweight UI for catalog browsing and instance inventory.

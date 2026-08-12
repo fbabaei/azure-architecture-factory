@@ -6,8 +6,8 @@
     "displayName": "Supply Chain Control Tower",
     "version": "0.1.0",
     "owner": "ai-apps-service-core",
-    "supportTier": "candidate",
-    "status": "candidate"
+    "supportTier": "standard",
+    "status": "preview"
   },
   "compatibility": {
     "minimumAAFVersion": "0.9.0",
@@ -84,7 +84,10 @@
   },
   "operations": {
     "healthChecks": [
-      "/health"
+      "python -m pytest tests -q",
+      "python evals/run_evals.py",
+      "azd ai agent show (post-deploy)",
+      "azd ai agent invoke (post-deploy)"
     ],
     "sloTargets": {
       "availability": "99.5%",
@@ -95,6 +98,111 @@
     "upgradeStrategy": "precheck-then-roll",
     "rollbackSupported": true
   },
+  "agents": [
+    {
+      "agentId": "supply-chain-control-tower-agent",
+      "displayName": "Supply Chain Control Tower Agent",
+      "description": "Hosted Foundry control-tower orchestrator for demand, supply, inventory, supplier risk, KPI monitoring, approvals, and what-if scenarios.",
+      "category": "planning",
+      "useCases": [
+        "Daily planning review",
+        "Exception management",
+        "Human-governed replenishment",
+        "Supplier-risk triage",
+        "Read-only scenario planning",
+        "ERP-agnostic pilot adoption"
+      ],
+      "endpoints": {
+        "responses": "Foundry Responses API"
+      },
+      "methods": {
+        "responses": "POST"
+      },
+      "tools": [
+        "route_request",
+        "describe_active_profile",
+        "list_planning_profiles",
+        "forecast_demand_tool",
+        "plan_supply_tool",
+        "evaluate_inventory_tool",
+        "supplier_risk_tool",
+        "supplier_risk_report",
+        "run_control_tower_plan",
+        "list_approval_queue",
+        "approve_order_tool",
+        "reject_order_tool",
+        "commit_order_tool",
+        "order_audit_trail",
+        "kpi_monitoring_report",
+        "list_scenarios",
+        "simulate_scenario_tool"
+      ],
+      "capabilities": [
+        "demand-forecasting",
+        "replenishment-planning",
+        "inventory-health",
+        "supplier-risk-scoring",
+        "kpi-monitoring",
+        "human-approval-workflow",
+        "audit-trail",
+        "read-only-scenario-planning",
+        "erp-adapter-read-model"
+      ],
+      "samplePayload": {
+        "message": "Run the control tower plan and flag anything needing approval."
+      }
+    }
+  ],
+  "services": [
+    {
+      "serviceId": "deterministic-planning-core",
+      "displayName": "Deterministic Planning Core",
+      "description": "Demand forecast, replenishment, inventory health, supplier risk, KPI monitoring, and scenario math remain deterministic and testable.",
+      "category": "planning",
+      "relatedAgents": [
+        "supply-chain-control-tower-agent"
+      ]
+    },
+    {
+      "serviceId": "human-approval-workflow",
+      "displayName": "Human Approval Workflow",
+      "description": "Material orders are proposed and audited, but not automatically committed; every approval, rejection, and commit is attributed to a named human.",
+      "category": "governance",
+      "relatedAgents": [
+        "supply-chain-control-tower-agent"
+      ]
+    },
+    {
+      "serviceId": "erp-read-model",
+      "displayName": "ERP Read Model",
+      "description": "Configurable read-only adapters for mock, CSV, SAP, Oracle, Dynamics 365, NetSuite, and generic REST/OData sources.",
+      "category": "integration",
+      "relatedAgents": [
+        "supply-chain-control-tower-agent"
+      ]
+    }
+  ],
+  "channels": [
+    {
+      "channelId": "foundry-responses",
+      "displayName": "Foundry Responses API",
+      "description": "Hosted agent channel for guided planning conversations and tool execution.",
+      "type": "foundry-hosted-agent",
+      "connectedAgents": [
+        "supply-chain-control-tower-agent"
+      ]
+    },
+    {
+      "channelId": "local-browser-portal",
+      "displayName": "Local Browser Portal",
+      "description": "Zero-dependency planning portal for offline demos, UAT, approval workflow, and scenario review.",
+      "type": "web-local",
+      "location": "portal/app.py",
+      "connectedAgents": [
+        "supply-chain-control-tower-agent"
+      ]
+    }
+  ],
   "packaging": {
     "executionModel": "independent",
     "sourceProjectSlug": "supply-chain-control-tower",

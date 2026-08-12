@@ -51,15 +51,9 @@
     "Version": "0.1.0",
     "Manifest": "C:\\dev\\workspace\\ai-apps-as-a-service\\app-packs\\supply-chain-control-tower\\0.1.0\\manifest.json",
     "SourceProjectPath": "C:\\dev\\workspace\\supply-chain-control-tower",
-    "Status": "candidate-with-gaps",
+    "Status": "certification-ready",
     "Blockers": 0,
-    "Warnings": 1,
-    "Findings": [
-      {
-        "Severity": "warning",
-        "Area": "certification",
-        "Finding": "Pack is still marked candidate; review the markdown certification report before promotion."
-      }
-    ]
+    "Warnings": 0,
+    "Findings": []
   }
 ]
