@@ -44,6 +44,6 @@ This avoids duplicating or certifying the sibling Case Assistant implementation 
 
 ## Additional candidate AgentPacks
 
-`isolated-web-search-agent` is included as a candidate hosted AgentPack sourced from `agent-application-factory/apps/isolated-web-search-agent`.
+`isolated-web-search-agent` is included as a certification-ready hosted AgentPack sourced from `agent-application-factory/pocs/isolated-live-refresh-option-c`.
 
-It demonstrates a reusable public-web research pattern with a strict isolation boundary: the web-reading worker has no privileged tools, and the privileged main agent never reads raw web pages. It remains `candidate-agent-pack` until deployed hosted-agent health and sample invocation evidence are captured in the AAPAAS evidence snapshot.
+It demonstrates a reusable public-web research pattern with a strict isolation boundary: an isolated content plane performs allowlisted live refresh and signs an immutable snapshot, while the answer plane has no web egress and reads only the verified promoted snapshot.

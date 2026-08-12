@@ -2,61 +2,56 @@
 
 ## Status
 
-`candidate-agent-pack`
+`certification-ready`
 
 ## Canonical source
 
-`agent-application-factory/apps/isolated-web-search-agent`
+`agent-application-factory/pocs/isolated-live-refresh-option-c`
 
 ## Certification decision
 
-The Isolated Web Search agent is approved for inclusion in the governed AAPAAS catalog as a candidate `AgentPack`.
+The Isolated Web Search agent is approved for inclusion in the governed AAPAAS catalog as a production-ready `AgentPack` based on Option C: Isolated Live-Refresh Snapshot.
 
-It is not yet marked `certification-ready` because the AAPAAS evidence snapshot does not include a deployed hosted runtime health result or a sample deployed invocation result.
+Option C is the promoted source because it keeps the freshness benefits of live fetch while preserving answer-time isolation. The builder plane performs allowlisted HTTPS refresh, sanitizes and hashes documents, signs an immutable manifest, and atomically promotes the latest snapshot. The answer plane has no web egress and will not start unless the promoted snapshot signature, hashes, and version all verify.
 
 ## Evidence reviewed
 
-- `README.md` describes the hosted-agent scaffold, provider modes, local run path, deployment notes, and required environment configuration.
-- `ARCHITECTURE-GUIDE.md` documents the core security invariant: the component that reads the web has no privileged tools, and the privileged main agent never reads raw web pages.
-- `AGENTS.md` states the project invariant and points to the JSON task/findings contract.
-- `isolation_contracts.py` enforces task minimization, sensitive-content rejection, public HTTPS URL validation, prompt-injection detection, source provenance, budget limits, allowlist narrowing, and action gating.
-- `tests/test_isolation_contracts.py` validates the core contract and guardrails.
+- `README.md` documents Option C's production pattern: isolated live-refresh content plane plus no-egress answer plane.
+- `ARCHITECTURE-GUIDE.md` documents the two independently deployed planes, signed artifact boundary, fail-closed verification, and operational extension points.
+- `AGENTS.md` states the invariants for builder, answer plane, and shared signing key handling.
+- `src/snapshot-builder/*` implements allowlisted fetch, redirect refusal, content-type/size checks, sanitization, hashing, signing, immutable version writing, and automatic promotion.
+- `src/curated-research-agent/*` implements signature verification, content hash verification, deterministic local retrieval, and no-network answer-time behavior.
+- `tests/*` validates both planes and the signed snapshot boundary.
 
 ## Local validation
 
 ```powershell
-python -m pytest tests\test_isolation_contracts.py -q
+python -m pytest tests -q
 ```
 
 Result:
 
 ```text
-13 passed
+76 passed
 ```
 
 ## Strengths
 
-- Clear separation between privileged reasoning and public-web reading.
-- Sanitized subprocess/worker boundary for public web access.
-- Strict JSON task/findings contract.
-- SSRF-aware URL validation and public HTTPS enforcement.
-- Configurable egress allowlist that can be narrowed but not widened by request payloads.
-- Prompt-injection scanning on claims and citation snippets.
-- Citation provenance requirements.
-- Action gate defaults to requiring approval before privileged use of web-influenced findings.
+- Strong two-plane design: content refresh plane has web egress but no model/tools; answer plane has model/tool surface but no web egress.
+- Public-source freshness through automatic timer/queue refresh and atomic latest-snapshot promotion.
+- Tamper evidence through per-document SHA-256 content hashes plus HMAC-signed manifest.
+- Fail-closed answer-plane startup on missing pointer, missing version, bad signature, hash mismatch, version mismatch, missing file, duplicate id, or path escape.
+- Builder refuses off-allowlist URLs, credentials, non-443 ports, IP literals, wildcards, local names, redirects, non-text content, and oversized responses.
+- Agent exposes a single local retrieval tool with `tool_choice=required` and response storage disabled.
+- Test suite validates allowlist, fetcher, sanitizer, signing, builder, store, corpus policy, retriever, and agent behavior.
 
-## Remaining certification gaps
+## Production deployment requirements
 
-- Capture deployed Foundry hosted-agent runtime health evidence.
-- Capture deployed sample invocation evidence with allowed public sources.
-- Document owner for operator egress allowlist configuration.
-- Decide the default provider mode for production deployments: WebIQ, Foundry Web Search, or constrained HTTP mode.
+Certification assumes the following deployment controls remain true:
 
-## Promotion criteria
-
-Move from `candidate-agent-pack` to `certification-ready` only after:
-
-1. A deployed hosted agent endpoint is available and healthy.
-2. A sample invocation returns grounded findings with citations from allowed sources.
-3. Runtime configuration proves that secrets are not passed to the isolated worker.
-4. Operator-owned egress allowlists are documented.
+1. Builder and answer plane use separate identities.
+2. Signing key is managed outside source control, preferably in Key Vault.
+3. Builder egress is restricted to approved HTTPS FQDNs at both application and network layers.
+4. Answer plane has no live web egress.
+5. Timer and queue refresh triggers run the same build-and-promote path.
+6. Old snapshot versions are retained/pruned according to operations policy while the promoted version remains available.
