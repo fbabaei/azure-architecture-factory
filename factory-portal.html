@@ -317,6 +317,43 @@
             padding-left: 1.2rem;
         }
 
+        .portal-navigation-diagram-shell {
+            min-width: 0;
+        }
+
+        .portal-navigation-diagram-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.45rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .portal-navigation-diagram-toolbar button {
+            border: 1px solid #9cc1e2;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #124267;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .portal-navigation-diagram-toolbar button:hover {
+            background: #e8f2ff;
+            border-color: #8eb8de;
+        }
+
+        .portal-navigation-zoom-label {
+            min-width: 3.8rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
         .portal-navigation-diagram {
             margin: 0;
             padding: 0.9rem;
@@ -324,13 +361,16 @@
             border-radius: 10px;
             background: #fbfdff;
             color: #17324d;
-            overflow-x: auto;
+            overflow: auto;
             min-height: 360px;
+            max-height: 640px;
         }
 
         .portal-navigation-diagram svg {
-            max-width: 100%;
+            max-width: none;
             height: auto;
+            transform-origin: top left;
+            transition: transform 0.12s ease-out;
         }
 
         .workspace-chip {
@@ -3230,7 +3270,14 @@
                             <li><strong>AI Apps &amp; Agents as a Service</strong>: review App Packs, Agent Packs, certification evidence, runtime evidence, and Quick Launch validation.</li>
                         </ol>
                     </div>
-                    <div class="portal-navigation-diagram mermaid" aria-label="Portal navigation Mermaid diagram">
+                    <div class="portal-navigation-diagram-shell">
+                        <div class="portal-navigation-diagram-toolbar" aria-label="User Map zoom controls">
+                            <button type="button" onclick="return zoomPortalNavigationGuide(-0.1)">Zoom out</button>
+                            <span id="portal-navigation-zoom-label" class="portal-navigation-zoom-label">100%</span>
+                            <button type="button" onclick="return zoomPortalNavigationGuide(0.1)">Zoom in</button>
+                            <button type="button" onclick="return resetPortalNavigationGuideZoom()">Reset</button>
+                        </div>
+                        <div class="portal-navigation-diagram mermaid" aria-label="Portal navigation Mermaid diagram">
 flowchart TD
     Start["Open AI Factory Services Portal"]
     Tabs["Choose one top service tab"]
@@ -3278,6 +3325,7 @@ flowchart TD
     RT --> EVID
     CH --> Done
     EVID --> Done
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6876,17 +6924,58 @@ flowchart TD
 
         const PRIMARY_SERVICE_CARD_IDS = ['user-map-panel', 'ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
         let portalNavigationMermaidInitialized = false;
+        let portalNavigationZoom = 1;
+
+        function applyPortalNavigationGuideZoom() {
+            const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram');
+            const svg = diagram?.querySelector('svg');
+            const label = document.getElementById('portal-navigation-zoom-label');
+            if (label) {
+                label.textContent = `${Math.round(portalNavigationZoom * 100)}%`;
+            }
+            if (!svg) return;
+            svg.style.transform = `scale(${portalNavigationZoom})`;
+            svg.style.transformOrigin = 'top left';
+            const baseWidth = Number(svg.dataset.baseWidth || svg.getBoundingClientRect().width / portalNavigationZoom || 0);
+            const baseHeight = Number(svg.dataset.baseHeight || svg.getBoundingClientRect().height / portalNavigationZoom || 0);
+            if (baseWidth && baseHeight) {
+                svg.dataset.baseWidth = String(baseWidth);
+                svg.dataset.baseHeight = String(baseHeight);
+                svg.style.width = `${baseWidth}px`;
+                svg.style.height = `${baseHeight}px`;
+                diagram.style.minWidth = `${Math.ceil(baseWidth * portalNavigationZoom) + 32}px`;
+                diagram.style.minHeight = `${Math.ceil(baseHeight * portalNavigationZoom) + 32}px`;
+            }
+        }
+
+        function zoomPortalNavigationGuide(delta) {
+            portalNavigationZoom = Math.max(0.6, Math.min(2.2, Math.round((portalNavigationZoom + delta) * 10) / 10));
+            applyPortalNavigationGuideZoom();
+            return false;
+        }
+
+        function resetPortalNavigationGuideZoom() {
+            portalNavigationZoom = 1;
+            applyPortalNavigationGuideZoom();
+            return false;
+        }
 
         function renderPortalNavigationGuide() {
             const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram.mermaid');
-            if (!diagram || diagram.dataset.processed || typeof mermaid === 'undefined') return;
+            if (!diagram || typeof mermaid === 'undefined') return;
+            if (diagram.dataset.processed) {
+                applyPortalNavigationGuideZoom();
+                return;
+            }
             if (!portalNavigationMermaidInitialized) {
                 mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' });
                 portalNavigationMermaidInitialized = true;
             }
-            mermaid.run({ nodes: [diagram] }).catch(error => {
-                diagram.textContent = `Mermaid render failed: ${error.message || error}`;
-            });
+            mermaid.run({ nodes: [diagram] })
+                .then(() => applyPortalNavigationGuideZoom())
+                .catch(error => {
+                    diagram.textContent = `Mermaid render failed: ${error.message || error}`;
+                });
         }
 
         function setPrimaryServiceTab(cardId, options = {}) {
