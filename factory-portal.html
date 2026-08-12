@@ -397,6 +397,14 @@
             white-space: nowrap;
         }
 
+        .service-tab-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            line-height: 1;
+        }
+
         .service-tab.active {
             color: #ffffff;
             border-color: var(--primary);
@@ -3542,10 +3550,10 @@ flowchart TD
 
         <div class="workspace-nav" aria-label="Portal workspaces">
             <div class="service-tabs" role="tablist" aria-label="Primary AI Factory services">
-                <a class="workspace-chip service-tab" data-service-tab="user-map-panel" href="#user-map-panel" role="tab" aria-controls="user-map-panel" onclick="return selectPrimaryServiceTab('user-map-panel', event)">User Map</a>
-                <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)">Agent Application Factory</a>
-                <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)">Azure Architecture Factory</a>
-                <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)">AI Apps & Agents as a Service</a>
+                <a class="workspace-chip service-tab" data-service-tab="user-map-panel" href="#user-map-panel" role="tab" aria-controls="user-map-panel" onclick="return selectPrimaryServiceTab('user-map-panel', event)"><span class="service-tab-icon" aria-hidden="true">🗺️</span>User Map</a>
+                <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)"><span class="service-tab-icon" aria-hidden="true">🤖</span>Agent Application Factory</a>
+                <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)"><span class="service-tab-icon" aria-hidden="true">🏗️</span>Azure Architecture Factory</a>
+                <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)"><span class="service-tab-icon" aria-hidden="true">📦</span>AI Apps & Agents as a Service</a>
             </div>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
