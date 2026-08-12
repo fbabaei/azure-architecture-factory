@@ -579,9 +579,83 @@
         .hero-flow-subtitle {
             font-size: 1.2rem;
             line-height: 1.5;
-            max-width: 980px;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 620px;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .hero-overview-section {
+            margin-bottom: 1.1rem;
+        }
+
+        .hero-overview-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+
+        .hero-primary {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 240px;
+            text-align: left;
+        }
+
+        .hero-context-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            border: 1px solid rgba(0, 120, 212, 0.16);
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(244, 250, 255, 0.96), rgba(255, 255, 255, 0.98));
+            box-shadow: 0 14px 36px rgba(19, 50, 74, 0.08);
+            text-align: left;
+        }
+
+        .hero-context-panel .factory-philosophy-panel {
+            background: transparent;
+            border-left: 4px solid var(--primary);
+            border-radius: 4px;
+            padding: 0 0 0 1rem;
+            font-size: 0.88rem;
+        }
+
+        .hero-context-panel .factory-philosophy-panel h3 {
+            color: var(--primary);
+            margin: 0 0 0.45rem;
+            font-size: 1rem;
+        }
+
+        .hero-context-panel .factory-philosophy-panel p {
+            margin-bottom: 0;
+        }
+
+        .hero-context-panel .design-analysis-heading {
+            margin-top: 0;
+        }
+
+        .hero-context-panel .design-analysis-heading h2 {
+            align-items: flex-start;
+            font-size: 1.05rem;
+            line-height: 1.35;
+            margin-bottom: 0;
+        }
+
+        .hero-context-panel .design-analysis-heading .section-subtitle {
+            display: block;
+            margin-top: 0.18rem;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            color: var(--text-secondary);
+        }
+
+        .hero-context-panel .design-analysis-heading-rule {
+            width: 100%;
+            margin: 0.8rem 0 0;
         }
 
         h2 {
@@ -804,6 +878,23 @@
             flex: 1 1 0;
             min-width: 0;
             margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero-overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-primary {
+                min-height: auto;
+                text-align: center;
+            }
+
+            .hero-flow-subtitle {
+                max-width: 980px;
+                margin-left: auto;
+                margin-right: auto;
+            }
         }
 
         @media (max-width: 768px) {
@@ -3240,23 +3331,28 @@
 
     <div class="container">
         <!-- Hero Section -->
-        <section style="text-align:center;">
-            <h1>AI Factory Services</h1>
-            <p class="section-subtitle hero-flow-subtitle">
-                Azure Architecture Factory + Agent Application Factory + AI Apps & Agents as a Service: from requirements to reusable agents, app packs, deployment, and operational evidence.
-            </p>
-            <hr class="section-divider">
-            <div class="factory-philosophy-panel" style="margin-top:1rem; text-align:left; background: #f4faff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; font-size: 0.88rem;">
-                <h3 style="color: var(--primary); margin-top: 0; font-size: 1rem;">Factory Design Philosophy</h3>
-                <p>
-                    The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
-                    Each project uses cloud-native patterns that align with real enterprise workloads, including
-                    service isolation, asynchronous processing, audit trails, and observability built-in from the start.
-                </p>
-            </div>
-            <div class="design-analysis-heading" style="margin-top:1.5rem;">
-                <h2>Design Analysis &amp; Rationale - <span style="font-weight:400; font-size:0.75em;">Understanding the architectural patterns and design decisions</span></h2>
-                <hr class="design-analysis-heading-rule">
+        <section class="hero-overview-section">
+            <div class="hero-overview-grid">
+                <div class="hero-primary">
+                    <h1>AI Factory Services</h1>
+                    <p class="section-subtitle hero-flow-subtitle">
+                        Azure Architecture Factory + Agent Application Factory + AI Apps & Agents as a Service: from requirements to reusable agents, app packs, deployment, and operational evidence.
+                    </p>
+                </div>
+                <div class="hero-context-panel">
+                    <div class="factory-philosophy-panel">
+                        <h3>Factory Design Philosophy</h3>
+                        <p>
+                            The Azure Architecture Factory prioritizes <strong>production-readiness</strong> over simplicity.
+                            Each project uses cloud-native patterns that align with real enterprise workloads, including
+                            service isolation, asynchronous processing, audit trails, and observability built-in from the start.
+                        </p>
+                    </div>
+                    <div class="design-analysis-heading">
+                        <h2>Design Analysis &amp; Rationale <span class="section-subtitle">Understanding the architectural patterns and design decisions</span></h2>
+                        <hr class="design-analysis-heading-rule">
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -8132,9 +8228,11 @@ flowchart TD
             const assist = document.getElementById('assist-workspace');
             const workspaceNav = document.querySelector('.workspace-nav');
             const heading = document.querySelector('.design-analysis-heading');
-            if (workspaceNav && heading && workspaceNav.previousElementSibling !== heading) {
+            const heroGrid = heading ? heading.closest('.hero-overview-grid') : null;
+            const tabAnchor = heroGrid || heading;
+            if (workspaceNav && tabAnchor && workspaceNav.previousElementSibling !== tabAnchor) {
                 workspaceNav.classList.add('service-tab-row');
-                heading.insertAdjacentElement('afterend', workspaceNav);
+                tabAnchor.insertAdjacentElement('afterend', workspaceNav);
             }
             if (agentFactory && azureFactory && appsAgents && assist && assist.parentNode) {
                 assist.parentNode.insertBefore(agentFactory, assist);
