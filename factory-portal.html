@@ -298,6 +298,41 @@
             display: none;
         }
 
+        .portal-navigation-guide-body {
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.25fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .portal-navigation-guide-body p,
+        .portal-navigation-guide-body li {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .portal-navigation-guide-body ol {
+            margin: 0.65rem 0 0;
+            padding-left: 1.2rem;
+        }
+
+        .portal-navigation-diagram {
+            margin: 0;
+            padding: 0.9rem;
+            border: 1px solid #d8e6f3;
+            border-radius: 10px;
+            background: #fbfdff;
+            color: #17324d;
+            overflow-x: auto;
+            min-height: 360px;
+        }
+
+        .portal-navigation-diagram svg {
+            max-width: 100%;
+            height: auto;
+        }
+
         .workspace-chip {
             display: inline-flex;
             align-items: center;
@@ -2110,6 +2145,10 @@
                 font-size: 0.86rem;
             }
 
+            .portal-navigation-guide-body {
+                grid-template-columns: 1fr;
+            }
+
             .workspace-card-title {
                 font-size: 1.28rem;
             }
@@ -3173,6 +3212,57 @@
             </div>
         </section>
 
+        <section id="user-map-panel" class="workspace-card primary-service-card collapsed" aria-label="User Map">
+            <div class="workspace-card-header" onclick="selectPrimaryServiceTab('user-map-panel', event)">
+                <div>
+                    <h3 class="workspace-card-title">User Map</h3>
+                    <p class="workspace-card-subtitle">A guided map for choosing the right AI Factory service and next action.</p>
+                </div>
+                <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('user-map-panel', event)">Hide</button>
+            </div>
+            <div class="workspace-card-body">
+                <div class="portal-navigation-guide-body">
+                    <div>
+                        <p>Use the service tabs like browser tabs. Selecting one tab opens that service and hides the others.</p>
+                        <ol>
+                            <li><strong>Azure Architecture Factory</strong>: create and review architecture projects from requirements.</li>
+                            <li><strong>Agent Application Factory</strong>: browse reusable agent patterns and create agent implementation plans.</li>
+                            <li><strong>AI Apps &amp; Agents as a Service</strong>: review App Packs, Agent Packs, certification evidence, runtime evidence, and Quick Launch validation.</li>
+                        </ol>
+                    </div>
+                    <div class="portal-navigation-diagram mermaid" aria-label="Portal navigation Mermaid diagram">
+flowchart TD
+    Start([Open AI Factory Services Portal])
+    Start --&gt; Tabs{Choose a primary service tab}
+
+    Tabs --&gt; AAF[Azure Architecture Factory]
+    Tabs --&gt; AAFac[Agent Application Factory]
+    Tabs --&gt; AAPAAS[AI Apps &amp; Agents as a Service]
+
+    AAF --&gt; AAF1[Submit Business Requirements]
+    AAF1 --&gt; AAF2[Generate architecture project]
+    AAF2 --&gt; AAF3[Review docs, code, diagrams, Bicep]
+
+    AAFac --&gt; AF1[Open Agent Browser]
+    AF1 --&gt; AF2[Choose reusable agent pattern]
+    AF2 --&gt; AF3[Create plan with Agent Assistant]
+
+    AAPAAS --&gt; AP1[Review App Pack and Agent Pack catalog]
+    AP1 --&gt; AP2[Review certification and runtime evidence]
+    AP2 --&gt; QL[Use Quick Launch]
+    QL --&gt; V[Validate Inputs]
+    V --&gt; CI[Create runtime workspace]
+    CI --&gt; LA[Load available agents]
+    LA --&gt; RT{Connect live runtime?}
+    RT --&gt;|Yes| CH[Check Health and run sample query]
+    RT --&gt;|No| EVID[Use evidence for readiness review]
+    CH --&gt; Done([Validated app or agent offering])
+    EVID --&gt; Done
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="ai-agent-foundry-panel" class="foundry-portal-panel workspace-card primary-service-card collapsed" aria-labelledby="ai-agent-foundry-title">
             <div class="workspace-card-header" onclick="selectPrimaryServiceTab('ai-agent-foundry-panel', event)">
                 <div>
@@ -3384,6 +3474,7 @@
 
         <div class="workspace-nav" aria-label="Portal workspaces">
             <div class="service-tabs" role="tablist" aria-label="Primary AI Factory services">
+                <a class="workspace-chip service-tab" data-service-tab="user-map-panel" href="#user-map-panel" role="tab" aria-controls="user-map-panel" onclick="return selectPrimaryServiceTab('user-map-panel', event)">User Map</a>
                 <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)">Agent Application Factory</a>
                 <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)">Azure Architecture Factory</a>
                 <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)">AI Apps & Agents as a Service</a>
@@ -4798,6 +4889,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
         const API_BASE = window.location.origin;
         const API_APPZONE_BASE = API_BASE;
@@ -6762,7 +6854,20 @@
             return false;
         }
 
-        const PRIMARY_SERVICE_CARD_IDS = ['ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
+        const PRIMARY_SERVICE_CARD_IDS = ['user-map-panel', 'ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
+        let portalNavigationMermaidInitialized = false;
+
+        function renderPortalNavigationGuide() {
+            const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram.mermaid');
+            if (!diagram || diagram.dataset.processed || typeof mermaid === 'undefined') return;
+            if (!portalNavigationMermaidInitialized) {
+                mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' });
+                portalNavigationMermaidInitialized = true;
+            }
+            mermaid.run({ nodes: [diagram] }).catch(error => {
+                diagram.textContent = `Mermaid render failed: ${error.message || error}`;
+            });
+        }
 
         function setPrimaryServiceTab(cardId, options = {}) {
             const selectedId = PRIMARY_SERVICE_CARD_IDS.includes(cardId)
@@ -6786,6 +6891,10 @@
 
             if (shouldUpdateHash) {
                 history.pushState(null, '', `#${selectedId}`);
+            }
+
+            if (selectedId === 'user-map-panel') {
+                renderPortalNavigationGuide();
             }
 
             if (shouldScroll) {
@@ -7281,6 +7390,11 @@
 
             if (hash === '#projects' || hash === '#projects-workspace') {
                 toggleWorkspaceCard('projects-workspace', true);
+                return;
+            }
+
+            if (hash === '#user-map-panel') {
+                setPrimaryServiceTab('user-map-panel', { scroll: true });
                 return;
             }
 
