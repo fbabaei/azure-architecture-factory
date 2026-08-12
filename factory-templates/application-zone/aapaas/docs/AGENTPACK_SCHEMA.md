@@ -41,3 +41,9 @@ The first `AgentPack` uses CaseWright as the canonical source:
 - runtime endpoint: `/api/chat/query`
 
 This avoids duplicating or certifying the sibling Case Assistant implementation while still allowing the CaseWright hosted agent to be marketed and supported as a reusable AI agent offering.
+
+## Additional candidate AgentPacks
+
+`isolated-web-search-agent` is included as a candidate hosted AgentPack sourced from `agent-application-factory/apps/isolated-web-search-agent`.
+
+It demonstrates a reusable public-web research pattern with a strict isolation boundary: the web-reading worker has no privileged tools, and the privileged main agent never reads raw web pages. It remains `candidate-agent-pack` until deployed hosted-agent health and sample invocation evidence are captured in the AAPAAS evidence snapshot.

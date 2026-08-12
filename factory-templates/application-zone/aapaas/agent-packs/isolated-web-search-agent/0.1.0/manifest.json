@@ -1,0 +1,138 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AgentPack",
+  "metadata": {
+    "agentPackId": "isolated-web-search-agent",
+    "displayName": "Isolated Web Search Agent",
+    "version": "0.1.0",
+    "owner": "agent-application-factory",
+    "supportTier": "candidate",
+    "status": "candidate",
+    "parentAppPackId": null,
+    "canonicalSource": "agent-application-factory/apps/isolated-web-search-agent"
+  },
+  "positioning": {
+    "offeringType": "agent-pack",
+    "serviceFamily": "AI Apps & Agents as a Service",
+    "summary": "Hosted Foundry agent pattern that separates privileged reasoning from untrusted public-web research through a strict JSON isolation contract.",
+    "notForPromotion": [
+      "unmanaged browser automation",
+      "local-only search scripts",
+      "ungoverned public-web scraping"
+    ]
+  },
+  "runtime": {
+    "executionMode": "hosted",
+    "hostingModel": "microsoft-foundry-responses-agent",
+    "defaultRuntimeEndpoint": "Foundry Responses API",
+    "healthChecks": [
+      "azd ai agent show",
+      "azd ai agent invoke"
+    ],
+    "requiresManagedIdentity": true,
+    "requiresKeyVault": false,
+    "providerModes": [
+      "mock",
+      "http",
+      "webiq",
+      "foundry-web-search"
+    ]
+  },
+  "contract": {
+    "tools": [
+      {
+        "toolId": "research_public_web",
+        "displayName": "Research Public Web",
+        "method": "function-call",
+        "endpoint": "research_public_web",
+        "description": "Delegates public-web research to an isolated read-only worker and returns validated claims, citations, budget usage, and guardrail evidence.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "query"
+          ],
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "A minimized public research question. Must not include secrets, customer data, internal URLs, private file content, or credentials."
+            },
+            "allowed_domains": {
+              "type": "string",
+              "description": "Optional comma-separated public hostnames that citations must come from. Operator configured allowlists can only be narrowed, not widened."
+            },
+            "max_iterations": {
+              "type": "integer",
+              "description": "Maximum search/read refinement rounds for the isolated worker."
+            }
+          }
+        },
+        "samplePayload": {
+          "query": "Research current Microsoft Learn guidance for Azure AI Foundry agents. Include citations.",
+          "allowed_domains": "learn.microsoft.com",
+          "max_iterations": 3
+        }
+      }
+    ],
+    "capabilities": [
+      "isolated-public-web-research",
+      "prompt-injection-reduction",
+      "ssrf-aware-url-validation",
+      "egress-allowlist-narrowing",
+      "citation-provenance",
+      "budget-limited-research",
+      "foundry-hosted-agent"
+    ]
+  },
+  "governance": {
+    "certificationStatus": "candidate-agent-pack",
+    "dataBoundary": "The privileged main agent never reads raw web pages. Public-web content is read only by a sanitized, unprivileged worker/subagent, and only validated claims/citations cross back through the findings contract.",
+    "authModel": "Hosted Foundry agent uses Microsoft Entra identity through Foundry/Azure credentials. Research tasks and findings must not carry secrets or credentials.",
+    "allowedOutbound": [
+      "configured WebIQ endpoint",
+      "Foundry Web Search",
+      "public HTTPS hosts inside configured allowlists",
+      "DuckDuckGo Instant Answer API for direct HTTP mode"
+    ],
+    "requiredEvidence": [
+      "tool-contract",
+      "data-boundary",
+      "auth-model",
+      "isolation-contract-tests",
+      "ssrf-and-injection-guardrails",
+      "runtime-health-before-promotion",
+      "sample-invocation-before-promotion"
+    ],
+    "evidence": [
+      {
+        "type": "local-test",
+        "name": "isolation contract tests",
+        "status": "passed",
+        "command": "python -m pytest tests/test_isolation_contracts.py -q",
+        "result": "13 passed"
+      },
+      {
+        "type": "source-review",
+        "name": "architecture and contract review",
+        "status": "passed",
+        "summary": "README, ARCHITECTURE-GUIDE, isolation_contracts.py, and tests define the web isolation invariant, URL validation, injection scanning, allowlist narrowing, citation provenance, and action gate."
+      }
+    ],
+    "findings": [
+      {
+        "severity": "warning",
+        "area": "runtime",
+        "finding": "No live hosted runtime health record is bundled in the AAPAAS evidence snapshot yet. Keep as candidate until deployed endpoint and sample invocation evidence are captured."
+      }
+    ],
+    "promotionRules": [
+      "Must capture deployed Foundry hosted-agent runtime health before service promotion.",
+      "Must capture a sample invocation using allowed public sources before customer-facing promotion.",
+      "Must document operator egress allowlist ownership and default provider mode for each deployment.",
+      "Must remain classified as a governed AgentPack, not a local-only personal tool."
+    ]
+  },
+  "lifecycle": {
+    "upgradeStrategy": "contract-tests-then-hosted-agent-roll",
+    "rollbackSupported": true
+  }
+}
