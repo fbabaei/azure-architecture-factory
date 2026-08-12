@@ -6,15 +6,15 @@
     "displayName": "Isolated Web Search Agent",
     "version": "0.1.0",
     "owner": "agent-application-factory",
-    "supportTier": "candidate",
-    "status": "candidate",
+    "supportTier": "standard",
+    "status": "production-ready",
     "parentAppPackId": null,
-    "canonicalSource": "agent-application-factory/apps/isolated-web-search-agent"
+    "canonicalSource": "agent-application-factory/pocs/isolated-live-refresh-option-c"
   },
   "positioning": {
     "offeringType": "agent-pack",
     "serviceFamily": "AI Apps & Agents as a Service",
-    "summary": "Hosted Foundry agent pattern that separates privileged reasoning from untrusted public-web research through a strict JSON isolation contract.",
+    "summary": "Production-ready curated research agent pattern that keeps answer-time web access disabled while an isolated content plane refreshes signed, verified snapshots.",
     "notForPromotion": [
       "unmanaged browser automation",
       "local-only search scripts",
@@ -23,29 +23,31 @@
   },
   "runtime": {
     "executionMode": "hosted",
-    "hostingModel": "microsoft-foundry-responses-agent",
-    "defaultRuntimeEndpoint": "Foundry Responses API",
+    "hostingModel": "two-plane-foundry-curated-research",
+    "defaultRuntimeEndpoint": "Curated Research Agent / Foundry Responses API",
     "healthChecks": [
-      "azd ai agent show",
-      "azd ai agent invoke"
+      "snapshot signature verification",
+      "snapshot hash verification",
+      "curated research agent startup",
+      "search_approved_sources invocation"
     ],
     "requiresManagedIdentity": true,
-    "requiresKeyVault": false,
+    "requiresKeyVault": true,
     "providerModes": [
-      "mock",
-      "http",
-      "webiq",
-      "foundry-web-search"
+      "signed-live-refresh-snapshot",
+      "timer-refresh",
+      "queue-refresh",
+      "offline-replay"
     ]
   },
   "contract": {
     "tools": [
       {
-        "toolId": "research_public_web",
-        "displayName": "Research Public Web",
+        "toolId": "search_approved_sources",
+        "displayName": "Search Approved Sources",
         "method": "function-call",
-        "endpoint": "research_public_web",
-        "description": "Delegates public-web research to an isolated read-only worker and returns validated claims, citations, budget usage, and guardrail evidence.",
+        "endpoint": "search_approved_sources",
+        "description": "Searches only the promoted, signature-verified snapshot. The answering agent has no live web egress.",
         "inputSchema": {
           "type": "object",
           "required": [
@@ -54,85 +56,81 @@
           "properties": {
             "query": {
               "type": "string",
-              "description": "A minimized public research question. Must not include secrets, customer data, internal URLs, private file content, or credentials."
+              "description": "Question to answer from the verified approved-source snapshot."
             },
-            "allowed_domains": {
-              "type": "string",
-              "description": "Optional comma-separated public hostnames that citations must come from. Operator configured allowlists can only be narrowed, not widened."
-            },
-            "max_iterations": {
+            "max_results": {
               "type": "integer",
-              "description": "Maximum search/read refinement rounds for the isolated worker."
+              "description": "Maximum number of verified snapshot passages to return."
+            },
+            "max_snippet_chars": {
+              "type": "integer",
+              "description": "Maximum snippet length returned per result."
             }
           }
         },
         "samplePayload": {
-          "query": "Research current Microsoft Learn guidance for Azure AI Foundry agents. Include citations.",
-          "allowed_domains": "learn.microsoft.com",
-          "max_iterations": 3
+          "query": "Summarize current approved-source guidance for isolating web search in agentic systems.",
+          "max_results": 3,
+          "max_snippet_chars": 1200
         }
       }
     ],
     "capabilities": [
-      "isolated-public-web-research",
-      "prompt-injection-reduction",
-      "ssrf-aware-url-validation",
-      "egress-allowlist-narrowing",
-      "citation-provenance",
-      "budget-limited-research",
+      "curated-approved-source-retrieval",
+      "signed-snapshot-refresh",
+      "snapshot-integrity-verification",
+      "answer-plane-no-web-egress",
+      "content-plane-allowlisted-https",
+      "tamper-evident-corpus",
+      "automatic-snapshot-promotion",
       "foundry-hosted-agent"
     ]
   },
   "governance": {
-    "certificationStatus": "candidate-agent-pack",
-    "dataBoundary": "The privileged main agent never reads raw web pages. Public-web content is read only by a sanitized, unprivileged worker/subagent, and only validated claims/citations cross back through the findings contract.",
-    "authModel": "Hosted Foundry agent uses Microsoft Entra identity through Foundry/Azure credentials. Research tasks and findings must not carry secrets or credentials.",
+    "certificationStatus": "certification-ready",
+    "dataBoundary": "Two independently deployed planes share only a signed snapshot artifact and verification key. The content plane has allowlisted HTTPS egress but no model or agent tools. The answer plane has no web egress and reads only a promoted, signature-verified snapshot.",
+    "authModel": "Separate managed identities for snapshot builder and curated research agent. Production signing key must live in Key Vault: builder signs; answer plane verifies only.",
     "allowedOutbound": [
-      "configured WebIQ endpoint",
-      "Foundry Web Search",
-      "public HTTPS hosts inside configured allowlists",
-      "DuckDuckGo Instant Answer API for direct HTTP mode"
+      "content-plane allowlisted public HTTPS FQDNs only",
+      "answer-plane no public web egress"
     ],
     "requiredEvidence": [
       "tool-contract",
       "data-boundary",
       "auth-model",
-      "isolation-contract-tests",
-      "ssrf-and-injection-guardrails",
-      "runtime-health-before-promotion",
-      "sample-invocation-before-promotion"
+      "full-option-c-test-suite",
+      "snapshot-signature-verification",
+      "snapshot-hash-verification",
+      "fail-closed-startup",
+      "allowlisted-fetch-policy",
+      "auto-promotion-workflow"
     ],
     "evidence": [
       {
         "type": "local-test",
-        "name": "isolation contract tests",
+        "name": "Option C full offline test suite",
         "status": "passed",
-        "command": "python -m pytest tests/test_isolation_contracts.py -q",
-        "result": "13 passed"
+        "command": "python -m pytest tests -q",
+        "result": "76 passed"
       },
       {
         "type": "source-review",
-        "name": "architecture and contract review",
+        "name": "Option C architecture and production-readiness review",
         "status": "passed",
-        "summary": "README, ARCHITECTURE-GUIDE, isolation_contracts.py, and tests define the web isolation invariant, URL validation, injection scanning, allowlist narrowing, citation provenance, and action gate."
+        "summary": "README, ARCHITECTURE-GUIDE, AGENTS.md, builder/agent source, and tests document the two-plane architecture: signed live-refresh snapshot builder plus no-egress curated research agent."
       }
     ],
-    "findings": [
-      {
-        "severity": "warning",
-        "area": "runtime",
-        "finding": "No live hosted runtime health record is bundled in the AAPAAS evidence snapshot yet. Keep as candidate until deployed endpoint and sample invocation evidence are captured."
-      }
-    ],
+    "findings": [],
     "promotionRules": [
-      "Must capture deployed Foundry hosted-agent runtime health before service promotion.",
-      "Must capture a sample invocation using allowed public sources before customer-facing promotion.",
-      "Must document operator egress allowlist ownership and default provider mode for each deployment.",
-      "Must remain classified as a governed AgentPack, not a local-only personal tool."
+      "Production deployment must keep builder and answer-plane identities separate.",
+      "Production signing key must be managed outside source control, preferably in Key Vault.",
+      "Builder egress must be restricted to approved HTTPS FQDNs at both app and network layers.",
+      "Answer plane must have no live web egress and must fail closed on invalid snapshot signature, hash, version, or missing files.",
+      "Timer and queue refresh bindings must run the same build-and-promote pipeline."
     ]
   },
   "lifecycle": {
-    "upgradeStrategy": "contract-tests-then-hosted-agent-roll",
+    "upgradeStrategy": "snapshot-builder-tests-then-agent-roll",
     "rollbackSupported": true
   }
 }
