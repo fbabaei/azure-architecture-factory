@@ -1,0 +1,88 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AgentPack",
+  "metadata": {
+    "agentPackId": "security-playbook-orchestrator",
+    "displayName": "Security Playbook Orchestrator",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate",
+    "parentAppPackId": "ai-security-control-tower",
+    "parentAppPackVersion": "0.1.0",
+    "canonicalSource": "factory-templates/application-zone/aapaas/app-packs/ai-security-control-tower/0.1.0"
+  },
+  "positioning": {
+    "offeringType": "agent-pack",
+    "serviceFamily": "AI Apps & Agents as a Service",
+    "summary": "Routes security requests to Red, Blue, and Green agents, selects playbooks, and tracks evidence through approval gates."
+  },
+  "runtime": {
+    "executionMode": "hosted",
+    "hostingModel": "governed-security-orchestrator",
+    "defaultRuntimeEndpoint": "Portal security work board",
+    "requiresManagedIdentity": true,
+    "requiresKeyVault": true
+  },
+  "contract": {
+    "tools": [
+      {
+        "toolId": "select_security_playbook",
+        "displayName": "Select Security Playbook",
+        "method": "function-call",
+        "endpoint": "select_security_playbook",
+        "description": "Classifies the security request and selects a governed Red/Blue/Green playbook.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "security_request"
+          ],
+          "properties": {
+            "security_request": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            }
+          }
+        },
+        "samplePayload": {
+          "security_request": "Assess whether this code-scanning finding is exploitable and recommend next actions.",
+          "scope": "code"
+        }
+      }
+    ],
+    "capabilities": [
+      "playbook-routing",
+      "agent-work-queue",
+      "evidence-tracking",
+      "approval-gating"
+    ]
+  },
+  "governance": {
+    "certificationStatus": "candidate-agent-pack",
+    "dataBoundary": "Routes metadata and evidence references only. Sensitive security findings must remain in approved tenant systems and evidence stores.",
+    "authModel": "Managed identity and least-privilege access to approved security data connectors.",
+    "allowedOutbound": [
+      "approved security evidence store",
+      "approved code-scanning source",
+      "approved work-board storage"
+    ],
+    "requiredEvidence": [
+      "tool-contract",
+      "data-boundary",
+      "auth-model",
+      "approval-gate",
+      "routing-evals"
+    ],
+    "promotionRules": [
+      "Must not execute destructive actions.",
+      "Must record playbook selection and evidence references.",
+      "Must require named human approval before containment, production change, or PR merge."
+    ]
+  },
+  "lifecycle": {
+    "upgradeStrategy": "contract-evals-then-roll",
+    "rollbackSupported": true
+  }
+}
