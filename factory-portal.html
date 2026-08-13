@@ -428,10 +428,6 @@
             position: fixed;
             inset: 0;
             z-index: 2000;
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-end;
-            padding: 4.25rem 1.25rem 1.25rem;
             background: transparent;
             pointer-events: none;
         }
@@ -441,8 +437,11 @@
         }
 
         .user-map-modal-dialog {
-            width: min(1120px, calc(100vw - 2.5rem));
-            max-height: min(82vh, 860px);
+            position: fixed;
+            top: var(--user-map-top, 7rem);
+            left: var(--user-map-left, calc(100vw - min(860px, calc(100vw - 2.5rem)) - 1.25rem));
+            width: min(860px, calc(100vw - 2.5rem));
+            max-height: min(72vh, 760px);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -464,6 +463,12 @@
             position: sticky;
             top: 0;
             z-index: 2;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .user-map-modal-header:active {
+            cursor: grabbing;
         }
 
         .user-map-modal-title {
@@ -511,6 +516,14 @@
 
         .user-map-modal-inline-close {
             box-shadow: 0 4px 12px rgba(0, 120, 212, 0.24);
+        }
+
+        .user-map-modal-drag-hint {
+            display: block;
+            margin-top: 0.25rem;
+            color: #5f7590;
+            font-size: 0.74rem;
+            font-weight: 700;
         }
 
         .user-map-modal-body {
@@ -3468,10 +3481,11 @@
         <div id="user-map-panel" class="user-map-modal" role="dialog" aria-modal="true" aria-labelledby="user-map-title" hidden onclick="closeUserMapModal(event)">
             <button type="button" class="user-map-modal-close" onclick="return closeUserMapModal(event)">Back to portal</button>
             <div class="user-map-modal-dialog" onclick="event.stopPropagation()">
-                <div class="user-map-modal-header">
+                <div class="user-map-modal-header" onpointerdown="startUserMapModalDrag(event)" onpointermove="moveUserMapModalDrag(event)" onpointerup="endUserMapModalDrag(event)" onpointercancel="endUserMapModalDrag(event)">
                     <div>
                         <h3 id="user-map-title" class="user-map-modal-title">User Map</h3>
                         <p class="user-map-modal-subtitle">A guided map for choosing the right AI Factory service and next action.</p>
+                        <span class="user-map-modal-drag-hint">Drag this header to move the map.</span>
                     </div>
                     <button type="button" class="user-map-modal-inline-close" onclick="return closeUserMapModal(event)">Back to portal</button>
                 </div>
@@ -7227,6 +7241,69 @@
         let portalNavigationMermaidInitialized = false;
         let portalNavigationZoom = 1;
         let userMapReturnFocus = null;
+        let userMapDragState = null;
+
+        function clampUserMapModalPosition(left, top) {
+            const modal = document.getElementById('user-map-panel');
+            const dialog = modal?.querySelector('.user-map-modal-dialog');
+            if (!dialog) return { left, top };
+            const rect = dialog.getBoundingClientRect();
+            const margin = 12;
+            const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+            const maxTop = Math.max(margin, window.innerHeight - Math.min(rect.height, window.innerHeight - margin * 2) - margin);
+            return {
+                left: Math.max(margin, Math.min(left, maxLeft)),
+                top: Math.max(margin, Math.min(top, maxTop)),
+            };
+        }
+
+        function setUserMapModalPosition(left, top) {
+            const modal = document.getElementById('user-map-panel');
+            if (!modal) return;
+            const position = clampUserMapModalPosition(left, top);
+            modal.style.setProperty('--user-map-left', `${Math.round(position.left)}px`);
+            modal.style.setProperty('--user-map-top', `${Math.round(position.top)}px`);
+        }
+
+        function resetUserMapModalPosition() {
+            const modal = document.getElementById('user-map-panel');
+            const dialog = modal?.querySelector('.user-map-modal-dialog');
+            if (!modal || !dialog) return;
+            const rect = dialog.getBoundingClientRect();
+            setUserMapModalPosition(window.innerWidth - rect.width - 20, Math.max(96, Math.round(window.innerHeight * 0.12)));
+        }
+
+        function startUserMapModalDrag(event) {
+            if (event.button !== undefined && event.button !== 0) return;
+            if (event.target?.closest?.('button, a, input, select, textarea')) return;
+            const modal = document.getElementById('user-map-panel');
+            const dialog = modal?.querySelector('.user-map-modal-dialog');
+            if (!modal || !dialog) return;
+            const rect = dialog.getBoundingClientRect();
+            userMapDragState = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+                startLeft: rect.left,
+                startTop: rect.top,
+            };
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+        }
+
+        function moveUserMapModalDrag(event) {
+            if (!userMapDragState || userMapDragState.pointerId !== event.pointerId) return;
+            const left = userMapDragState.startLeft + event.clientX - userMapDragState.startX;
+            const top = userMapDragState.startTop + event.clientY - userMapDragState.startY;
+            setUserMapModalPosition(left, top);
+            event.preventDefault();
+        }
+
+        function endUserMapModalDrag(event) {
+            if (!userMapDragState || userMapDragState.pointerId !== event.pointerId) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            userMapDragState = null;
+        }
 
         function applyPortalNavigationGuideZoom() {
             const diagram = document.querySelector('#user-map-panel .portal-navigation-diagram');
@@ -7310,6 +7387,7 @@
                 ? event.currentTarget
                 : document.activeElement;
             modal.hidden = false;
+            resetUserMapModalPosition();
             document.body.classList.add('user-map-modal-open');
             history.pushState(null, '', '#user-map-panel');
             renderPortalNavigationGuide();
