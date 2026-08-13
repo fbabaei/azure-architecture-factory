@@ -138,6 +138,19 @@ Phase 9 starter surface:
 - `evals/security-control-tower/pilot-evidence.json`
 - The eval gate verifies required capture categories, owners, artifact lists, and evidence controls for approved tenant storage and no raw sensitive findings in portal cards.
 
+## Phase 10: Production-pilot enablement
+
+- Define the limited-scope production-pilot contract.
+- Require named go/no-go approval before pilot enablement.
+- Require pilot evidence capture, owner signoff, rollback readiness, and communications approval.
+- Keep production pilot blocked until every go/no-go criterion has evidence and owner approval.
+
+Phase 10 starter surface:
+
+- `GET /api/application-zone/security-control-tower/production-pilot`
+- `evals/security-control-tower/production-pilot.json`
+- The eval gate verifies the pilot remains blocked pending named go/no-go approval, scope is limited, actions remain read-only/draft-only/approval-gated, and every go/no-go criterion blocks enablement.
+
 ## Non-goals
 
 - No autonomous destructive action.

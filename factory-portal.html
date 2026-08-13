@@ -4410,6 +4410,15 @@
                                 </summary>
                                 <div id="appzone-security-pilot-evidence" class="appzone-security-board">Loading pilot evidence...</div>
                             </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Production Pilot</span>
+                                        <span class="appzone-accordion-subtitle">Limited-scope go/no-go enablement plan.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-production-pilot" class="appzone-security-board">Loading production pilot...</div>
+                            </details>
                         </div>
 
                         <div class="appzone-panel">
@@ -7946,7 +7955,7 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse, connectorPilotResponse, pilotEvidenceResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse, connectorPilotResponse, pilotEvidenceResponse, productionPilotResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
@@ -7955,6 +7964,7 @@
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-readiness`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/connector-pilot`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-evidence`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/production-pilot`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7993,6 +8003,11 @@
                     renderSecurityPilotEvidence(await pilotEvidenceResponse.json());
                 } else {
                     renderSecurityPilotEvidence(null);
+                }
+                if (productionPilotResponse && productionPilotResponse.ok) {
+                    renderSecurityProductionPilot(await productionPilotResponse.json());
+                } else {
+                    renderSecurityProductionPilot(null);
                 }
 
                 const packs = data.packs || [];
@@ -8365,6 +8380,52 @@
                         ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Pilot evidence contract</a>` : ''}
                     </div>
                 </div>
+                <div class="security-tool-grid">${cards}</div>
+                <div class="security-tool-controls">
+                    ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderSecurityProductionPilot(data) {
+            const el = document.getElementById('appzone-security-production-pilot');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Production pilot enablement plan is not available.</div>';
+                return;
+            }
+
+            const pilot = data.productionPilot || {};
+            const scope = data.pilotScope || {};
+            const criteria = Array.isArray(data.goNoGoCriteria) ? data.goNoGoCriteria : [];
+            const controls = Array.isArray(data.enablementControls) ? data.enablementControls : [];
+            const scopeConnectors = Array.isArray(scope.connectorScope) ? scope.connectorScope.join(', ') : '';
+            const cards = criteria.map(item => {
+                const evidence = Array.isArray(item.requiredEvidence) ? item.requiredEvidence.join(', ') : '';
+                return `
+                    <div class="security-pilot-card">
+                        <div class="security-work-item-title">${escapeHtml(item.displayName || item.criterionId || 'go/no-go criterion')}</div>
+                        <div class="security-work-meta">Owner: ${escapeHtml(item.ownerRole || '-')} · Status: ${escapeHtml(item.status || '-')}</div>
+                        <div class="security-work-meta">Evidence: ${escapeHtml(evidence || '-')}</div>
+                        <div class="security-work-footer">
+                            <span class="security-work-pill ${item.blocksEnablement ? 'fail' : 'pass'}">${item.blocksEnablement ? 'Blocks enablement' : 'Nonblocking'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Stage:</strong> ${escapeHtml(pilot.stage || '-')} · ${escapeHtml(pilot.scopeMode || '-')}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(pilot.overallStatus || '-')}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Production pilot contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-work-meta">Tenant: ${escapeHtml(scope.tenantScope || '-')} · Users: ${escapeHtml(scope.userScope || '-')}</div>
+                <div class="security-work-meta">Connectors: ${escapeHtml(scopeConnectors || '-')}</div>
+                <div class="security-work-meta">Actions: ${escapeHtml(scope.actionScope || '-')}</div>
+                <div class="security-tool-section-title">Go/no-go criteria</div>
                 <div class="security-tool-grid">${cards}</div>
                 <div class="security-tool-controls">
                     ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
