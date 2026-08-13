@@ -101,6 +101,11 @@
       "p95LatencyMs": 3000
     }
   },
+  "documentation": [
+    "factory-templates/application-zone/aapaas/docs/SECURITY_CONTROL_TOWER_PLAN.md",
+    "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md",
+    "factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md"
+  ],
   "agents": [
     {
       "agentId": "security-playbook-orchestrator",
