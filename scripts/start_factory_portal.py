@@ -623,6 +623,20 @@ def _portal_load_security_approval_workflows() -> dict:
     }
 
 
+def _portal_load_security_pilot_readiness() -> dict:
+    readiness_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "pilot-readiness.json"
+    readiness = _portal_read_json(readiness_path)
+    if not isinstance(readiness, dict):
+        readiness = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "pilotReadiness": readiness.get("pilotReadiness", {}),
+        "readinessChecks": readiness.get("readinessChecks", []),
+        "pilotControls": readiness.get("pilotControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-readiness.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3734,6 +3748,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/approval-workflows":
             return self._handle_security_control_tower_approval_workflows()
+
+        if request_path == "/api/application-zone/security-control-tower/pilot-readiness":
+            return self._handle_security_control_tower_pilot_readiness()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7389,6 +7406,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_approval_workflows(self):
         """Return named-human approval workflows for sensitive actions."""
         return self._send_json(_portal_load_security_approval_workflows(), 200)
+
+    def _handle_security_control_tower_pilot_readiness(self):
+        """Return production-pilot readiness gates for Security Control Tower."""
+        return self._send_json(_portal_load_security_pilot_readiness(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

@@ -100,6 +100,19 @@ Phase 6 evidence:
 - Runtime control-plane baseline captured in `operations/instances/ai-security-control-tower-dev-eastus.instance.json`.
 - Operations runbook published at `docs/SECURITY_CONTROL_TOWER_RUNBOOK.md`.
 
+## Phase 7: Production-pilot readiness
+
+- Add a pilot-readiness gate before any production-pilot rollout.
+- Require tenant connector inventory, RBAC review, managed persistence, observability, live health evidence, rollback drill, and data retention review.
+- Keep overall status blocked until target-tenant prerequisites are complete.
+- Surface pilot blockers in the portal so certification-ready controlled preview is not confused with production enablement.
+
+Phase 7 starter surface:
+
+- `GET /api/application-zone/security-control-tower/pilot-readiness`
+- `evals/security-control-tower/pilot-readiness.json`
+- The eval gate verifies the service remains `controlled-preview`, the production pilot is blocked until prerequisites complete, and every readiness check blocks production pilot until evidence is supplied.
+
 ## Non-goals
 
 - No autonomous destructive action.

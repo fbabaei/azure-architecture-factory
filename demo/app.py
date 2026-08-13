@@ -544,6 +544,19 @@ def _load_security_approval_workflows() -> dict:
     }
 
 
+def _load_security_pilot_readiness() -> dict:
+    readiness = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "pilot-readiness.json")
+    if not isinstance(readiness, dict):
+        readiness = {}
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "pilotReadiness": readiness.get("pilotReadiness", {}),
+        "readinessChecks": readiness.get("readinessChecks", []),
+        "pilotControls": readiness.get("pilotControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-readiness.json",
+    }
+
+
 def _validate_input_rule(rule: dict, value) -> str | None:
     field_type = rule.get("type")
     name = rule.get("name", "field")
@@ -1523,6 +1536,12 @@ def get_security_control_tower_tool_integrations():
 def get_security_control_tower_approval_workflows():
     """Return named-human approval workflows for sensitive actions."""
     return jsonify(_load_security_approval_workflows())
+
+
+@app.route('/api/application-zone/security-control-tower/pilot-readiness')
+def get_security_control_tower_pilot_readiness():
+    """Return production-pilot readiness gates for Security Control Tower."""
+    return jsonify(_load_security_pilot_readiness())
 
 
 @app.route('/api/application-zone/packs/<pack_id>/versions')

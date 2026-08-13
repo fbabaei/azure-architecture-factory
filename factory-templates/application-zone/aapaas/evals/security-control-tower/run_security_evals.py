@@ -21,6 +21,7 @@ SCHEMA_PATH = ROOT / "evidence-schema.json"
 CASES_PATH = ROOT / "cases.json"
 TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
 APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
+PILOT_READINESS_PATH = ROOT / "pilot-readiness.json"
 AAPAAS_ROOT = ROOT.parents[1]
 CERTIFICATION_EVIDENCE_PATH = AAPAAS_ROOT / "operations" / "health" / "ai-security-control-tower-certification.generated.json"
 EVIDENCE_DIR = ROOT / "evidence"
@@ -203,11 +204,64 @@ def evaluate_certification_evidence(evidence: dict) -> list[dict]:
     return failures
 
 
+def evaluate_pilot_readiness(readiness_doc: dict) -> list[dict]:
+    failures: list[dict] = []
+    pilot = readiness_doc.get("pilotReadiness") or {}
+    checks = readiness_doc.get("readinessChecks") or []
+    required_evidence = set(pilot.get("requiredEvidenceBeforePilot") or [])
+    check(pilot.get("stage") == "controlled-preview", "pilot_stage_controlled_preview", "pilot readiness: stage must remain controlled-preview", failures)
+    check(pilot.get("targetStage") == "production-pilot", "pilot_target_stage_declared", "pilot readiness: targetStage must be production-pilot", failures)
+    check(
+        pilot.get("overallStatus") == "blocked-until-tenant-prerequisites-complete",
+        "pilot_blocked_until_prereqs",
+        "pilot readiness: production pilot must remain blocked until prerequisites complete",
+        failures,
+    )
+    check(bool(pilot.get("minimumApproverRole")), "pilot_minimum_approver_role_present", "pilot readiness: minimumApproverRole missing", failures)
+    check(bool(checks), "pilot_readiness_checks_present", "pilot readiness: readinessChecks is empty", failures)
+
+    check_evidence = {
+        str(item.get("evidenceType"))
+        for item in checks
+        if isinstance(item, dict) and item.get("evidenceType")
+    }
+    check(
+        required_evidence.issubset(check_evidence),
+        "pilot_required_evidence_covered",
+        f"pilot readiness: missing evidence {sorted(required_evidence - check_evidence)}",
+        failures,
+    )
+
+    for item in checks:
+        check_id = str(item.get("checkId", "<missing>"))
+        check(item.get("status") == "required", "pilot_check_status_required", f"{check_id}: status must be required", failures)
+        check(item.get("blocksProductionPilot") is True, "pilot_check_blocks_production", f"{check_id}: does not block production pilot", failures)
+        check(bool(item.get("ownerRole")), "pilot_check_owner_present", f"{check_id}: ownerRole missing", failures)
+        check(bool(item.get("description")), "pilot_check_description_present", f"{check_id}: description missing", failures)
+
+    controls = readiness_doc.get("pilotControls") or []
+    check(bool(controls), "pilot_controls_present", "pilot readiness: pilotControls is empty", failures)
+    check(
+        any("read-only" in str(control).lower() for control in controls),
+        "pilot_controls_read_only_boundary",
+        "pilot readiness: controls must mention read-only boundary",
+        failures,
+    )
+    check(
+        any("draft-only" in str(control).lower() for control in controls),
+        "pilot_controls_draft_only_boundary",
+        "pilot readiness: controls must mention draft-only boundary",
+        failures,
+    )
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
     tool_integrations = load_json(TOOL_INTEGRATIONS_PATH)
     approval_workflows = load_json(APPROVAL_WORKFLOWS_PATH)
+    pilot_readiness = load_json(PILOT_READINESS_PATH)
     certification_evidence = load_json(CERTIFICATION_EVIDENCE_PATH)
     all_failures: list[dict] = []
     results = []
@@ -228,6 +282,8 @@ def main() -> int:
     all_failures.extend(approval_failures)
     certification_failures = evaluate_certification_evidence(certification_evidence)
     all_failures.extend(certification_failures)
+    pilot_failures = evaluate_pilot_readiness(pilot_readiness)
+    all_failures.extend(pilot_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -239,6 +295,8 @@ def main() -> int:
         "approvalWorkflowCount": len(approval_workflows.get("approvalWorkflows", [])),
         "approvalWorkflowFailures": approval_failures,
         "certificationEvidenceFailures": certification_failures,
+        "pilotReadinessCheckCount": len(pilot_readiness.get("readinessChecks", [])),
+        "pilotReadinessFailures": pilot_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -276,7 +334,20 @@ def main() -> int:
             "certification_cases_present",
             "certification_tool_integrations_present",
             "certification_approval_workflows_present",
-            "certification_interpretation_present"
+            "certification_interpretation_present",
+            "pilot_stage_controlled_preview",
+            "pilot_target_stage_declared",
+            "pilot_blocked_until_prereqs",
+            "pilot_minimum_approver_role_present",
+            "pilot_readiness_checks_present",
+            "pilot_required_evidence_covered",
+            "pilot_check_status_required",
+            "pilot_check_blocks_production",
+            "pilot_check_owner_present",
+            "pilot_check_description_present",
+            "pilot_controls_present",
+            "pilot_controls_read_only_boundary",
+            "pilot_controls_draft_only_boundary"
         ],
     }
 
@@ -308,6 +379,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print("  [ok] certification evidence")
+    if pilot_failures:
+        print("  [fail] pilot readiness")
+        for failure in pilot_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] pilot readiness ({summary['pilotReadinessCheckCount']})")
     return 0 if not all_failures else 1
 
 
@@ -337,6 +414,11 @@ def render_scorecard(summary: dict) -> str:
         "## Certification-ready evidence",
         "",
         f"- Certification evidence result: `{'PASS' if not summary.get('certificationEvidenceFailures') else 'FAIL'}`",
+        "",
+        "## Production pilot readiness",
+        "",
+        f"- Pilot readiness checks: `{summary.get('pilotReadinessCheckCount', 0)}`",
+        f"- Pilot readiness result: `{'PASS' if not summary.get('pilotReadinessFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

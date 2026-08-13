@@ -45,3 +45,17 @@ Operate the AI Security Control Tower as a governed security-agent control plane
 ## Promotion status
 
 Certification-ready controlled preview. Production adoption still requires target-environment connector configuration, managed persistence, tenant-specific RBAC review, and live health evidence capture.
+
+## Production pilot readiness
+
+Before production-pilot rollout, confirm:
+
+1. Tenant connector inventory is approved for code scanning, XDR, cloud posture, and repository metadata.
+2. RBAC and managed identity review is complete.
+3. Managed persistence, retention, backup, and purge plans are approved.
+4. Observability dashboard and alerts are published.
+5. Live health evidence is captured from the target environment.
+6. Rollback and compensation drill is complete.
+7. Data retention and sensitivity review is complete.
+
+The pilot-readiness contract at `evals/security-control-tower/pilot-readiness.json` intentionally keeps `overallStatus` blocked until these prerequisites are complete.
