@@ -484,6 +484,11 @@
             top: max(1rem, env(safe-area-inset-top));
             right: max(1rem, env(safe-area-inset-right));
             z-index: 2003;
+            pointer-events: auto;
+        }
+
+        .user-map-modal-close,
+        .user-map-modal-inline-close {
             border: 1px solid #005a9e;
             background: var(--primary);
             color: #ffffff;
@@ -497,9 +502,15 @@
         }
 
         .user-map-modal-close:hover,
-        .user-map-modal-close:focus-visible {
+        .user-map-modal-close:focus-visible,
+        .user-map-modal-inline-close:hover,
+        .user-map-modal-inline-close:focus-visible {
             background: var(--primary-dark);
             outline: none;
+        }
+
+        .user-map-modal-inline-close {
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.24);
         }
 
         .user-map-modal-body {
@@ -3462,6 +3473,7 @@
                         <h3 id="user-map-title" class="user-map-modal-title">User Map</h3>
                         <p class="user-map-modal-subtitle">A guided map for choosing the right AI Factory service and next action.</p>
                     </div>
+                    <button type="button" class="user-map-modal-inline-close" onclick="return closeUserMapModal(event)">Back to portal</button>
                 </div>
                 <div class="user-map-modal-body">
                 <div class="portal-navigation-guide-body">
