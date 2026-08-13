@@ -1,0 +1,26 @@
+[
+  {
+    "instanceId": "ai-security-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "security eval gate",
+    "result": "Gate: PASS; 4 work-board cases, 8 safe tool integration contracts, and 4 approval workflow contracts passed"
+  },
+  {
+    "instanceId": "ai-security-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "work-board surface",
+    "result": "Portal renders Orchestrator, Red, Blue, and Green lanes with Eval PASS evidence and human approval requirements"
+  },
+  {
+    "instanceId": "ai-security-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "safe tool boundaries",
+    "result": "Read-only source contracts and draft-only output contracts are exposed and validated"
+  },
+  {
+    "instanceId": "ai-security-control-tower-dev-eastus",
+    "status": "passed",
+    "check": "approval workflow boundary",
+    "result": "Containment, production change, pull-request merge, and external communication workflows require named-human approval, audit events, and rollback or compensation guidance"
+  }
+]

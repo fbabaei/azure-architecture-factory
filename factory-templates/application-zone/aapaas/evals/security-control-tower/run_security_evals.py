@@ -21,6 +21,8 @@ SCHEMA_PATH = ROOT / "evidence-schema.json"
 CASES_PATH = ROOT / "cases.json"
 TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
 APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
+AAPAAS_ROOT = ROOT.parents[1]
+CERTIFICATION_EVIDENCE_PATH = AAPAAS_ROOT / "operations" / "health" / "ai-security-control-tower-certification.generated.json"
 EVIDENCE_DIR = ROOT / "evidence"
 
 
@@ -191,11 +193,22 @@ def evaluate_approval_workflows(workflows_doc: dict, schema: dict) -> list[dict]
     return failures
 
 
+def evaluate_certification_evidence(evidence: dict) -> list[dict]:
+    failures: list[dict] = []
+    check(evidence.get("evalGate") == "PASS", "certification_eval_gate_passed", "certification evidence: evalGate is not PASS", failures)
+    check(int(evidence.get("caseCount", 0) or 0) >= 4, "certification_cases_present", "certification evidence: expected at least 4 cases", failures)
+    check(int(evidence.get("toolIntegrationCount", 0) or 0) >= 8, "certification_tool_integrations_present", "certification evidence: expected at least 8 tool integrations", failures)
+    check(int(evidence.get("approvalWorkflowCount", 0) or 0) >= 4, "certification_approval_workflows_present", "certification evidence: expected at least 4 approval workflows", failures)
+    check(bool(evidence.get("certificationInterpretation")), "certification_interpretation_present", "certification evidence: interpretation missing", failures)
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
     tool_integrations = load_json(TOOL_INTEGRATIONS_PATH)
     approval_workflows = load_json(APPROVAL_WORKFLOWS_PATH)
+    certification_evidence = load_json(CERTIFICATION_EVIDENCE_PATH)
     all_failures: list[dict] = []
     results = []
 
@@ -213,6 +226,8 @@ def main() -> int:
     all_failures.extend(integration_failures)
     approval_failures = evaluate_approval_workflows(approval_workflows, schema)
     all_failures.extend(approval_failures)
+    certification_failures = evaluate_certification_evidence(certification_evidence)
+    all_failures.extend(certification_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -223,6 +238,7 @@ def main() -> int:
         "toolIntegrationFailures": integration_failures,
         "approvalWorkflowCount": len(approval_workflows.get("approvalWorkflows", [])),
         "approvalWorkflowFailures": approval_failures,
+        "certificationEvidenceFailures": certification_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -255,7 +271,12 @@ def main() -> int:
             "approval_audit_evidence_required",
             "approval_rollback_declared",
             "approval_rollback_plan_present",
-            "approval_notification_policy_present"
+            "approval_notification_policy_present",
+            "certification_eval_gate_passed",
+            "certification_cases_present",
+            "certification_tool_integrations_present",
+            "certification_approval_workflows_present",
+            "certification_interpretation_present"
         ],
     }
 
@@ -281,6 +302,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print(f"  [ok] approval workflows ({summary['approvalWorkflowCount']})")
+    if certification_failures:
+        print("  [fail] certification evidence")
+        for failure in certification_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print("  [ok] certification evidence")
     return 0 if not all_failures else 1
 
 
@@ -306,6 +333,10 @@ def render_scorecard(summary: dict) -> str:
         "",
         f"- Approval workflow contracts: `{summary.get('approvalWorkflowCount', 0)}`",
         f"- Approval workflow result: `{'PASS' if not summary.get('approvalWorkflowFailures') else 'FAIL'}`",
+        "",
+        "## Certification-ready evidence",
+        "",
+        f"- Certification evidence result: `{'PASS' if not summary.get('certificationEvidenceFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

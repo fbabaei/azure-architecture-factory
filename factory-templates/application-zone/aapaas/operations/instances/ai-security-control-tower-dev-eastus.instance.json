@@ -1,0 +1,43 @@
+{
+  "apiVersion": "aiapps.service/v1",
+  "kind": "AppInstance",
+  "metadata": {
+    "instanceId": "ai-security-control-tower-dev-eastus",
+    "packId": "ai-security-control-tower",
+    "packVersion": "0.1.0",
+    "displayName": "AI Security Control Tower dev baseline",
+    "status": "certification-ready-control-plane"
+  },
+  "source": {
+    "appPackManifest": "..\\..\\app-packs\\ai-security-control-tower\\0.1.0\\manifest.json",
+    "sourceRepo": "factory-templates\\application-zone\\aapaas\\app-packs\\ai-security-control-tower\\0.1.0",
+    "azdEnvironment": "dev"
+  },
+  "azure": {
+    "subscriptionId": "729fcdbd-c547-48df-a749-dbee6cdb50b0",
+    "subscriptionName": "ME-MngEnvMCAP688316-fbabaei-1",
+    "resourceGroup": "arch-factory-dev-rg",
+    "location": "eastus"
+  },
+  "knownResources": {
+    "portal": "arch-factory-dev-portal",
+    "workBoardEndpoint": "/api/application-zone/security-control-tower/work-board",
+    "toolIntegrationsEndpoint": "/api/application-zone/security-control-tower/tool-integrations",
+    "approvalWorkflowsEndpoint": "/api/application-zone/security-control-tower/approval-workflows"
+  },
+  "runtime": {
+    "apiBaseUrl": "https://arch-factory-dev-portal.politebeach-70e24eed.eastus.azurecontainerapps.io",
+    "healthStatus": "passed",
+    "notes": "Certification-ready control-plane baseline. The portal exposes work-board, safe-tool, approval-workflow, documentation, and scorecard evidence. Live security data connectors remain read-only/draft-only until tenant-specific RBAC and managed persistence are configured."
+  },
+  "operations": {
+    "healthChecks": [
+      "python factory-templates\\application-zone\\aapaas\\evals\\security-control-tower\\run_security_evals.py",
+      "GET /api/application-zone/security-control-tower/work-board",
+      "GET /api/application-zone/security-control-tower/tool-integrations",
+      "GET /api/application-zone/security-control-tower/approval-workflows"
+    ],
+    "lastEvalReport": "ai-security-control-tower-certification.generated.json",
+    "nextAction": "Configure tenant-specific read-only security connectors, managed persistence, and RBAC before production pilot."
+  }
+}

@@ -61,15 +61,9 @@
     "Version": "0.1.0",
     "Manifest": "factory-templates\\application-zone\\aapaas\\app-packs\\ai-security-control-tower\\0.1.0\\manifest.json",
     "SourceProjectPath": "factory-templates\\application-zone\\aapaas\\app-packs\\ai-security-control-tower\\0.1.0",
-    "Status": "candidate-with-gaps",
+    "Status": "certification-ready",
     "Blockers": 0,
-    "Warnings": 1,
-    "Findings": [
-      {
-        "Severity": "warning",
-        "Area": "certification",
-        "Finding": "Candidate catalog and governance baseline only. Runtime implementation, eval harness, work board, and approval-gated integrations are required before certification-ready promotion."
-      }
-    ]
+    "Warnings": 0,
+    "Findings": []
   }
 ]

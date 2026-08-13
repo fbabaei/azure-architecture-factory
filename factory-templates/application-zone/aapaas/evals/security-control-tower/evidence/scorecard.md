@@ -19,6 +19,10 @@
 - Approval workflow contracts: `4`
 - Approval workflow result: `PASS`
 
+## Certification-ready evidence
+
+- Certification evidence result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -52,3 +56,8 @@
 - `approval_rollback_declared`
 - `approval_rollback_plan_present`
 - `approval_notification_policy_present`
+- `certification_eval_gate_passed`
+- `certification_cases_present`
+- `certification_tool_integrations_present`
+- `certification_approval_workflows_present`
+- `certification_interpretation_present`

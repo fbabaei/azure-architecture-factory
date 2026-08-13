@@ -79,7 +79,7 @@ Phase 5 starter surface:
 
 ## Phase 6: Certification-ready promotion
 
-Promote only after:
+Promotion completed after:
 
 - runtime health is captured
 - eval suite passes
@@ -87,6 +87,18 @@ Promote only after:
 - approval gates are proven
 - work-board evidence is persisted
 - operations runbook is complete
+
+Phase 6 evidence:
+
+- Parent AppPack `ai-security-control-tower` promoted to `preview` with `standard` support tier and `certification-ready` summary status.
+- Security AgentPacks promoted to `certification-ready` for controlled preview:
+  - Security Playbook Orchestrator
+  - Red Exploitability Validator
+  - Blue Detection Generator
+  - Green Remediation Planner
+- Certification evidence captured in `operations/health/ai-security-control-tower-certification.generated.json`.
+- Runtime control-plane baseline captured in `operations/instances/ai-security-control-tower-dev-eastus.instance.json`.
+- Operations runbook published at `docs/SECURITY_CONTROL_TOWER_RUNBOOK.md`.
 
 ## Non-goals
 
