@@ -2,20 +2,20 @@
 
 ## Status
 
-`candidate-agent-pack`
+`certification-ready`
 
 ## Summary
 
 Routes security requests to governed Red, Blue, and Green agents and tracks work through an approval-gated evidence board.
 
-## Required evidence before promotion
+## Certification evidence
 
-- Playbook routing evals.
-- Work-board state persistence.
-- Evidence references for each routed agent.
-- Named-human approval capture.
-- No autonomous destructive action.
+- Playbook routing eval is captured by `orchestrator-routing` in `evals/security-control-tower/cases.json`.
+- Work-board state is exposed through `/api/application-zone/security-control-tower/work-board`.
+- Evidence references are rendered in the work board and scorecard.
+- Named-human approval capture is specified in `approval-workflows.json`.
+- No autonomous destructive action is enforced by the eval gate.
 
 ## Certification note
 
-This AgentPack is a design contract only. It should not be marked production-ready until a runtime implementation and eval suite are added.
+This AgentPack is certification-ready for controlled preview as a governed orchestrator contract. Tenant-specific connector activation still requires RBAC, persistence, and operational ownership review.

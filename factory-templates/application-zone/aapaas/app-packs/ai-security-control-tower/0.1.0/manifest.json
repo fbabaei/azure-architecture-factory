@@ -6,8 +6,8 @@
     "displayName": "AI Security Control Tower",
     "version": "0.1.0",
     "owner": "ai-apps-service-core",
-    "supportTier": "candidate",
-    "status": "candidate"
+    "supportTier": "standard",
+    "status": "preview"
   },
   "compatibility": {
     "minimumAAFVersion": "0.9.0",
@@ -103,6 +103,7 @@
   },
   "documentation": [
     "factory-templates/application-zone/aapaas/docs/SECURITY_CONTROL_TOWER_PLAN.md",
+    "factory-templates/application-zone/aapaas/docs/SECURITY_CONTROL_TOWER_RUNBOOK.md",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
@@ -196,6 +197,7 @@
       "evidence-schema-contract",
       "safe-tool-integration-contract",
       "named-human-approval-workflow-contract",
+      "certification-ready-evidence-contract",
       "python factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py"
     ],
     "evaluationPlan": "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md"

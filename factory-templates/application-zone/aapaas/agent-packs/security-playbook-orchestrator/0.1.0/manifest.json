@@ -6,8 +6,8 @@
     "displayName": "Security Playbook Orchestrator",
     "version": "0.1.0",
     "owner": "ai-apps-service-core",
-    "supportTier": "candidate",
-    "status": "candidate",
+    "supportTier": "standard",
+    "status": "preview",
     "parentAppPackId": "ai-security-control-tower",
     "parentAppPackVersion": "0.1.0",
     "canonicalSource": "factory-templates/application-zone/aapaas/app-packs/ai-security-control-tower/0.1.0"
@@ -60,7 +60,7 @@
     ]
   },
   "governance": {
-    "certificationStatus": "candidate-agent-pack",
+    "certificationStatus": "certification-ready",
     "dataBoundary": "Routes metadata and evidence references only. Sensitive security findings must remain in approved tenant systems and evidence stores.",
     "authModel": "Managed identity and least-privilege access to approved security data connectors.",
     "allowedOutbound": [

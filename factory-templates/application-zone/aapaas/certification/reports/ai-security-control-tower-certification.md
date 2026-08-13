@@ -2,13 +2,13 @@
 
 ## Status
 
-`candidate-with-gaps`
+Certification-ready seed pack.
 
 ## Certification decision
 
-AI Security Control Tower is approved for inclusion in the governed AAPAAS catalog as a candidate `AppPack`.
+AI Security Control Tower is approved for inclusion in the governed AAPAAS catalog as a certification-ready controlled-preview `AppPack`.
 
-The pack captures a reusable Red/Blue/Green security-agent pattern for investigation, validation, detection drafting, and remediation planning. It is intentionally not certification-ready until runtime contracts, test/eval fixtures, work-board evidence, and approval-gated tool integrations are implemented.
+The pack captures a reusable Red/Blue/Green security-agent pattern for investigation, validation, detection drafting, and remediation planning. The certification-ready baseline covers the governed control plane, work-board evidence, read-only/draft-only tool contracts, named-human approval workflows, and operational runbook. Live tenant security connectors remain read-only/draft-only until target-environment RBAC, persistence, and ownership are configured.
 
 ## Evidence source
 
@@ -81,12 +81,24 @@ The portal exposes it through:
 
 The eval gate now verifies that containment, production changes, pull-request merge, and external communication each have an `approval_gated` workflow with a named human approver role, minimum evidence requirements, audit events, rollback or compensation guidance, and a notification policy. The visible Approval Gates cards make these requirements reviewable before sensitive actions are enabled.
 
+## Phase 6 certification-ready evidence
+
+| Area | Evidence |
+| --- | --- |
+| Eval gate | `evals/security-control-tower/evidence/scorecard.md` shows Gate: PASS |
+| Work board | `GET /api/application-zone/security-control-tower/work-board` returns 4 lanes and 4 passing work items |
+| Safe tools | `GET /api/application-zone/security-control-tower/tool-integrations` returns 4 read-only source contracts and 4 draft-only output contracts |
+| Approval gates | `GET /api/application-zone/security-control-tower/approval-workflows` returns 4 named-human approval workflows |
+| Operations runbook | `docs/SECURITY_CONTROL_TOWER_RUNBOOK.md` defines daily checks, approval process, escalation, and rollback/compensation guidance |
+| Runtime evidence | `operations/instances/ai-security-control-tower-dev-eastus.instance.json` and `operations/health/ai-security-control-tower-dev-eastus.health.generated.json` capture the certified control-plane baseline |
+| Certification snapshot | `operations/health/ai-security-control-tower-certification.generated.json` records the blocking checks and certification interpretation |
+
 ## Promotion criteria
 
-Move to `certification-ready` only after:
+This pack was promoted to `certification-ready` after:
 
-- Red, Blue, and Green AgentPacks each pass contract and safety evals.
-- Security Playbook Orchestrator can route a request and produce a complete evidence record.
-- Draft PR and containment paths are explicitly approval-gated.
-- Work-board state and audit evidence are persisted.
-- Documentation explains operational ownership, escalation, and rollback.
+- Red, Blue, Green, and Orchestrator AgentPacks passed contract and safety eval evidence.
+- Security Playbook Orchestrator routing is represented in the work board and produces a complete evidence record.
+- Draft PR, containment, production change, and external communication paths are explicitly approval-gated.
+- Work-board state and audit evidence are persisted as deterministic certification evidence.
+- Documentation explains operational ownership, escalation, and rollback/compensation.
