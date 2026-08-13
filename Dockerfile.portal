@@ -28,7 +28,7 @@ RUN if [ "$INSTALL_COPILOT_CLI" = "1" ]; then \
 
 # Create non-root user
 RUN useradd -m -u 1000 portal && \
-    mkdir -p /app/docs/intake /app/outputs/brd-runs /app/logs && \
+    mkdir -p /app/docs/intake /app/outputs/brd-runs /app/logs /app/projects && \
     chown -R portal:portal /app
 
 # Copy application code
@@ -44,7 +44,7 @@ COPY diagrams/ diagrams/
 COPY assets/ assets/
 COPY factory-templates/ factory-templates/
 COPY agent-application-factory/ agent-application-factory/
-# Note: projects/ directory NOT included in minimal Docker build context.
+# Note: project contents are not included in the minimal Docker build context.
 # Snapshot of the project feed baked into the image at build time
 # (factory-projects.generated.json will be served without directory filtering).
 # Per-user ownership allowlist (slug → UPNs). Consumed when
