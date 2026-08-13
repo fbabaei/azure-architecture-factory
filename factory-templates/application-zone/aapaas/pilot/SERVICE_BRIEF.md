@@ -20,6 +20,7 @@ AAPAAS, AI Apps as a Service, is a repeatable service for delivering secure, gov
 | CaseWright | Knowledge assistant over case/policy content using RAG, Azure AI Search, Foundry, and SharePoint ingestion | Healthy API/worker reference instance |
 | Compliance Agent | Compliance copilot with RAG, document extraction, HITL approval, and audit history | Candidate |
 | Supply Chain Control Tower | Multi-agent planning assistant for demand, supply, inventory, supplier risk, and human-approved replenishment | Certification-ready |
+| AI Security Control Tower | Red/Blue/Green agentic security work board for exploitability validation, detection drafting, and approval-gated remediation | Candidate |
 | Mailer Automation | OCR/vision/RAG/human-review workflow for mail processing | Candidate |
 
 ## MVP proof point

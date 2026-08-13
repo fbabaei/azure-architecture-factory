@@ -47,3 +47,14 @@ This avoids duplicating or certifying the sibling Case Assistant implementation 
 `isolated-web-search-agent` is included as a certification-ready hosted AgentPack sourced from `agent-application-factory/pocs/isolated-live-refresh-option-c`.
 
 It demonstrates a reusable public-web research pattern with a strict isolation boundary: an isolated content plane performs allowlisted live refresh and signs an immutable snapshot, while the answer plane has no web egress and reads only the verified promoted snapshot.
+
+## Security AgentPacks
+
+The initial security AgentPacks are candidate offerings attached to `AI Security Control Tower`:
+
+- `security-playbook-orchestrator`
+- `red-exploitability-validator`
+- `blue-detection-generator`
+- `green-remediation-planner`
+
+These packs follow a strict approval-first rule: they can investigate, validate, recommend, and draft evidence or remediation, but containment, production changes, pull-request merge, or externally visible action must remain named-human approved.

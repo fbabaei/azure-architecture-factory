@@ -1,0 +1,90 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AgentPack",
+  "metadata": {
+    "agentPackId": "green-remediation-planner",
+    "displayName": "Green Remediation Planner",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate",
+    "parentAppPackId": "ai-security-control-tower",
+    "parentAppPackVersion": "0.1.0",
+    "canonicalSource": "factory-templates/application-zone/aapaas/app-packs/ai-security-control-tower/0.1.0"
+  },
+  "positioning": {
+    "offeringType": "agent-pack",
+    "serviceFamily": "AI Apps & Agents as a Service",
+    "summary": "Hardening and remediation planning agent that drafts fixes, runbooks, and pull requests without merging changes."
+  },
+  "runtime": {
+    "executionMode": "hosted",
+    "hostingModel": "approval-gated-security-agent",
+    "defaultRuntimeEndpoint": "Security work board",
+    "requiresManagedIdentity": true,
+    "requiresKeyVault": true
+  },
+  "contract": {
+    "tools": [
+      {
+        "toolId": "draft_remediation_plan",
+        "displayName": "Draft Remediation Plan",
+        "method": "function-call",
+        "endpoint": "draft_remediation_plan",
+        "description": "Drafts hardening guidance, runbook steps, and optional pull request changes for human review.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "finding_summary"
+          ],
+          "properties": {
+            "finding_summary": {
+              "type": "string"
+            },
+            "repository": {
+              "type": "string"
+            },
+            "allowed_change_mode": {
+              "type": "string"
+            }
+          }
+        },
+        "samplePayload": {
+          "finding_summary": "Missing input validation allows untrusted URL fetch.",
+          "repository": "contoso/service-api",
+          "allowed_change_mode": "draft-pr-only"
+        }
+      }
+    ],
+    "capabilities": [
+      "remediation-planning",
+      "hardening-guidance",
+      "runbook-drafting",
+      "draft-pr-generation"
+    ]
+  },
+  "governance": {
+    "certificationStatus": "candidate-agent-pack",
+    "dataBoundary": "Reads approved finding and repository metadata. Drafts remediation only; does not merge pull requests or alter production.",
+    "authModel": "Least-privilege access to approved repositories and work items; write paths restricted to draft artifacts.",
+    "allowedOutbound": [
+      "approved repository provider",
+      "approved work-board storage"
+    ],
+    "requiredEvidence": [
+      "draft-only-remediation-contract",
+      "human-review-required",
+      "rollback-guidance",
+      "audit-trail"
+    ],
+    "promotionRules": [
+      "Pull requests must remain draft or review-required.",
+      "No automatic merge or production deployment.",
+      "Remediation must include validation and rollback guidance."
+    ]
+  },
+  "lifecycle": {
+    "upgradeStrategy": "remediation-evals-then-roll",
+    "rollbackSupported": true
+  }
+}

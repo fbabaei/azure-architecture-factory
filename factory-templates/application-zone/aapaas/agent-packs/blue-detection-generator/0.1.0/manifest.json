@@ -1,0 +1,88 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AgentPack",
+  "metadata": {
+    "agentPackId": "blue-detection-generator",
+    "displayName": "Blue Detection Generator",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate",
+    "parentAppPackId": "ai-security-control-tower",
+    "parentAppPackVersion": "0.1.0",
+    "canonicalSource": "factory-templates/application-zone/aapaas/app-packs/ai-security-control-tower/0.1.0"
+  },
+  "positioning": {
+    "offeringType": "agent-pack",
+    "serviceFamily": "AI Apps & Agents as a Service",
+    "summary": "Detection and triage agent that turns validated attack paths into detection hypotheses and response evidence."
+  },
+  "runtime": {
+    "executionMode": "hosted",
+    "hostingModel": "approval-gated-security-agent",
+    "defaultRuntimeEndpoint": "Security work board",
+    "requiresManagedIdentity": true,
+    "requiresKeyVault": true
+  },
+  "contract": {
+    "tools": [
+      {
+        "toolId": "draft_detection_logic",
+        "displayName": "Draft Detection Logic",
+        "method": "function-call",
+        "endpoint": "draft_detection_logic",
+        "description": "Drafts detection logic, triage steps, and expected signal evidence from a validated attack path.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "attack_path_summary"
+          ],
+          "properties": {
+            "attack_path_summary": {
+              "type": "string"
+            },
+            "telemetry_sources": {
+              "type": "array"
+            }
+          }
+        },
+        "samplePayload": {
+          "attack_path_summary": "Suspicious token replay from unmanaged device to privileged API.",
+          "telemetry_sources": [
+            "Defender XDR",
+            "Entra sign-in logs"
+          ]
+        }
+      }
+    ],
+    "capabilities": [
+      "detection-drafting",
+      "incident-triage",
+      "containment-recommendation",
+      "xdr-evidence-mapping"
+    ]
+  },
+  "governance": {
+    "certificationStatus": "candidate-agent-pack",
+    "dataBoundary": "Reads approved detection, telemetry, and incident metadata. Does not apply containment without explicit human approval.",
+    "authModel": "Least-privilege read access to approved security telemetry; write actions are approval-gated.",
+    "allowedOutbound": [
+      "approved XDR or SIEM evidence store",
+      "approved work-board storage"
+    ],
+    "requiredEvidence": [
+      "detection-contract",
+      "triage-evidence-schema",
+      "approval-gated-containment"
+    ],
+    "promotionRules": [
+      "Containment actions must remain human-approved.",
+      "Generated detections must be reviewed before production enablement.",
+      "Evidence links must point to approved tenant systems."
+    ]
+  },
+  "lifecycle": {
+    "upgradeStrategy": "detection-evals-then-roll",
+    "rollbackSupported": true
+  }
+}

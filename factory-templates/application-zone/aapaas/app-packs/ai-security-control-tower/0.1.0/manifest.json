@@ -1,0 +1,193 @@
+{
+  "apiVersion": "aaf.applicationzone/v1",
+  "kind": "AppPack",
+  "metadata": {
+    "packId": "ai-security-control-tower",
+    "displayName": "AI Security Control Tower",
+    "version": "0.1.0",
+    "owner": "ai-apps-service-core",
+    "supportTier": "candidate",
+    "status": "candidate"
+  },
+  "compatibility": {
+    "minimumAAFVersion": "0.9.0",
+    "supportedRegions": [
+      "eastus",
+      "westeurope",
+      "westus3"
+    ],
+    "requiredServices": [
+      "microsoft-defender-xdr",
+      "github-advanced-security-or-code-scanning",
+      "azure-monitor",
+      "key-vault",
+      "managed-identity"
+    ]
+  },
+  "inputs": {
+    "required": [
+      {
+        "name": "environmentName",
+        "type": "string"
+      },
+      {
+        "name": "region",
+        "type": "enum",
+        "allowedValues": [
+          "eastus",
+          "westeurope",
+          "westus3"
+        ]
+      },
+      {
+        "name": "securityScope",
+        "type": "enum",
+        "allowedValues": [
+          "code",
+          "cloud-posture",
+          "incident-response",
+          "end-to-end"
+        ]
+      }
+    ],
+    "optional": [
+      {
+        "name": "approvalMode",
+        "type": "enum",
+        "allowedValues": [
+          "recommend-only",
+          "draft-pr",
+          "approval-gated-action"
+        ]
+      },
+      {
+        "name": "sourceSystems",
+        "type": "object",
+        "requiredFields": [
+          "defender",
+          "codeScanning"
+        ]
+      }
+    ]
+  },
+  "deployment": {
+    "runtimeProfiles": [
+      "dev",
+      "test",
+      "prod"
+    ],
+    "defaultProfile": "dev"
+  },
+  "security": {
+    "managedIdentityRequired": true,
+    "keyVaultRequired": true,
+    "requiredPolicies": [
+      "rbac-least-privilege",
+      "diagnostic-logs-enabled",
+      "human-approval-for-containment",
+      "human-approval-for-remediation-merge",
+      "audit-trail-required"
+    ]
+  },
+  "operations": {
+    "healthChecks": [
+      "playbook catalog available",
+      "agent queue status available",
+      "evidence store writable",
+      "approval workflow reachable"
+    ],
+    "sloTargets": {
+      "availability": "99.5%",
+      "p95LatencyMs": 3000
+    }
+  },
+  "agents": [
+    {
+      "agentId": "security-playbook-orchestrator",
+      "displayName": "Security Playbook Orchestrator",
+      "description": "Routes security requests to red, blue, and green agents and tracks evidence through an approval-gated work board.",
+      "category": "security-orchestration",
+      "useCases": [
+        "Security playbook selection",
+        "Agent work routing",
+        "Evidence board tracking",
+        "Approval-gated execution"
+      ],
+      "connectedAgentPacks": [
+        "red-exploitability-validator",
+        "blue-detection-generator",
+        "green-remediation-planner"
+      ]
+    },
+    {
+      "agentId": "red-exploitability-validator",
+      "displayName": "Red Exploitability Validator",
+      "description": "Validates whether reported weaknesses are plausibly exploitable using non-destructive checks and evidence capture.",
+      "category": "red"
+    },
+    {
+      "agentId": "blue-detection-generator",
+      "displayName": "Blue Detection Generator",
+      "description": "Turns validated attack paths into detection hypotheses, alert logic drafts, and XDR/SIEM evidence packages.",
+      "category": "blue"
+    },
+    {
+      "agentId": "green-remediation-planner",
+      "displayName": "Green Remediation Planner",
+      "description": "Creates hardening guidance, remediation plans, and draft pull requests without merging or changing production automatically.",
+      "category": "green"
+    }
+  ],
+  "services": [
+    {
+      "serviceId": "security-work-board",
+      "displayName": "Security Work Board",
+      "description": "Kanban-style status surface for agent tasks, evidence, approvals, and follow-up work.",
+      "category": "operations"
+    },
+    {
+      "serviceId": "security-evidence-store",
+      "displayName": "Security Evidence Store",
+      "description": "Stores exploitability, detection, remediation, approval, and audit evidence for certification and support.",
+      "category": "governance"
+    },
+    {
+      "serviceId": "approval-gated-remediation",
+      "displayName": "Approval-Gated Remediation",
+      "description": "Requires named human approval before containment actions, production changes, pull request merge, or externally visible remediation."
+    }
+  ],
+  "channels": [
+    {
+      "channelId": "portal-work-board",
+      "displayName": "Portal Work Board",
+      "description": "Portal channel for playbook execution status, evidence review, and approval checkpoints.",
+      "type": "portal"
+    },
+    {
+      "channelId": "github-pr-drafts",
+      "displayName": "GitHub Pull Request Drafts",
+      "description": "Optional draft remediation channel. Agents can draft PRs, but humans review and merge.",
+      "type": "github"
+    }
+  ],
+  "packaging": {
+    "executionModel": "governed-control-plane",
+    "sourceProjectSlug": "ai-security-control-tower",
+    "sourceProjectPath": "factory-templates\\application-zone\\aapaas\\app-packs\\ai-security-control-tower\\0.1.0",
+    "exportIncludes": [
+      "manifest.json",
+      "certification",
+      "docs",
+      "evals"
+    ]
+  },
+  "verification": {
+    "smokeTests": [
+      "playbook-routing-contract",
+      "approval-gate-contract",
+      "evidence-schema-contract"
+    ],
+    "evaluationPlan": "evals/security-control-tower-starter-eval-plan.json"
+  }
+}
