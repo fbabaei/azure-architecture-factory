@@ -1,0 +1,146 @@
+[
+  {
+    "caseId": "red-passive-ssrf",
+    "lane": "red",
+    "request": "Assess whether code-scanning finding codeql-123 is exploitable in a non-production API.",
+    "classification": {
+      "playbook": "red-exploitability-validation",
+      "risk": "high",
+      "scope": "non-production"
+    },
+    "evidence": [
+      {
+        "type": "finding_metadata",
+        "source": "code-scanning",
+        "reference": "codeql-123"
+      },
+      {
+        "type": "exploitability_assessment",
+        "summary": "Potential SSRF requires URL validation review; active validation is not approved."
+      }
+    ],
+    "approval": {
+      "state": "requires_human_approval",
+      "requiredFor": [
+        "active_validation"
+      ],
+      "approvedBy": null
+    },
+    "actions": [
+      {
+        "mode": "recommend_only",
+        "type": "risk_prioritization",
+        "description": "Prioritize validation in non-production and review URL allowlist controls."
+      }
+    ]
+  },
+  {
+    "caseId": "blue-detection-draft",
+    "lane": "blue",
+    "request": "Draft detection logic for token replay from an unmanaged device.",
+    "classification": {
+      "playbook": "blue-detection-generation",
+      "risk": "medium",
+      "scope": "telemetry-draft"
+    },
+    "evidence": [
+      {
+        "type": "telemetry_mapping",
+        "source": "approved-xdr-summary",
+        "reference": "xdr-case-456"
+      },
+      {
+        "type": "detection_hypothesis",
+        "summary": "Correlate unmanaged-device sign-in, privileged API call, and anomalous token age."
+      }
+    ],
+    "approval": {
+      "state": "requires_human_approval",
+      "requiredFor": [
+        "production_detection_enablement",
+        "containment"
+      ],
+      "approvedBy": null
+    },
+    "actions": [
+      {
+        "mode": "draft_only",
+        "type": "detection_draft",
+        "description": "Draft detection logic and triage notes for analyst review."
+      }
+    ]
+  },
+  {
+    "caseId": "green-remediation-pr",
+    "lane": "green",
+    "request": "Draft remediation for missing URL allowlist validation.",
+    "classification": {
+      "playbook": "green-remediation-planning",
+      "risk": "high",
+      "scope": "repository-draft"
+    },
+    "evidence": [
+      {
+        "type": "remediation_plan",
+        "source": "approved-repository-metadata",
+        "reference": "repo/service-api"
+      },
+      {
+        "type": "draft_pull_request",
+        "summary": "Draft PR adds public HTTPS validation and tests; merge is blocked for human review."
+      }
+    ],
+    "approval": {
+      "state": "requires_human_approval",
+      "requiredFor": [
+        "pull_request_merge",
+        "production_deployment"
+      ],
+      "approvedBy": null
+    },
+    "actions": [
+      {
+        "mode": "draft_only",
+        "type": "draft_pull_request",
+        "description": "Create a draft PR with remediation and rollback notes."
+      }
+    ]
+  },
+  {
+    "caseId": "orchestrator-routing",
+    "lane": "orchestrator",
+    "request": "Route a new critical vulnerability announcement to the right agents.",
+    "classification": {
+      "playbook": "security-playbook-routing",
+      "risk": "critical",
+      "scope": "end-to-end"
+    },
+    "evidence": [
+      {
+        "type": "finding_metadata",
+        "source": "approved-intake",
+        "reference": "intake-789"
+      },
+      {
+        "type": "audit_event",
+        "summary": "Work items routed to red, blue, and green lanes with approval checkpoints."
+      }
+    ],
+    "approval": {
+      "state": "requires_human_approval",
+      "requiredFor": [
+        "containment",
+        "production_change",
+        "external_notification"
+      ],
+      "approvedBy": null
+    },
+    "actions": [
+      {
+        "mode": "recommend_only",
+        "type": "work_routing",
+        "description": "Create evidence-backed work items for each security lane."
+      }
+    ]
+  }
+]

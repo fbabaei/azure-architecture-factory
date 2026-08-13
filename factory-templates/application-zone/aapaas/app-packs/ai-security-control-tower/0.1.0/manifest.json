@@ -186,8 +186,9 @@
     "smokeTests": [
       "playbook-routing-contract",
       "approval-gate-contract",
-      "evidence-schema-contract"
+      "evidence-schema-contract",
+      "python factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py"
     ],
-    "evaluationPlan": "evals/security-control-tower-starter-eval-plan.json"
+    "evaluationPlan": "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md"
   }
 }

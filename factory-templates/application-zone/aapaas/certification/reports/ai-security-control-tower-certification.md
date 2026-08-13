@@ -41,6 +41,14 @@ Use only the generalized Red/Blue/Green pattern in catalog and customer-facing a
 6. Evidence schema for exploitability, detection, remediation, and closure.
 7. Runtime health/readiness evidence for the work board and agent endpoints.
 
+## Phase 2 evidence harness
+
+The Phase 2 offline eval gate is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py`
+
+It validates candidate evidence envelopes, Red/Blue/Green lane classification, approval requirements, and the no-autonomous-destructive-action contract before runtime integrations are built.
+
 ## Promotion criteria
 
 Move to `certification-ready` only after:
