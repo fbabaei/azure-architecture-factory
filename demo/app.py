@@ -453,6 +453,71 @@ def _build_agent_pack_catalog() -> list[dict]:
     return catalog
 
 
+def _load_security_work_board() -> dict:
+    cases = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "cases.json")
+    results = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "evidence" / "results.json")
+    if not isinstance(cases, list):
+        cases = []
+    if not isinstance(results, dict):
+        results = {}
+
+    result_by_case = {
+        str(item.get("caseId")): item
+        for item in results.get("results", [])
+        if isinstance(item, dict) and item.get("caseId")
+    }
+    lane_order = ["orchestrator", "red", "blue", "green"]
+    lanes = {
+        lane: {"lane": lane, "label": lane.title(), "items": []}
+        for lane in lane_order
+    }
+
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        case_id = str(case.get("caseId", ""))
+        lane = str(case.get("lane", "orchestrator"))
+        lanes.setdefault(lane, {"lane": lane, "label": lane.title(), "items": []})
+        approval = case.get("approval") if isinstance(case.get("approval"), dict) else {}
+        classification = case.get("classification") if isinstance(case.get("classification"), dict) else {}
+        actions = case.get("actions") if isinstance(case.get("actions"), list) else []
+        evidence = case.get("evidence") if isinstance(case.get("evidence"), list) else []
+        result = result_by_case.get(case_id, {})
+        lanes[lane]["items"].append({
+            "caseId": case_id,
+            "request": case.get("request", ""),
+            "playbook": classification.get("playbook", ""),
+            "risk": classification.get("risk", ""),
+            "scope": classification.get("scope", ""),
+            "approvalState": approval.get("state", ""),
+            "requiredFor": approval.get("requiredFor", []),
+            "actionModes": sorted({
+                str(action.get("mode", ""))
+                for action in actions
+                if isinstance(action, dict) and action.get("mode")
+            }),
+            "evidenceTypes": [
+                str(item.get("type", ""))
+                for item in evidence
+                if isinstance(item, dict) and item.get("type")
+            ],
+            "evalPassed": bool(result.get("passed")),
+            "failures": result.get("failures", []),
+        })
+
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "gate": results.get("gate", "UNKNOWN"),
+        "caseCount": len(cases),
+        "passedCount": int(results.get("passedCount", 0) or 0),
+        "failedCount": int(results.get("failedCount", 0) or 0),
+        "blockingChecks": results.get("blockingChecks", []),
+        "lanes": [lanes[lane] for lane in lane_order if lane in lanes],
+        "scorecardHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md",
+        "evalReadmeHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/README.md",
+    }
+
+
 def _validate_input_rule(rule: dict, value) -> str | None:
     field_type = rule.get("type")
     name = rule.get("name", "field")
@@ -1414,6 +1479,12 @@ def get_aapaas_summary():
             "schedulerStatus": scheduler.get("syncResult", {}).get("status"),
         },
     })
+
+
+@app.route('/api/application-zone/security-control-tower/work-board')
+def get_security_control_tower_work_board():
+    """Return the Security Control Tower Red/Blue/Green work board."""
+    return jsonify(_load_security_work_board())
 
 
 @app.route('/api/application-zone/packs/<pack_id>/versions')

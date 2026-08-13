@@ -517,6 +517,84 @@ def _portal_build_agent_pack_catalog() -> list:
     return catalog
 
 
+def _portal_load_security_work_board() -> dict:
+    cases_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "cases.json"
+    results_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "evidence" / "results.json"
+    cases = _portal_read_json(cases_path)
+    results = _portal_read_json(results_path)
+    if not isinstance(cases, list):
+        cases = []
+    if not isinstance(results, dict):
+        results = {}
+
+    result_by_case = {
+        str(item.get("caseId")): item
+        for item in results.get("results", [])
+        if isinstance(item, dict) and item.get("caseId")
+    }
+    lane_order = ["orchestrator", "red", "blue", "green"]
+    lane_labels = {
+        "orchestrator": "Orchestrator",
+        "red": "Red",
+        "blue": "Blue",
+        "green": "Green",
+    }
+    lanes = {
+        lane: {
+            "lane": lane,
+            "label": lane_labels[lane],
+            "items": [],
+        }
+        for lane in lane_order
+    }
+
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        case_id = str(case.get("caseId", ""))
+        lane = str(case.get("lane", "orchestrator"))
+        if lane not in lanes:
+            lanes[lane] = {"lane": lane, "label": lane.title(), "items": []}
+        approval = case.get("approval") if isinstance(case.get("approval"), dict) else {}
+        classification = case.get("classification") if isinstance(case.get("classification"), dict) else {}
+        actions = case.get("actions") if isinstance(case.get("actions"), list) else []
+        evidence = case.get("evidence") if isinstance(case.get("evidence"), list) else []
+        result = result_by_case.get(case_id, {})
+        lanes[lane]["items"].append({
+            "caseId": case_id,
+            "request": case.get("request", ""),
+            "playbook": classification.get("playbook", ""),
+            "risk": classification.get("risk", ""),
+            "scope": classification.get("scope", ""),
+            "approvalState": approval.get("state", ""),
+            "requiredFor": approval.get("requiredFor", []),
+            "actionModes": sorted({
+                str(action.get("mode", ""))
+                for action in actions
+                if isinstance(action, dict) and action.get("mode")
+            }),
+            "evidenceTypes": [
+                str(item.get("type", ""))
+                for item in evidence
+                if isinstance(item, dict) and item.get("type")
+            ],
+            "evalPassed": bool(result.get("passed")),
+            "failures": result.get("failures", []),
+        })
+
+    return {
+        "updated_at": _utcnow_iso(),
+        "gate": results.get("gate", "UNKNOWN"),
+        "caseCount": len(cases),
+        "passedCount": int(results.get("passedCount", 0) or 0),
+        "failedCount": int(results.get("failedCount", 0) or 0),
+        "blockingChecks": results.get("blockingChecks", []),
+        "lanes": [lanes[lane] for lane in lane_order if lane in lanes],
+        "scorecardHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md",
+        "evalReadmeHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/README.md",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3619,6 +3697,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/aapaas/summary":
             return self._handle_aapaas_summary()
+
+        if request_path == "/api/application-zone/security-control-tower/work-board":
+            return self._handle_security_control_tower_work_board()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7262,6 +7343,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 "schedulerStatus": (scheduler.get("syncResult") or {}).get("status"),
             },
         }, 200)
+
+    def _handle_security_control_tower_work_board(self):
+        """Return the Security Control Tower Red/Blue/Green work board."""
+        return self._send_json(_portal_load_security_work_board(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

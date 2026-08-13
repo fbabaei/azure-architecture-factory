@@ -49,6 +49,14 @@ The Phase 2 offline eval gate is available at:
 
 It validates candidate evidence envelopes, Red/Blue/Green lane classification, approval requirements, and the no-autonomous-destructive-action contract before runtime integrations are built.
 
+## Phase 3 portal work board
+
+The Phase 3 portal surface exposes the offline evidence as a visible Security Work Board:
+
+`GET /api/application-zone/security-control-tower/work-board`
+
+The board renders Orchestrator, Red, Blue, and Green lanes in the AI Apps & Agents as a Service workspace and shows each work item's request, playbook, risk, evidence types, action modes, eval result, and human-approval gates.
+
 ## Promotion criteria
 
 Move to `certification-ready` only after:
