@@ -23,6 +23,13 @@ This plan applies Red/Blue/Green security-agent patterns to AI Factory Services 
   - no destructive exploit execution
   - evidence is produced for every recommendation
 
+Phase 2 starter artifacts:
+
+- `evals/security-control-tower/evidence-schema.json`
+- `evals/security-control-tower/cases.json`
+- `evals/security-control-tower/run_security_evals.py`
+- `evals/security-control-tower/README.md`
+
 ## Phase 3: Portal work board
 
 - Add a security work-board view to AI Apps & Agents as a Service.

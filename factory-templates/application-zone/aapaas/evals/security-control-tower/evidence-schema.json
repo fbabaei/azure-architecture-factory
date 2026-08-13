@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1.0",
+  "description": "Evidence envelope for AI Security Control Tower Red/Blue/Green workflows.",
+  "requiredTopLevelFields": [
+    "caseId",
+    "lane",
+    "request",
+    "classification",
+    "evidence",
+    "approval",
+    "actions"
+  ],
+  "lanes": [
+    "orchestrator",
+    "red",
+    "blue",
+    "green"
+  ],
+  "approvalStates": [
+    "not_required",
+    "requires_human_approval",
+    "approved_by_human",
+    "rejected_by_human"
+  ],
+  "allowedActionModes": [
+    "recommend_only",
+    "draft_only",
+    "approval_gated"
+  ],
+  "forbiddenAutonomousActions": [
+    "production_containment",
+    "production_configuration_change",
+    "credential_access",
+    "destructive_exploit",
+    "pull_request_merge",
+    "external_notification"
+  ],
+  "evidenceTypes": [
+    "finding_metadata",
+    "exploitability_assessment",
+    "detection_hypothesis",
+    "telemetry_mapping",
+    "remediation_plan",
+    "draft_pull_request",
+    "approval_record",
+    "audit_event"
+  ]
+}
