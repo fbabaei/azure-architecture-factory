@@ -4350,6 +4350,10 @@
                             <h4>Approval Gates</h4>
                             <p class="appzone-note">Phase 5 named-human approval workflows for containment, production changes, PR merge, and external communications.</p>
                             <div id="appzone-security-approval-workflows" class="appzone-security-board">Loading approval workflows...</div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>Pilot Readiness</h4>
+                            <p class="appzone-note">Phase 7 production-pilot gates for tenant connectors, RBAC, persistence, observability, live health, rollback drills, and data retention.</p>
+                            <div id="appzone-security-pilot-readiness" class="appzone-security-board">Loading pilot readiness...</div>
                         </div>
 
                         <div class="appzone-panel">
@@ -7886,12 +7890,13 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/tool-integrations`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/approval-workflows`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-readiness`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7915,6 +7920,11 @@
                     renderSecurityApprovalWorkflows(await approvalWorkflowResponse.json());
                 } else {
                     renderSecurityApprovalWorkflows(null);
+                }
+                if (pilotReadinessResponse && pilotReadinessResponse.ok) {
+                    renderSecurityPilotReadiness(await pilotReadinessResponse.json());
+                } else {
+                    renderSecurityPilotReadiness(null);
                 }
 
                 const packs = data.packs || [];
@@ -8162,6 +8172,44 @@
                 <div class="security-tool-grid">${workflowCards}</div>
                 <div class="security-tool-controls">
                     ${principles.map(principle => `<span class="security-work-pill approval">${escapeHtml(principle)}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderSecurityPilotReadiness(data) {
+            const el = document.getElementById('appzone-security-pilot-readiness');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Pilot readiness contract is not available.</div>';
+                return;
+            }
+
+            const pilot = data.pilotReadiness || {};
+            const checks = Array.isArray(data.readinessChecks) ? data.readinessChecks : [];
+            const controls = Array.isArray(data.pilotControls) ? data.pilotControls : [];
+            const checkCards = checks.map(check => `
+                <div class="security-pilot-card">
+                    <div class="security-work-item-title">${escapeHtml(check.displayName || check.checkId || 'readiness check')}</div>
+                    <div class="security-work-meta">Owner: ${escapeHtml(check.ownerRole || '-')} · Status: ${escapeHtml(check.status || '-')}</div>
+                    <div class="security-work-meta">Evidence: ${escapeHtml(check.evidenceType || '-')}</div>
+                    <div class="security-work-request">${escapeHtml(check.description || '')}</div>
+                    <div class="security-work-footer">
+                        <span class="security-work-pill ${check.blocksProductionPilot ? 'fail' : 'pass'}">${check.blocksProductionPilot ? 'Blocks production pilot' : 'Nonblocking'}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Stage:</strong> ${escapeHtml(pilot.stage || '-')} → ${escapeHtml(pilot.targetStage || '-')}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(pilot.overallStatus || '-')}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Pilot readiness contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-tool-grid">${checkCards}</div>
+                <div class="security-tool-controls">
+                    ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
                 </div>
             `;
         }
@@ -10159,6 +10207,14 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             border-top: 3px solid #5c2d91;
             border-radius: 6px;
             background: #fffaff;
+            padding: 0.48rem;
+        }
+
+        .security-pilot-card {
+            border: 1px solid #d9e7f5;
+            border-top: 3px solid #0078d4;
+            border-radius: 6px;
+            background: #f8fbff;
             padding: 0.48rem;
         }
 

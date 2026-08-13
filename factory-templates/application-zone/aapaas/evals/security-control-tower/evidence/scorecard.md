@@ -23,6 +23,11 @@
 
 - Certification evidence result: `PASS`
 
+## Production pilot readiness
+
+- Pilot readiness checks: `7`
+- Pilot readiness result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -61,3 +66,16 @@
 - `certification_tool_integrations_present`
 - `certification_approval_workflows_present`
 - `certification_interpretation_present`
+- `pilot_stage_controlled_preview`
+- `pilot_target_stage_declared`
+- `pilot_blocked_until_prereqs`
+- `pilot_minimum_approver_role_present`
+- `pilot_readiness_checks_present`
+- `pilot_required_evidence_covered`
+- `pilot_check_status_required`
+- `pilot_check_blocks_production`
+- `pilot_check_owner_present`
+- `pilot_check_description_present`
+- `pilot_controls_present`
+- `pilot_controls_read_only_boundary`
+- `pilot_controls_draft_only_boundary`

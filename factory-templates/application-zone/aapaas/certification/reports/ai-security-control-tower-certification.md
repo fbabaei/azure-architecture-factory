@@ -93,6 +93,18 @@ The eval gate now verifies that containment, production changes, pull-request me
 | Runtime evidence | `operations/instances/ai-security-control-tower-dev-eastus.instance.json` and `operations/health/ai-security-control-tower-dev-eastus.health.generated.json` capture the certified control-plane baseline |
 | Certification snapshot | `operations/health/ai-security-control-tower-certification.generated.json` records the blocking checks and certification interpretation |
 
+## Phase 7 production-pilot readiness
+
+The Phase 7 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-readiness.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/pilot-readiness`
+
+This gate keeps the service in certification-ready controlled preview while production-pilot prerequisites are completed. The contract requires tenant connector inventory, RBAC review, managed persistence, observability, live health evidence, rollback drill, and data-retention review before production pilot can be unblocked.
+
 ## Promotion criteria
 
 This pack was promoted to `certification-ready` after:

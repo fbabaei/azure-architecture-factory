@@ -1,0 +1,89 @@
+{
+  "pilotReadiness": {
+    "stage": "controlled-preview",
+    "targetStage": "production-pilot",
+    "overallStatus": "blocked-until-tenant-prerequisites-complete",
+    "minimumApproverRole": "security-platform-owner",
+    "requiredEvidenceBeforePilot": [
+      "tenant_connector_inventory",
+      "rbac_review",
+      "managed_persistence_plan",
+      "observability_dashboard",
+      "live_health_evidence",
+      "rollback_drill",
+      "data_retention_review"
+    ]
+  },
+  "readinessChecks": [
+    {
+      "checkId": "tenant-connector-inventory",
+      "displayName": "Tenant connector inventory",
+      "status": "required",
+      "ownerRole": "security-platform-owner",
+      "evidenceType": "tenant_connector_inventory",
+      "description": "Document approved read-only code scanning, XDR, cloud posture, and repository metadata connectors for the target tenant.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "rbac-review",
+      "displayName": "RBAC and managed identity review",
+      "status": "required",
+      "ownerRole": "identity-security-owner",
+      "evidenceType": "rbac_review",
+      "description": "Verify least-privilege managed identities, role assignments, and separation of read-only, draft-only, and approval-gated permissions.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "managed-persistence",
+      "displayName": "Managed persistence plan",
+      "status": "required",
+      "ownerRole": "platform-engineering-owner",
+      "evidenceType": "managed_persistence_plan",
+      "description": "Define durable work-board, evidence, approval, audit, retention, and backup storage for pilot data.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "observability-dashboard",
+      "displayName": "Observability dashboard",
+      "status": "required",
+      "ownerRole": "service-operations-owner",
+      "evidenceType": "observability_dashboard",
+      "description": "Publish metrics, logs, traces, alerts, and workbook views for work-board health, connector failures, approval latency, and eval status.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "live-health-evidence",
+      "displayName": "Live health evidence",
+      "status": "required",
+      "ownerRole": "service-operations-owner",
+      "evidenceType": "live_health_evidence",
+      "description": "Capture target-environment endpoint checks, sample read-only connector calls, and approval workflow smoke tests.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "rollback-drill",
+      "displayName": "Rollback and compensation drill",
+      "status": "required",
+      "ownerRole": "security-incident-commander",
+      "evidenceType": "rollback_drill",
+      "description": "Run a tabletop drill for containment rollback, production change rollback, PR revert, and external communication compensation.",
+      "blocksProductionPilot": true
+    },
+    {
+      "checkId": "data-retention-review",
+      "displayName": "Data retention and sensitivity review",
+      "status": "required",
+      "ownerRole": "compliance-owner",
+      "evidenceType": "data_retention_review",
+      "description": "Confirm retention, purge, sensitivity-label handling, and export restrictions for security evidence.",
+      "blocksProductionPilot": true
+    }
+  ],
+  "pilotControls": [
+    "controlled-preview remains certification-ready but not production-enabled",
+    "production pilot starts only after every readiness check has completed evidence",
+    "all live connectors remain read-only until RBAC review is complete",
+    "all outputs remain draft-only until named-human approval workflows are live",
+    "pilot scope must define tenants, connector set, owner roles, and rollback contacts"
+  ]
+}
