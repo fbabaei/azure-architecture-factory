@@ -1,0 +1,105 @@
+{
+  "approvalWorkflows": [
+    {
+      "workflowId": "containment-approval",
+      "displayName": "Containment approval",
+      "sensitiveAction": "containment",
+      "executionMode": "approval_gated",
+      "requiresNamedHumanApproval": true,
+      "approverRole": "security-incident-commander",
+      "minimumEvidence": [
+        "finding_metadata",
+        "telemetry_mapping",
+        "audit_event"
+      ],
+      "auditEvents": [
+        "approval_requested",
+        "evidence_reviewed",
+        "approval_recorded",
+        "action_executed_or_rejected",
+        "rollback_reviewed"
+      ],
+      "rollbackRequired": true,
+      "rollbackPlan": "Document containment scope, expected impact, validation checks, rollback trigger, and service-owner contact before execution.",
+      "notificationPolicy": "generic_internal_only"
+    },
+    {
+      "workflowId": "production-change-approval",
+      "displayName": "Production change approval",
+      "sensitiveAction": "production_change",
+      "executionMode": "approval_gated",
+      "requiresNamedHumanApproval": true,
+      "approverRole": "service-owner-or-change-manager",
+      "minimumEvidence": [
+        "remediation_plan",
+        "audit_event"
+      ],
+      "auditEvents": [
+        "approval_requested",
+        "change_plan_reviewed",
+        "approval_recorded",
+        "action_executed_or_rejected",
+        "rollback_reviewed"
+      ],
+      "rollbackRequired": true,
+      "rollbackPlan": "Document deployment scope, blast radius, health checks, rollback command or procedure, and owner sign-off before production change.",
+      "notificationPolicy": "generic_internal_only"
+    },
+    {
+      "workflowId": "pull-request-merge-approval",
+      "displayName": "Pull request merge approval",
+      "sensitiveAction": "pull_request_merge",
+      "executionMode": "approval_gated",
+      "requiresNamedHumanApproval": true,
+      "approverRole": "code-owner",
+      "minimumEvidence": [
+        "draft_pull_request",
+        "remediation_plan",
+        "audit_event"
+      ],
+      "auditEvents": [
+        "approval_requested",
+        "code_owner_reviewed",
+        "approval_recorded",
+        "action_executed_or_rejected",
+        "rollback_reviewed"
+      ],
+      "rollbackRequired": true,
+      "rollbackPlan": "Document revert strategy, test evidence, deployment dependency, and code-owner sign-off before merge.",
+      "notificationPolicy": "generic_internal_only"
+    },
+    {
+      "workflowId": "external-communication-approval",
+      "displayName": "External communication approval",
+      "sensitiveAction": "external_notification",
+      "executionMode": "approval_gated",
+      "requiresNamedHumanApproval": true,
+      "approverRole": "communications-owner-and-legal-reviewer",
+      "minimumEvidence": [
+        "audit_event",
+        "remediation_plan"
+      ],
+      "auditEvents": [
+        "approval_requested",
+        "message_reviewed",
+        "approval_recorded",
+        "action_executed_or_rejected"
+      ],
+      "rollbackRequired": false,
+      "rollbackPlan": "External communications cannot be rolled back; require pre-send review, audience validation, and approved generic wording.",
+      "notificationPolicy": "approved_generic_external_only"
+    }
+  ],
+  "requiredSensitiveActions": [
+    "containment",
+    "production_change",
+    "pull_request_merge",
+    "external_notification"
+  ],
+  "approvalPrinciples": [
+    "named human approval before sensitive execution",
+    "audit events for approval request, review, decision, and outcome",
+    "rollback or compensation guidance before execution",
+    "generic communications only unless separately approved"
+  ]
+}

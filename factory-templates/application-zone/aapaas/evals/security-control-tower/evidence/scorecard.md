@@ -14,6 +14,11 @@
 - Tool integration contracts: `8`
 - Integration contract result: `PASS`
 
+## Approval-gated automation
+
+- Approval workflow contracts: `4`
+- Approval workflow result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -36,3 +41,14 @@
 - `output_mode_draft_only`
 - `output_promotion_requires_human_approval`
 - `output_forbidden_actions_explicit`
+- `approval_workflows_present`
+- `approval_workflows_cover_sensitive_actions`
+- `approval_execution_mode_gated`
+- `approval_requires_named_human`
+- `approval_role_present`
+- `approval_minimum_evidence_present`
+- `approval_audit_event_required`
+- `approval_audit_evidence_required`
+- `approval_rollback_declared`
+- `approval_rollback_plan_present`
+- `approval_notification_policy_present`

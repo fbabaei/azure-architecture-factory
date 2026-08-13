@@ -531,6 +531,19 @@ def _load_security_tool_integrations() -> dict:
     }
 
 
+def _load_security_approval_workflows() -> dict:
+    workflows = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "approval-workflows.json")
+    if not isinstance(workflows, dict):
+        workflows = {}
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "approvalWorkflows": workflows.get("approvalWorkflows", []),
+        "requiredSensitiveActions": workflows.get("requiredSensitiveActions", []),
+        "approvalPrinciples": workflows.get("approvalPrinciples", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
+    }
+
+
 def _validate_input_rule(rule: dict, value) -> str | None:
     field_type = rule.get("type")
     name = rule.get("name", "field")
@@ -1504,6 +1517,12 @@ def get_security_control_tower_work_board():
 def get_security_control_tower_tool_integrations():
     """Return safe read-only and draft-only tool integration contracts."""
     return jsonify(_load_security_tool_integrations())
+
+
+@app.route('/api/application-zone/security-control-tower/approval-workflows')
+def get_security_control_tower_approval_workflows():
+    """Return named-human approval workflows for sensitive actions."""
+    return jsonify(_load_security_approval_workflows())
 
 
 @app.route('/api/application-zone/packs/<pack_id>/versions')

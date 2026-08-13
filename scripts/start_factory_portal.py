@@ -609,6 +609,20 @@ def _portal_load_security_tool_integrations() -> dict:
     }
 
 
+def _portal_load_security_approval_workflows() -> dict:
+    workflows_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "approval-workflows.json"
+    workflows = _portal_read_json(workflows_path)
+    if not isinstance(workflows, dict):
+        workflows = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "approvalWorkflows": workflows.get("approvalWorkflows", []),
+        "requiredSensitiveActions": workflows.get("requiredSensitiveActions", []),
+        "approvalPrinciples": workflows.get("approvalPrinciples", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3717,6 +3731,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/tool-integrations":
             return self._handle_security_control_tower_tool_integrations()
+
+        if request_path == "/api/application-zone/security-control-tower/approval-workflows":
+            return self._handle_security_control_tower_approval_workflows()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7368,6 +7385,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_tool_integrations(self):
         """Return safe read-only and draft-only tool integration contracts."""
         return self._send_json(_portal_load_security_tool_integrations(), 200)
+
+    def _handle_security_control_tower_approval_workflows(self):
+        """Return named-human approval workflows for sensitive actions."""
+        return self._send_json(_portal_load_security_approval_workflows(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""
