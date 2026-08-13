@@ -5,6 +5,8 @@
   "failedCount": 0,
   "toolIntegrationCount": 8,
   "toolIntegrationFailures": [],
+  "approvalWorkflowCount": 4,
+  "approvalWorkflowFailures": [],
   "results": [
     {
       "caseId": "red-passive-ssrf",
@@ -51,6 +53,17 @@
     "source_forbidden_actions_explicit",
     "output_mode_draft_only",
     "output_promotion_requires_human_approval",
-    "output_forbidden_actions_explicit"
+    "output_forbidden_actions_explicit",
+    "approval_workflows_present",
+    "approval_workflows_cover_sensitive_actions",
+    "approval_execution_mode_gated",
+    "approval_requires_named_human",
+    "approval_role_present",
+    "approval_minimum_evidence_present",
+    "approval_audit_event_required",
+    "approval_audit_evidence_required",
+    "approval_rollback_declared",
+    "approval_rollback_plan_present",
+    "approval_notification_policy_present"
   ]
 }

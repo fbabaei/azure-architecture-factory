@@ -105,6 +105,7 @@
     "factory-templates/application-zone/aapaas/docs/SECURITY_CONTROL_TOWER_PLAN.md",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json",
+    "factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md"
   ],
   "agents": [
@@ -194,6 +195,7 @@
       "approval-gate-contract",
       "evidence-schema-contract",
       "safe-tool-integration-contract",
+      "named-human-approval-workflow-contract",
       "python factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py"
     ],
     "evaluationPlan": "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md"

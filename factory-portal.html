@@ -4346,6 +4346,10 @@
                             <h4>Safe Tool Integrations</h4>
                             <p class="appzone-note">Phase 4 contracts for read-only security sources and draft-only outputs. Sensitive actions stay human-gated.</p>
                             <div id="appzone-security-tool-integrations" class="appzone-security-board">Loading safe tool integrations...</div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>Approval Gates</h4>
+                            <p class="appzone-note">Phase 5 named-human approval workflows for containment, production changes, PR merge, and external communications.</p>
+                            <div id="appzone-security-approval-workflows" class="appzone-security-board">Loading approval workflows...</div>
                         </div>
 
                         <div class="appzone-panel">
@@ -7882,11 +7886,12 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse, securityToolResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/tool-integrations`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/approval-workflows`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7905,6 +7910,11 @@
                     renderSecurityToolIntegrations(await securityToolResponse.json());
                 } else {
                     renderSecurityToolIntegrations(null);
+                }
+                if (approvalWorkflowResponse && approvalWorkflowResponse.ok) {
+                    renderSecurityApprovalWorkflows(await approvalWorkflowResponse.json());
+                } else {
+                    renderSecurityApprovalWorkflows(null);
                 }
 
                 const packs = data.packs || [];
@@ -8107,6 +8117,51 @@
                 <div class="security-tool-grid">${draftOnlyOutputs.map(item => renderIntegrationCard(item, item.outputMode || 'draft_only')).join('')}</div>
                 <div class="security-tool-controls">
                     ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderSecurityApprovalWorkflows(data) {
+            const el = document.getElementById('appzone-security-approval-workflows');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Approval workflow contracts are not available.</div>';
+                return;
+            }
+
+            const workflows = Array.isArray(data.approvalWorkflows) ? data.approvalWorkflows : [];
+            const requiredActions = Array.isArray(data.requiredSensitiveActions) ? data.requiredSensitiveActions : [];
+            const principles = Array.isArray(data.approvalPrinciples) ? data.approvalPrinciples : [];
+            const workflowCards = workflows.map(workflow => {
+                const evidence = Array.isArray(workflow.minimumEvidence) ? workflow.minimumEvidence.join(', ') : '';
+                const auditEvents = Array.isArray(workflow.auditEvents) ? workflow.auditEvents.join(', ') : '';
+                const rollback = workflow.rollbackRequired ? 'Rollback required' : 'Compensation/pre-send review required';
+                return `
+                    <div class="security-approval-card">
+                        <div class="security-work-item-title">${escapeHtml(workflow.displayName || workflow.workflowId || 'approval workflow')}</div>
+                        <div class="security-work-meta">Action: ${escapeHtml(workflow.sensitiveAction || '-')} · Mode: ${escapeHtml(workflow.executionMode || '-')}</div>
+                        <div class="security-work-meta">Approver: ${escapeHtml(workflow.approverRole || '-')} · Named human: ${workflow.requiresNamedHumanApproval ? 'required' : 'missing'}</div>
+                        <div class="security-work-meta">Evidence: ${escapeHtml(evidence || '-')}</div>
+                        <div class="security-work-meta">Audit: ${escapeHtml(auditEvents || '-')}</div>
+                        <div class="security-work-approval">${escapeHtml(rollback)}: ${escapeHtml(workflow.rollbackPlan || '-')}</div>
+                        <div class="security-work-footer">
+                            <span class="security-work-pill approval">${escapeHtml(workflow.notificationPolicy || 'approval policy')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Approval workflows:</strong> ${escapeHtml(String(workflows.length))}</div>
+                    <div><strong>Sensitive actions covered:</strong> ${escapeHtml(String(requiredActions.length))}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Approval contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-tool-grid">${workflowCards}</div>
+                <div class="security-tool-controls">
+                    ${principles.map(principle => `<span class="security-work-pill approval">${escapeHtml(principle)}</span>`).join('')}
                 </div>
             `;
         }
@@ -10096,6 +10151,14 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             border-top-width: 3px;
             border-radius: 6px;
             background: #ffffff;
+            padding: 0.48rem;
+        }
+
+        .security-approval-card {
+            border: 1px solid #eadcf8;
+            border-top: 3px solid #5c2d91;
+            border-radius: 6px;
+            background: #fffaff;
             padding: 0.48rem;
         }
 

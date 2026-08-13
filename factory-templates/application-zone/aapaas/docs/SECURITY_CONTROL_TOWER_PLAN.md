@@ -70,6 +70,13 @@ Phase 4 starter surface:
 - Store audit events for every approval and action.
 - Add rollback/compensation guidance.
 
+Phase 5 starter surface:
+
+- `GET /api/application-zone/security-control-tower/approval-workflows`
+- `evals/security-control-tower/approval-workflows.json`
+- The eval gate now verifies every sensitive action has an `approval_gated` workflow, named human approval, required evidence, audit events, and rollback or compensation guidance.
+- The portal renders Approval Gates cards so approver role, evidence requirements, audit trail, rollback plan, and notification policy are visible before any sensitive action is enabled.
+
 ## Phase 6: Certification-ready promotion
 
 Promote only after:

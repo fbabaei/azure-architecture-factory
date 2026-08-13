@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent
 SCHEMA_PATH = ROOT / "evidence-schema.json"
 CASES_PATH = ROOT / "cases.json"
 TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
+APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
 EVIDENCE_DIR = ROOT / "evidence"
 
 
@@ -144,10 +145,57 @@ def evaluate_tool_integrations(integrations: dict, schema: dict) -> list[dict]:
     return failures
 
 
+def evaluate_approval_workflows(workflows_doc: dict, schema: dict) -> list[dict]:
+    failures: list[dict] = []
+    allowed_evidence = set(schema["evidenceTypes"])
+    required_actions = set(workflows_doc.get("requiredSensitiveActions") or [])
+    workflows = workflows_doc.get("approvalWorkflows") or []
+    check(bool(workflows), "approval_workflows_present", "approval workflows: approvalWorkflows is empty", failures)
+
+    workflow_actions = {
+        str(workflow.get("sensitiveAction"))
+        for workflow in workflows
+        if isinstance(workflow, dict) and workflow.get("sensitiveAction")
+    }
+    check(
+        required_actions.issubset(workflow_actions),
+        "approval_workflows_cover_sensitive_actions",
+        f"approval workflows: missing {sorted(required_actions - workflow_actions)}",
+        failures,
+    )
+
+    for workflow in workflows:
+        workflow_id = str(workflow.get("workflowId", "<missing>"))
+        action = workflow.get("sensitiveAction")
+        check(action in required_actions, "approval_action_required", f"{workflow_id}: unexpected sensitive action {action}", failures)
+        check(workflow.get("executionMode") == "approval_gated", "approval_execution_mode_gated", f"{workflow_id}: not approval_gated", failures)
+        check(
+            workflow.get("requiresNamedHumanApproval") is True,
+            "approval_requires_named_human",
+            f"{workflow_id}: named human approval not required",
+            failures,
+        )
+        check(bool(workflow.get("approverRole")), "approval_role_present", f"{workflow_id}: missing approverRole", failures)
+        minimum_evidence = workflow.get("minimumEvidence") or []
+        check(bool(minimum_evidence), "approval_minimum_evidence_present", f"{workflow_id}: missing minimumEvidence", failures)
+        for evidence_type in minimum_evidence:
+            check(evidence_type in allowed_evidence, "approval_evidence_type_allowed", f"{workflow_id}: invalid evidence type {evidence_type}", failures)
+        audit_events = set(workflow.get("auditEvents") or [])
+        for event_name in {"approval_requested", "approval_recorded", "action_executed_or_rejected"}:
+            check(event_name in audit_events, "approval_audit_event_required", f"{workflow_id}: missing {event_name}", failures)
+        check("audit_event" in minimum_evidence, "approval_audit_evidence_required", f"{workflow_id}: missing audit_event evidence", failures)
+        check("rollbackRequired" in workflow, "approval_rollback_declared", f"{workflow_id}: rollbackRequired missing", failures)
+        check(bool(workflow.get("rollbackPlan")), "approval_rollback_plan_present", f"{workflow_id}: rollbackPlan missing", failures)
+        check(bool(workflow.get("notificationPolicy")), "approval_notification_policy_present", f"{workflow_id}: notificationPolicy missing", failures)
+
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
     tool_integrations = load_json(TOOL_INTEGRATIONS_PATH)
+    approval_workflows = load_json(APPROVAL_WORKFLOWS_PATH)
     all_failures: list[dict] = []
     results = []
 
@@ -163,6 +211,8 @@ def main() -> int:
 
     integration_failures = evaluate_tool_integrations(tool_integrations, schema)
     all_failures.extend(integration_failures)
+    approval_failures = evaluate_approval_workflows(approval_workflows, schema)
+    all_failures.extend(approval_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -171,6 +221,8 @@ def main() -> int:
         "failedCount": len([item for item in results if not item["passed"]]),
         "toolIntegrationCount": len(tool_integrations.get("readOnlySources", [])) + len(tool_integrations.get("draftOnlyOutputs", [])),
         "toolIntegrationFailures": integration_failures,
+        "approvalWorkflowCount": len(approval_workflows.get("approvalWorkflows", [])),
+        "approvalWorkflowFailures": approval_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -192,7 +244,18 @@ def main() -> int:
             "source_forbidden_actions_explicit",
             "output_mode_draft_only",
             "output_promotion_requires_human_approval",
-            "output_forbidden_actions_explicit"
+            "output_forbidden_actions_explicit",
+            "approval_workflows_present",
+            "approval_workflows_cover_sensitive_actions",
+            "approval_execution_mode_gated",
+            "approval_requires_named_human",
+            "approval_role_present",
+            "approval_minimum_evidence_present",
+            "approval_audit_event_required",
+            "approval_audit_evidence_required",
+            "approval_rollback_declared",
+            "approval_rollback_plan_present",
+            "approval_notification_policy_present"
         ],
     }
 
@@ -212,6 +275,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print(f"  [ok] tool integrations ({summary['toolIntegrationCount']})")
+    if approval_failures:
+        print("  [fail] approval workflows")
+        for failure in approval_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] approval workflows ({summary['approvalWorkflowCount']})")
     return 0 if not all_failures else 1
 
 
@@ -232,6 +301,11 @@ def render_scorecard(summary: dict) -> str:
         "",
         f"- Tool integration contracts: `{summary.get('toolIntegrationCount', 0)}`",
         f"- Integration contract result: `{'PASS' if not summary.get('toolIntegrationFailures') else 'FAIL'}`",
+        "",
+        "## Approval-gated automation",
+        "",
+        f"- Approval workflow contracts: `{summary.get('approvalWorkflowCount', 0)}`",
+        f"- Approval workflow result: `{'PASS' if not summary.get('approvalWorkflowFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

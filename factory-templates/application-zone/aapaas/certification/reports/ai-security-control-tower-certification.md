@@ -69,6 +69,18 @@ The portal exposes it through:
 
 The eval gate now blocks any source that is not `read_only`, any output that is not `draft_only`, and any sensitive promotion path that lacks human approval. The visible portal cards list read-only source boundaries, draft-only outputs, and forbidden actions for code scanning findings, Defender/XDR summaries, cloud posture findings, repository metadata, detection drafts, remediation plans, draft pull requests, and runbook updates.
 
+## Phase 5 approval-gated automation
+
+The Phase 5 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/approval-workflows`
+
+The eval gate now verifies that containment, production changes, pull-request merge, and external communication each have an `approval_gated` workflow with a named human approver role, minimum evidence requirements, audit events, rollback or compensation guidance, and a notification policy. The visible Approval Gates cards make these requirements reviewable before sensitive actions are enabled.
+
 ## Promotion criteria
 
 Move to `certification-ready` only after:
