@@ -300,7 +300,7 @@
 
         .portal-navigation-guide-body {
             display: grid;
-            grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.25fr);
+            grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.45fr);
             gap: 1rem;
             align-items: start;
         }
@@ -440,7 +440,7 @@
         }
 
         .user-map-modal-dialog {
-            width: min(1120px, 96vw);
+            width: min(1400px, 98vw);
             max-height: 92vh;
             display: flex;
             flex-direction: column;
@@ -459,6 +459,9 @@
             padding: 1rem 1.15rem;
             border-bottom: 1px solid #d6e5f3;
             background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
         .user-map-modal-title {
@@ -475,19 +478,31 @@
         }
 
         .user-map-modal-close {
-            border: 1px solid #9cc1e2;
-            background: #ffffff;
-            color: #124267;
+            border: 1px solid #005a9e;
+            background: var(--primary);
+            color: #ffffff;
             border-radius: 999px;
-            padding: 0.34rem 0.8rem;
-            font-size: 0.82rem;
+            padding: 0.44rem 0.95rem;
+            font-size: 0.9rem;
             font-weight: 800;
             cursor: pointer;
+            flex: 0 0 auto;
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.24);
+        }
+
+        .user-map-modal-close:hover,
+        .user-map-modal-close:focus-visible {
+            background: var(--primary-dark);
+            outline: none;
         }
 
         .user-map-modal-body {
             padding: 1rem 1.15rem 1.15rem;
             overflow: auto;
+        }
+
+        .user-map-modal .portal-navigation-guide-body {
+            grid-template-columns: 1fr;
         }
 
         body.user-map-modal-open {
@@ -7125,7 +7140,8 @@
             const viewBoxHeight = Number(viewBox?.height || 0);
             const renderedWidth = Number(svg.getBoundingClientRect().width || 0);
             const renderedHeight = Number(svg.getBoundingClientRect().height || 0);
-            const baseWidth = Number(svg.dataset.baseWidth || Math.max(1500, viewBoxWidth, renderedWidth / portalNavigationZoom || 0));
+            const viewportWidth = Math.max(640, Math.min(1040, (diagram.clientWidth || 1040) - 32));
+            const baseWidth = Number(svg.dataset.baseWidth || Math.max(640, Math.min(1040, viewportWidth || viewBoxWidth || renderedWidth / portalNavigationZoom || 0)));
             const aspectRatio = viewBoxWidth && viewBoxHeight
                 ? viewBoxHeight / viewBoxWidth
                 : (renderedWidth ? renderedHeight / renderedWidth : 0.45);
