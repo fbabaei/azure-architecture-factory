@@ -48,6 +48,12 @@ http://127.0.0.1:5501/factory-portal.html#application-zone-workspace
 
 ## **Part 2: Create Your First Instance** (2 minutes)
 
+### What Quick Launch (Local) is for
+
+**Quick Launch (Local)** is a portal-side test harness for trying an App Pack without doing a real Azure deployment. Use it to validate the selected pack/version, check required inputs, create a local/in-memory instance record, discover available agents, and test runtime or sample agent calls.
+
+It is intended for catalog validation, demos, and developer testing before promotion to a real deployment path. It is **not** the production deployment experience.
+
 An **instance** is your isolated workspace for a single app (e.g., CaseWright). It holds agent definitions and configuration.
 
 ### Step 3: Click "Create Instance"
