@@ -4308,9 +4308,9 @@
 
                     <div id="workspace-tab" class="workspace-tab-content active workspace-tab-panel">
                         <div class="appzone-grid">
-                        <div class="appzone-panel">
+                        <div class="appzone-panel appzone-catalog-panel">
                             <h4>Catalog</h4>
-                            <p class="appzone-note">Shows App Packs and Agent Packs loaded from factory templates.</p>
+                            <p class="appzone-note">Shows App Packs, Agent Packs, evidence, and Security Control Tower governance from factory templates.</p>
                             <div class="appzone-kpi-row">
                                 <div class="appzone-kpi">
                                     <div class="appzone-kpi-label">Selected Pack</div>
@@ -4329,31 +4329,69 @@
                                 <button type="button" class="btn-primary" onclick="refreshAppZoneCatalog(true)">Refresh Catalog</button>
                             </div>
                             <div id="appzone-catalog-status" class="status-message info visible">Loading catalog...</div>
-                            <div id="appzone-catalog-list" class="appzone-list"></div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>Agent Packs</h4>
-                            <p class="appzone-note">Reusable hosted agents promoted from canonical App Packs. Personal/local tools stay out of the governed service catalog.</p>
-                            <div id="appzone-agentpack-list" class="appzone-list"></div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>AAPAAS Evidence</h4>
-                            <p class="appzone-note">Live AI Apps as a Service instance, health, scheduler, and certification evidence.</p>
-                            <div id="appzone-aapaas-summary" class="appzone-output">Loading AAPAAS evidence...</div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>Security Work Board</h4>
-                            <p class="appzone-note">Red, Blue, Green, and Orchestrator work lanes from the Security Control Tower Phase 2 eval evidence.</p>
-                            <div id="appzone-security-work-board" class="appzone-security-board">Loading Security Work Board...</div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>Safe Tool Integrations</h4>
-                            <p class="appzone-note">Phase 4 contracts for read-only security sources and draft-only outputs. Sensitive actions stay human-gated.</p>
-                            <div id="appzone-security-tool-integrations" class="appzone-security-board">Loading safe tool integrations...</div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>Approval Gates</h4>
-                            <p class="appzone-note">Phase 5 named-human approval workflows for containment, production changes, PR merge, and external communications.</p>
-                            <div id="appzone-security-approval-workflows" class="appzone-security-board">Loading approval workflows...</div>
-                            <div style="height:0.75rem;"></div>
-                            <h4>Pilot Readiness</h4>
-                            <p class="appzone-note">Phase 7 production-pilot gates for tenant connectors, RBAC, persistence, observability, live health, rollback drills, and data retention.</p>
-                            <div id="appzone-security-pilot-readiness" class="appzone-security-board">Loading pilot readiness...</div>
+                            <details class="appzone-accordion-section" open>
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">App Packs</span>
+                                        <span class="appzone-accordion-subtitle">Governed app bundles and certification state.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-catalog-list" class="appzone-list"></div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Agent Packs</span>
+                                        <span class="appzone-accordion-subtitle">Reusable hosted agents promoted from canonical App Packs.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-agentpack-list" class="appzone-list"></div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">AAPAAS Evidence</span>
+                                        <span class="appzone-accordion-subtitle">Instance, health, scheduler, and certification evidence.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-aapaas-summary" class="appzone-output">Loading AAPAAS evidence...</div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Security Work Board</span>
+                                        <span class="appzone-accordion-subtitle">Red, Blue, Green, and Orchestrator lanes.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-work-board" class="appzone-security-board">Loading Security Work Board...</div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Safe Tool Integrations</span>
+                                        <span class="appzone-accordion-subtitle">Read-only sources and draft-only outputs.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-tool-integrations" class="appzone-security-board">Loading safe tool integrations...</div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Approval Gates</span>
+                                        <span class="appzone-accordion-subtitle">Named-human workflows for sensitive actions.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-approval-workflows" class="appzone-security-board">Loading approval workflows...</div>
+                            </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Pilot Readiness</span>
+                                        <span class="appzone-accordion-subtitle">Production-pilot prerequisite blockers.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-pilot-readiness" class="appzone-security-board">Loading pilot readiness...</div>
+                            </details>
                         </div>
 
                         <div class="appzone-panel">
@@ -9915,6 +9953,80 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             color: var(--primary);
             font-size: 0.92rem;
             margin-bottom: 0.45rem;
+        }
+
+        .appzone-catalog-panel {
+            display: grid;
+            gap: 0.65rem;
+            align-content: start;
+        }
+
+        .appzone-accordion-section {
+            border: 1px solid #dbe7f3;
+            border-radius: 8px;
+            background: #f8fbff;
+            overflow: hidden;
+        }
+
+        .appzone-accordion-section summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+            cursor: pointer;
+            list-style: none;
+            padding: 0.62rem 0.7rem;
+            color: #123b5d;
+            user-select: none;
+        }
+
+        .appzone-accordion-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .appzone-accordion-section summary::after {
+            content: "Expand";
+            flex: 0 0 auto;
+            border: 1px solid #c7d9ea;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #005a9e;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 0.12rem 0.5rem;
+        }
+
+        .appzone-accordion-section[open] summary {
+            border-bottom: 1px solid #dbe7f3;
+            background: #eef6ff;
+        }
+
+        .appzone-accordion-section[open] summary::after {
+            content: "Collapse";
+        }
+
+        .appzone-accordion-title,
+        .appzone-accordion-subtitle {
+            display: block;
+        }
+
+        .appzone-accordion-title {
+            font-weight: 800;
+            font-size: 0.82rem;
+            color: #124267;
+        }
+
+        .appzone-accordion-subtitle {
+            margin-top: 0.1rem;
+            font-size: 0.7rem;
+            color: #5b7286;
+            line-height: 1.25;
+        }
+
+        .appzone-accordion-section > .appzone-list,
+        .appzone-accordion-section > .appzone-output,
+        .appzone-accordion-section > .appzone-security-board {
+            margin: 0.6rem;
         }
 
         .appzone-note {
