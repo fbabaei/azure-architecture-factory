@@ -27,54 +27,55 @@ def test_repo_intake_includes_live_log_panel():
     assert "/api/runs/${encodeURIComponent(runId)}/log" in html
 
 
-def test_agent_factory_has_paired_top_section():
+def test_portal_has_ai_factory_service_tabs_and_user_map():
     html = _portal_html()
-    root = Path(__file__).resolve().parents[2]
-    feature = html.index('id="agent-factory-feature"')
-    workspaces = html.index('id="design-analysis"')
 
-    assert feature < workspaces
-    assert 'class="agent-factory-feature"' in html
-    assert 'href="agent-application-factory/browser/index.html"' in html
-    assert 'href="#ai-agent-foundry-panel">Open planning workspace</a>' in html
-    assert 'class="companion-strip"' in html
-    assert 'src="assets/agent-application-factory-logo.svg"' in html
-    assert (root / "assets" / "agent-application-factory-logo.svg").is_file()
-    assert "topPair.className = 'factory-top-pair'" in html
-    assert "topPair.appendChild(foundry)" in html
-    assert "topPair.appendChild(hero)" in html
+    assert "AI Factory Services" in html
+    assert "Azure Architecture Factory" in html
+    assert "Agent Application Factory" in html
+    assert "AI Apps &amp; Agents as a Service" in html
+    assert 'id="user-map-panel"' in html
+    assert "function openUserMapModal" in html
+    assert "function closeUserMapModal" in html
+    assert "Back to portal" in html
+    assert "portal-navigation-diagram-toolbar" in html
 
 
-def test_document_viewer_renders_mermaid_diagrams():
+def test_agent_factory_links_to_browser_and_workspace():
+    html = _portal_html()
+
+    assert 'href="agent-foundry/browser/index.html"' in html
+    assert 'id="ai-agent-foundry-panel"' in html
+    assert "Agent Browser" in html
+    assert "Agent Assistant" in html
+
+
+def test_user_map_renders_mermaid_when_modal_opens():
     html = _portal_html()
 
     assert "mermaid.min.js" in html
-    assert "function renderDocMermaidDiagrams()" in html
-    assert "code.language-mermaid" in html
-    assert "await renderDocMermaidDiagrams()" in html
+    assert "function renderPortalNavigationGuide()" in html
+    assert "mermaid.initialize({ startOnLoad: false" in html
+    assert "mermaid.run({ nodes: [diagram] })" in html
+    assert "diagram.classList.add('mermaid')" in html
+    assert 'class="portal-navigation-diagram"' in html
+    assert 'class="portal-navigation-diagram mermaid"' not in html
 
 
-def test_portal_links_to_aaf_workflow_diagram():
-    html = _portal_html()
-    root = Path(__file__).resolve().parents[2]
-
-    assert 'href="diagrams/azure-architecture-factory-flow.mmd"' in html
-    assert "COPY diagrams/ diagrams/" in (root / "Dockerfile.portal").read_text(encoding="utf-8")
-
-    diagram = (root / "diagrams" / "azure-architecture-factory-flow.mmd").read_text(encoding="utf-8")
-    assert "flowchart TB" in diagram
-    for phase in ("Phase 0", "Phase 1.5", "Phase 2r", "Phase 2.5", "Phase 2.6", "Phase 2.7", "Phase 2.8", "Phase 3.7", "Phase 4.5", "Phase 7"):
-        assert phase in diagram
-    for phase in ("Phase U0", "Phase U1", "Phase U2", "Phase U3", "Phase U4", "Phase U4b", "Phase U5"):
-        assert phase in diagram
-    assert "Greenfield mode" in diagram
-    assert "Update mode" in diagram
-    assert "ACA Express" in diagram
-
-
-def test_docs_shortcut_expands_portal_documentation():
+def test_user_map_contains_portal_navigation_flow():
     html = _portal_html()
 
-    assert "function expandAnchorPanel(anchorId, source)" in html
-    assert "anchorId === 'docs-quick-links' && !source.closest('#docs-quick-links')" in html
-    assert "expandAnchorPanel(raw, a)" in html
+    assert "flowchart TD" in html
+    assert 'Start["Open AI Factory Services Portal"]' in html
+    assert 'AAF["Azure Architecture Factory"]' in html
+    assert 'AAFac["Agent Application Factory"]' in html
+    assert 'AAPAAS["AI Apps and Agents as a Service"]' in html
+    assert 'Done["Validated app or agent offering"]' in html
+
+
+def test_user_map_modal_hides_floating_helper_while_open():
+    html = _portal_html()
+
+    assert "body.user-map-modal-open #fab-helper-container" in html
+    assert "display: none !important" in html
+    assert "pointer-events: none !important" in html
