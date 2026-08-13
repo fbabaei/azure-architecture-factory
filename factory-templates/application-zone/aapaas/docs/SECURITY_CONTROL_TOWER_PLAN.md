@@ -37,6 +37,13 @@ Phase 2 starter artifacts:
 - Track evidence, owner, approval state, and next action.
 - Add exportable readiness/certification evidence.
 
+Phase 3 portal surface:
+
+- `GET /api/application-zone/security-control-tower/work-board`
+- Renders the Security Work Board in the AI Apps & Agents as a Service workspace.
+- Uses the Phase 2 eval cases and generated PASS scorecard as the initial board data.
+- Displays approval-required actions explicitly so containment, production changes, PR merge, and external notifications remain human-gated.
+
 ## Phase 4: Safe tool integrations
 
 - Integrate read-only sources first:

@@ -4338,6 +4338,10 @@
                             <h4>AAPAAS Evidence</h4>
                             <p class="appzone-note">Live AI Apps as a Service instance, health, scheduler, and certification evidence.</p>
                             <div id="appzone-aapaas-summary" class="appzone-output">Loading AAPAAS evidence...</div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>Security Work Board</h4>
+                            <p class="appzone-note">Red, Blue, Green, and Orchestrator work lanes from the Security Control Tower Phase 2 eval evidence.</p>
+                            <div id="appzone-security-work-board" class="appzone-security-board">Loading Security Work Board...</div>
                         </div>
 
                         <div class="appzone-panel">
@@ -7874,9 +7878,10 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7885,6 +7890,11 @@
                     renderAapaasSummary(aapaas);
                 } else {
                     renderAapaasSummary(null);
+                }
+                if (securityBoardResponse && securityBoardResponse.ok) {
+                    renderSecurityWorkBoard(await securityBoardResponse.json());
+                } else {
+                    renderSecurityWorkBoard(null);
                 }
 
                 const packs = data.packs || [];
@@ -7990,6 +8000,59 @@
                     <thead><tr><th style="text-align:left;">Instance</th><th style="text-align:left;">Status</th><th style="text-align:left;">Health</th><th style="text-align:left;">Endpoint</th></tr></thead>
                     <tbody>${instanceRows || '<tr><td colspan="4">No instances registered.</td></tr>'}</tbody>
                 </table>
+            `;
+        }
+
+        function renderSecurityWorkBoard(data) {
+            const el = document.getElementById('appzone-security-work-board');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Security Work Board evidence is not available.</div>';
+                return;
+            }
+
+            const lanes = Array.isArray(data.lanes) ? data.lanes : [];
+            const laneHtml = lanes.map(lane => {
+                const items = Array.isArray(lane.items) ? lane.items : [];
+                const cards = items.map(item => {
+                    const requiredFor = Array.isArray(item.requiredFor) ? item.requiredFor.join(', ') : '';
+                    const evidenceTypes = Array.isArray(item.evidenceTypes) ? item.evidenceTypes.join(', ') : '';
+                    const actionModes = Array.isArray(item.actionModes) ? item.actionModes.join(', ') : '';
+                    const passed = Boolean(item.evalPassed);
+                    return `
+                        <div class="security-work-item">
+                            <div class="security-work-item-title">${escapeHtml(item.caseId || 'work-item')}</div>
+                            <div class="security-work-request">${escapeHtml(item.request || '')}</div>
+                            <div class="security-work-meta">Playbook: ${escapeHtml(item.playbook || '-')}</div>
+                            <div class="security-work-meta">Risk: ${escapeHtml(item.risk || '-')} · Scope: ${escapeHtml(item.scope || '-')}</div>
+                            <div class="security-work-meta">Evidence: ${escapeHtml(evidenceTypes || '-')}</div>
+                            <div class="security-work-meta">Actions: ${escapeHtml(actionModes || '-')}</div>
+                            <div class="security-work-footer">
+                                <span class="security-work-pill approval">${escapeHtml(item.approvalState || 'unknown')}</span>
+                                <span class="security-work-pill ${passed ? 'pass' : 'fail'}">${passed ? 'Eval PASS' : 'Eval FAIL'}</span>
+                            </div>
+                            ${requiredFor ? `<div class="security-work-approval">Human approval required for: ${escapeHtml(requiredFor)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                return `
+                    <section class="security-work-lane security-work-lane-${escapeHtml(lane.lane || 'other')}">
+                        <div class="security-work-lane-title">${escapeHtml(lane.label || lane.lane || 'Lane')}</div>
+                        ${cards || '<div class="security-work-empty">No work items.</div>'}
+                    </section>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Gate:</strong> ${escapeHtml(data.gate || 'UNKNOWN')}</div>
+                    <div><strong>Cases:</strong> ${escapeHtml(String(data.passedCount ?? 0))}/${escapeHtml(String(data.caseCount ?? 0))} passing</div>
+                    <div class="appzone-doc-links">
+                        ${data.scorecardHref ? `<a href="${escapeHtml(data.scorecardHref)}" target="_blank" rel="noopener">Scorecard</a>` : ''}
+                        ${data.evalReadmeHref ? `<a href="${escapeHtml(data.evalReadmeHref)}" target="_blank" rel="noopener">Eval README</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-work-lanes">${laneHtml}</div>
             `;
         }
 
@@ -9844,10 +9907,125 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             font-weight: 700;
         }
 
+        .appzone-security-board {
+            border: 1px solid #d8e7f6;
+            border-radius: 8px;
+            background: #f9fcff;
+            padding: 0.65rem;
+        }
+
+        .security-work-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.76rem;
+            color: #123b5d;
+            margin-bottom: 0.65rem;
+        }
+
+        .security-work-lanes {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .security-work-lane {
+            border: 1px solid #dce8f5;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0.5rem;
+        }
+
+        .security-work-lane-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #315b7c;
+            margin-bottom: 0.45rem;
+        }
+
+        .security-work-lane-red { border-top: 3px solid #d13438; }
+        .security-work-lane-blue { border-top: 3px solid #0078d4; }
+        .security-work-lane-green { border-top: 3px solid #107c10; }
+        .security-work-lane-orchestrator { border-top: 3px solid #5c2d91; }
+
+        .security-work-item {
+            border: 1px solid #e2edf7;
+            border-radius: 6px;
+            background: #f7fbff;
+            padding: 0.48rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .security-work-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .security-work-item-title {
+            font-size: 0.77rem;
+            font-weight: 800;
+            color: #123b5d;
+            margin-bottom: 0.22rem;
+        }
+
+        .security-work-request,
+        .security-work-meta,
+        .security-work-approval,
+        .security-work-empty {
+            font-size: 0.7rem;
+            color: #4b6478;
+            line-height: 1.35;
+        }
+
+        .security-work-request {
+            color: #203c54;
+            margin-bottom: 0.28rem;
+        }
+
+        .security-work-footer {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.38rem;
+        }
+
+        .security-work-pill {
+            border-radius: 999px;
+            padding: 0.1rem 0.42rem;
+            font-size: 0.66rem;
+            font-weight: 800;
+            background: #e7f1fb;
+            color: #005a9e;
+        }
+
+        .security-work-pill.pass {
+            background: #e7f6e7;
+            color: #107c10;
+        }
+
+        .security-work-pill.fail {
+            background: #fde7e9;
+            color: #a4262c;
+        }
+
+        .security-work-pill.approval {
+            background: #fff4ce;
+            color: #8a6d00;
+        }
+
+        .security-work-approval {
+            margin-top: 0.28rem;
+            color: #6f5200;
+        }
+
         @media (max-width: 900px) {
             .appzone-grid,
             .appzone-form-grid,
-            .appzone-kpi-row {
+            .appzone-kpi-row,
+            .security-work-lanes {
                 grid-template-columns: 1fr;
             }
         }
