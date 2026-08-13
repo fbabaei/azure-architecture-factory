@@ -3741,12 +3741,12 @@
         <hr class="section-divider">
 
         <div class="workspace-nav" aria-label="Portal workspaces">
+            <button type="button" class="workspace-chip user-map-helper" onclick="return openUserMapModal(event)" aria-haspopup="dialog" aria-controls="user-map-panel"><span class="service-tab-icon" aria-hidden="true">🗺️</span>User Map</button>
             <div class="service-tabs" role="tablist" aria-label="Primary AI Factory services">
                 <a class="workspace-chip service-tab" data-service-tab="ai-agent-foundry-panel" href="#ai-agent-foundry-panel" role="tab" aria-controls="ai-agent-foundry-panel" onclick="return selectPrimaryServiceTab('ai-agent-foundry-panel', event)"><span class="service-tab-icon" aria-hidden="true">🤖</span>Agent Application Factory</a>
                 <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)"><span class="service-tab-icon" aria-hidden="true">🏗️</span>Azure Architecture Factory</a>
                 <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)"><span class="service-tab-icon" aria-hidden="true">📦</span>AI Apps & Agents as a Service</a>
             </div>
-            <button type="button" class="workspace-chip user-map-helper" onclick="return openUserMapModal(event)" aria-haspopup="dialog" aria-controls="user-map-panel"><span class="service-tab-icon" aria-hidden="true">🗺️</span>User Map</button>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
@@ -7204,6 +7204,8 @@
         }
 
         const PRIMARY_SERVICE_CARD_IDS = ['ai-agent-foundry-panel', 'build-workspace', 'application-zone-workspace'];
+        const PORTAL_NAVIGATION_ZOOM_MIN = 0.3;
+        const PORTAL_NAVIGATION_ZOOM_MAX = 2.2;
         let portalNavigationMermaidInitialized = false;
         let portalNavigationZoom = 1;
         let userMapReturnFocus = null;
@@ -7221,12 +7223,12 @@
             const viewBoxHeight = Number(viewBox?.height || 0);
             const renderedWidth = Number(svg.getBoundingClientRect().width || 0);
             const renderedHeight = Number(svg.getBoundingClientRect().height || 0);
-            const viewportWidth = Math.max(640, Math.min(1040, (diagram.clientWidth || 1040) - 32));
-            const baseWidth = Number(svg.dataset.baseWidth || Math.max(640, Math.min(1040, viewportWidth || viewBoxWidth || renderedWidth / portalNavigationZoom || 0)));
+            const viewportWidth = Math.max(420, Math.min(560, (diagram.clientWidth || 560) - 32));
+            const baseWidth = Number(svg.dataset.baseWidth || Math.max(420, Math.min(560, viewportWidth || viewBoxWidth || renderedWidth / portalNavigationZoom || 0)));
             const aspectRatio = viewBoxWidth && viewBoxHeight
                 ? viewBoxHeight / viewBoxWidth
                 : (renderedWidth ? renderedHeight / renderedWidth : 0.45);
-            const baseHeight = Number(svg.dataset.baseHeight || Math.max(520, Math.round(baseWidth * aspectRatio)));
+            const baseHeight = Number(svg.dataset.baseHeight || Math.max(360, Math.round(baseWidth * aspectRatio)));
             if (baseWidth && baseHeight) {
                 svg.dataset.baseWidth = String(baseWidth);
                 svg.dataset.baseHeight = String(baseHeight);
@@ -7240,7 +7242,7 @@
         }
 
         function zoomPortalNavigationGuide(delta) {
-            portalNavigationZoom = Math.max(0.6, Math.min(2.2, Math.round((portalNavigationZoom + delta) * 10) / 10));
+            portalNavigationZoom = Math.max(PORTAL_NAVIGATION_ZOOM_MIN, Math.min(PORTAL_NAVIGATION_ZOOM_MAX, Math.round((portalNavigationZoom + delta) * 10) / 10));
             applyPortalNavigationGuideZoom();
             return false;
         }
