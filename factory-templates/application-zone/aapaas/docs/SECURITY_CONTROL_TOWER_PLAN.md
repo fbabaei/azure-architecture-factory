@@ -126,6 +126,18 @@ Phase 8 starter surface:
 - `evals/security-control-tower/connector-pilot.json`
 - The eval gate verifies connectors are read-only-first, each connector has required evidence and forbidden sensitive actions, and rollout controls prohibit connector writes.
 
+## Phase 9: Pilot evidence capture
+
+- Define the evidence that must be captured during connector smoke tests, approval workflow drills, rollback drills, observability proof, and data-retention review.
+- Store only artifact references in the portal; raw sensitive findings remain in approved tenant stores.
+- Keep production pilot blocked until required evidence capture items are complete.
+
+Phase 9 starter surface:
+
+- `GET /api/application-zone/security-control-tower/pilot-evidence`
+- `evals/security-control-tower/pilot-evidence.json`
+- The eval gate verifies required capture categories, owners, artifact lists, and evidence controls for approved tenant storage and no raw sensitive findings in portal cards.
+
 ## Non-goals
 
 - No autonomous destructive action.

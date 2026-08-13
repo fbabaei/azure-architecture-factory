@@ -1,0 +1,82 @@
+{
+  "evidenceCapture": {
+    "stage": "pilot-evidence-capture",
+    "overallStatus": "ready-to-capture",
+    "targetStage": "production-pilot-evidence",
+    "minimumApproverRole": "security-platform-owner",
+    "evidenceStore": "managed evidence store required before live capture"
+  },
+  "captureItems": [
+    {
+      "captureId": "connector-smoke-tests",
+      "displayName": "Connector smoke tests",
+      "category": "connectors",
+      "status": "required",
+      "ownerRole": "security-operations-owner",
+      "requiredArtifacts": [
+        "read_only_query_transcript",
+        "connector_health_result",
+        "audit_log_reference"
+      ],
+      "description": "Capture one approved read-only query and health result for each pilot connector."
+    },
+    {
+      "captureId": "approval-workflow-drill",
+      "displayName": "Approval workflow drill",
+      "category": "approvals",
+      "status": "required",
+      "ownerRole": "security-incident-commander",
+      "requiredArtifacts": [
+        "approval_requested_event",
+        "approval_recorded_event",
+        "action_executed_or_rejected_event"
+      ],
+      "description": "Run a tabletop approval workflow for containment, production change, PR merge, and external communication."
+    },
+    {
+      "captureId": "rollback-drill-evidence",
+      "displayName": "Rollback drill evidence",
+      "category": "rollback",
+      "status": "required",
+      "ownerRole": "service-operations-owner",
+      "requiredArtifacts": [
+        "rollback_plan",
+        "drill_outcome",
+        "owner_signoff"
+      ],
+      "description": "Capture rollback or compensation drill evidence for each sensitive action class."
+    },
+    {
+      "captureId": "observability-proof",
+      "displayName": "Observability proof",
+      "category": "observability",
+      "status": "required",
+      "ownerRole": "service-operations-owner",
+      "requiredArtifacts": [
+        "dashboard_link",
+        "alert_rule_inventory",
+        "sample_trace_or_log"
+      ],
+      "description": "Capture dashboard, alert, and log/trace evidence for connector health, eval gate, and approval latency."
+    },
+    {
+      "captureId": "data-retention-evidence",
+      "displayName": "Data retention evidence",
+      "category": "compliance",
+      "status": "required",
+      "ownerRole": "compliance-owner",
+      "requiredArtifacts": [
+        "retention_policy_reference",
+        "purge_process_reference",
+        "sensitivity_handling_review"
+      ],
+      "description": "Capture retention, purge, and sensitivity handling evidence for security work-board data."
+    }
+  ],
+  "evidenceControls": [
+    "capture evidence inside approved tenant storage only",
+    "do not paste raw sensitive findings into portal cards",
+    "record artifact references, owners, timestamps, and approval event ids",
+    "production pilot remains blocked until required capture items are complete"
+  ]
+}
