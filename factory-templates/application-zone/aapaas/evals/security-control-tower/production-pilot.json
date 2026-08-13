@@ -1,0 +1,79 @@
+{
+  "productionPilot": {
+    "stage": "production-pilot-enablement",
+    "overallStatus": "blocked-pending-go-no-go-approval",
+    "scopeMode": "limited-scope-pilot",
+    "minimumApproverRole": "security-platform-owner",
+    "requiresNamedGoNoGoDecision": true
+  },
+  "pilotScope": {
+    "tenantScope": "single approved tenant",
+    "connectorScope": [
+      "github-code-scanning",
+      "defender-xdr-summary",
+      "cloud-posture-summary",
+      "repository-metadata"
+    ],
+    "userScope": "named pilot operators only",
+    "actionScope": "read-only inputs, draft-only outputs, approval-gated sensitive actions"
+  },
+  "goNoGoCriteria": [
+    {
+      "criterionId": "evidence-capture-complete",
+      "displayName": "Pilot evidence capture complete",
+      "status": "required",
+      "ownerRole": "security-platform-owner",
+      "requiredEvidence": [
+        "connector_smoke_tests",
+        "approval_workflow_drill",
+        "rollback_drill_evidence",
+        "observability_proof",
+        "data_retention_evidence"
+      ],
+      "blocksEnablement": true
+    },
+    {
+      "criterionId": "owner-signoff",
+      "displayName": "Named owner signoff",
+      "status": "required",
+      "ownerRole": "security-platform-owner",
+      "requiredEvidence": [
+        "security_owner_signoff",
+        "operations_owner_signoff",
+        "compliance_owner_signoff"
+      ],
+      "blocksEnablement": true
+    },
+    {
+      "criterionId": "rollback-ready",
+      "displayName": "Rollback and compensation ready",
+      "status": "required",
+      "ownerRole": "service-operations-owner",
+      "requiredEvidence": [
+        "rollback_contacts",
+        "rollback_runbook",
+        "compensation_plan"
+      ],
+      "blocksEnablement": true
+    },
+    {
+      "criterionId": "communications-approved",
+      "displayName": "Communications policy approved",
+      "status": "required",
+      "ownerRole": "communications-owner-and-legal-reviewer",
+      "requiredEvidence": [
+        "approved_generic_wording",
+        "audience_scope",
+        "send_approval_policy"
+      ],
+      "blocksEnablement": true
+    }
+  ],
+  "enablementControls": [
+    "production pilot remains blocked until named go/no-go approval is recorded",
+    "pilot starts with read-only connectors and draft-only outputs",
+    "sensitive actions require approval-gated workflows and rollback or compensation evidence",
+    "pilot scope must name tenant, operators, connectors, owner roles, and rollback contacts",
+    "rollback path must be tested before sensitive action enablement"
+  ]
+}

@@ -82,3 +82,14 @@ The pilot evidence contract at `evals/security-control-tower/pilot-evidence.json
 - Data retention evidence
 
 Capture artifact references, owners, timestamps, and approval event IDs in approved tenant storage. Do not paste raw sensitive findings into portal cards.
+
+## Production-pilot go/no-go
+
+The production-pilot contract at `evals/security-control-tower/production-pilot.json` defines the final enablement gate. Before any pilot starts, record:
+
+- Evidence capture completion
+- Named owner signoff
+- Rollback and compensation readiness
+- Communications policy approval
+
+The contract intentionally keeps `overallStatus` set to `blocked-pending-go-no-go-approval` until those records exist.

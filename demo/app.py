@@ -584,6 +584,20 @@ def _load_security_pilot_evidence() -> dict:
     }
 
 
+def _load_security_production_pilot() -> dict:
+    pilot = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "production-pilot.json")
+    if not isinstance(pilot, dict):
+        pilot = {}
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "productionPilot": pilot.get("productionPilot", {}),
+        "pilotScope": pilot.get("pilotScope", {}),
+        "goNoGoCriteria": pilot.get("goNoGoCriteria", []),
+        "enablementControls": pilot.get("enablementControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/production-pilot.json",
+    }
+
+
 def _validate_input_rule(rule: dict, value) -> str | None:
     field_type = rule.get("type")
     name = rule.get("name", "field")
@@ -1581,6 +1595,12 @@ def get_security_control_tower_connector_pilot():
 def get_security_control_tower_pilot_evidence():
     """Return production-pilot evidence capture plan for Security Control Tower."""
     return jsonify(_load_security_pilot_evidence())
+
+
+@app.route('/api/application-zone/security-control-tower/production-pilot')
+def get_security_control_tower_production_pilot():
+    """Return production-pilot enablement plan for Security Control Tower."""
+    return jsonify(_load_security_production_pilot())
 
 
 @app.route('/api/application-zone/packs/<pack_id>/versions')

@@ -38,6 +38,11 @@
 - Pilot evidence capture items: `5`
 - Pilot evidence capture result: `PASS`
 
+## Production pilot enablement
+
+- Go/no-go criteria: `4`
+- Production pilot enablement result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -111,3 +116,15 @@
 - `evidence_controls_tenant_storage`
 - `evidence_controls_no_raw_findings`
 - `evidence_controls_pilot_blocked`
+- `production_pilot_stage_declared`
+- `production_pilot_go_no_go_blocked`
+- `production_pilot_limited_scope`
+- `production_pilot_named_decision`
+- `production_pilot_tenant_scope_present`
+- `production_pilot_connector_scope_present`
+- `production_pilot_action_scope_gated`
+- `production_pilot_required_criteria_present`
+- `production_pilot_criterion_blocks`
+- `production_pilot_controls_blocked`
+- `production_pilot_controls_read_only`
+- `production_pilot_controls_draft_only`

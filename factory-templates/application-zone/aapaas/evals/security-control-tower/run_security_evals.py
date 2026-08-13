@@ -24,6 +24,7 @@ APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
 PILOT_READINESS_PATH = ROOT / "pilot-readiness.json"
 CONNECTOR_PILOT_PATH = ROOT / "connector-pilot.json"
 PILOT_EVIDENCE_PATH = ROOT / "pilot-evidence.json"
+PRODUCTION_PILOT_PATH = ROOT / "production-pilot.json"
 AAPAAS_ROOT = ROOT.parents[1]
 CERTIFICATION_EVIDENCE_PATH = AAPAAS_ROOT / "operations" / "health" / "ai-security-control-tower-certification.generated.json"
 EVIDENCE_DIR = ROOT / "evidence"
@@ -321,6 +322,44 @@ def evaluate_pilot_evidence(evidence_doc: dict) -> list[dict]:
     return failures
 
 
+def evaluate_production_pilot(pilot_doc: dict) -> list[dict]:
+    failures: list[dict] = []
+    pilot = pilot_doc.get("productionPilot") or {}
+    scope = pilot_doc.get("pilotScope") or {}
+    criteria = pilot_doc.get("goNoGoCriteria") or []
+    controls = pilot_doc.get("enablementControls") or []
+    check(pilot.get("stage") == "production-pilot-enablement", "production_pilot_stage_declared", "production pilot: stage must be production-pilot-enablement", failures)
+    check(pilot.get("overallStatus") == "blocked-pending-go-no-go-approval", "production_pilot_go_no_go_blocked", "production pilot: must remain blocked pending go/no-go approval", failures)
+    check(pilot.get("scopeMode") == "limited-scope-pilot", "production_pilot_limited_scope", "production pilot: scopeMode must be limited-scope-pilot", failures)
+    check(pilot.get("requiresNamedGoNoGoDecision") is True, "production_pilot_named_decision", "production pilot: named go/no-go decision required", failures)
+    check(bool(pilot.get("minimumApproverRole")), "production_pilot_approver_present", "production pilot: minimumApproverRole missing", failures)
+    check(bool(scope.get("tenantScope")), "production_pilot_tenant_scope_present", "production pilot: tenantScope missing", failures)
+    check(bool(scope.get("connectorScope")), "production_pilot_connector_scope_present", "production pilot: connectorScope missing", failures)
+    check("approval-gated" in str(scope.get("actionScope", "")).lower(), "production_pilot_action_scope_gated", "production pilot: actionScope must mention approval-gated actions", failures)
+    check(bool(criteria), "production_pilot_criteria_present", "production pilot: goNoGoCriteria is empty", failures)
+    criterion_ids = {
+        str(item.get("criterionId"))
+        for item in criteria
+        if isinstance(item, dict) and item.get("criterionId")
+    }
+    check(
+        {"evidence-capture-complete", "owner-signoff", "rollback-ready", "communications-approved"}.issubset(criterion_ids),
+        "production_pilot_required_criteria_present",
+        "production pilot: missing required go/no-go criteria",
+        failures,
+    )
+    for item in criteria:
+        criterion_id = str(item.get("criterionId", "<missing>"))
+        check(item.get("status") == "required", "production_pilot_criterion_required", f"{criterion_id}: status must be required", failures)
+        check(item.get("blocksEnablement") is True, "production_pilot_criterion_blocks", f"{criterion_id}: criterion must block enablement", failures)
+        check(bool(item.get("ownerRole")), "production_pilot_criterion_owner", f"{criterion_id}: ownerRole missing", failures)
+        check(len(item.get("requiredEvidence") or []) >= 3, "production_pilot_criterion_evidence", f"{criterion_id}: expected at least 3 evidence items", failures)
+    check(any("blocked until named go/no-go approval" in str(control).lower() for control in controls), "production_pilot_controls_blocked", "production pilot: controls must keep pilot blocked until named approval", failures)
+    check(any("read-only connectors" in str(control).lower() for control in controls), "production_pilot_controls_read_only", "production pilot: controls must require read-only connectors", failures)
+    check(any("draft-only outputs" in str(control).lower() for control in controls), "production_pilot_controls_draft_only", "production pilot: controls must require draft-only outputs", failures)
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
@@ -329,6 +368,7 @@ def main() -> int:
     pilot_readiness = load_json(PILOT_READINESS_PATH)
     connector_pilot = load_json(CONNECTOR_PILOT_PATH)
     pilot_evidence = load_json(PILOT_EVIDENCE_PATH)
+    production_pilot = load_json(PRODUCTION_PILOT_PATH)
     certification_evidence = load_json(CERTIFICATION_EVIDENCE_PATH)
     all_failures: list[dict] = []
     results = []
@@ -355,6 +395,8 @@ def main() -> int:
     all_failures.extend(connector_failures)
     evidence_failures = evaluate_pilot_evidence(pilot_evidence)
     all_failures.extend(evidence_failures)
+    production_pilot_failures = evaluate_production_pilot(production_pilot)
+    all_failures.extend(production_pilot_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -372,6 +414,8 @@ def main() -> int:
         "connectorPilotFailures": connector_failures,
         "pilotEvidenceCaptureCount": len(pilot_evidence.get("captureItems", [])),
         "pilotEvidenceFailures": evidence_failures,
+        "productionPilotCriteriaCount": len(production_pilot.get("goNoGoCriteria", [])),
+        "productionPilotFailures": production_pilot_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -444,7 +488,19 @@ def main() -> int:
             "evidence_capture_artifacts_present",
             "evidence_controls_tenant_storage",
             "evidence_controls_no_raw_findings",
-            "evidence_controls_pilot_blocked"
+            "evidence_controls_pilot_blocked",
+            "production_pilot_stage_declared",
+            "production_pilot_go_no_go_blocked",
+            "production_pilot_limited_scope",
+            "production_pilot_named_decision",
+            "production_pilot_tenant_scope_present",
+            "production_pilot_connector_scope_present",
+            "production_pilot_action_scope_gated",
+            "production_pilot_required_criteria_present",
+            "production_pilot_criterion_blocks",
+            "production_pilot_controls_blocked",
+            "production_pilot_controls_read_only",
+            "production_pilot_controls_draft_only"
         ],
     }
 
@@ -494,6 +550,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print(f"  [ok] pilot evidence ({summary['pilotEvidenceCaptureCount']})")
+    if production_pilot_failures:
+        print("  [fail] production pilot")
+        for failure in production_pilot_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] production pilot ({summary['productionPilotCriteriaCount']})")
     return 0 if not all_failures else 1
 
 
@@ -538,6 +600,11 @@ def render_scorecard(summary: dict) -> str:
         "",
         f"- Pilot evidence capture items: `{summary.get('pilotEvidenceCaptureCount', 0)}`",
         f"- Pilot evidence capture result: `{'PASS' if not summary.get('pilotEvidenceFailures') else 'FAIL'}`",
+        "",
+        "## Production pilot enablement",
+        "",
+        f"- Go/no-go criteria: `{summary.get('productionPilotCriteriaCount', 0)}`",
+        f"- Production pilot enablement result: `{'PASS' if not summary.get('productionPilotFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

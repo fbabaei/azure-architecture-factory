@@ -666,6 +666,21 @@ def _portal_load_security_pilot_evidence() -> dict:
     }
 
 
+def _portal_load_security_production_pilot() -> dict:
+    pilot_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "production-pilot.json"
+    pilot = _portal_read_json(pilot_path)
+    if not isinstance(pilot, dict):
+        pilot = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "productionPilot": pilot.get("productionPilot", {}),
+        "pilotScope": pilot.get("pilotScope", {}),
+        "goNoGoCriteria": pilot.get("goNoGoCriteria", []),
+        "enablementControls": pilot.get("enablementControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/production-pilot.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3786,6 +3801,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/pilot-evidence":
             return self._handle_security_control_tower_pilot_evidence()
+
+        if request_path == "/api/application-zone/security-control-tower/production-pilot":
+            return self._handle_security_control_tower_production_pilot()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7453,6 +7471,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_pilot_evidence(self):
         """Return production-pilot evidence capture plan for Security Control Tower."""
         return self._send_json(_portal_load_security_pilot_evidence(), 200)
+
+    def _handle_security_control_tower_production_pilot(self):
+        """Return production-pilot enablement plan for Security Control Tower."""
+        return self._send_json(_portal_load_security_production_pilot(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

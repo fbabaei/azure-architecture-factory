@@ -129,6 +129,18 @@ The portal exposes it through:
 
 This contract defines the artifact references needed during live connector smoke tests, approval workflow drills, rollback drills, observability proof, and data-retention review. It requires evidence to remain in approved tenant storage and blocks production pilot until the capture items are complete.
 
+## Phase 10 production-pilot enablement
+
+The Phase 10 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/production-pilot.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/production-pilot`
+
+This contract defines the limited-scope production-pilot go/no-go gate. It keeps production pilot blocked until named approval is recorded with evidence capture completion, owner signoff, rollback readiness, and communications policy approval.
+
 ## Promotion criteria
 
 This pack was promoted to `certification-ready` after:
