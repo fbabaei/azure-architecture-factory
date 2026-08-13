@@ -28,6 +28,11 @@
 - Pilot readiness checks: `7`
 - Pilot readiness result: `PASS`
 
+## Live connector pilot
+
+- Connector pilot contracts: `4`
+- Connector pilot result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -79,3 +84,14 @@
 - `pilot_controls_present`
 - `pilot_controls_read_only_boundary`
 - `pilot_controls_draft_only_boundary`
+- `connector_pilot_stage_declared`
+- `connector_pilot_read_only_first`
+- `connector_pilot_approver_present`
+- `connector_pilot_connectors_present`
+- `connector_access_read_only`
+- `connector_required_evidence_complete`
+- `connector_forbidden_actions_present`
+- `connector_prerequisites_present`
+- `connector_controls_no_writes`
+- `connector_controls_read_only`
+- `connector_controls_pilot_blocked`

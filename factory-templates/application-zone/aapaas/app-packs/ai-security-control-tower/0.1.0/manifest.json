@@ -108,6 +108,7 @@
     "factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-readiness.json",
+    "factory-templates/application-zone/aapaas/evals/security-control-tower/connector-pilot.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md"
   ],
   "agents": [
@@ -200,6 +201,7 @@
       "named-human-approval-workflow-contract",
       "certification-ready-evidence-contract",
       "production-pilot-readiness-contract",
+      "read-only-connector-pilot-contract",
       "python factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py"
     ],
     "evaluationPlan": "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md"

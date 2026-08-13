@@ -637,6 +637,21 @@ def _portal_load_security_pilot_readiness() -> dict:
     }
 
 
+def _portal_load_security_connector_pilot() -> dict:
+    pilot_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "connector-pilot.json"
+    pilot = _portal_read_json(pilot_path)
+    if not isinstance(pilot, dict):
+        pilot = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "connectorPilot": pilot.get("connectorPilot", {}),
+        "connectors": pilot.get("connectors", []),
+        "pilotPrerequisites": pilot.get("pilotPrerequisites", []),
+        "rolloutControls": pilot.get("rolloutControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/connector-pilot.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3751,6 +3766,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/pilot-readiness":
             return self._handle_security_control_tower_pilot_readiness()
+
+        if request_path == "/api/application-zone/security-control-tower/connector-pilot":
+            return self._handle_security_control_tower_connector_pilot()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7410,6 +7428,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_pilot_readiness(self):
         """Return production-pilot readiness gates for Security Control Tower."""
         return self._send_json(_portal_load_security_pilot_readiness(), 200)
+
+    def _handle_security_control_tower_connector_pilot(self):
+        """Return live connector pilot preparation contracts for Security Control Tower."""
+        return self._send_json(_portal_load_security_connector_pilot(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

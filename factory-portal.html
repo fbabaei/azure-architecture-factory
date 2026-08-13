@@ -4392,6 +4392,15 @@
                                 </summary>
                                 <div id="appzone-security-pilot-readiness" class="appzone-security-board">Loading pilot readiness...</div>
                             </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Connector Pilot</span>
+                                        <span class="appzone-accordion-subtitle">Read-only live connector activation plan.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-connector-pilot" class="appzone-security-board">Loading connector pilot...</div>
+                            </details>
                         </div>
 
                         <div class="appzone-panel">
@@ -7928,13 +7937,14 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse, connectorPilotResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/tool-integrations`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/approval-workflows`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-readiness`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/connector-pilot`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7963,6 +7973,11 @@
                     renderSecurityPilotReadiness(await pilotReadinessResponse.json());
                 } else {
                     renderSecurityPilotReadiness(null);
+                }
+                if (connectorPilotResponse && connectorPilotResponse.ok) {
+                    renderSecurityConnectorPilot(await connectorPilotResponse.json());
+                } else {
+                    renderSecurityConnectorPilot(null);
                 }
 
                 const packs = data.packs || [];
@@ -8246,6 +8261,57 @@
                     </div>
                 </div>
                 <div class="security-tool-grid">${checkCards}</div>
+                <div class="security-tool-controls">
+                    ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderSecurityConnectorPilot(data) {
+            const el = document.getElementById('appzone-security-connector-pilot');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Connector pilot contract is not available.</div>';
+                return;
+            }
+
+            const pilot = data.connectorPilot || {};
+            const connectors = Array.isArray(data.connectors) ? data.connectors : [];
+            const prerequisites = Array.isArray(data.pilotPrerequisites) ? data.pilotPrerequisites : [];
+            const controls = Array.isArray(data.rolloutControls) ? data.rolloutControls : [];
+            const connectorCards = connectors.map(connector => {
+                const evidence = Array.isArray(connector.requiredEvidence) ? connector.requiredEvidence.join(', ') : '';
+                const forbidden = Array.isArray(connector.forbiddenUntilApproved) ? connector.forbiddenUntilApproved.join(', ') : '';
+                return `
+                    <div class="security-pilot-card">
+                        <div class="security-work-item-title">${escapeHtml(connector.displayName || connector.connectorId || 'connector')}</div>
+                        <div class="security-work-meta">Source: ${escapeHtml(connector.sourceType || '-')} · Mode: ${escapeHtml(connector.accessMode || '-')} · Status: ${escapeHtml(connector.pilotStatus || '-')}</div>
+                        <div class="security-work-meta">Owner: ${escapeHtml(connector.requiredOwnerRole || '-')}</div>
+                        <div class="security-work-meta">Evidence: ${escapeHtml(evidence || '-')}</div>
+                        <div class="security-work-approval">Forbidden until approved: ${escapeHtml(forbidden || '-')}</div>
+                    </div>
+                `;
+            }).join('');
+            const prerequisiteCards = prerequisites.map(item => `
+                <div class="security-pilot-card">
+                    <div class="security-work-item-title">${escapeHtml(item.displayName || item.prerequisiteId || 'prerequisite')}</div>
+                    <div class="security-work-meta">Status: ${escapeHtml(item.status || '-')}</div>
+                    <div class="security-work-request">${escapeHtml(item.description || '')}</div>
+                </div>
+            `).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Stage:</strong> ${escapeHtml(pilot.stage || '-')} → ${escapeHtml(pilot.targetEnvironment || '-')}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(pilot.overallStatus || '-')}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Connector pilot contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-tool-section-title">Read-only connectors</div>
+                <div class="security-tool-grid">${connectorCards}</div>
+                <div class="security-tool-section-title">Pilot prerequisites</div>
+                <div class="security-tool-grid">${prerequisiteCards}</div>
                 <div class="security-tool-controls">
                     ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
                 </div>

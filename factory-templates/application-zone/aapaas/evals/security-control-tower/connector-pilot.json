@@ -1,0 +1,111 @@
+{
+  "connectorPilot": {
+    "stage": "connector-pilot-prep",
+    "overallStatus": "not-started",
+    "targetEnvironment": "tenant-specific-production-pilot",
+    "activationMode": "read_only_first",
+    "minimumApproverRole": "security-platform-owner"
+  },
+  "connectors": [
+    {
+      "connectorId": "github-code-scanning",
+      "displayName": "GitHub code scanning",
+      "sourceType": "code-scanning",
+      "accessMode": "read_only",
+      "pilotStatus": "planned",
+      "requiredOwnerRole": "code-security-owner",
+      "requiredEvidence": [
+        "tenant_connector_inventory",
+        "rbac_review",
+        "sample_read_only_query",
+        "audit_log_mapping"
+      ],
+      "forbiddenUntilApproved": [
+        "repository_write",
+        "pull_request_merge"
+      ]
+    },
+    {
+      "connectorId": "defender-xdr-summary",
+      "displayName": "Defender/XDR summary",
+      "sourceType": "security-telemetry",
+      "accessMode": "read_only",
+      "pilotStatus": "planned",
+      "requiredOwnerRole": "security-operations-owner",
+      "requiredEvidence": [
+        "tenant_connector_inventory",
+        "rbac_review",
+        "sample_read_only_query",
+        "audit_log_mapping"
+      ],
+      "forbiddenUntilApproved": [
+        "containment",
+        "external_notification"
+      ]
+    },
+    {
+      "connectorId": "cloud-posture-summary",
+      "displayName": "Cloud posture summary",
+      "sourceType": "cloud-posture",
+      "accessMode": "read_only",
+      "pilotStatus": "planned",
+      "requiredOwnerRole": "cloud-security-owner",
+      "requiredEvidence": [
+        "tenant_connector_inventory",
+        "rbac_review",
+        "sample_read_only_query",
+        "audit_log_mapping"
+      ],
+      "forbiddenUntilApproved": [
+        "policy_assignment",
+        "resource_mutation",
+        "production_change"
+      ]
+    },
+    {
+      "connectorId": "repository-metadata",
+      "displayName": "Repository metadata",
+      "sourceType": "repository-metadata",
+      "accessMode": "read_only",
+      "pilotStatus": "planned",
+      "requiredOwnerRole": "code-owner",
+      "requiredEvidence": [
+        "tenant_connector_inventory",
+        "rbac_review",
+        "sample_read_only_query",
+        "audit_log_mapping"
+      ],
+      "forbiddenUntilApproved": [
+        "repository_write",
+        "pull_request_merge",
+        "deployment"
+      ]
+    }
+  ],
+  "pilotPrerequisites": [
+    {
+      "prerequisiteId": "managed-persistence",
+      "displayName": "Managed persistence",
+      "status": "required",
+      "description": "Provision durable work-board, evidence, approval, audit, backup, and purge storage before connector pilot."
+    },
+    {
+      "prerequisiteId": "observability",
+      "displayName": "Observability",
+      "status": "required",
+      "description": "Publish dashboards and alerts for connector health, query failures, approval latency, and eval gate status."
+    },
+    {
+      "prerequisiteId": "pilot-scope",
+      "displayName": "Pilot scope",
+      "status": "required",
+      "description": "Document tenant, connector set, owner roles, read-only query boundaries, and rollback contacts."
+    }
+  ],
+  "rolloutControls": [
+    "no connector writes during initial pilot",
+    "sample queries must be read-only and audited",
+    "draft outputs remain draft-only until approval workflows are exercised",
+    "production pilot cannot start until pilot-readiness blockers are closed"
+  ]
+}

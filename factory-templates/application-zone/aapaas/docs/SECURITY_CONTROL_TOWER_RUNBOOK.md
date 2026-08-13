@@ -59,3 +59,14 @@ Before production-pilot rollout, confirm:
 7. Data retention and sensitivity review is complete.
 
 The pilot-readiness contract at `evals/security-control-tower/pilot-readiness.json` intentionally keeps `overallStatus` blocked until these prerequisites are complete.
+
+## Live connector pilot preparation
+
+The connector pilot contract at `evals/security-control-tower/connector-pilot.json` defines the first read-only connector set:
+
+- GitHub code scanning
+- Defender/XDR summary
+- Cloud posture summary
+- Repository metadata
+
+Each connector requires tenant inventory, RBAC review, sample read-only query evidence, and audit-log mapping before activation. No connector writes are allowed during the initial pilot.

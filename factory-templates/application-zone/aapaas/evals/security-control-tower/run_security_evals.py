@@ -22,6 +22,7 @@ CASES_PATH = ROOT / "cases.json"
 TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
 APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
 PILOT_READINESS_PATH = ROOT / "pilot-readiness.json"
+CONNECTOR_PILOT_PATH = ROOT / "connector-pilot.json"
 AAPAAS_ROOT = ROOT.parents[1]
 CERTIFICATION_EVIDENCE_PATH = AAPAAS_ROOT / "operations" / "health" / "ai-security-control-tower-certification.generated.json"
 EVIDENCE_DIR = ROOT / "evidence"
@@ -256,12 +257,43 @@ def evaluate_pilot_readiness(readiness_doc: dict) -> list[dict]:
     return failures
 
 
+def evaluate_connector_pilot(pilot_doc: dict) -> list[dict]:
+    failures: list[dict] = []
+    pilot = pilot_doc.get("connectorPilot") or {}
+    connectors = pilot_doc.get("connectors") or []
+    prerequisites = pilot_doc.get("pilotPrerequisites") or []
+    controls = pilot_doc.get("rolloutControls") or []
+    check(pilot.get("stage") == "connector-pilot-prep", "connector_pilot_stage_declared", "connector pilot: stage must be connector-pilot-prep", failures)
+    check(pilot.get("activationMode") == "read_only_first", "connector_pilot_read_only_first", "connector pilot: activationMode must be read_only_first", failures)
+    check(bool(pilot.get("minimumApproverRole")), "connector_pilot_approver_present", "connector pilot: minimumApproverRole missing", failures)
+    check(bool(connectors), "connector_pilot_connectors_present", "connector pilot: connectors are empty", failures)
+    for connector in connectors:
+        connector_id = str(connector.get("connectorId", "<missing>"))
+        check(connector.get("accessMode") == "read_only", "connector_access_read_only", f"{connector_id}: connector is not read_only", failures)
+        check(connector.get("pilotStatus") in {"planned", "in-review", "ready"}, "connector_status_allowed", f"{connector_id}: invalid pilotStatus", failures)
+        check(bool(connector.get("requiredOwnerRole")), "connector_owner_present", f"{connector_id}: requiredOwnerRole missing", failures)
+        required_evidence = set(connector.get("requiredEvidence") or [])
+        check({"tenant_connector_inventory", "rbac_review", "sample_read_only_query", "audit_log_mapping"}.issubset(required_evidence), "connector_required_evidence_complete", f"{connector_id}: missing required evidence", failures)
+        forbidden = set(connector.get("forbiddenUntilApproved") or [])
+        check(bool(forbidden), "connector_forbidden_actions_present", f"{connector_id}: forbiddenUntilApproved missing", failures)
+    check(len(prerequisites) >= 3, "connector_prerequisites_present", "connector pilot: expected managed persistence, observability, and pilot scope prerequisites", failures)
+    for prerequisite in prerequisites:
+        prereq_id = str(prerequisite.get("prerequisiteId", "<missing>"))
+        check(prerequisite.get("status") == "required", "connector_prerequisite_required", f"{prereq_id}: prerequisite status must be required", failures)
+        check(bool(prerequisite.get("description")), "connector_prerequisite_description_present", f"{prereq_id}: description missing", failures)
+    check(any("no connector writes" in str(control).lower() for control in controls), "connector_controls_no_writes", "connector pilot: controls must prohibit connector writes", failures)
+    check(any("read-only" in str(control).lower() for control in controls), "connector_controls_read_only", "connector pilot: controls must mention read-only queries", failures)
+    check(any("production pilot cannot start" in str(control).lower() for control in controls), "connector_controls_pilot_blocked", "connector pilot: controls must keep production pilot blocked", failures)
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
     tool_integrations = load_json(TOOL_INTEGRATIONS_PATH)
     approval_workflows = load_json(APPROVAL_WORKFLOWS_PATH)
     pilot_readiness = load_json(PILOT_READINESS_PATH)
+    connector_pilot = load_json(CONNECTOR_PILOT_PATH)
     certification_evidence = load_json(CERTIFICATION_EVIDENCE_PATH)
     all_failures: list[dict] = []
     results = []
@@ -284,6 +316,8 @@ def main() -> int:
     all_failures.extend(certification_failures)
     pilot_failures = evaluate_pilot_readiness(pilot_readiness)
     all_failures.extend(pilot_failures)
+    connector_failures = evaluate_connector_pilot(connector_pilot)
+    all_failures.extend(connector_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -297,6 +331,8 @@ def main() -> int:
         "certificationEvidenceFailures": certification_failures,
         "pilotReadinessCheckCount": len(pilot_readiness.get("readinessChecks", [])),
         "pilotReadinessFailures": pilot_failures,
+        "connectorPilotCount": len(connector_pilot.get("connectors", [])),
+        "connectorPilotFailures": connector_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -347,7 +383,18 @@ def main() -> int:
             "pilot_check_description_present",
             "pilot_controls_present",
             "pilot_controls_read_only_boundary",
-            "pilot_controls_draft_only_boundary"
+            "pilot_controls_draft_only_boundary",
+            "connector_pilot_stage_declared",
+            "connector_pilot_read_only_first",
+            "connector_pilot_approver_present",
+            "connector_pilot_connectors_present",
+            "connector_access_read_only",
+            "connector_required_evidence_complete",
+            "connector_forbidden_actions_present",
+            "connector_prerequisites_present",
+            "connector_controls_no_writes",
+            "connector_controls_read_only",
+            "connector_controls_pilot_blocked"
         ],
     }
 
@@ -385,6 +432,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print(f"  [ok] pilot readiness ({summary['pilotReadinessCheckCount']})")
+    if connector_failures:
+        print("  [fail] connector pilot")
+        for failure in connector_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] connector pilot ({summary['connectorPilotCount']})")
     return 0 if not all_failures else 1
 
 
@@ -419,6 +472,11 @@ def render_scorecard(summary: dict) -> str:
         "",
         f"- Pilot readiness checks: `{summary.get('pilotReadinessCheckCount', 0)}`",
         f"- Pilot readiness result: `{'PASS' if not summary.get('pilotReadinessFailures') else 'FAIL'}`",
+        "",
+        "## Live connector pilot",
+        "",
+        f"- Connector pilot contracts: `{summary.get('connectorPilotCount', 0)}`",
+        f"- Connector pilot result: `{'PASS' if not summary.get('connectorPilotFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",
