@@ -113,6 +113,19 @@ Phase 7 starter surface:
 - `evals/security-control-tower/pilot-readiness.json`
 - The eval gate verifies the service remains `controlled-preview`, the production pilot is blocked until prerequisites complete, and every readiness check blocks production pilot until evidence is supplied.
 
+## Phase 8: Live connector pilot preparation
+
+- Define the initial read-only connector pilot set for code scanning, XDR summaries, cloud posture summaries, and repository metadata.
+- Keep connector status `planned` until tenant owners provide inventory, RBAC review, sample read-only query evidence, and audit-log mapping.
+- Require managed persistence, observability, and pilot scope before connector activation.
+- Keep production pilot blocked while connector pilot evidence is incomplete.
+
+Phase 8 starter surface:
+
+- `GET /api/application-zone/security-control-tower/connector-pilot`
+- `evals/security-control-tower/connector-pilot.json`
+- The eval gate verifies connectors are read-only-first, each connector has required evidence and forbidden sensitive actions, and rollout controls prohibit connector writes.
+
 ## Non-goals
 
 - No autonomous destructive action.

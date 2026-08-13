@@ -105,6 +105,18 @@ The portal exposes it through:
 
 This gate keeps the service in certification-ready controlled preview while production-pilot prerequisites are completed. The contract requires tenant connector inventory, RBAC review, managed persistence, observability, live health evidence, rollback drill, and data-retention review before production pilot can be unblocked.
 
+## Phase 8 live connector pilot preparation
+
+The Phase 8 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/connector-pilot.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/connector-pilot`
+
+This contract defines the first read-only connector pilot set and the evidence required before target-tenant connector activation. It covers GitHub code scanning, Defender/XDR summaries, cloud posture summaries, and repository metadata. All connectors remain read-only, all write-like actions remain forbidden until approved, and production pilot remains blocked until pilot-readiness prerequisites are complete.
+
 ## Promotion criteria
 
 This pack was promoted to `certification-ready` after:
