@@ -23,6 +23,7 @@ TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
 APPROVAL_WORKFLOWS_PATH = ROOT / "approval-workflows.json"
 PILOT_READINESS_PATH = ROOT / "pilot-readiness.json"
 CONNECTOR_PILOT_PATH = ROOT / "connector-pilot.json"
+PILOT_EVIDENCE_PATH = ROOT / "pilot-evidence.json"
 AAPAAS_ROOT = ROOT.parents[1]
 CERTIFICATION_EVIDENCE_PATH = AAPAAS_ROOT / "operations" / "health" / "ai-security-control-tower-certification.generated.json"
 EVIDENCE_DIR = ROOT / "evidence"
@@ -287,6 +288,39 @@ def evaluate_connector_pilot(pilot_doc: dict) -> list[dict]:
     return failures
 
 
+def evaluate_pilot_evidence(evidence_doc: dict) -> list[dict]:
+    failures: list[dict] = []
+    capture = evidence_doc.get("evidenceCapture") or {}
+    items = evidence_doc.get("captureItems") or []
+    controls = evidence_doc.get("evidenceControls") or []
+    check(capture.get("stage") == "pilot-evidence-capture", "evidence_capture_stage_declared", "pilot evidence: stage must be pilot-evidence-capture", failures)
+    check(capture.get("overallStatus") == "ready-to-capture", "evidence_capture_ready", "pilot evidence: overallStatus must be ready-to-capture", failures)
+    check(bool(capture.get("minimumApproverRole")), "evidence_capture_approver_present", "pilot evidence: minimumApproverRole missing", failures)
+    check(bool(capture.get("evidenceStore")), "evidence_store_declared", "pilot evidence: evidenceStore missing", failures)
+    check(bool(items), "evidence_capture_items_present", "pilot evidence: captureItems is empty", failures)
+    categories = {
+        str(item.get("category"))
+        for item in items
+        if isinstance(item, dict) and item.get("category")
+    }
+    check(
+        {"connectors", "approvals", "rollback", "observability", "compliance"}.issubset(categories),
+        "evidence_capture_categories_complete",
+        f"pilot evidence: missing categories {sorted({'connectors', 'approvals', 'rollback', 'observability', 'compliance'} - categories)}",
+        failures,
+    )
+    for item in items:
+        capture_id = str(item.get("captureId", "<missing>"))
+        check(item.get("status") == "required", "evidence_capture_status_required", f"{capture_id}: status must be required", failures)
+        check(bool(item.get("ownerRole")), "evidence_capture_owner_present", f"{capture_id}: ownerRole missing", failures)
+        check(len(item.get("requiredArtifacts") or []) >= 3, "evidence_capture_artifacts_present", f"{capture_id}: expected at least 3 required artifacts", failures)
+        check(bool(item.get("description")), "evidence_capture_description_present", f"{capture_id}: description missing", failures)
+    check(any("approved tenant storage" in str(control).lower() for control in controls), "evidence_controls_tenant_storage", "pilot evidence: controls must require approved tenant storage", failures)
+    check(any("do not paste raw sensitive findings" in str(control).lower() for control in controls), "evidence_controls_no_raw_findings", "pilot evidence: controls must prohibit raw sensitive findings in portal cards", failures)
+    check(any("production pilot remains blocked" in str(control).lower() for control in controls), "evidence_controls_pilot_blocked", "pilot evidence: controls must keep production pilot blocked", failures)
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
@@ -294,6 +328,7 @@ def main() -> int:
     approval_workflows = load_json(APPROVAL_WORKFLOWS_PATH)
     pilot_readiness = load_json(PILOT_READINESS_PATH)
     connector_pilot = load_json(CONNECTOR_PILOT_PATH)
+    pilot_evidence = load_json(PILOT_EVIDENCE_PATH)
     certification_evidence = load_json(CERTIFICATION_EVIDENCE_PATH)
     all_failures: list[dict] = []
     results = []
@@ -318,6 +353,8 @@ def main() -> int:
     all_failures.extend(pilot_failures)
     connector_failures = evaluate_connector_pilot(connector_pilot)
     all_failures.extend(connector_failures)
+    evidence_failures = evaluate_pilot_evidence(pilot_evidence)
+    all_failures.extend(evidence_failures)
 
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
@@ -333,6 +370,8 @@ def main() -> int:
         "pilotReadinessFailures": pilot_failures,
         "connectorPilotCount": len(connector_pilot.get("connectors", [])),
         "connectorPilotFailures": connector_failures,
+        "pilotEvidenceCaptureCount": len(pilot_evidence.get("captureItems", [])),
+        "pilotEvidenceFailures": evidence_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -394,7 +433,18 @@ def main() -> int:
             "connector_prerequisites_present",
             "connector_controls_no_writes",
             "connector_controls_read_only",
-            "connector_controls_pilot_blocked"
+            "connector_controls_pilot_blocked",
+            "evidence_capture_stage_declared",
+            "evidence_capture_ready",
+            "evidence_capture_approver_present",
+            "evidence_store_declared",
+            "evidence_capture_items_present",
+            "evidence_capture_categories_complete",
+            "evidence_capture_status_required",
+            "evidence_capture_artifacts_present",
+            "evidence_controls_tenant_storage",
+            "evidence_controls_no_raw_findings",
+            "evidence_controls_pilot_blocked"
         ],
     }
 
@@ -438,6 +488,12 @@ def main() -> int:
             print(f"       - {failure['name']}: {failure['detail']}")
     else:
         print(f"  [ok] connector pilot ({summary['connectorPilotCount']})")
+    if evidence_failures:
+        print("  [fail] pilot evidence")
+        for failure in evidence_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] pilot evidence ({summary['pilotEvidenceCaptureCount']})")
     return 0 if not all_failures else 1
 
 
@@ -477,6 +533,11 @@ def render_scorecard(summary: dict) -> str:
         "",
         f"- Connector pilot contracts: `{summary.get('connectorPilotCount', 0)}`",
         f"- Connector pilot result: `{'PASS' if not summary.get('connectorPilotFailures') else 'FAIL'}`",
+        "",
+        "## Pilot evidence capture",
+        "",
+        f"- Pilot evidence capture items: `{summary.get('pilotEvidenceCaptureCount', 0)}`",
+        f"- Pilot evidence capture result: `{'PASS' if not summary.get('pilotEvidenceFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

@@ -117,6 +117,18 @@ The portal exposes it through:
 
 This contract defines the first read-only connector pilot set and the evidence required before target-tenant connector activation. It covers GitHub code scanning, Defender/XDR summaries, cloud posture summaries, and repository metadata. All connectors remain read-only, all write-like actions remain forbidden until approved, and production pilot remains blocked until pilot-readiness prerequisites are complete.
 
+## Phase 9 pilot evidence capture
+
+The Phase 9 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-evidence.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/pilot-evidence`
+
+This contract defines the artifact references needed during live connector smoke tests, approval workflow drills, rollback drills, observability proof, and data-retention review. It requires evidence to remain in approved tenant storage and blocks production pilot until the capture items are complete.
+
 ## Promotion criteria
 
 This pack was promoted to `certification-ready` after:

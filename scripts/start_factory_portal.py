@@ -652,6 +652,20 @@ def _portal_load_security_connector_pilot() -> dict:
     }
 
 
+def _portal_load_security_pilot_evidence() -> dict:
+    evidence_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "pilot-evidence.json"
+    evidence = _portal_read_json(evidence_path)
+    if not isinstance(evidence, dict):
+        evidence = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "evidenceCapture": evidence.get("evidenceCapture", {}),
+        "captureItems": evidence.get("captureItems", []),
+        "evidenceControls": evidence.get("evidenceControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-evidence.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3769,6 +3783,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/connector-pilot":
             return self._handle_security_control_tower_connector_pilot()
+
+        if request_path == "/api/application-zone/security-control-tower/pilot-evidence":
+            return self._handle_security_control_tower_pilot_evidence()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7432,6 +7449,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_connector_pilot(self):
         """Return live connector pilot preparation contracts for Security Control Tower."""
         return self._send_json(_portal_load_security_connector_pilot(), 200)
+
+    def _handle_security_control_tower_pilot_evidence(self):
+        """Return production-pilot evidence capture plan for Security Control Tower."""
+        return self._send_json(_portal_load_security_pilot_evidence(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

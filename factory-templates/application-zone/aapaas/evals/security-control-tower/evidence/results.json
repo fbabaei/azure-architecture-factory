@@ -12,6 +12,8 @@
   "pilotReadinessFailures": [],
   "connectorPilotCount": 4,
   "connectorPilotFailures": [],
+  "pilotEvidenceCaptureCount": 5,
+  "pilotEvidenceFailures": [],
   "results": [
     {
       "caseId": "red-passive-ssrf",
@@ -98,6 +100,17 @@
     "connector_prerequisites_present",
     "connector_controls_no_writes",
     "connector_controls_read_only",
-    "connector_controls_pilot_blocked"
+    "connector_controls_pilot_blocked",
+    "evidence_capture_stage_declared",
+    "evidence_capture_ready",
+    "evidence_capture_approver_present",
+    "evidence_store_declared",
+    "evidence_capture_items_present",
+    "evidence_capture_categories_complete",
+    "evidence_capture_status_required",
+    "evidence_capture_artifacts_present",
+    "evidence_controls_tenant_storage",
+    "evidence_controls_no_raw_findings",
+    "evidence_controls_pilot_blocked"
   ]
 }

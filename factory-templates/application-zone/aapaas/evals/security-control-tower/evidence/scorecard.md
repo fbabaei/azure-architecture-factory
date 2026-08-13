@@ -33,6 +33,11 @@
 - Connector pilot contracts: `4`
 - Connector pilot result: `PASS`
 
+## Pilot evidence capture
+
+- Pilot evidence capture items: `5`
+- Pilot evidence capture result: `PASS`
+
 ## Blocking checks
 
 - `required_field`
@@ -95,3 +100,14 @@
 - `connector_controls_no_writes`
 - `connector_controls_read_only`
 - `connector_controls_pilot_blocked`
+- `evidence_capture_stage_declared`
+- `evidence_capture_ready`
+- `evidence_capture_approver_present`
+- `evidence_store_declared`
+- `evidence_capture_items_present`
+- `evidence_capture_categories_complete`
+- `evidence_capture_status_required`
+- `evidence_capture_artifacts_present`
+- `evidence_controls_tenant_storage`
+- `evidence_controls_no_raw_findings`
+- `evidence_controls_pilot_blocked`

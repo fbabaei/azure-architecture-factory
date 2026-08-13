@@ -109,6 +109,7 @@
     "factory-templates/application-zone/aapaas/evals/security-control-tower/approval-workflows.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-readiness.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/connector-pilot.json",
+    "factory-templates/application-zone/aapaas/evals/security-control-tower/pilot-evidence.json",
     "factory-templates/application-zone/aapaas/evals/security-control-tower/evidence/scorecard.md"
   ],
   "agents": [
@@ -202,6 +203,7 @@
       "certification-ready-evidence-contract",
       "production-pilot-readiness-contract",
       "read-only-connector-pilot-contract",
+      "pilot-evidence-capture-contract",
       "python factory-templates/application-zone/aapaas/evals/security-control-tower/run_security_evals.py"
     ],
     "evaluationPlan": "factory-templates/application-zone/aapaas/evals/security-control-tower/README.md"

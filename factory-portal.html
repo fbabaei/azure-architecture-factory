@@ -4401,6 +4401,15 @@
                                 </summary>
                                 <div id="appzone-security-connector-pilot" class="appzone-security-board">Loading connector pilot...</div>
                             </details>
+                            <details class="appzone-accordion-section">
+                                <summary>
+                                    <span>
+                                        <span class="appzone-accordion-title">Pilot Evidence</span>
+                                        <span class="appzone-accordion-subtitle">Evidence capture plan for production-pilot drills.</span>
+                                    </span>
+                                </summary>
+                                <div id="appzone-security-pilot-evidence" class="appzone-security-board">Loading pilot evidence...</div>
+                            </details>
                         </div>
 
                         <div class="appzone-panel">
@@ -7937,7 +7946,7 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse, connectorPilotResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse, approvalWorkflowResponse, pilotReadinessResponse, connectorPilotResponse, pilotEvidenceResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
@@ -7945,6 +7954,7 @@
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/approval-workflows`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-readiness`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/connector-pilot`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/pilot-evidence`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7978,6 +7988,11 @@
                     renderSecurityConnectorPilot(await connectorPilotResponse.json());
                 } else {
                     renderSecurityConnectorPilot(null);
+                }
+                if (pilotEvidenceResponse && pilotEvidenceResponse.ok) {
+                    renderSecurityPilotEvidence(await pilotEvidenceResponse.json());
+                } else {
+                    renderSecurityPilotEvidence(null);
                 }
 
                 const packs = data.packs || [];
@@ -8312,6 +8327,45 @@
                 <div class="security-tool-grid">${connectorCards}</div>
                 <div class="security-tool-section-title">Pilot prerequisites</div>
                 <div class="security-tool-grid">${prerequisiteCards}</div>
+                <div class="security-tool-controls">
+                    ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        function renderSecurityPilotEvidence(data) {
+            const el = document.getElementById('appzone-security-pilot-evidence');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Pilot evidence capture plan is not available.</div>';
+                return;
+            }
+
+            const capture = data.evidenceCapture || {};
+            const items = Array.isArray(data.captureItems) ? data.captureItems : [];
+            const controls = Array.isArray(data.evidenceControls) ? data.evidenceControls : [];
+            const cards = items.map(item => {
+                const artifacts = Array.isArray(item.requiredArtifacts) ? item.requiredArtifacts.join(', ') : '';
+                return `
+                    <div class="security-pilot-card">
+                        <div class="security-work-item-title">${escapeHtml(item.displayName || item.captureId || 'capture item')}</div>
+                        <div class="security-work-meta">Category: ${escapeHtml(item.category || '-')} · Status: ${escapeHtml(item.status || '-')}</div>
+                        <div class="security-work-meta">Owner: ${escapeHtml(item.ownerRole || '-')}</div>
+                        <div class="security-work-meta">Artifacts: ${escapeHtml(artifacts || '-')}</div>
+                        <div class="security-work-request">${escapeHtml(item.description || '')}</div>
+                    </div>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Stage:</strong> ${escapeHtml(capture.stage || '-')} → ${escapeHtml(capture.targetStage || '-')}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(capture.overallStatus || '-')}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Pilot evidence contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-tool-grid">${cards}</div>
                 <div class="security-tool-controls">
                     ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
                 </div>

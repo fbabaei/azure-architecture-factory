@@ -70,3 +70,15 @@ The connector pilot contract at `evals/security-control-tower/connector-pilot.js
 - Repository metadata
 
 Each connector requires tenant inventory, RBAC review, sample read-only query evidence, and audit-log mapping before activation. No connector writes are allowed during the initial pilot.
+
+## Pilot evidence capture
+
+The pilot evidence contract at `evals/security-control-tower/pilot-evidence.json` defines the evidence bundle required before production-pilot enablement:
+
+- Connector smoke tests
+- Approval workflow drill
+- Rollback drill evidence
+- Observability proof
+- Data retention evidence
+
+Capture artifact references, owners, timestamps, and approval event IDs in approved tenant storage. Do not paste raw sensitive findings into portal cards.
