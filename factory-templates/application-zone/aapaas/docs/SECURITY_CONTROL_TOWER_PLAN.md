@@ -57,6 +57,13 @@ Phase 3 portal surface:
   - draft pull requests
   - runbook updates
 
+Phase 4 starter surface:
+
+- `GET /api/application-zone/security-control-tower/tool-integrations`
+- `evals/security-control-tower/tool-integrations.json`
+- The eval gate now verifies source integrations are `read_only`, output integrations are `draft_only`, and every sensitive promotion requires named human approval.
+- The portal renders safe integration cards beside the Security Work Board so source boundaries, allowed outputs, and forbidden sensitive actions are visible before runtime tool activation.
+
 ## Phase 5: Approval-gated automation
 
 - Add named-human approval workflows for containment, production changes, PR merge, and external communications.

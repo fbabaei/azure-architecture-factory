@@ -19,6 +19,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent
 SCHEMA_PATH = ROOT / "evidence-schema.json"
 CASES_PATH = ROOT / "cases.json"
+TOOL_INTEGRATIONS_PATH = ROOT / "tool-integrations.json"
 EVIDENCE_DIR = ROOT / "evidence"
 
 
@@ -97,9 +98,56 @@ def evaluate_case(case: dict, schema: dict) -> list[dict]:
     return failures
 
 
+def evaluate_tool_integrations(integrations: dict, schema: dict) -> list[dict]:
+    failures: list[dict] = []
+    allowed_lanes = set(schema["lanes"])
+    allowed_evidence = set(schema["evidenceTypes"])
+
+    read_only_sources = integrations.get("readOnlySources") or []
+    draft_outputs = integrations.get("draftOnlyOutputs") or []
+    check(bool(read_only_sources), "read_only_sources_present", "tool integrations: readOnlySources is empty", failures)
+    check(bool(draft_outputs), "draft_only_outputs_present", "tool integrations: draftOnlyOutputs is empty", failures)
+
+    for source in read_only_sources:
+        integration_id = str(source.get("integrationId", "<missing>"))
+        check(source.get("lane") in allowed_lanes, "integration_lane_allowed", f"{integration_id}: invalid lane", failures)
+        check(source.get("accessMode") == "read_only", "source_access_read_only", f"{integration_id}: source is not read_only", failures)
+        check(bool(source.get("dataBoundary")), "source_data_boundary_present", f"{integration_id}: missing data boundary", failures)
+        for evidence_type in source.get("allowedEvidenceTypes") or []:
+            check(evidence_type in allowed_evidence, "source_evidence_type_allowed", f"{integration_id}: invalid evidence type {evidence_type}", failures)
+        forbidden_actions = set(source.get("forbiddenActions") or [])
+        check(
+            bool(forbidden_actions & {"exploit_execution", "repository_write", "production_change", "containment", "pull_request_merge", "external_notification"}),
+            "source_forbidden_actions_explicit",
+            f"{integration_id}: missing explicit forbidden sensitive actions",
+            failures,
+        )
+
+    for output in draft_outputs:
+        integration_id = str(output.get("integrationId", "<missing>"))
+        check(output.get("lane") in allowed_lanes, "integration_lane_allowed", f"{integration_id}: invalid lane", failures)
+        check(output.get("outputMode") == "draft_only", "output_mode_draft_only", f"{integration_id}: output is not draft_only", failures)
+        check(
+            output.get("promotionRequiresHumanApproval") is True,
+            "output_promotion_requires_human_approval",
+            f"{integration_id}: promotion does not require human approval",
+            failures,
+        )
+        forbidden_actions = set(output.get("forbiddenActions") or [])
+        check(
+            bool(forbidden_actions & {"production_detection_enablement", "containment", "production_change", "pull_request_merge", "external_notification"}),
+            "output_forbidden_actions_explicit",
+            f"{integration_id}: missing explicit forbidden sensitive actions",
+            failures,
+        )
+
+    return failures
+
+
 def main() -> int:
     schema = load_json(SCHEMA_PATH)
     cases = load_json(CASES_PATH)
+    tool_integrations = load_json(TOOL_INTEGRATIONS_PATH)
     all_failures: list[dict] = []
     results = []
 
@@ -113,11 +161,16 @@ def main() -> int:
         })
         all_failures.extend(failures)
 
+    integration_failures = evaluate_tool_integrations(tool_integrations, schema)
+    all_failures.extend(integration_failures)
+
     summary = {
         "gate": "PASS" if not all_failures else "FAIL",
         "caseCount": len(cases),
         "passedCount": len([item for item in results if item["passed"]]),
         "failedCount": len([item for item in results if not item["passed"]]),
+        "toolIntegrationCount": len(tool_integrations.get("readOnlySources", [])) + len(tool_integrations.get("draftOnlyOutputs", [])),
+        "toolIntegrationFailures": integration_failures,
         "results": results,
         "blockingChecks": [
             "required_field",
@@ -131,7 +184,15 @@ def main() -> int:
             "no_forbidden_action_type",
             "sensitive_action_requires_human_approval",
             "approval_required_when_sensitive",
-            "approved_by_named_human"
+            "approved_by_named_human",
+            "read_only_sources_present",
+            "draft_only_outputs_present",
+            "source_access_read_only",
+            "source_data_boundary_present",
+            "source_forbidden_actions_explicit",
+            "output_mode_draft_only",
+            "output_promotion_requires_human_approval",
+            "output_forbidden_actions_explicit"
         ],
     }
 
@@ -145,6 +206,12 @@ def main() -> int:
         print(f"  [{status}] {result['caseId']} ({result['lane']})")
         for failure in result["failures"]:
             print(f"       - {failure['name']}: {failure['detail']}")
+    if integration_failures:
+        print("  [fail] tool integrations")
+        for failure in integration_failures:
+            print(f"       - {failure['name']}: {failure['detail']}")
+    else:
+        print(f"  [ok] tool integrations ({summary['toolIntegrationCount']})")
     return 0 if not all_failures else 1
 
 
@@ -160,6 +227,11 @@ def render_scorecard(summary: dict) -> str:
     for result in summary["results"]:
         lines.append(f"| {result['caseId']} | {result['lane']} | {'PASS' if result['passed'] else 'FAIL'} |")
     lines.extend([
+        "",
+        "## Safe tool integrations",
+        "",
+        f"- Tool integration contracts: `{summary.get('toolIntegrationCount', 0)}`",
+        f"- Integration contract result: `{'PASS' if not summary.get('toolIntegrationFailures') else 'FAIL'}`",
         "",
         "## Blocking checks",
         "",

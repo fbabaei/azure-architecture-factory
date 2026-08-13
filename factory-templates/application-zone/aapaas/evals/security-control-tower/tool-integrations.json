@@ -1,0 +1,136 @@
+{
+  "readOnlySources": [
+    {
+      "integrationId": "code-scanning-findings",
+      "displayName": "Code scanning findings",
+      "lane": "red",
+      "accessMode": "read_only",
+      "dataBoundary": "approved repository security findings and finding metadata only",
+      "allowedEvidenceTypes": [
+        "finding_metadata",
+        "exploitability_assessment"
+      ],
+      "forbiddenActions": [
+        "exploit_execution",
+        "repository_write",
+        "pull_request_merge"
+      ]
+    },
+    {
+      "integrationId": "xdr-telemetry-summaries",
+      "displayName": "Defender/XDR telemetry summaries",
+      "lane": "blue",
+      "accessMode": "read_only",
+      "dataBoundary": "approved summarized security telemetry only",
+      "allowedEvidenceTypes": [
+        "telemetry_mapping",
+        "detection_hypothesis",
+        "audit_event"
+      ],
+      "forbiddenActions": [
+        "containment",
+        "production_detection_enablement",
+        "external_notification"
+      ]
+    },
+    {
+      "integrationId": "cloud-posture-findings",
+      "displayName": "Cloud posture findings",
+      "lane": "green",
+      "accessMode": "read_only",
+      "dataBoundary": "approved cloud posture assessment summaries only",
+      "allowedEvidenceTypes": [
+        "finding_metadata",
+        "remediation_plan"
+      ],
+      "forbiddenActions": [
+        "production_change",
+        "policy_assignment",
+        "resource_mutation"
+      ]
+    },
+    {
+      "integrationId": "repository-metadata",
+      "displayName": "Repository metadata",
+      "lane": "green",
+      "accessMode": "read_only",
+      "dataBoundary": "approved repository file names, branch metadata, and code-owner metadata",
+      "allowedEvidenceTypes": [
+        "remediation_plan",
+        "draft_pull_request"
+      ],
+      "forbiddenActions": [
+        "repository_write",
+        "pull_request_merge",
+        "deployment"
+      ]
+    }
+  ],
+  "draftOnlyOutputs": [
+    {
+      "integrationId": "detection-drafts",
+      "displayName": "Detection drafts",
+      "lane": "blue",
+      "outputMode": "draft_only",
+      "promotionRequiresHumanApproval": true,
+      "allowedActions": [
+        "detection_draft",
+        "triage_notes"
+      ],
+      "forbiddenActions": [
+        "production_detection_enablement",
+        "containment"
+      ]
+    },
+    {
+      "integrationId": "remediation-plans",
+      "displayName": "Remediation plans",
+      "lane": "green",
+      "outputMode": "draft_only",
+      "promotionRequiresHumanApproval": true,
+      "allowedActions": [
+        "remediation_plan",
+        "rollback_notes"
+      ],
+      "forbiddenActions": [
+        "production_change",
+        "deployment"
+      ]
+    },
+    {
+      "integrationId": "draft-pull-requests",
+      "displayName": "Draft pull requests",
+      "lane": "green",
+      "outputMode": "draft_only",
+      "promotionRequiresHumanApproval": true,
+      "allowedActions": [
+        "draft_pull_request"
+      ],
+      "forbiddenActions": [
+        "pull_request_merge",
+        "repository_write_without_review"
+      ]
+    },
+    {
+      "integrationId": "runbook-updates",
+      "displayName": "Runbook updates",
+      "lane": "orchestrator",
+      "outputMode": "draft_only",
+      "promotionRequiresHumanApproval": true,
+      "allowedActions": [
+        "runbook_update_draft",
+        "audit_event"
+      ],
+      "forbiddenActions": [
+        "external_notification",
+        "production_runbook_publish"
+      ]
+    }
+  ],
+  "safetyControls": [
+    "read-only inputs before tool activation",
+    "draft-only outputs by default",
+    "named human approval before containment, production change, PR merge, or external communication",
+    "audit evidence for every proposed action"
+  ]
+}
