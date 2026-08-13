@@ -595,6 +595,20 @@ def _portal_load_security_work_board() -> dict:
     }
 
 
+def _portal_load_security_tool_integrations() -> dict:
+    integrations_path = AAPAAS_ROOT / "evals" / "security-control-tower" / "tool-integrations.json"
+    integrations = _portal_read_json(integrations_path)
+    if not isinstance(integrations, dict):
+        integrations = {}
+    return {
+        "updated_at": _utcnow_iso(),
+        "readOnlySources": integrations.get("readOnlySources", []),
+        "draftOnlyOutputs": integrations.get("draftOnlyOutputs", []),
+        "safetyControls": integrations.get("safetyControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json",
+    }
+
+
 def _portal_list_pack_versions(pack_id: str) -> list:
     registry = _portal_load_app_packs()
     versions = [
@@ -3700,6 +3714,9 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
 
         if request_path == "/api/application-zone/security-control-tower/work-board":
             return self._handle_security_control_tower_work_board()
+
+        if request_path == "/api/application-zone/security-control-tower/tool-integrations":
+            return self._handle_security_control_tower_tool_integrations()
 
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
@@ -7347,6 +7364,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
     def _handle_security_control_tower_work_board(self):
         """Return the Security Control Tower Red/Blue/Green work board."""
         return self._send_json(_portal_load_security_work_board(), 200)
+
+    def _handle_security_control_tower_tool_integrations(self):
+        """Return safe read-only and draft-only tool integration contracts."""
+        return self._send_json(_portal_load_security_tool_integrations(), 200)
 
     def _handle_application_zone_validate_inputs(self):
         """Validate a Quick Launch payload against the selected App Pack manifest."""

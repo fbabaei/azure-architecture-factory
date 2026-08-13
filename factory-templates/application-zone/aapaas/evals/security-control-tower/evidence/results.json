@@ -3,6 +3,8 @@
   "caseCount": 4,
   "passedCount": 4,
   "failedCount": 0,
+  "toolIntegrationCount": 8,
+  "toolIntegrationFailures": [],
   "results": [
     {
       "caseId": "red-passive-ssrf",
@@ -41,6 +43,14 @@
     "no_forbidden_action_type",
     "sensitive_action_requires_human_approval",
     "approval_required_when_sensitive",
-    "approved_by_named_human"
+    "approved_by_named_human",
+    "read_only_sources_present",
+    "draft_only_outputs_present",
+    "source_access_read_only",
+    "source_data_boundary_present",
+    "source_forbidden_actions_explicit",
+    "output_mode_draft_only",
+    "output_promotion_requires_human_approval",
+    "output_forbidden_actions_explicit"
   ]
 }

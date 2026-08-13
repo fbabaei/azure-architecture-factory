@@ -518,6 +518,19 @@ def _load_security_work_board() -> dict:
     }
 
 
+def _load_security_tool_integrations() -> dict:
+    integrations = _read_json(AAPAAS_ROOT / "evals" / "security-control-tower" / "tool-integrations.json")
+    if not isinstance(integrations, dict):
+        integrations = {}
+    return {
+        "updated_at": datetime.now().isoformat(),
+        "readOnlySources": integrations.get("readOnlySources", []),
+        "draftOnlyOutputs": integrations.get("draftOnlyOutputs", []),
+        "safetyControls": integrations.get("safetyControls", []),
+        "contractHref": "/factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json",
+    }
+
+
 def _validate_input_rule(rule: dict, value) -> str | None:
     field_type = rule.get("type")
     name = rule.get("name", "field")
@@ -1485,6 +1498,12 @@ def get_aapaas_summary():
 def get_security_control_tower_work_board():
     """Return the Security Control Tower Red/Blue/Green work board."""
     return jsonify(_load_security_work_board())
+
+
+@app.route('/api/application-zone/security-control-tower/tool-integrations')
+def get_security_control_tower_tool_integrations():
+    """Return safe read-only and draft-only tool integration contracts."""
+    return jsonify(_load_security_tool_integrations())
 
 
 @app.route('/api/application-zone/packs/<pack_id>/versions')

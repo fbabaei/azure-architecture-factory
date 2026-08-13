@@ -4342,6 +4342,10 @@
                             <h4>Security Work Board</h4>
                             <p class="appzone-note">Red, Blue, Green, and Orchestrator work lanes from the Security Control Tower Phase 2 eval evidence.</p>
                             <div id="appzone-security-work-board" class="appzone-security-board">Loading Security Work Board...</div>
+                            <div style="height:0.75rem;"></div>
+                            <h4>Safe Tool Integrations</h4>
+                            <p class="appzone-note">Phase 4 contracts for read-only security sources and draft-only outputs. Sensitive actions stay human-gated.</p>
+                            <div id="appzone-security-tool-integrations" class="appzone-security-board">Loading safe tool integrations...</div>
                         </div>
 
                         <div class="appzone-panel">
@@ -7878,10 +7882,11 @@
             if (agentPackListEl) agentPackListEl.innerHTML = '';
 
             try {
-                const [response, aapaasResponse, securityBoardResponse] = await Promise.all([
+                const [response, aapaasResponse, securityBoardResponse, securityToolResponse] = await Promise.all([
                     fetch(API_APPZONE_PACKS, { cache: 'no-store' }),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/aapaas/summary`, { cache: 'no-store' }).catch(() => null),
                     fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/work-board`, { cache: 'no-store' }).catch(() => null),
+                    fetch(`${API_APPZONE_BASE}/api/application-zone/security-control-tower/tool-integrations`, { cache: 'no-store' }).catch(() => null),
                 ]);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
@@ -7895,6 +7900,11 @@
                     renderSecurityWorkBoard(await securityBoardResponse.json());
                 } else {
                     renderSecurityWorkBoard(null);
+                }
+                if (securityToolResponse && securityToolResponse.ok) {
+                    renderSecurityToolIntegrations(await securityToolResponse.json());
+                } else {
+                    renderSecurityToolIntegrations(null);
                 }
 
                 const packs = data.packs || [];
@@ -8053,6 +8063,51 @@
                     </div>
                 </div>
                 <div class="security-work-lanes">${laneHtml}</div>
+            `;
+        }
+
+        function renderSecurityToolIntegrations(data) {
+            const el = document.getElementById('appzone-security-tool-integrations');
+            if (!el) return;
+            if (!data) {
+                el.innerHTML = '<div class="appzone-meta">Safe tool integration contracts are not available.</div>';
+                return;
+            }
+
+            const readOnlySources = Array.isArray(data.readOnlySources) ? data.readOnlySources : [];
+            const draftOnlyOutputs = Array.isArray(data.draftOnlyOutputs) ? data.draftOnlyOutputs : [];
+            const controls = Array.isArray(data.safetyControls) ? data.safetyControls : [];
+            const renderIntegrationCard = (item, modeLabel) => {
+                const forbidden = Array.isArray(item.forbiddenActions) ? item.forbiddenActions.join(', ') : '';
+                const allowed = Array.isArray(item.allowedActions)
+                    ? item.allowedActions.join(', ')
+                    : (Array.isArray(item.allowedEvidenceTypes) ? item.allowedEvidenceTypes.join(', ') : '');
+                return `
+                    <div class="security-tool-card security-work-lane-${escapeHtml(item.lane || 'other')}">
+                        <div class="security-work-item-title">${escapeHtml(item.displayName || item.integrationId || 'integration')}</div>
+                        <div class="security-work-meta">Lane: ${escapeHtml(item.lane || '-')} · Mode: ${escapeHtml(modeLabel)}</div>
+                        ${item.dataBoundary ? `<div class="security-work-meta">Boundary: ${escapeHtml(item.dataBoundary)}</div>` : ''}
+                        <div class="security-work-meta">Allowed: ${escapeHtml(allowed || '-')}</div>
+                        <div class="security-work-approval">Forbidden without approval: ${escapeHtml(forbidden || '-')}</div>
+                    </div>
+                `;
+            };
+
+            el.innerHTML = `
+                <div class="security-work-summary">
+                    <div><strong>Read-only sources:</strong> ${escapeHtml(String(readOnlySources.length))}</div>
+                    <div><strong>Draft-only outputs:</strong> ${escapeHtml(String(draftOnlyOutputs.length))}</div>
+                    <div class="appzone-doc-links">
+                        ${data.contractHref ? `<a href="${escapeHtml(data.contractHref)}" target="_blank" rel="noopener">Integration contract</a>` : ''}
+                    </div>
+                </div>
+                <div class="security-tool-section-title">Read-only sources</div>
+                <div class="security-tool-grid">${readOnlySources.map(item => renderIntegrationCard(item, item.accessMode || 'read_only')).join('')}</div>
+                <div class="security-tool-section-title">Draft-only outputs</div>
+                <div class="security-tool-grid">${draftOnlyOutputs.map(item => renderIntegrationCard(item, item.outputMode || 'draft_only')).join('')}</div>
+                <div class="security-tool-controls">
+                    ${controls.map(control => `<span class="security-work-pill approval">${escapeHtml(control)}</span>`).join('')}
+                </div>
             `;
         }
 
@@ -10021,11 +10076,42 @@ az group show --name ${rg} 2>/dev/null || echo "Resource group deleted."`;
             color: #6f5200;
         }
 
+        .security-tool-section-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #315b7c;
+            margin: 0.55rem 0 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .security-tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        .security-tool-card {
+            border: 1px solid #e2edf7;
+            border-top-width: 3px;
+            border-radius: 6px;
+            background: #ffffff;
+            padding: 0.48rem;
+        }
+
+        .security-tool-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.6rem;
+        }
+
         @media (max-width: 900px) {
             .appzone-grid,
             .appzone-form-grid,
             .appzone-kpi-row,
-            .security-work-lanes {
+            .security-work-lanes,
+            .security-tool-grid {
                 grid-template-columns: 1fr;
             }
         }

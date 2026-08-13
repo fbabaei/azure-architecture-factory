@@ -57,6 +57,18 @@ The Phase 3 portal surface exposes the offline evidence as a visible Security Wo
 
 The board renders Orchestrator, Red, Blue, and Green lanes in the AI Apps & Agents as a Service workspace and shows each work item's request, playbook, risk, evidence types, action modes, eval result, and human-approval gates.
 
+## Phase 4 safe tool integrations
+
+The Phase 4 starter contract is available at:
+
+`factory-templates/application-zone/aapaas/evals/security-control-tower/tool-integrations.json`
+
+The portal exposes it through:
+
+`GET /api/application-zone/security-control-tower/tool-integrations`
+
+The eval gate now blocks any source that is not `read_only`, any output that is not `draft_only`, and any sensitive promotion path that lacks human approval. The visible portal cards list read-only source boundaries, draft-only outputs, and forbidden actions for code scanning findings, Defender/XDR summaries, cloud posture findings, repository metadata, detection drafts, remediation plans, draft pull requests, and runbook updates.
+
 ## Promotion criteria
 
 Move to `certification-ready` only after:
