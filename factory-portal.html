@@ -3469,6 +3469,146 @@
             line-height: 1.35;
         }
 
+        .hero-action-row,
+        .new-user-mode-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-top: 0.9rem;
+        }
+
+        .hero-action-row button,
+        .new-user-mode-actions button,
+        .sample-demo-button {
+            border: 1px solid #0078d4;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #005a9e;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 850;
+            padding: 0.42rem 0.75rem;
+        }
+
+        .hero-action-row button.primary,
+        .new-user-mode-actions button.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+        }
+
+        body.first-time-mode .first-time-hide {
+            display: none !important;
+        }
+
+        .new-user-progress-panel,
+        .environment-clarity-panel,
+        .context-help-block {
+            border: 1px solid rgba(0, 120, 212, 0.16);
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 10px 24px rgba(18, 50, 74, 0.08);
+            padding: 0.9rem;
+            margin: 0 0 1.1rem;
+        }
+
+        .new-user-progress-panel h3,
+        .environment-clarity-panel h3,
+        .context-help-block h4 {
+            margin: 0 0 0.45rem;
+            color: #123b5d;
+        }
+
+        .workflow-progress-grid,
+        .environment-state-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.65rem;
+        }
+
+        .workflow-progress-card,
+        .environment-state-card {
+            border: 1px solid #dbe7f3;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 0.7rem;
+        }
+
+        .workflow-progress-card strong,
+        .environment-state-card strong {
+            display: block;
+            color: #123b5d;
+            margin-bottom: 0.35rem;
+            font-size: 0.84rem;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.28rem;
+        }
+
+        .workflow-steps span,
+        .state-badge,
+        .catalog-status-badge {
+            border-radius: 999px;
+            background: #e7f1fb;
+            color: #005a9e;
+            font-size: 0.68rem;
+            font-weight: 850;
+            padding: 0.12rem 0.45rem;
+        }
+
+        .state-badge.certified,
+        .catalog-status-badge.certified {
+            background: #e7f6e7;
+            color: #107c10;
+        }
+
+        .state-badge.gated,
+        .catalog-status-badge.gated {
+            background: #fff4ce;
+            color: #8a6d00;
+        }
+
+        .state-badge.local {
+            background: #f3e8ff;
+            color: #5c2d91;
+        }
+
+        .catalog-filter-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 12rem;
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .catalog-filter-row input,
+        .catalog-filter-row select {
+            border: 1px solid #c9dced;
+            border-radius: 8px;
+            padding: 0.42rem 0.55rem;
+            font-size: 0.8rem;
+            background: #ffffff;
+        }
+
+        .appzone-status-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin: 0.35rem 0;
+        }
+
+        @media (max-width: 900px) {
+            .start-here-card-grid,
+            .start-here-examples,
+            .workflow-progress-grid,
+            .environment-state-grid,
+            .catalog-filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .csa-toggle-copy {
             display: flex;
             flex-direction: column;
@@ -3602,8 +3742,13 @@
                 <div class="hero-primary">
                     <h1>AI Factory Services</h1>
                     <p class="section-subtitle hero-flow-subtitle">
-                        Azure Architecture Factory + Agent Application Factory + AI Apps & Agents as a Service: from requirements to reusable agents, app packs, deployment, and operational evidence.
+                        Turn requirements into Azure-ready architectures, reusable agents, and certified app packs with clear validation evidence.
                     </p>
+                    <div class="hero-action-row" aria-label="Primary portal actions">
+                        <button type="button" class="primary" onclick="return startHereAction('architecture', event)">Plan architecture</button>
+                        <button type="button" onclick="return startHereAction('agent', event)">Explore agents</button>
+                        <button type="button" onclick="return startHereAction('catalog', event)">Validate app pack</button>
+                    </div>
                 </div>
                 <div class="hero-context-panel">
                     <div class="factory-philosophy-panel">
@@ -3630,6 +3775,11 @@
                     <p class="start-here-subtitle">New to the portal? Pick the outcome closest to your job. You can still use the advanced panels below whenever you need them.</p>
                 </div>
                 <a class="start-here-plan-link" href="docs/PORTAL_NEW_USER_UX_PLAN.md" target="_blank" rel="noopener">View UX plan</a>
+            </div>
+            <div class="new-user-mode-actions" aria-label="New user mode controls">
+                <button type="button" id="first-time-mode-on" onclick="return setFirstTimeMode(true, event)">First-time mode</button>
+                <button type="button" id="first-time-mode-off" class="active" onclick="return setFirstTimeMode(false, event)">Show all controls</button>
+                <button type="button" class="sample-demo-button" onclick="return loadSampleBrd(event)">Load sample BRD idea</button>
             </div>
             <div class="start-here-card-grid" aria-label="Role-based entry points">
                 <article class="start-here-card">
@@ -3666,6 +3816,33 @@
                     <strong>Explore Security Control Tower</strong>
                     <span>Review security work board, approval gates, pilot readiness, and production gating.</span>
                 </button>
+            </div>
+        </section>
+
+        <section id="workflow-progress" class="new-user-progress-panel" aria-label="Workflow progress">
+            <h3>Workflow progress at a glance</h3>
+            <div class="workflow-progress-grid">
+                <div class="workflow-progress-card">
+                    <strong>Architecture path</strong>
+                    <div class="workflow-steps"><span>BRD</span><span>Analysis</span><span>Architecture</span><span>Code/Bicep</span><span>Review</span></div>
+                </div>
+                <div class="workflow-progress-card">
+                    <strong>Agent path</strong>
+                    <div class="workflow-steps"><span>Browse</span><span>Select pattern</span><span>Create plan</span><span>Approve package</span></div>
+                </div>
+                <div class="workflow-progress-card">
+                    <strong>Apps & Agents path</strong>
+                    <div class="workflow-steps"><span>Catalog</span><span>Evidence</span><span>Quick Launch</span><span>Certification</span><span>Pilot gate</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="environment-clarity" class="environment-clarity-panel" aria-label="Environment and state legend">
+            <h3>Environment and state legend</h3>
+            <div class="environment-state-grid">
+                <div class="environment-state-card"><strong><span class="state-badge local">Local test</span></strong> Quick Launch and local APIs validate manifests and runtime contracts before real deployment.</div>
+                <div class="environment-state-card"><strong><span class="state-badge certified">Certification-ready</span></strong> Evidence gates passed for controlled preview; production still requires rollout controls.</div>
+                <div class="environment-state-card"><strong><span class="state-badge gated">Production-pilot gated</span></strong> Requires named owners, live evidence, RBAC, observability, rollback, and go/no-go approval.</div>
             </div>
         </section>
 
@@ -3810,7 +3987,7 @@
             </div>
         </section>
 
-        <section id="assist-workspace" class="workspace-card collapsed" aria-label="Assist workspace">
+        <section id="assist-workspace" class="workspace-card collapsed first-time-hide" aria-label="Assist workspace">
             <div class="workspace-card-header" onclick="expandWorkspaceCard('assist-workspace', event)">
                 <div>
                     <h3 class="workspace-card-title">Assist Workspace</h3>
@@ -3901,7 +4078,7 @@
         </div>
 
         <div class="docs-csa-row">
-        <section class="docs-quick-links" id="docs-quick-links" aria-labelledby="docs-quick-links-title">
+        <section class="docs-quick-links first-time-hide" id="docs-quick-links" aria-labelledby="docs-quick-links-title">
             <div class="docs-toggle-row">
                 <a href="#docs-quick-links" class="docs-toggle-link" onclick="toggleDocsPanel(event)">
                     <span class="docs-toggle-copy">
@@ -4523,6 +4700,10 @@
                     <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('application-zone-workspace', event)">Hide</button>
                 </div>
                 <div class="workspace-card-body">
+                    <div class="context-help-block">
+                        <h4>What can I do here?</h4>
+                        <p class="appzone-note">Use this workspace to inspect governed App Packs and Agent Packs, review evidence, run local Quick Launch validation, and understand what is certified versus production-pilot gated.</p>
+                    </div>
                     <div class="workspace-tabs">
                         <button class="workspace-tab active" onclick="switchAppZoneTab('workspace-tab', event)">🚀 Workspace</button>
                         <button class="workspace-tab" onclick="switchAppZoneTab('gps-tab', event)">🗺️ GPS Guide</button>
@@ -4550,6 +4731,15 @@
                             </div>
                             <div class="appzone-actions">
                                 <button type="button" class="btn-primary" onclick="refreshAppZoneCatalog(true)">Refresh Catalog</button>
+                            </div>
+                            <div class="catalog-filter-row" aria-label="Catalog filters">
+                                <input id="appzone-catalog-search" type="search" placeholder="Search packs, agents, certification, or capabilities" oninput="refreshAppZoneCatalog(false)">
+                                <select id="appzone-catalog-filter" onchange="refreshAppZoneCatalog(false)">
+                                    <option value="all">All statuses</option>
+                                    <option value="certified">Certified / ready</option>
+                                    <option value="preview">Preview</option>
+                                    <option value="gated">Production gated</option>
+                                </select>
                             </div>
                             <div id="appzone-catalog-status" class="status-message info visible">Loading catalog...</div>
                             <details class="appzone-accordion-section" open>
@@ -7647,6 +7837,54 @@
             return setPrimaryServiceTab(cardId, { updateHash: true, scroll: true });
         }
 
+        function setFirstTimeMode(enabled, event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            document.body.classList.toggle('first-time-mode', Boolean(enabled));
+            document.getElementById('first-time-mode-on')?.classList.toggle('active', Boolean(enabled));
+            document.getElementById('first-time-mode-off')?.classList.toggle('active', !enabled);
+            if (typeof showStatus === 'function') {
+                showStatus(enabled ? 'First-time mode enabled. Advanced support panels are hidden.' : 'All portal controls are visible.', 'info');
+            }
+            return false;
+        }
+
+        function loadSampleBrd(event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            setPrimaryServiceTab('build-workspace', { updateHash: true, scroll: true });
+            const sample = [
+                'Build an internal AI support assistant for CSA users.',
+                '',
+                'Goals:',
+                '- Ingest approved product and support documentation.',
+                '- Provide grounded answers with citations.',
+                '- Track unanswered questions for content improvement.',
+                '- Include authentication, audit logs, telemetry, and cost controls.',
+                '',
+                'Constraints:',
+                '- Use Azure-native services.',
+                '- Keep sensitive data inside the tenant.',
+                '- Require production readiness review before deployment.'
+            ].join('\\n');
+            window.setTimeout(() => {
+                const textarea = document.querySelector('#brd-textarea, #brd-content, textarea[name=\"brd\"], textarea[id*=\"brd\" i]');
+                if (textarea) {
+                    textarea.value = sample;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 250);
+            if (typeof showStatus === 'function') {
+                showStatus('Loaded a sample BRD idea for the architecture path.', 'info');
+            }
+            return false;
+        }
+
         function startHereAction(action, event = null) {
             if (event) {
                 event.preventDefault();
@@ -8281,6 +8519,48 @@
             return `<div class="appzone-doc-links" onclick="event.stopPropagation()" aria-label="Documentation links">${anchors}</div>`;
         }
 
+        function appZoneCatalogSearchText(item) {
+            return [
+                item.packId,
+                item.agentPackId,
+                item.displayName,
+                item.status,
+                item.certificationStatus,
+                item.supportTier,
+                item.source,
+                item.parentAppPackId,
+                ...(item.capabilities || []),
+                ...(item.requiredEvidence || []),
+            ].join(' ').toLowerCase();
+        }
+
+        function appZoneCatalogMatches(item, query, filter) {
+            const text = appZoneCatalogSearchText(item);
+            const matchesQuery = !query || text.includes(query);
+            const certText = String(item.certificationStatus || '').toLowerCase();
+            const statusText = String(item.status || '').toLowerCase();
+            const gatedText = text.includes('pilot') || text.includes('approval') || text.includes('gated');
+            const matchesFilter =
+                filter === 'all'
+                || (filter === 'certified' && (certText.includes('ready') || certText.includes('certification-ready')))
+                || (filter === 'preview' && statusText.includes('preview'))
+                || (filter === 'gated' && gatedText);
+            return matchesQuery && matchesFilter;
+        }
+
+        function renderCatalogBadges(item) {
+            const badges = [];
+            const certText = String(item.certificationStatus || '').toLowerCase();
+            const statusText = String(item.status || '').toLowerCase();
+            if (certText.includes('ready')) badges.push('<span class="catalog-status-badge certified">Certified</span>');
+            if (statusText.includes('preview')) badges.push('<span class="catalog-status-badge">Preview</span>');
+            if (appZoneCatalogSearchText(item).includes('gated') || appZoneCatalogSearchText(item).includes('pilot')) {
+                badges.push('<span class="catalog-status-badge gated">Pilot gated</span>');
+            }
+            if (!badges.length) badges.push('<span class="catalog-status-badge">Needs setup</span>');
+            return `<div class="appzone-status-badges">${badges.join('')}</div>`;
+        }
+
         async function refreshAppZoneCatalog(showToast = false) {
             const statusEl = document.getElementById('appzone-catalog-status');
             const listEl = document.getElementById('appzone-catalog-list');
@@ -8350,6 +8630,10 @@
 
                 const packs = data.packs || [];
                 const agentPacks = data.agentPacks || [];
+                const query = (document.getElementById('appzone-catalog-search')?.value || '').trim().toLowerCase();
+                const filter = document.getElementById('appzone-catalog-filter')?.value || 'all';
+                const visiblePacks = packs.filter(pack => appZoneCatalogMatches(pack, query, filter));
+                const visibleAgentPacks = agentPacks.filter(agentPack => appZoneCatalogMatches(agentPack, query, filter));
                 if (!packs.length) {
                     listEl.innerHTML = '<div class="appzone-item"><div class="appzone-meta">No App Packs found.</div></div>';
                 } else {
@@ -8365,7 +8649,7 @@
                         packSelect.value = exists ? selectedPack : (packSelect.options[0]?.value || 'casewright');
                     }
 
-                    listEl.innerHTML = packs.map(pack => {
+                    listEl.innerHTML = visiblePacks.map(pack => {
                         const packId = pack.packId || '';
                         const version = pack.latestVersion || '';
                         const active = packId === (packSelect?.value || 'casewright') ? 'active' : '';
@@ -8374,6 +8658,7 @@
                         return `
                         <div class="appzone-item ${active}" onclick="selectAppZonePack('${escapeHtml(packId)}', '${escapeHtml(version)}')">
                             <div class="appzone-item-title">${escapeHtml(pack.displayName || pack.packId || 'unknown')}</div>
+                            ${renderCatalogBadges(pack)}
                             <div class="appzone-meta">${escapeHtml(pack.packId || '')} · v${escapeHtml(pack.latestVersion || '')} · ${escapeHtml(pack.status || '')}${escapeHtml(cert)}</div>
                             <div class="appzone-meta">Source: ${escapeHtml(pack.source || 'aaf')} · Instances: ${escapeHtml(String(instances))} · Warnings: ${escapeHtml(String(pack.certificationWarnings ?? 0))}</div>
                             <div class="appzone-meta">Regions: ${escapeHtml((pack.supportedRegions || []).join(', '))}</div>
@@ -8381,7 +8666,7 @@
                             ${renderAppZoneDocumentationLinks(pack.documentationLinks)}
                         </div>
                     `;
-                    }).join('');
+                    }).join('') || '<div class="appzone-item"><div class="appzone-meta">No App Packs match the current search/filter.</div></div>';
 
                     await onAppZonePackChanged();
                 }
@@ -8390,12 +8675,13 @@
                     if (!agentPacks.length) {
                         agentPackListEl.innerHTML = '<div class="appzone-item"><div class="appzone-meta">No governed Agent Packs found.</div></div>';
                     } else {
-                        agentPackListEl.innerHTML = agentPacks.map(agentPack => {
+                        agentPackListEl.innerHTML = visibleAgentPacks.map(agentPack => {
                             const capabilities = (agentPack.capabilities || []).slice(0, 5).join(', ');
                             const evidence = (agentPack.requiredEvidence || []).join(', ');
                             return `
                                 <div class="appzone-item">
                                     <div class="appzone-item-title">${escapeHtml(agentPack.displayName || agentPack.agentPackId || 'unknown agent')}</div>
+                                    ${renderCatalogBadges(agentPack)}
                                     <div class="appzone-meta">${escapeHtml(agentPack.agentPackId || '')} · v${escapeHtml(agentPack.latestVersion || '')} · ${escapeHtml(agentPack.executionMode || 'unknown')} · ${escapeHtml(agentPack.certificationStatus || agentPack.status || '')}</div>
                                     <div class="appzone-meta">Canonical source: ${escapeHtml(agentPack.canonicalSource || 'casewright')} · Parent App Pack: ${escapeHtml(agentPack.parentAppPackId || '-')} · Tools: ${escapeHtml(String(agentPack.toolCount ?? 0))}</div>
                                     <div class="appzone-meta">Capabilities: ${escapeHtml(capabilities || '-')}</div>
@@ -8403,12 +8689,12 @@
                                     ${renderAppZoneDocumentationLinks(agentPack.documentationLinks)}
                                 </div>
                             `;
-                        }).join('');
+                        }).join('') || '<div class="appzone-item"><div class="appzone-meta">No Agent Packs match the current search/filter.</div></div>';
                     }
                 }
 
                 statusEl.className = 'status-message success visible';
-                statusEl.textContent = `Loaded ${packs.length} App Pack(s) and ${agentPacks.length} Agent Pack(s).`;
+                statusEl.textContent = `Loaded ${visiblePacks.length}/${packs.length} App Pack(s) and ${visibleAgentPacks.length}/${agentPacks.length} Agent Pack(s).`;
                 if (showToast && typeof showStatus === 'function') {
                     showStatus('Apps & Agents catalog refreshed.', 'success');
                 }
