@@ -3334,6 +3334,141 @@
             background: rgba(255, 255, 255, 0.92);
         }
 
+        .start-here-panel {
+            border: 1px solid rgba(0, 120, 212, 0.18);
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f7fbff 0%, #eef7ff 50%, #ffffff 100%);
+            box-shadow: 0 14px 34px rgba(18, 50, 74, 0.12);
+            padding: 1rem;
+            margin: 0 0 1.25rem;
+        }
+
+        .start-here-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .start-here-kicker {
+            margin: 0 0 0.2rem;
+            color: #005a9e;
+            font-size: 0.72rem;
+            font-weight: 850;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .start-here-title {
+            margin: 0;
+            color: #123b5d;
+            font-size: 1.35rem;
+            font-weight: 850;
+        }
+
+        .start-here-subtitle {
+            margin: 0.3rem 0 0;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+
+        .start-here-plan-link {
+            flex: 0 0 auto;
+            border: 1px solid #bad5ed;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #005a9e;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0.3rem 0.7rem;
+            text-decoration: none;
+        }
+
+        .start-here-card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        .start-here-card {
+            border: 1px solid rgba(0, 120, 212, 0.16);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.86);
+            padding: 0.85rem;
+            box-shadow: 0 8px 20px rgba(18, 50, 74, 0.08);
+        }
+
+        .start-here-card h4 {
+            margin: 0 0 0.35rem;
+            color: #123b5d;
+            font-size: 0.96rem;
+        }
+
+        .start-here-card p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        .start-here-card button {
+            margin-top: 0.7rem;
+            width: 100%;
+            border: 1px solid #0078d4;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #005a9e;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 850;
+            padding: 0.4rem 0.65rem;
+        }
+
+        .start-here-card button.primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+        }
+
+        .start-here-card button:hover,
+        .start-here-card button:focus-visible,
+        .start-here-plan-link:hover,
+        .start-here-plan-link:focus-visible {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 18px rgba(0, 120, 212, 0.16);
+            outline: none;
+        }
+
+        .start-here-examples {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.55rem;
+            margin-top: 0.8rem;
+        }
+
+        .start-here-example {
+            border: 1px solid #dbe7f3;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 0.65rem;
+        }
+
+        .start-here-example strong {
+            display: block;
+            color: #123b5d;
+            font-size: 0.8rem;
+            margin-bottom: 0.18rem;
+        }
+
+        .start-here-example span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            line-height: 1.35;
+        }
+
         .csa-toggle-copy {
             display: flex;
             flex-direction: column;
@@ -3375,6 +3510,15 @@
         }
 
         @media (max-width: 480px) {
+            .start-here-header {
+                flex-direction: column;
+            }
+
+            .start-here-card-grid,
+            .start-here-examples {
+                grid-template-columns: 1fr;
+            }
+
             .projects-intake-wrapper #projects {
                 max-width: 100%;
             }
@@ -3475,6 +3619,53 @@
                         <hr class="design-analysis-heading-rule">
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="start-here" class="start-here-panel" aria-labelledby="start-here-title">
+            <div class="start-here-header">
+                <div>
+                    <p class="start-here-kicker">Start here</p>
+                    <h2 id="start-here-title" class="start-here-title">Choose your first path</h2>
+                    <p class="start-here-subtitle">New to the portal? Pick the outcome closest to your job. You can still use the advanced panels below whenever you need them.</p>
+                </div>
+                <a class="start-here-plan-link" href="docs/PORTAL_NEW_USER_UX_PLAN.md" target="_blank" rel="noopener">View UX plan</a>
+            </div>
+            <div class="start-here-card-grid" aria-label="Role-based entry points">
+                <article class="start-here-card">
+                    <h4>I'm a CSA</h4>
+                    <p>Use the User Map and CSA companion to find the right workflow, docs, or support path quickly.</p>
+                    <button type="button" class="primary" onclick="return startHereAction('csa', event)">Guide me</button>
+                </article>
+                <article class="start-here-card">
+                    <h4>I'm planning architecture</h4>
+                    <p>Start with requirements, generate an Azure-ready architecture, then review code, Bicep, cost, and operations.</p>
+                    <button type="button" onclick="return startHereAction('architecture', event)">Plan architecture</button>
+                </article>
+                <article class="start-here-card">
+                    <h4>I'm building an agent</h4>
+                    <p>Browse reusable agent patterns and create an implementation plan with Agent Application Factory.</p>
+                    <button type="button" onclick="return startHereAction('agent', event)">Explore agents</button>
+                </article>
+                <article class="start-here-card">
+                    <h4>I'm validating an app pack</h4>
+                    <p>Review App Packs, Agent Packs, certification evidence, runtime evidence, and local Quick Launch validation.</p>
+                    <button type="button" onclick="return startHereAction('catalog', event)">Open catalog</button>
+                </article>
+            </div>
+            <div class="start-here-examples" aria-label="Guided examples">
+                <button type="button" class="start-here-example" onclick="return startHereAction('casewright', event)">
+                    <strong>Try CaseWright</strong>
+                    <span>Open the certified App Pack and local validation flow.</span>
+                </button>
+                <button type="button" class="start-here-example" onclick="return startHereAction('supply-chain', event)">
+                    <strong>Review Supply Chain Control Tower</strong>
+                    <span>See certification-ready operations and evidence patterns.</span>
+                </button>
+                <button type="button" class="start-here-example" onclick="return startHereAction('security', event)">
+                    <strong>Explore Security Control Tower</strong>
+                    <span>Review security work board, approval gates, pilot readiness, and production gating.</span>
+                </button>
             </div>
         </section>
 
@@ -7454,6 +7645,55 @@
                 event.preventDefault();
             }
             return setPrimaryServiceTab(cardId, { updateHash: true, scroll: true });
+        }
+
+        function startHereAction(action, event = null) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const chooseAppPack = (packId, version = '0.1.0') => {
+                setPrimaryServiceTab('application-zone-workspace', { updateHash: true, scroll: true });
+                window.setTimeout(() => {
+                    selectAppZonePack(packId, version);
+                    document.getElementById('application-zone-workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            };
+
+            switch (action) {
+                case 'csa':
+                    openUserMapModal(event);
+                    window.setTimeout(() => toggleWorkspaceCard('assist-workspace', true), 150);
+                    break;
+                case 'architecture':
+                    setPrimaryServiceTab('build-workspace', { updateHash: true, scroll: true });
+                    window.setTimeout(() => document.getElementById('intake')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+                    break;
+                case 'agent':
+                    setPrimaryServiceTab('ai-agent-foundry-panel', { updateHash: true, scroll: true });
+                    break;
+                case 'catalog':
+                    setPrimaryServiceTab('application-zone-workspace', { updateHash: true, scroll: true });
+                    break;
+                case 'casewright':
+                    chooseAppPack('casewright', '1.0.0');
+                    break;
+                case 'supply-chain':
+                    chooseAppPack('supply-chain-control-tower', '0.1.0');
+                    break;
+                case 'security':
+                    chooseAppPack('ai-security-control-tower', '0.1.0');
+                    break;
+                default:
+                    openUserMapModal(event);
+                    break;
+            }
+
+            if (typeof showStatus === 'function') {
+                showStatus('Opened the recommended starting point.', 'info');
+            }
+            return false;
         }
 
         function expandWorkspaceCard(cardId, event = null) {
