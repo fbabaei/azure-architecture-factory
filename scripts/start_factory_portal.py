@@ -191,6 +191,7 @@ AAPAAS_CERTIFICATION_FILE = AAPAAS_ROOT / "certification" / "reports" / "certifi
 AAPAAS_INSTANCES_DIR = AAPAAS_ROOT / "operations" / "instances"
 AAPAAS_HEALTH_DIR = AAPAAS_ROOT / "operations" / "health"
 AAPAAS_SCHEDULER_REPORT = AAPAAS_ROOT / "operations" / "scheduler" / "casewright-scheduler.generated.json"
+COLLABORATION_STATE_DIR = AAPAAS_ROOT / "operations" / "collaboration"
 APPLICATION_ZONE_RUNTIME_INSTANCES: dict[str, dict] = {}
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
@@ -203,6 +204,86 @@ def _portal_read_json(path: pathlib.Path):
             return json.load(f)
     except (OSError, json.JSONDecodeError):
         return None
+
+
+def _portal_write_json(path: pathlib.Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    tmp_path.write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+    tmp_path.replace(path)
+
+
+def _portal_safe_slug(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "").strip())[:120].strip("-")
+
+
+def _portal_collaboration_state_path(slug: str) -> pathlib.Path:
+    safe_slug = _portal_safe_slug(slug)
+    return COLLABORATION_STATE_DIR / f"{safe_slug}.collaboration.json"
+
+
+def _portal_default_collaboration_state(slug: str) -> dict:
+    now = _utcnow_iso()
+    return {
+        "apiVersion": "aaf.collaboration/v1",
+        "projectSlug": slug,
+        "updatedAt": now,
+        "participants": [
+            {"role": "Project owner", "name": "Assign owner", "description": "Accountable for goals, scope, and stakeholder alignment."},
+            {"role": "Architect", "name": "Assign architect", "description": "Reviews architecture, tradeoffs, WAF/CAF alignment, and design decisions."},
+            {"role": "Implementer", "name": "Assign implementer", "description": "Owns code, infrastructure, deployment package, and fixes."},
+            {"role": "Reviewer / approver", "name": "Assign approver", "description": "Approves readiness, security, cost, and production gate decisions."},
+        ],
+        "workItems": [
+            {"id": "assign-owners", "title": "Assign project owner and reviewers", "lane": "todo", "owner": "", "status": "open"},
+            {"id": "review-artifacts", "title": "Review generated architecture and artifacts", "lane": "in_progress", "owner": "", "status": "open"},
+            {"id": "record-decisions", "title": "Record open decisions and approval needs", "lane": "blocked", "owner": "", "status": "open"},
+        ],
+        "decisions": [
+            {"id": "architecture-baseline", "title": "Architecture baseline", "status": "proposed", "owner": "", "rationale": "Review architecture overview and diagram before implementation approval.", "evidence": ""},
+            {"id": "deployment-readiness", "title": "Deployment readiness", "status": "pending-evidence", "owner": "", "rationale": "Confirm environment, identity, networking, observability, and rollback plan.", "evidence": ""},
+        ],
+        "notes": [],
+    }
+
+
+def _portal_load_collaboration_state(slug: str) -> dict | None:
+    safe_slug = _portal_safe_slug(slug)
+    if not safe_slug or safe_slug != slug:
+        return None
+    path = _portal_collaboration_state_path(slug)
+    state = _portal_read_json(path)
+    if not isinstance(state, dict):
+        state = _portal_default_collaboration_state(slug)
+    state.setdefault("projectSlug", slug)
+    state.setdefault("participants", [])
+    state.setdefault("workItems", [])
+    state.setdefault("decisions", [])
+    state.setdefault("notes", [])
+    return state
+
+
+def _portal_normalize_collaboration_state(slug: str, payload: dict) -> dict:
+    current = _portal_load_collaboration_state(slug) or _portal_default_collaboration_state(slug)
+    next_state = {
+        "apiVersion": "aaf.collaboration/v1",
+        "projectSlug": slug,
+        "updatedAt": _utcnow_iso(),
+        "participants": payload.get("participants") if isinstance(payload.get("participants"), list) else current.get("participants", []),
+        "workItems": payload.get("workItems") if isinstance(payload.get("workItems"), list) else current.get("workItems", []),
+        "decisions": payload.get("decisions") if isinstance(payload.get("decisions"), list) else current.get("decisions", []),
+        "notes": payload.get("notes") if isinstance(payload.get("notes"), list) else current.get("notes", []),
+    }
+    for collection_name in ("participants", "workItems", "decisions", "notes"):
+        normalized_items = []
+        for item in next_state.get(collection_name, []):
+            if isinstance(item, dict):
+                normalized_items.append({
+                    str(key)[:64]: (value if isinstance(value, (str, int, float, bool)) or value is None else str(value))
+                    for key, value in item.items()
+                })
+        next_state[collection_name] = normalized_items[:100]
+    return next_state
 
 
 def _portal_app_pack_key(pack_id: str, version: str) -> str:
@@ -3805,6 +3886,12 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path == "/api/application-zone/security-control-tower/production-pilot":
             return self._handle_security_control_tower_production_pilot()
 
+        collab_match = re.fullmatch(r"/api/projects/([^/]+)/collaboration", request_path)
+        if collab_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_project_collaboration_get(collab_match.group(1))
+
         appzone_match = re.fullmatch(r"/api/application-zone/packs/([^/]+)/versions", request_path)
         if appzone_match:
             return self._handle_application_zone_pack_versions(appzone_match.group(1))
@@ -4029,6 +4116,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
                 return self._handle_project_chat(parts[3])
             self._send_json({"error": "Invalid project chat path"}, 400)
             return
+        collab_match = re.fullmatch(r"/api/projects/([^/]+)/collaboration", path)
+        if collab_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_project_collaboration_update(collab_match.group(1))
         if path == "/api/guide/refresh":
             if not self._require_auth_for_mutation():
                 return
@@ -4051,6 +4143,41 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return self._handle_copilot_root_post(path)
 
         self._send_json({"error": "Not found"}, 404)
+
+    def _handle_project_collaboration_get(self, slug: str):
+        safe_slug = _portal_safe_slug(slug)
+        if not safe_slug or safe_slug != slug:
+            self._send_json({"error": "Invalid project slug"}, 400)
+            return
+        if not _is_slug_visible(slug):
+            self._send_json({"error": "Unknown project"}, 404)
+            return
+        state = _portal_load_collaboration_state(slug)
+        self._send_json({"ok": True, "state": state}, 200)
+
+    def _handle_project_collaboration_update(self, slug: str):
+        safe_slug = _portal_safe_slug(slug)
+        if not safe_slug or safe_slug != slug:
+            self._send_json({"error": "Invalid project slug"}, 400)
+            return
+        if not _is_slug_visible(slug):
+            self._send_json({"error": "Unknown project"}, 404)
+            return
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+        state = _portal_normalize_collaboration_state(slug, payload)
+        _portal_write_json(_portal_collaboration_state_path(slug), state)
+        self._send_json({"ok": True, "state": state}, 200)
 
     def do_OPTIONS(self):
         self.send_response(204)
