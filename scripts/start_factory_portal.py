@@ -37,7 +37,7 @@ def _utcnow_iso() -> str:
     Preserves the legacy `datetime.utcnow().isoformat() + 'Z'` output format.
     """
     return datetime.now(UTC).replace(tzinfo=None).isoformat() + "Z"
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError, URLError
 
@@ -198,6 +198,14 @@ APPLICATION_ZONE_RUNTIME_INSTANCES: dict[str, dict] = {}
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
 TEAMS_WEBHOOK_URL = os.environ.get("FACTORY_PORTAL_TEAMS_WEBHOOK_URL", "")
+GRAPH_TENANT_ID = os.environ.get("FACTORY_PORTAL_GRAPH_TENANT_ID", "").strip() or os.environ.get("ENTRA_TENANT_ID", "").strip()
+GRAPH_CLIENT_ID = os.environ.get("FACTORY_PORTAL_GRAPH_CLIENT_ID", "").strip()
+GRAPH_CLIENT_SECRET = os.environ.get("FACTORY_PORTAL_GRAPH_CLIENT_SECRET", "").strip()
+GRAPH_NOTIFICATION_SENDER = os.environ.get("FACTORY_PORTAL_GRAPH_NOTIFICATION_SENDER", "").strip()
+GRAPH_BASE_URL = os.environ.get("FACTORY_PORTAL_GRAPH_BASE_URL", "https://graph.microsoft.com/v1.0").strip().rstrip("/")
+GRAPH_AUTHORITY = os.environ.get("FACTORY_PORTAL_GRAPH_AUTHORITY", "https://login.microsoftonline.com").strip().rstrip("/")
+_GRAPH_TOKEN_CACHE: dict[str, object] = {"accessToken": "", "expiresAt": 0.0}
+_GRAPH_TOKEN_LOCK = threading.Lock()
 
 
 def _portal_read_json(path: pathlib.Path):
@@ -350,6 +358,73 @@ def _portal_can_edit_collaboration(slug: str, state: dict, user: str | None) -> 
         if str(value).strip()
     }
     return normalized_user in editors
+
+
+def _portal_graph_configured() -> bool:
+    return bool(GRAPH_TENANT_ID and GRAPH_CLIENT_ID and GRAPH_CLIENT_SECRET)
+
+
+def _portal_graph_token() -> str:
+    if not _portal_graph_configured():
+        raise RuntimeError("Microsoft Graph integration is not configured")
+    now = time.time()
+    with _GRAPH_TOKEN_LOCK:
+        cached = str(_GRAPH_TOKEN_CACHE.get("accessToken") or "")
+        expires_at = float(_GRAPH_TOKEN_CACHE.get("expiresAt") or 0)
+        if cached and expires_at - 60 > now:
+            return cached
+        body = urlencode(
+            {
+                "client_id": GRAPH_CLIENT_ID,
+                "client_secret": GRAPH_CLIENT_SECRET,
+                "scope": "https://graph.microsoft.com/.default",
+                "grant_type": "client_credentials",
+            }
+        ).encode("utf-8")
+        req = Request(
+            f"{GRAPH_AUTHORITY}/{GRAPH_TENANT_ID}/oauth2/v2.0/token",
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        try:
+            with urlopen(req, timeout=20) as resp:  # noqa: S310 - configured Microsoft identity endpoint
+                data = json.loads(resp.read().decode("utf-8"))
+        except HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Microsoft Graph token request failed: HTTP {exc.code} {detail}") from exc
+        access_token = data.get("access_token")
+        if not access_token:
+            raise RuntimeError("Microsoft Graph token response did not include an access token")
+        _GRAPH_TOKEN_CACHE["accessToken"] = access_token
+        _GRAPH_TOKEN_CACHE["expiresAt"] = now + int(data.get("expires_in") or 3600)
+        return str(access_token)
+
+
+def _portal_graph_request(method: str, path: str, payload: dict | None = None) -> dict:
+    token = _portal_graph_token()
+    url = f"{GRAPH_BASE_URL}/{path.lstrip('/')}"
+    data = json.dumps(payload or {}).encode("utf-8") if payload is not None else None
+    req = Request(url, data=data, method=method.upper())
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urlopen(req, timeout=30) as resp:  # noqa: S310 - configured Microsoft Graph endpoint
+            raw = resp.read().decode("utf-8")
+            return json.loads(raw) if raw else {"status": "accepted"}
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Microsoft Graph request failed: HTTP {exc.code} {detail}") from exc
+
+
+def _portal_graph_user_member(email: str, *, owner: bool = False) -> dict:
+    roles = ["owner"] if owner else []
+    safe_email = str(email or "").strip()
+    return {
+        "@odata.type": "#microsoft.graph.aadUserConversationMember",
+        "roles": roles,
+        "user@odata.bind": f"{GRAPH_BASE_URL}/users('{safe_email}')",
+    }
 
 
 def _portal_app_pack_key(pack_id: str, version: str) -> str:
@@ -4191,6 +4266,16 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_project_collaboration_update(collab_match.group(1))
+        teams_match = re.fullmatch(r"/api/projects/([^/]+)/collaboration/teams-provision", path)
+        if teams_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_project_collaboration_teams_provision(teams_match.group(1))
+        notify_match = re.fullmatch(r"/api/projects/([^/]+)/collaboration/notifications/deliver", path)
+        if notify_match:
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_project_collaboration_notification_deliver(notify_match.group(1))
         if path == "/api/guide/refresh":
             if not self._require_auth_for_mutation():
                 return
@@ -4252,6 +4337,165 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         state = _portal_normalize_collaboration_state(slug, payload)
         _portal_write_json(_portal_collaboration_state_path(slug), state)
         self._send_json({"ok": True, "state": state}, 200)
+
+    def _read_json_body(self) -> dict | None:
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return None
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return None
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return None
+        return payload
+
+    def _collaboration_state_for_update(self, slug: str) -> dict | None:
+        safe_slug = _portal_safe_slug(slug)
+        if not safe_slug or safe_slug != slug:
+            self._send_json({"error": "Invalid project slug"}, 400)
+            return None
+        if not _is_slug_visible(slug):
+            self._send_json({"error": "Unknown project"}, 404)
+            return None
+        state = _portal_load_collaboration_state(slug) or _portal_default_collaboration_state(slug)
+        if not _portal_can_edit_collaboration(slug, state, self._authorized_user()):
+            self._send_json({"error": "You do not have edit permission for this collaboration workspace"}, 403)
+            return None
+        return state
+
+    def _handle_project_collaboration_teams_provision(self, slug: str):
+        state = self._collaboration_state_for_update(slug)
+        if state is None:
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        request_id = _portal_text(payload.get("requestId"), 120)
+        request_item = next((item for item in state.get("teamProvisioningRequests", []) if item.get("id") == request_id), None)
+        if not isinstance(request_item, dict):
+            self._send_json({"error": "Unknown Teams provisioning request"}, 404)
+            return
+        if not _portal_graph_configured():
+            self._send_json({"error": "Microsoft Graph integration is not configured for this portal"}, 503)
+            return
+
+        mode = _portal_text(payload.get("mode") or "chat", 40)
+        now = _utcnow_iso()
+        try:
+            if mode == "channel":
+                team_id = _portal_text(payload.get("teamId"), 240)
+                channel_name = _portal_text(payload.get("channelName") or request_item.get("label") or f"{slug} collaboration", 80)
+                if not team_id:
+                    self._send_json({"error": "teamId is required for channel provisioning"}, 400)
+                    return
+                result = _portal_graph_request(
+                    "POST",
+                    f"/teams/{team_id}/channels",
+                    {
+                        "displayName": channel_name,
+                        "description": f"Collaboration channel for {slug}",
+                        "membershipType": "standard",
+                    },
+                )
+                link = result.get("webUrl", "")
+                label = channel_name
+            else:
+                members = [
+                    str(value).strip().lower()
+                    for value in payload.get("memberEmails", [])
+                    if str(value).strip()
+                ]
+                owner = _portal_text(payload.get("ownerEmail") or request_item.get("owner"), 240).lower()
+                if owner and owner not in members:
+                    members.insert(0, owner)
+                if len(members) < 2:
+                    self._send_json({"error": "At least two memberEmails are required to create a Teams chat"}, 400)
+                    return
+                result = _portal_graph_request(
+                    "POST",
+                    "/chats",
+                    {
+                        "chatType": "group",
+                        "topic": _portal_text(payload.get("topic") or request_item.get("label") or f"{slug} collaboration", 250),
+                        "members": [
+                            _portal_graph_user_member(email, owner=(email == owner))
+                            for email in members
+                        ],
+                    },
+                )
+                link = result.get("webUrl", "") or (f"https://teams.microsoft.com/l/chat/0/0?users={','.join(members)}" if members else "")
+                label = result.get("topic") or payload.get("topic") or request_item.get("label") or "Teams chat"
+        except RuntimeError as exc:
+            request_item["status"] = "failed"
+            request_item["lastError"] = str(exc)[:1000]
+            request_item["updatedAt"] = now
+            _portal_write_json(_portal_collaboration_state_path(slug), state)
+            self._send_json({"error": str(exc), "state": state}, 502)
+            return
+
+        request_item["status"] = "created"
+        request_item["completedAt"] = now
+        request_item["graphResultId"] = result.get("id", "")
+        if link:
+            state["teamLinks"] = [
+                *(state.get("teamLinks") or []),
+                {"id": f"teams-{int(time.time())}", "label": label, "url": link, "source": "graph"},
+            ]
+        _portal_write_json(_portal_collaboration_state_path(slug), state)
+        self._send_json({"ok": True, "result": result, "state": state}, 200)
+
+    def _handle_project_collaboration_notification_deliver(self, slug: str):
+        state = self._collaboration_state_for_update(slug)
+        if state is None:
+            return
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        request_id = _portal_text(payload.get("requestId"), 120)
+        request_item = next((item for item in state.get("notificationRequests", []) if item.get("id") == request_id), None)
+        if not isinstance(request_item, dict):
+            self._send_json({"error": "Unknown notification request"}, 404)
+            return
+        if not _portal_graph_configured() or not GRAPH_NOTIFICATION_SENDER:
+            self._send_json({"error": "Microsoft Graph notification delivery is not configured for this portal"}, 503)
+            return
+        recipient = _portal_text(payload.get("recipient") or request_item.get("recipient"), 240).lower()
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", recipient or ""):
+            self._send_json({"error": "Notification recipient must be an email address"}, 400)
+            return
+        subject = _portal_text(payload.get("subject") or f"Action requested: {request_item.get('action', 'Project collaboration update')}", 180)
+        body = _portal_text(payload.get("body") or request_item.get("action") or "Please review the project collaboration workspace.", 4000)
+        now = _utcnow_iso()
+        try:
+            result = _portal_graph_request(
+                "POST",
+                f"/users/{quote(GRAPH_NOTIFICATION_SENDER, safe='')}/sendMail",
+                {
+                    "message": {
+                        "subject": subject,
+                        "body": {"contentType": "Text", "content": body},
+                        "toRecipients": [{"emailAddress": {"address": recipient}}],
+                    },
+                    "saveToSentItems": True,
+                },
+            )
+        except RuntimeError as exc:
+            request_item["status"] = "failed"
+            request_item["lastError"] = str(exc)[:1000]
+            request_item["updatedAt"] = now
+            _portal_write_json(_portal_collaboration_state_path(slug), state)
+            self._send_json({"error": str(exc), "state": state}, 502)
+            return
+        request_item["status"] = "delivered"
+        request_item["deliveredAt"] = now
+        request_item["deliveryChannel"] = "email"
+        request_item["deliveredTo"] = recipient
+        _portal_write_json(_portal_collaboration_state_path(slug), state)
+        self._send_json({"ok": True, "result": result, "state": state}, 200)
 
     def _handle_project_onboard(self):
         content_length = self._safe_content_length()

@@ -35,6 +35,8 @@ The portal exposes this state through:
 
 - `GET /api/projects/{slug}/collaboration`
 - `POST /api/projects/{slug}/collaboration`
+- `POST /api/projects/{slug}/collaboration/teams-provision`
+- `POST /api/projects/{slug}/collaboration/notifications/deliver`
 
 ## Onboarding an existing project
 
@@ -65,14 +67,32 @@ Implemented collaboration enhancements:
 - Teams provisioning request tracking
 - notification/action request tracking
 - collaboration-specific owners, editors, and viewers with server-side edit enforcement in Entra mode
+- Microsoft Graph-backed Teams chat/channel provisioning when Graph app credentials are configured
+- Microsoft Graph-backed email notification delivery when a sender mailbox is configured
+
+## Microsoft Graph integration
+
+Graph-backed actions are disabled until the deployment supplies:
+
+- `FACTORY_PORTAL_GRAPH_TENANT_ID`
+- `FACTORY_PORTAL_GRAPH_CLIENT_ID`
+- `FACTORY_PORTAL_GRAPH_CLIENT_SECRET`
+- `FACTORY_PORTAL_GRAPH_NOTIFICATION_SENDER`
+
+The portal uses app-only Microsoft Graph permissions. The exact tenant consent depends on which actions are enabled:
+
+- Teams group chat creation uses Graph `POST /chats`.
+- Teams channel creation uses Graph `POST /teams/{team-id}/channels`.
+- Notification delivery uses Graph `POST /users/{sender}/sendMail`.
+
+The browser asks for confirmation before creating a Teams resource or sending a notification. Failed Graph calls are persisted back to the request item with `status: failed` and `lastError`.
 
 Remaining future enhancements:
 
-- live Microsoft Graph Teams chat/channel creation
-- live outbound Teams/email notifications to owners and reviewers
+- tenant-approved Graph permission package and deployment runbook
+- richer delivery history and retries
 
 ## Future phases
 
 - Add approval workflow history.
-- Add Microsoft Graph-backed Teams provisioning.
-- Add outbound notification delivery after user-approved message templates are defined.
+- Add Graph permission validation and admin diagnostics.
