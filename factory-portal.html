@@ -1870,6 +1870,61 @@
             font-size: 0.88rem;
         }
 
+        .collab-onboard-panel {
+            border: 1px solid #d5e8f8;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f7fbff 0%, #ffffff 100%);
+            padding: 0.9rem;
+        }
+
+        .collab-onboard-panel h4 {
+            margin: 0 0 0.25rem;
+            color: var(--text-primary);
+            font-size: 0.98rem;
+        }
+
+        .collab-onboard-panel p {
+            margin: 0 0 0.7rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .collab-onboard-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .collab-onboard-form label {
+            display: grid;
+            gap: 0.25rem;
+            color: var(--text-secondary);
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+
+        .collab-onboard-form input,
+        .collab-onboard-form textarea,
+        .collab-onboard-form select {
+            border: 1px solid #c9dced;
+            border-radius: 8px;
+            padding: 0.48rem 0.55rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+
+        .collab-onboard-form textarea,
+        .collab-onboard-wide {
+            grid-column: 1 / -1;
+        }
+
+        .collab-onboard-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .collab-inline-form {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
@@ -1887,6 +1942,7 @@
         }
 
         .collab-inline-form button,
+        .collab-onboard-form button,
         .collab-mini-button {
             border: 1px solid #9cc1e2;
             border-radius: 999px;
@@ -1987,6 +2043,7 @@
         }
 
         @media (max-width: 900px) {
+            .collab-onboard-form,
             .collab-toolbar,
             .collab-inline-form,
             .collab-grid,
@@ -4860,6 +4917,49 @@
                         <p class="appzone-note">Pick a project and use this space to align participants, track work, review generated artifacts, and record decisions. Changes are saved to the project collaboration record and reloaded when the workspace opens.</p>
                     </div>
                     <div class="collab-shell">
+                        <div class="collab-onboard-panel">
+                            <h4>Onboard an existing project</h4>
+                            <p>Register a project that was created outside this portal so it appears in the collaboration dropdown with a project home, starter artifacts, roles, work board, and decision log.</p>
+                            <form id="collab-onboard-form" class="collab-onboard-form" onsubmit="return onboardExistingProject(event)">
+                                <label>
+                                    Project title
+                                    <input name="title" placeholder="Customer Support Modernization" required>
+                                </label>
+                                <label>
+                                    Optional slug
+                                    <input name="slug" placeholder="customer-support-modernization">
+                                </label>
+                                <label>
+                                    Source, repo, or tracking link
+                                    <input name="source" placeholder="https://dev.azure.com/... or existing project path">
+                                </label>
+                                <label>
+                                    Status
+                                    <select name="status">
+                                        <option value="Onboarding">Onboarding</option>
+                                        <option value="Ready">Ready</option>
+                                        <option value="In review">In review</option>
+                                        <option value="Blocked">Blocked</option>
+                                    </select>
+                                </label>
+                                <label class="collab-onboard-wide">
+                                    Short context
+                                    <textarea name="summary" rows="2" placeholder="What this project is, where the team should start, and any known review needs."></textarea>
+                                </label>
+                                <label>
+                                    Architecture overview link
+                                    <input name="architectureOverview" placeholder="Optional HTTPS URL or portal path">
+                                </label>
+                                <label>
+                                    Deployment guide link
+                                    <input name="deploy" placeholder="Optional HTTPS URL or portal path">
+                                </label>
+                                <div class="collab-onboard-actions collab-onboard-wide">
+                                    <button type="submit">Onboard project</button>
+                                    <span id="collab-onboard-status" class="collab-meta">Creates a lightweight project record; collaboration changes are saved per project.</span>
+                                </div>
+                            </form>
+                        </div>
                         <div class="collab-toolbar">
                             <label for="collab-project-select">
                                 Project
@@ -5851,6 +5951,7 @@
         const API_PROJECT_FILE = (projectSlug, relativePath) => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/file?path=${encodeURIComponent(relativePath)}`;
         const API_PROJECT_DOWNLOAD = projectSlug => `${API_BASE}/api/projects/${encodeURIComponent(projectSlug)}/download`;
         const API_PROJECT_OPERATIONS = projectSlug => `${API_BASE}/api/project-operations/${encodeURIComponent(projectSlug)}`;
+        const API_PROJECT_ONBOARD = `${API_BASE}/api/projects/onboard`;
         const API_RUN_STATUS = runId => `${API_BASE}/api/brd-runs/${encodeURIComponent(runId)}`;
         const API_AGENT_FOUNDRY_RUNS = `${API_BASE}/api/agent-foundry/runs`;
         const API_AGENT_FOUNDRY_RUN = runId => `${API_BASE}/api/agent-foundry/runs/${encodeURIComponent(runId)}`;
@@ -8394,6 +8495,54 @@
             const select = document.getElementById('collab-project-select');
             const selectedSlug = select?.value;
             return (allProjects || []).find(project => project.slug === selectedSlug) || getLatestProjects(allProjects || [])[0] || null;
+        }
+
+        async function onboardExistingProject(event) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const status = document.getElementById('collab-onboard-status');
+            const submit = form.querySelector('button[type="submit"]');
+            const formData = new FormData(form);
+            const title = (formData.get('title') || '').toString().trim();
+            if (!title) return false;
+
+            const payload = {
+                title,
+                slug: (formData.get('slug') || '').toString().trim(),
+                source: (formData.get('source') || '').toString().trim(),
+                status: (formData.get('status') || 'Onboarding').toString(),
+                summary: (formData.get('summary') || '').toString().trim(),
+                links: {
+                    architectureOverview: (formData.get('architectureOverview') || '').toString().trim(),
+                    deploy: (formData.get('deploy') || '').toString().trim(),
+                },
+            };
+
+            if (status) status.textContent = 'Onboarding project...';
+            if (submit) submit.disabled = true;
+            try {
+                const response = await fetch(API_PROJECT_ONBOARD, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                form.reset();
+                collaborationStateBySlug[data.project.slug] = data.collaboration;
+                await loadProjects();
+                const select = document.getElementById('collab-project-select');
+                if (select) select.value = data.project.slug;
+                await renderCollaborationWorkspace();
+                if (status) status.textContent = `${data.project.title} is now available for collaboration.`;
+                showNotification('Existing project onboarded for collaboration.');
+            } catch (error) {
+                if (status) status.textContent = `Onboarding failed: ${error.message}`;
+                showNotification(`Project onboarding failed: ${error.message}`, true);
+            } finally {
+                if (submit) submit.disabled = false;
+            }
+            return false;
         }
 
         async function loadCollaborationState(slug) {
