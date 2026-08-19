@@ -14,11 +14,24 @@ The Project Collaboration Workspace gives everyone participating in a project a 
 
 ## Data model
 
-The first implementation derives its view from the existing `factory-projects.generated.json` project feed and renders a collaboration shell for the selected project. It does not create a new persistence backend yet.
+The workspace derives project metadata from `factory-projects.generated.json` and persists collaboration state per project under:
+
+`factory-templates/application-zone/aapaas/operations/collaboration/<project-slug>.collaboration.json`
+
+The persisted state includes:
+
+- participants
+- work items
+- decisions
+- notes
+
+The portal exposes this state through:
+
+- `GET /api/projects/{slug}/collaboration`
+- `POST /api/projects/{slug}/collaboration`
 
 ## Future phases
 
-- Persist participants, work items, and decisions per project.
 - Integrate Teams channel/chat links.
 - Add approval workflow history.
 - Add Waza/eval evidence links.

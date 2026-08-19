@@ -1870,6 +1870,35 @@
             font-size: 0.88rem;
         }
 
+        .collab-inline-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: 0.45rem;
+            margin: 0 0 0.65rem;
+        }
+
+        .collab-inline-form input,
+        .collab-inline-form select {
+            border: 1px solid #c9dced;
+            border-radius: 8px;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.78rem;
+            background: #ffffff;
+        }
+
+        .collab-inline-form button,
+        .collab-mini-button {
+            border: 1px solid #9cc1e2;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #005a9e;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.25rem 0.55rem;
+        }
+
         .collab-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1959,6 +1988,7 @@
 
         @media (max-width: 900px) {
             .collab-toolbar,
+            .collab-inline-form,
             .collab-grid,
             .collab-work-board {
                 grid-template-columns: 1fr;
@@ -5834,6 +5864,7 @@
         let allProjects = [];
         let showAllProjects = false;
         let latestProjectForCopilot = null;
+        let collaborationStateBySlug = {};
         let appZoneCurrentInstanceId = null;
         let appZoneAgents = [];
         let currentAgentFoundryRunId = null;
@@ -8365,7 +8396,34 @@
             return (allProjects || []).find(project => project.slug === selectedSlug) || getLatestProjects(allProjects || [])[0] || null;
         }
 
-        function renderCollaborationWorkspace() {
+        async function loadCollaborationState(slug) {
+            if (!slug) return null;
+            if (collaborationStateBySlug[slug]) return collaborationStateBySlug[slug];
+            try {
+                const response = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(slug)}/collaboration`, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                collaborationStateBySlug[slug] = data.state;
+                return data.state;
+            } catch (error) {
+                console.warn('Collaboration state unavailable; using generated defaults.', error);
+                return null;
+            }
+        }
+
+        async function saveCollaborationState(slug, state) {
+            const response = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(slug)}/collaboration`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(state),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+            collaborationStateBySlug[slug] = data.state;
+            return data.state;
+        }
+
+        async function renderCollaborationWorkspace() {
             const host = document.getElementById('collab-workspace-content');
             if (!host) return;
             const project = getCollaborationProject();
@@ -8397,6 +8455,30 @@
                 ['Deployment guide', deploy],
                 ['Traceability matrix', traceability],
             ].filter(([, href]) => Boolean(href));
+            const state = await loadCollaborationState(slug) || {};
+            const participants = Array.isArray(state.participants) && state.participants.length
+                ? state.participants
+                : [
+                    {role: 'Project owner', name: window._currentUser?.name || window._currentUser?.userDetails || 'Assign owner', description: 'Accountable for goals, scope, and stakeholder alignment.'},
+                    {role: 'Architect', name: 'Assign architect', description: 'Reviews architecture, tradeoffs, WAF/CAF alignment, and design decisions.'},
+                    {role: 'Implementer', name: 'Assign implementer', description: 'Owns code, infrastructure, deployment package, and fixes.'},
+                    {role: 'Reviewer / approver', name: 'Assign approver', description: 'Approves readiness, security, cost, and production gate decisions.'},
+                ];
+            const workItems = Array.isArray(state.workItems) && state.workItems.length
+                ? state.workItems
+                : [
+                    {id: 'assign-owners', title: 'Assign project owner and reviewers', lane: 'todo', owner: '', status: 'open'},
+                    {id: 'review-artifacts', title: 'Review generated architecture and artifacts', lane: 'in_progress', owner: '', status: 'open'},
+                    {id: 'record-decisions', title: 'Record open decisions and approval needs', lane: 'blocked', owner: '', status: 'open'},
+                    {id: 'evidence', title: artifactLinks.length ? `${artifactLinks.length} artifact links available` : 'No artifact links found', lane: 'done', owner: '', status: 'done'},
+                ];
+            const decisions = Array.isArray(state.decisions) && state.decisions.length
+                ? state.decisions
+                : [
+                    {id: 'architecture-baseline', title: 'Architecture baseline', status: 'proposed', owner: '', rationale: 'Review architecture overview and diagram before implementation approval.', evidence: ''},
+                    {id: 'deployment-readiness', title: 'Deployment readiness', status: 'pending-evidence', owner: '', rationale: 'Confirm environment, identity, networking, observability, and rollback plan.', evidence: ''},
+                    {id: 'production-gate', title: 'Production gate', status: 'not-started', owner: '', rationale: 'Requires named owner approval and readiness evidence before deployment.', evidence: ''},
+                ];
 
             host.innerHTML = `
                 <section class="collab-panel">
@@ -8409,32 +8491,32 @@
                 </section>
                 <section class="collab-panel">
                     <h4>People & Roles</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationParticipant(event, '${escapeHtml(slug)}')">
+                        <input name="role" placeholder="Role" required>
+                        <input name="name" placeholder="Name or group" required>
+                        <button type="submit">Add</button>
+                    </form>
                     <div class="collab-role-list">
-                        ${renderCollabRole('Project owner', window._currentUser?.name || window._currentUser?.userDetails || 'Assign owner', 'Accountable for goals, scope, and stakeholder alignment.')}
-                        ${renderCollabRole('Architect', 'Assign architect', 'Reviews architecture, tradeoffs, WAF/CAF alignment, and design decisions.')}
-                        ${renderCollabRole('Implementer', 'Assign implementer', 'Owns code, infrastructure, deployment package, and fixes.')}
-                        ${renderCollabRole('Reviewer / approver', 'Assign approver', 'Approves readiness, security, cost, and production gate decisions.')}
+                        ${participants.map((participant, index) => renderCollabRole(participant.role || 'Role', participant.name || 'Assign person', participant.description || '', slug, index)).join('')}
                     </div>
                 </section>
                 <section class="collab-panel" style="grid-column:1 / -1;">
                     <h4>Work Board</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationWorkItem(event, '${escapeHtml(slug)}')">
+                        <input name="title" placeholder="New task, blocker, or action item" required>
+                        <select name="lane">
+                            <option value="todo">To do</option>
+                            <option value="in_progress">In progress</option>
+                            <option value="blocked">Blocked / decisions</option>
+                            <option value="done">Done / evidence</option>
+                        </select>
+                        <button type="submit">Add work</button>
+                    </form>
                     <div class="collab-work-board">
-                        ${renderCollabLane('To do', [
-                            'Assign project owner and reviewers',
-                            'Confirm target environment and constraints',
-                        ])}
-                        ${renderCollabLane('In progress', [
-                            'Review generated architecture and artifacts',
-                            'Validate cost, observability, and traceability',
-                        ])}
-                        ${renderCollabLane('Blocked / decisions', [
-                            'Record open decisions and approval needs',
-                            'Resolve missing requirements before deployment',
-                        ])}
-                        ${renderCollabLane('Done / evidence', [
-                            status,
-                            artifactLinks.length ? `${artifactLinks.length} artifact links available` : 'No artifact links found',
-                        ])}
+                        ${renderCollabLane('To do', workItems.filter(item => (item.lane || 'todo') === 'todo'), slug, 'todo')}
+                        ${renderCollabLane('In progress', workItems.filter(item => item.lane === 'in_progress'), slug, 'in_progress')}
+                        ${renderCollabLane('Blocked / decisions', workItems.filter(item => item.lane === 'blocked'), slug, 'blocked')}
+                        ${renderCollabLane('Done / evidence', workItems.filter(item => item.lane === 'done'), slug, 'done')}
                     </div>
                 </section>
                 <section class="collab-panel">
@@ -8448,29 +8530,101 @@
                 </section>
                 <section class="collab-panel">
                     <h4>Decision Log</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationDecision(event, '${escapeHtml(slug)}')">
+                        <input name="title" placeholder="Decision title" required>
+                        <input name="rationale" placeholder="Rationale or evidence link">
+                        <button type="submit">Add decision</button>
+                    </form>
                     <div class="collab-decision-list">
-                        ${renderCollabDecision('Architecture baseline', 'Proposed', 'Review architecture overview and diagram before implementation approval.')}
-                        ${renderCollabDecision('Deployment readiness', 'Pending evidence', 'Confirm environment, identity, networking, observability, and rollback plan.')}
-                        ${renderCollabDecision('Production gate', 'Not started', 'Requires named owner approval and readiness evidence before deployment.')}
+                        ${decisions.map((decision, index) => renderCollabDecision(decision.title || 'Decision', decision.status || 'proposed', decision.rationale || '', slug, index)).join('')}
                     </div>
                 </section>
             `;
         }
 
-        function renderCollabRole(role, person, description) {
-            return `<div class="collab-role"><strong>${escapeHtml(role)} · ${escapeHtml(person)}</strong><div class="collab-meta">${escapeHtml(description)}</div></div>`;
+        function renderCollabRole(role, person, description, slug, index) {
+            const remove = slug !== undefined ? `<button type="button" class="collab-mini-button" onclick="return removeCollaborationParticipant('${escapeHtml(slug)}', ${index})">Remove</button>` : '';
+            return `<div class="collab-role"><strong>${escapeHtml(role)} · ${escapeHtml(person)}</strong><div class="collab-meta">${escapeHtml(description)}</div>${remove}</div>`;
         }
 
-        function renderCollabLane(title, items) {
+        function renderCollabLane(title, items, slug, lane) {
             return `
                 <div class="collab-work-lane">
                     <div class="collab-lane-title">${escapeHtml(title)}</div>
-                    ${(items || []).map(item => `<div class="collab-work-item"><strong>${escapeHtml(item)}</strong></div>`).join('')}
+                    ${(items || []).map(item => `<div class="collab-work-item"><strong>${escapeHtml(item.title || item)}</strong><div class="collab-meta">${escapeHtml(item.owner || '')}${item.status ? ` · ${escapeHtml(item.status)}` : ''}</div><button type="button" class="collab-mini-button" onclick="return moveCollaborationWorkItem('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}', '${lane === 'done' ? 'todo' : 'done'}')">${lane === 'done' ? 'Reopen' : 'Mark done'}</button></div>`).join('') || '<div class="collab-meta">No items.</div>'}
                 </div>`;
         }
 
-        function renderCollabDecision(title, status, rationale) {
-            return `<div class="collab-decision"><strong>${escapeHtml(title)} · ${escapeHtml(status)}</strong><div class="collab-meta">${escapeHtml(rationale)}</div></div>`;
+        function renderCollabDecision(title, status, rationale, slug, index) {
+            const remove = slug !== undefined ? `<button type="button" class="collab-mini-button" onclick="return removeCollaborationDecision('${escapeHtml(slug)}', ${index})">Remove</button>` : '';
+            return `<div class="collab-decision"><strong>${escapeHtml(title)} · ${escapeHtml(status)}</strong><div class="collab-meta">${escapeHtml(rationale)}</div>${remove}</div>`;
+        }
+
+        async function mutateCollaborationState(slug, mutator) {
+            const state = await loadCollaborationState(slug) || {projectSlug: slug, participants: [], workItems: [], decisions: [], notes: []};
+            mutator(state);
+            try {
+                await saveCollaborationState(slug, state);
+                await renderCollaborationWorkspace();
+                if (typeof showStatus === 'function') showStatus('Collaboration workspace saved.', 'success');
+            } catch (error) {
+                if (typeof showStatus === 'function') showStatus(`Collaboration save failed: ${error.message}`, 'error');
+            }
+            return false;
+        }
+
+        function addCollaborationParticipant(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const role = form.elements.role.value.trim();
+            const name = form.elements.name.value.trim();
+            if (!role || !name) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.participants = [...(state.participants || []), {role, name, description: 'Added from portal collaboration workspace.'}];
+            });
+        }
+
+        function removeCollaborationParticipant(slug, index) {
+            return mutateCollaborationState(slug, state => {
+                state.participants = (state.participants || []).filter((_, i) => i !== index);
+            });
+        }
+
+        function addCollaborationWorkItem(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const title = form.elements.title.value.trim();
+            const lane = form.elements.lane.value || 'todo';
+            if (!title) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.workItems = [...(state.workItems || []), {id: `work-${Date.now()}`, title, lane, owner: '', status: 'open'}];
+            });
+        }
+
+        function moveCollaborationWorkItem(slug, id, lane) {
+            return mutateCollaborationState(slug, state => {
+                state.workItems = (state.workItems || []).map(item => item.id === id ? {...item, lane, status: lane === 'done' ? 'done' : 'open'} : item);
+            });
+        }
+
+        function addCollaborationDecision(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const title = form.elements.title.value.trim();
+            const rationale = form.elements.rationale.value.trim();
+            if (!title) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.decisions = [...(state.decisions || []), {id: `decision-${Date.now()}`, title, status: 'proposed', owner: '', rationale, evidence: ''}];
+            });
+        }
+
+        function removeCollaborationDecision(slug, index) {
+            return mutateCollaborationState(slug, state => {
+                state.decisions = (state.decisions || []).filter((_, i) => i !== index);
+            });
         }
 
         function toggleProjectView() {
