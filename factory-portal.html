@@ -1969,6 +1969,131 @@
             gap: 0.85rem;
         }
 
+        .collab-dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.85fr);
+            gap: 0.85rem;
+            grid-column: 1 / -1;
+        }
+
+        .collab-action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.65rem;
+            grid-column: 1 / -1;
+        }
+
+        .collab-action-card {
+            border: 1px solid #dbe7f3;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 6px 16px rgba(18, 50, 74, 0.07);
+            color: #123b5d;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .collab-action-card strong {
+            display: block;
+            font-size: 0.86rem;
+            margin-bottom: 0.18rem;
+        }
+
+        .collab-action-card span {
+            color: var(--text-secondary);
+            display: block;
+            font-size: 0.74rem;
+            line-height: 1.35;
+        }
+
+        .collab-action-card:hover,
+        .collab-action-card:focus-visible {
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(0, 120, 212, 0.14);
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .collab-stat-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.45rem;
+            margin-top: 0.65rem;
+        }
+
+        .collab-stat {
+            border: 1px solid #e1ecf6;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 0.55rem;
+        }
+
+        .collab-stat strong {
+            color: #005a9e;
+            display: block;
+            font-size: 1rem;
+        }
+
+        .collab-stat span {
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .collab-modal {
+            align-items: center;
+            background: rgba(5, 23, 39, 0.46);
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            left: 0;
+            padding: 1.5rem;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 2500;
+        }
+
+        .collab-modal[hidden] {
+            display: none;
+        }
+
+        .collab-modal-dialog {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 24px 70px rgba(5, 23, 39, 0.32);
+            max-height: min(84vh, 760px);
+            max-width: min(980px, 94vw);
+            overflow: auto;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .collab-modal-header {
+            align-items: start;
+            border-bottom: 1px solid #e1ecf6;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.85rem;
+            padding-bottom: 0.7rem;
+        }
+
+        .collab-modal-header h4 {
+            color: #123b5d;
+            margin: 0 0 0.2rem;
+        }
+
+        .collab-modal-header p {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            margin: 0;
+        }
+
         .collab-panel {
             border: 1px solid #dbe7f3;
             border-radius: 12px;
@@ -2127,6 +2252,9 @@
             .collab-inline-form,
             .collab-inline-form.four-column,
             .collab-inline-form.decision-form,
+            .collab-dashboard-grid,
+            .collab-action-grid,
+            .collab-stat-row,
             .collab-grid,
             .collab-work-board {
                 grid-template-columns: 1fr;
@@ -8721,84 +8849,84 @@
             const summaryText = buildCollaborationSummary(project, state, {participants, workItems, decisions, teamLinks, discussionLinks, evidenceLinks, teamProvisioningRequests, notificationRequests, permissions, notes});
 
             host.innerHTML = `
-                <section class="collab-panel">
-                    <h4>Project Home</h4>
-                    <div class="collab-meta"><strong>${title}</strong></div>
-                    <div class="collab-meta">Status: ${status}</div>
-                    <div class="collab-meta">Generated from: ${generatedFrom}</div>
-                    <div class="collab-meta">Last generated: ${escapeHtml(generatedAt)}</div>
-                    <div class="collab-meta">Current milestone: Review generated artifacts and assign owners for validation.</div>
-                    <div class="collab-card-actions">
-                        <button type="button" class="collab-mini-button" onclick="return copyCollaborationSummary('${escapeHtml(slug)}')">Copy summary</button>
-                    </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>People & Roles</h4>
+                <div class="collab-dashboard-grid">
+                    <section class="collab-panel">
+                        <h4>Project Home</h4>
+                        <div class="collab-meta"><strong>${title}</strong></div>
+                        <div class="collab-meta">Status: ${status}</div>
+                        <div class="collab-meta">Generated from: ${generatedFrom}</div>
+                        <div class="collab-meta">Last generated: ${escapeHtml(generatedAt)}</div>
+                        <div class="collab-meta">Current milestone: Review generated artifacts and assign owners for validation.</div>
+                        <div class="collab-stat-row">
+                            <div class="collab-stat"><strong>${participants.length}</strong><span>People</span></div>
+                            <div class="collab-stat"><strong>${workItems.filter(item => (item.status || '') !== 'done').length}</strong><span>Open work</span></div>
+                            <div class="collab-stat"><strong>${decisions.length}</strong><span>Decisions</span></div>
+                            <div class="collab-stat"><strong>${evidenceLinks.length}</strong><span>Evidence</span></div>
+                        </div>
+                        <div class="collab-card-actions">
+                            <button type="button" class="collab-mini-button" onclick="return copyCollaborationSummary('${escapeHtml(slug)}')">Copy summary</button>
+                            <button type="button" class="collab-mini-button" onclick="openCollaborationModal('collab-modal-export-${escapeHtml(slug)}'); return false;">Preview export</button>
+                        </div>
+                    </section>
+                    <section class="collab-panel">
+                        <h4>Work Board</h4>
+                        <form class="collab-inline-form four-column" onsubmit="return addCollaborationWorkItem(event, '${escapeHtml(slug)}')">
+                            <input name="title" placeholder="New task, blocker, or action item" required>
+                            <input name="owner" placeholder="Owner">
+                            <select name="lane">
+                                <option value="todo">To do</option>
+                                <option value="in_progress">In progress</option>
+                                <option value="blocked">Blocked / decisions</option>
+                                <option value="done">Done / evidence</option>
+                            </select>
+                            <input name="dueDate" type="date" title="Due date">
+                            <button type="submit">Add work</button>
+                        </form>
+                        <div class="collab-work-board">
+                            ${renderCollabLane('To do', workItems.filter(item => (item.lane || 'todo') === 'todo'), slug, 'todo')}
+                            ${renderCollabLane('In progress', workItems.filter(item => item.lane === 'in_progress'), slug, 'in_progress')}
+                            ${renderCollabLane('Blocked / decisions', workItems.filter(item => item.lane === 'blocked'), slug, 'blocked')}
+                            ${renderCollabLane('Done / evidence', workItems.filter(item => item.lane === 'done'), slug, 'done')}
+                        </div>
+                    </section>
+                </div>
+                <div class="collab-action-grid">
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-people-${escapeHtml(slug)}')"><strong>People & Roles</strong><span>${participants.length} participants, reviewers, and approvers</span></button>
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-decisions-${escapeHtml(slug)}')"><strong>Decision Log</strong><span>${decisions.length} decisions with rationale, approver, and evidence</span></button>
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-artifacts-${escapeHtml(slug)}')"><strong>Artifacts</strong><span>${artifactLinks.length} generated artifacts and project tools</span></button>
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-comms-${escapeHtml(slug)}')"><strong>Teams & Discussions</strong><span>${teamLinks.length + discussionLinks.length + teamProvisioningRequests.length} chats, channels, and discussions</span></button>
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-evidence-${escapeHtml(slug)}')"><strong>Evidence</strong><span>${evidenceLinks.length} evals, reviews, checks, and reports</span></button>
+                    <button type="button" class="collab-action-card" onclick="openCollaborationModal('collab-modal-controls-${escapeHtml(slug)}')"><strong>Notifications & Access</strong><span>${notificationRequests.length} action requests; manage permissions</span></button>
+                </div>
+                ${renderCollaborationModal(`collab-modal-people-${escapeHtml(slug)}`, 'People & Roles', 'Add participants, assign roles, and mark reviewers or approvers.', `
                     <form class="collab-inline-form four-column" onsubmit="return addCollaborationParticipant(event, '${escapeHtml(slug)}')">
                         <input name="role" placeholder="Role" required>
                         <input name="name" placeholder="Name or group" required>
-                        <select name="kind">
-                            <option value="participant">Participant</option>
-                            <option value="reviewer">Reviewer</option>
-                            <option value="approver">Approver</option>
-                        </select>
+                        <select name="kind"><option value="participant">Participant</option><option value="reviewer">Reviewer</option><option value="approver">Approver</option></select>
                         <input name="description" placeholder="Scope or note">
                         <button type="submit">Add</button>
                     </form>
-                    <div class="collab-role-list">
-                        ${participants.map((participant, index) => renderCollabRole(participant, slug, index)).join('')}
-                    </div>
-                </section>
-                <section class="collab-panel" style="grid-column:1 / -1;">
-                    <h4>Work Board</h4>
-                    <form class="collab-inline-form four-column" onsubmit="return addCollaborationWorkItem(event, '${escapeHtml(slug)}')">
-                        <input name="title" placeholder="New task, blocker, or action item" required>
-                        <input name="owner" placeholder="Owner">
-                        <select name="lane">
-                            <option value="todo">To do</option>
-                            <option value="in_progress">In progress</option>
-                            <option value="blocked">Blocked / decisions</option>
-                            <option value="done">Done / evidence</option>
-                        </select>
-                        <input name="dueDate" type="date" title="Due date">
-                        <button type="submit">Add work</button>
+                    <div class="collab-role-list">${participants.map((participant, index) => renderCollabRole(participant, slug, index)).join('')}</div>
+                `)}
+                ${renderCollaborationModal(`collab-modal-decisions-${escapeHtml(slug)}`, 'Decision Log', 'Capture decisions with rationale, status, approver, date, and evidence.', `
+                    <form class="collab-inline-form decision-form" onsubmit="return addCollaborationDecision(event, '${escapeHtml(slug)}')">
+                        <input name="title" placeholder="Decision title" required>
+                        <input name="rationale" placeholder="Rationale">
+                        <input name="approver" placeholder="Approver">
+                        <select name="status"><option value="proposed">Proposed</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="pending-evidence">Pending evidence</option></select>
+                        <button type="submit">Add decision</button>
                     </form>
-                    <div class="collab-work-board">
-                        ${renderCollabLane('To do', workItems.filter(item => (item.lane || 'todo') === 'todo'), slug, 'todo')}
-                        ${renderCollabLane('In progress', workItems.filter(item => item.lane === 'in_progress'), slug, 'in_progress')}
-                        ${renderCollabLane('Blocked / decisions', workItems.filter(item => item.lane === 'blocked'), slug, 'blocked')}
-                        ${renderCollabLane('Done / evidence', workItems.filter(item => item.lane === 'done'), slug, 'done')}
-                    </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Artifacts</h4>
+                    <div class="collab-decision-list">${decisions.map((decision, index) => renderCollabDecision(decision, slug, index)).join('')}</div>
+                `)}
+                ${renderCollaborationModal(`collab-modal-artifacts-${escapeHtml(slug)}`, 'Artifacts', 'Open generated artifacts, code, cost tools, and operations without crowding the main board.', `
                     <div class="collab-artifact-list">
                         ${artifactLinks.map(([label, href]) => `<a class="collab-artifact" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`).join('') || '<div class="collab-meta">No artifact links available yet.</div>'}
                         ${slug ? `<a class="collab-artifact" href="#" onclick="openCodeBrowser('${escapeHtml(slug)}', '${title}'); return false;">Code browser</a>` : ''}
                         ${slug ? `<a class="collab-artifact" href="#" onclick="openCostModal('${escapeHtml(slug)}', '${title}'); return false;">Cost tools</a>` : ''}
                         ${slug ? `<a class="collab-artifact" href="#" onclick="openProjectOperations(event, '${escapeHtml(slug)}'); return false;">Operations</a>` : ''}
                     </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Decision Log</h4>
-                    <form class="collab-inline-form decision-form" onsubmit="return addCollaborationDecision(event, '${escapeHtml(slug)}')">
-                        <input name="title" placeholder="Decision title" required>
-                        <input name="rationale" placeholder="Rationale">
-                        <input name="approver" placeholder="Approver">
-                        <select name="status">
-                            <option value="proposed">Proposed</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="pending-evidence">Pending evidence</option>
-                        </select>
-                        <button type="submit">Add decision</button>
-                    </form>
-                    <div class="collab-decision-list">
-                        ${decisions.map((decision, index) => renderCollabDecision(decision, slug, index)).join('')}
-                    </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Teams & Discussions</h4>
+                `)}
+                ${renderCollaborationModal(`collab-modal-comms-${escapeHtml(slug)}`, 'Teams & Discussions', 'Track Teams spaces, chats, meetings, Loop pages, and discussion follow-ups.', `
                     <form class="collab-inline-form" onsubmit="return addTeamProvisioningRequest(event, '${escapeHtml(slug)}')">
                         <input name="label" placeholder="Team/channel/chat request" required>
                         <input name="owner" placeholder="Requester or owner">
@@ -8814,61 +8942,76 @@
                         <input name="url" placeholder="Meeting, Loop, or thread URL">
                         <button type="submit">Add discussion</button>
                     </form>
-                    <div class="collab-artifact-list">
-                        ${renderTeamProvisioningRequests(teamProvisioningRequests, slug)}
-                        ${renderCollabLinkList(teamLinks, slug, 'teamLinks')}
-                        ${renderCollabLinkList(discussionLinks, slug, 'discussionLinks')}
-                    </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Notifications & Action Requests</h4>
-                    <form class="collab-inline-form four-column" onsubmit="return addNotificationRequest(event, '${escapeHtml(slug)}')">
-                        <input name="recipient" placeholder="Owner/reviewer/approver" required>
-                        <input name="action" placeholder="Action needed" required>
-                        <select name="priority">
-                            <option value="normal">Normal</option>
-                            <option value="high">High</option>
-                            <option value="low">Low</option>
-                        </select>
-                        <input name="dueDate" type="date" title="Due date">
-                        <button type="submit">Add request</button>
-                    </form>
-                    <div class="collab-artifact-list">
-                        ${renderNotificationRequests(notificationRequests, slug)}
-                    </div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Collaboration Permissions</h4>
-                    <form class="collab-inline-form" onsubmit="return addCollaborationPermission(event, '${escapeHtml(slug)}')">
-                        <input name="principal" placeholder="user@contoso.com or group" required>
-                        <select name="role">
-                            <option value="viewers">Viewer</option>
-                            <option value="editors">Editor</option>
-                            <option value="owners">Owner</option>
-                        </select>
-                        <button type="submit">Grant</button>
-                    </form>
-                    <div class="collab-artifact-list">
-                        ${renderCollaborationPermissions(permissions, slug)}
-                    </div>
-                    <div class="collab-meta">Project owners and portal admins can edit by default. Editors and owners listed here can also update this workspace when Entra filtering is enabled.</div>
-                </section>
-                <section class="collab-panel">
-                    <h4>Evidence Attachments</h4>
+                    <div class="collab-artifact-list">${renderTeamProvisioningRequests(teamProvisioningRequests, slug)}${renderCollabLinkList(teamLinks, slug, 'teamLinks')}${renderCollabLinkList(discussionLinks, slug, 'discussionLinks')}</div>
+                `)}
+                ${renderCollaborationModal(`collab-modal-evidence-${escapeHtml(slug)}`, 'Evidence Attachments', 'Attach Waza evals, architecture reviews, deployment checks, cost reviews, and readiness reports.', `
                     <form class="collab-inline-form" onsubmit="return addCollaborationLink(event, '${escapeHtml(slug)}', 'evidenceLinks')">
                         <input name="label" placeholder="Waza eval, review, check, or report" required>
                         <input name="url" placeholder="Evidence URL or artifact path">
                         <button type="submit">Add evidence</button>
                     </form>
-                    <div class="collab-artifact-list">
-                        ${renderCollabLinkList(evidenceLinks, slug, 'evidenceLinks')}
-                    </div>
-                </section>
-                <section class="collab-panel" style="grid-column:1 / -1;">
-                    <h4>Export / Share View</h4>
+                    <div class="collab-artifact-list">${renderCollabLinkList(evidenceLinks, slug, 'evidenceLinks')}</div>
+                `)}
+                ${renderCollaborationModal(`collab-modal-controls-${escapeHtml(slug)}`, 'Notifications & Access', 'Request action from owners/reviewers and manage collaboration-specific permissions.', `
+                    <h4>Notifications & Action Requests</h4>
+                    <form class="collab-inline-form four-column" onsubmit="return addNotificationRequest(event, '${escapeHtml(slug)}')">
+                        <input name="recipient" placeholder="Owner/reviewer/approver" required>
+                        <input name="action" placeholder="Action needed" required>
+                        <select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select>
+                        <input name="dueDate" type="date" title="Due date">
+                        <button type="submit">Add request</button>
+                    </form>
+                    <div class="collab-artifact-list">${renderNotificationRequests(notificationRequests, slug)}</div>
+                    <h4 style="margin-top:1rem;">Collaboration Permissions</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationPermission(event, '${escapeHtml(slug)}')">
+                        <input name="principal" placeholder="user@contoso.com or group" required>
+                        <select name="role"><option value="viewers">Viewer</option><option value="editors">Editor</option><option value="owners">Owner</option></select>
+                        <button type="submit">Grant</button>
+                    </form>
+                    <div class="collab-artifact-list">${renderCollaborationPermissions(permissions, slug)}</div>
+                    <div class="collab-meta">Project owners and portal admins can edit by default. Editors and owners listed here can also update this workspace when Entra filtering is enabled.</div>
+                `)}
+                ${renderCollaborationModal(`collab-modal-export-${escapeHtml(slug)}`, 'Export / Share View', 'Formatted project-review summary. Copy still preserves Markdown.', `
                     <div id="collab-summary-${escapeHtml(slug)}" class="collab-share-summary" data-markdown="${escapeHtml(summaryText)}">${renderCollaborationSummaryHtml(summaryText)}</div>
-                </section>
+                `)}
             `;
+        }
+
+        function renderCollaborationModal(id, title, description, body) {
+            return `
+                <div id="${id}" class="collab-modal" hidden onclick="closeCollaborationModalOnBackdrop(event)">
+                    <div class="collab-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="${id}-title">
+                        <div class="collab-modal-header">
+                            <div>
+                                <h4 id="${id}-title">${escapeHtml(title)}</h4>
+                                <p>${escapeHtml(description)}</p>
+                            </div>
+                            <button type="button" class="collab-mini-button" onclick="closeCollaborationModal('${id}')">Back to workspace</button>
+                        </div>
+                        ${body}
+                    </div>
+                </div>`;
+        }
+
+        function openCollaborationModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return false;
+            modal.hidden = false;
+            const firstInput = modal.querySelector('input, select, textarea, button');
+            if (firstInput) firstInput.focus({preventScroll: true});
+            return false;
+        }
+
+        function closeCollaborationModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.hidden = true;
+            return false;
+        }
+
+        function closeCollaborationModalOnBackdrop(event) {
+            if (event.target?.classList?.contains('collab-modal')) {
+                event.target.hidden = true;
+            }
         }
 
         function renderCollabRole(participant, slug, index) {
