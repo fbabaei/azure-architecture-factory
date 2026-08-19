@@ -1841,6 +1841,130 @@
             background: #fafcff;
         }
 
+        .collab-shell {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .collab-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.7rem;
+            align-items: end;
+        }
+
+        .collab-toolbar label {
+            display: grid;
+            gap: 0.25rem;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .collab-toolbar select {
+            border: 1px solid #c9dced;
+            border-radius: 8px;
+            padding: 0.5rem 0.6rem;
+            background: #ffffff;
+            color: #123b5d;
+            font-size: 0.88rem;
+        }
+
+        .collab-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .collab-panel {
+            border: 1px solid #dbe7f3;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 0.85rem;
+            box-shadow: 0 8px 20px rgba(18, 50, 74, 0.08);
+        }
+
+        .collab-panel h4 {
+            margin: 0 0 0.45rem;
+            color: #123b5d;
+            font-size: 0.95rem;
+        }
+
+        .collab-meta {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        .collab-role-list,
+        .collab-artifact-list,
+        .collab-decision-list {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .collab-role,
+        .collab-artifact,
+        .collab-decision,
+        .collab-work-item {
+            border: 1px solid #e1ecf6;
+            border-radius: 8px;
+            background: #f8fbff;
+            padding: 0.55rem;
+        }
+
+        .collab-role strong,
+        .collab-decision strong,
+        .collab-work-item strong {
+            display: block;
+            color: #123b5d;
+            font-size: 0.8rem;
+            margin-bottom: 0.18rem;
+        }
+
+        .collab-work-board {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .collab-work-lane {
+            border: 1px solid #dbe7f3;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 0.55rem;
+        }
+
+        .collab-lane-title {
+            color: #005a9e;
+            font-size: 0.72rem;
+            font-weight: 850;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .collab-artifact {
+            color: #005a9e;
+            font-size: 0.78rem;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .collab-artifact:hover,
+        .collab-artifact:focus-visible {
+            background: #eef6ff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+            .collab-toolbar,
+            .collab-grid,
+            .collab-work-board {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .project-header {
             display: flex;
             justify-content: space-between;
@@ -4148,6 +4272,7 @@
                 <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)"><span class="service-tab-icon" aria-hidden="true">📦</span>AI Apps & Agents as a Service</a>
             </div>
             <a class="workspace-chip" href="#projects-workspace">Projects</a>
+            <a class="workspace-chip" href="#collaboration-workspace">Collaborate</a>
             <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
             <a class="workspace-chip" href="#assist-workspace">Assist</a>
         </div>
@@ -4688,6 +4813,40 @@
                     </div>
                 </section>
             </div>
+                </div>
+            </section>
+
+            <section id="collaboration-workspace" class="workspace-card" aria-label="Project Collaboration workspace">
+                <div class="workspace-card-header" onclick="expandWorkspaceCard('collaboration-workspace', event)">
+                    <div>
+                        <h3 class="workspace-card-title">Project Collaboration Workspace</h3>
+                        <p class="workspace-card-subtitle">Shared project home, roles, work board, artifacts, and decision log.</p>
+                    </div>
+                    <button type="button" class="workspace-card-toggle" onclick="collapseWorkspaceCard('collaboration-workspace', event)">Hide</button>
+                </div>
+                <div class="workspace-card-body">
+                    <div class="context-help-block">
+                        <h4>What can I do here?</h4>
+                        <p class="appzone-note">Pick a project and use this space to align participants, track work, review generated artifacts, and record decisions. This MVP reads the existing project feed; persistent project collaboration records can be added later.</p>
+                    </div>
+                    <div class="collab-shell">
+                        <div class="collab-toolbar">
+                            <label for="collab-project-select">
+                                Project
+                                <select id="collab-project-select" onchange="renderCollaborationWorkspace()">
+                                    <option value="">Loading projects...</option>
+                                </select>
+                            </label>
+                            <a class="start-here-plan-link" href="docs/PROJECT_COLLABORATION_WORKSPACE.md" target="_blank" rel="noopener">Workspace guide</a>
+                        </div>
+                        <div id="collab-workspace-content" class="collab-grid">
+                            <div class="empty-state" style="grid-column:1 / -1;">
+                                <div class="empty-state-icon">🤝</div>
+                                <h3>No project selected</h3>
+                                <p>Select a project to open its collaboration workspace.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -8114,6 +8273,8 @@
                 updateStats(visibleProjects);
                 updateProjectViewToggle(allProjects);
                 updateMainCopilotButton(allProjects);
+                populateCollaborationProjectSelect(allProjects);
+                renderCollaborationWorkspace();
                 window._portalProjectSlugs = allProjects.map(p => p.slug).filter(Boolean);
                 populateProjectSelect('brd-target-project-slug', 'Create new project');
                 updateArchitectureIntakeHints();
@@ -8126,6 +8287,8 @@
             } catch (error) {
                 console.error('Error loading projects:', error);
                 updateMainCopilotButton([]);
+                populateCollaborationProjectSelect([]);
+                renderCollaborationWorkspace();
                 document.getElementById('projects-container').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">⚠️</div>
@@ -8176,6 +8339,138 @@
 
         function getVisibleProjects(projects) {
             return showAllProjects ? projects : getLatestProjects(projects);
+        }
+
+        function populateCollaborationProjectSelect(projects) {
+            const select = document.getElementById('collab-project-select');
+            if (!select) return;
+            const current = select.value;
+            const latest = getLatestProjects(projects || [])[0];
+            const options = (projects || []).map(project => {
+                const value = escapeHtml(project.slug || '');
+                const label = escapeHtml(project.title || project.slug || 'Untitled project');
+                return `<option value="${value}">${label}</option>`;
+            }).join('');
+            select.innerHTML = options || '<option value="">No projects available</option>';
+            if (current && (projects || []).some(project => project.slug === current)) {
+                select.value = current;
+            } else if (latest?.slug) {
+                select.value = latest.slug;
+            }
+        }
+
+        function getCollaborationProject() {
+            const select = document.getElementById('collab-project-select');
+            const selectedSlug = select?.value;
+            return (allProjects || []).find(project => project.slug === selectedSlug) || getLatestProjects(allProjects || [])[0] || null;
+        }
+
+        function renderCollaborationWorkspace() {
+            const host = document.getElementById('collab-workspace-content');
+            if (!host) return;
+            const project = getCollaborationProject();
+            if (!project) {
+                host.innerHTML = `
+                    <div class="empty-state" style="grid-column:1 / -1;">
+                        <div class="empty-state-icon">🤝</div>
+                        <h3>No project selected</h3>
+                        <p>Submit a BRD or select an existing project to open a shared collaboration space.</p>
+                    </div>`;
+                return;
+            }
+
+            const links = project.links || {};
+            const slug = project.slug || '';
+            const title = escapeHtml(project.title || slug || 'Untitled project');
+            const status = escapeHtml(project.status || 'Unknown');
+            const generatedFrom = escapeHtml(project.generatedFrom || 'Unknown source');
+            const generatedAt = project.generatedAt ? new Date(project.generatedAt).toLocaleString() : 'Unknown date';
+            const readme = links.readme || (slug ? `projects/${slug}/README.md` : '');
+            const architectureOverview = links.architectureOverview || (slug ? `projects/${slug}/docs/architecture-overview.md` : '');
+            const diagram = links.diagram || (slug ? `projects/${slug}/diagrams/${slug}.drawio` : '');
+            const deploy = slug ? `projects/${slug}/DEPLOY.md` : '';
+            const traceability = links.traceability || '';
+            const artifactLinks = [
+                ['README', readme],
+                ['Architecture overview', architectureOverview],
+                ['Diagram', diagram],
+                ['Deployment guide', deploy],
+                ['Traceability matrix', traceability],
+            ].filter(([, href]) => Boolean(href));
+
+            host.innerHTML = `
+                <section class="collab-panel">
+                    <h4>Project Home</h4>
+                    <div class="collab-meta"><strong>${title}</strong></div>
+                    <div class="collab-meta">Status: ${status}</div>
+                    <div class="collab-meta">Generated from: ${generatedFrom}</div>
+                    <div class="collab-meta">Last generated: ${escapeHtml(generatedAt)}</div>
+                    <div class="collab-meta">Current milestone: Review generated artifacts and assign owners for validation.</div>
+                </section>
+                <section class="collab-panel">
+                    <h4>People & Roles</h4>
+                    <div class="collab-role-list">
+                        ${renderCollabRole('Project owner', window._currentUser?.name || window._currentUser?.userDetails || 'Assign owner', 'Accountable for goals, scope, and stakeholder alignment.')}
+                        ${renderCollabRole('Architect', 'Assign architect', 'Reviews architecture, tradeoffs, WAF/CAF alignment, and design decisions.')}
+                        ${renderCollabRole('Implementer', 'Assign implementer', 'Owns code, infrastructure, deployment package, and fixes.')}
+                        ${renderCollabRole('Reviewer / approver', 'Assign approver', 'Approves readiness, security, cost, and production gate decisions.')}
+                    </div>
+                </section>
+                <section class="collab-panel" style="grid-column:1 / -1;">
+                    <h4>Work Board</h4>
+                    <div class="collab-work-board">
+                        ${renderCollabLane('To do', [
+                            'Assign project owner and reviewers',
+                            'Confirm target environment and constraints',
+                        ])}
+                        ${renderCollabLane('In progress', [
+                            'Review generated architecture and artifacts',
+                            'Validate cost, observability, and traceability',
+                        ])}
+                        ${renderCollabLane('Blocked / decisions', [
+                            'Record open decisions and approval needs',
+                            'Resolve missing requirements before deployment',
+                        ])}
+                        ${renderCollabLane('Done / evidence', [
+                            status,
+                            artifactLinks.length ? `${artifactLinks.length} artifact links available` : 'No artifact links found',
+                        ])}
+                    </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Artifacts</h4>
+                    <div class="collab-artifact-list">
+                        ${artifactLinks.map(([label, href]) => `<a class="collab-artifact" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`).join('') || '<div class="collab-meta">No artifact links available yet.</div>'}
+                        ${slug ? `<a class="collab-artifact" href="#" onclick="openCodeBrowser('${escapeHtml(slug)}', '${title}'); return false;">Code browser</a>` : ''}
+                        ${slug ? `<a class="collab-artifact" href="#" onclick="openCostModal('${escapeHtml(slug)}', '${title}'); return false;">Cost tools</a>` : ''}
+                        ${slug ? `<a class="collab-artifact" href="#" onclick="openProjectOperations(event, '${escapeHtml(slug)}'); return false;">Operations</a>` : ''}
+                    </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Decision Log</h4>
+                    <div class="collab-decision-list">
+                        ${renderCollabDecision('Architecture baseline', 'Proposed', 'Review architecture overview and diagram before implementation approval.')}
+                        ${renderCollabDecision('Deployment readiness', 'Pending evidence', 'Confirm environment, identity, networking, observability, and rollback plan.')}
+                        ${renderCollabDecision('Production gate', 'Not started', 'Requires named owner approval and readiness evidence before deployment.')}
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderCollabRole(role, person, description) {
+            return `<div class="collab-role"><strong>${escapeHtml(role)} · ${escapeHtml(person)}</strong><div class="collab-meta">${escapeHtml(description)}</div></div>`;
+        }
+
+        function renderCollabLane(title, items) {
+            return `
+                <div class="collab-work-lane">
+                    <div class="collab-lane-title">${escapeHtml(title)}</div>
+                    ${(items || []).map(item => `<div class="collab-work-item"><strong>${escapeHtml(item)}</strong></div>`).join('')}
+                </div>`;
+        }
+
+        function renderCollabDecision(title, status, rationale) {
+            return `<div class="collab-decision"><strong>${escapeHtml(title)} · ${escapeHtml(status)}</strong><div class="collab-meta">${escapeHtml(rationale)}</div></div>`;
         }
 
         function toggleProjectView() {
