@@ -368,22 +368,6 @@
             box-shadow: 0 28px 80px rgba(5, 23, 39, 0.32);
         }
 
-        body.main-workspace-all-view .workspace-modal-view:not(.main-workspace-hidden) {
-            position: static;
-            inset: auto;
-            z-index: auto;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.95);
-            border-color: var(--border);
-            border-radius: 10px;
-            padding: 0;
-            box-shadow: 0 10px 24px rgba(18, 50, 74, 0.06);
-        }
-
-        body.main-workspace-all-view .workspace-modal-close {
-            display: none;
-        }
-
         .workspace-modal-close {
             border: 1px solid #9cc1e2;
             background: #ffffff;
@@ -396,6 +380,49 @@
             padding: 0.35rem 0.85rem;
         }
 
+        .all-workspace-modal-launchers {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0 0 1.25rem;
+        }
+
+        .all-workspace-modal-launchers.main-workspace-hidden {
+            display: none !important;
+        }
+
+        .all-workspace-launch-card {
+            border: 1px solid #b8d2ea;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+            color: #124267;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0.85rem 1rem;
+            text-align: left;
+            box-shadow: 0 8px 20px rgba(18, 50, 74, 0.08);
+        }
+
+        .all-workspace-launch-card strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .all-workspace-launch-card span {
+            color: var(--text-secondary);
+            display: block;
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+
+        .all-workspace-launch-card:hover,
+        .all-workspace-launch-card:focus-visible {
+            border-color: var(--primary);
+            outline: none;
+            transform: translateY(-1px);
+        }
+
         @media (max-width: 900px) {
             .main-workspace-tabs {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -404,6 +431,10 @@
             .workspace-modal-view:not(.main-workspace-hidden) {
                 inset: 4.8rem 0.5rem 0.5rem;
                 padding: 0.5rem;
+            }
+
+            .all-workspace-modal-launchers {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -4710,6 +4741,16 @@
                 <span>Factory helper, docs, and CSA companion.</span>
             </button>
         </div>
+        <div id="all-workspace-modal-launchers" class="all-workspace-modal-launchers">
+            <button type="button" class="all-workspace-launch-card" onclick="return selectMainWorkspaceTab('analyze-workspace', event)">
+                <strong>Open Analyze as popup</strong>
+                <span>Review architecture patterns, rationale, and deeper analysis without crowding the page.</span>
+            </button>
+            <button type="button" class="all-workspace-launch-card" onclick="return selectMainWorkspaceTab('assist-workspace', event)">
+                <strong>Open Assist as popup</strong>
+                <span>Use Factory Helper, documentation shortcuts, and CSA companion on demand.</span>
+            </button>
+        </div>
 
         <!-- Design Analysis -->
         <section id="design-analysis">
@@ -8510,8 +8551,13 @@
                 MAIN_WORKSPACE_IDS.forEach(id => {
                     const card = document.getElementById(id);
                     if (!card) return;
-                    card.classList.remove('main-workspace-hidden', 'collapsed');
+                    if (MAIN_WORKSPACE_MODAL_IDS.has(id)) {
+                        card.classList.add('main-workspace-hidden', 'collapsed');
+                    } else {
+                        card.classList.remove('main-workspace-hidden', 'collapsed');
+                    }
                 });
+                document.getElementById('all-workspace-modal-launchers')?.classList.remove('main-workspace-hidden');
                 activeInlineMainWorkspace = 'all-workspaces';
                 updateMainWorkspaceTabs('all-workspaces');
                 history.pushState(null, '', '#all-workspaces');
@@ -8523,6 +8569,7 @@
             const target = document.getElementById(cardId);
             if (!target) return false;
             document.body.classList.remove('main-workspace-all-view');
+            document.getElementById('all-workspace-modal-launchers')?.classList.add('main-workspace-hidden');
 
             if (MAIN_WORKSPACE_MODAL_IDS.has(cardId)) {
                 ensureWorkspaceModalClose(target);
