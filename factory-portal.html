@@ -8914,6 +8914,7 @@
                     <div class="collab-meta">Owner: ${escapeHtml(item.owner || 'Unassigned')} · Requested: ${escapeHtml(item.requestedAt || '')}</div>
                     <div class="collab-badge-row"><span class="collab-badge ${item.status === 'created' ? 'success' : 'warning'}">${escapeHtml(item.status || 'requested')}</span></div>
                     <div class="collab-card-actions">
+                        <button type="button" class="collab-mini-button" onclick="return provisionTeamsSpace('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}')">Create with Graph</button>
                         <button type="button" class="collab-mini-button" onclick="return updateTeamProvisioningStatus('${escapeHtml(slug)}', ${index}, 'created')">Mark created</button>
                         <button type="button" class="collab-mini-button" onclick="return removeCollaborationCollectionItem('${escapeHtml(slug)}', 'teamProvisioningRequests', ${index})">Remove</button>
                     </div>
@@ -8928,6 +8929,7 @@
                     <div class="collab-meta">Recipient: ${escapeHtml(item.recipient || 'Unassigned')} · Priority: ${escapeHtml(item.priority || 'normal')}${item.dueDate ? ` · due ${escapeHtml(item.dueDate)}` : ''}</div>
                     <div class="collab-badge-row"><span class="collab-badge ${item.status === 'completed' ? 'success' : 'warning'}">${escapeHtml(item.status || 'pending')}</span></div>
                     <div class="collab-card-actions">
+                        <button type="button" class="collab-mini-button" onclick="return deliverNotificationRequest('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}')">Send</button>
                         <button type="button" class="collab-mini-button" onclick="return updateNotificationRequestStatus('${escapeHtml(slug)}', ${index}, 'completed')">Complete</button>
                         <button type="button" class="collab-mini-button" onclick="return removeCollaborationCollectionItem('${escapeHtml(slug)}', 'notificationRequests', ${index})">Remove</button>
                     </div>
@@ -9117,6 +9119,42 @@
             });
         }
 
+        async function provisionTeamsSpace(slug, requestId) {
+            const state = await loadCollaborationState(slug) || {};
+            const request = (state.teamProvisioningRequests || []).find(item => item.id === requestId);
+            if (!request) return false;
+            const mode = window.prompt('Create a Teams group chat or channel? Enter "chat" or "channel".', 'chat') || 'chat';
+            const payload = {requestId, mode: mode.trim().toLowerCase()};
+            if (payload.mode === 'channel') {
+                payload.teamId = window.prompt('Microsoft Teams team ID where the channel should be created', '') || '';
+                payload.channelName = window.prompt('Channel name', request.label || `${slug} collaboration`) || request.label || `${slug} collaboration`;
+            } else {
+                const members = window.prompt('Member email addresses for the Teams chat, comma-separated. Include at least two users.', request.owner || '') || '';
+                payload.memberEmails = members.split(',').map(value => value.trim()).filter(Boolean);
+                payload.ownerEmail = request.owner || payload.memberEmails[0] || '';
+                payload.topic = request.label || `${slug} collaboration`;
+            }
+            const summary = payload.mode === 'channel'
+                ? `Create Teams channel "${payload.channelName}" in team ${payload.teamId}.`
+                : `Create Teams group chat "${payload.topic}" with: ${(payload.memberEmails || []).join(', ')}.`;
+            if (!window.confirm(`${summary}\n\nThis creates a Microsoft Teams resource through Microsoft Graph. Continue?`)) return false;
+            try {
+                const response = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(slug)}/collaboration/teams-provision`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                collaborationStateBySlug[slug] = data.state;
+                await renderCollaborationWorkspace();
+                showNotification('Teams space created and linked.');
+            } catch (error) {
+                showNotification(`Teams provisioning failed: ${error.message}`, true);
+            }
+            return false;
+        }
+
         function addNotificationRequest(event, slug) {
             event.preventDefault();
             const form = event.currentTarget;
@@ -9143,6 +9181,32 @@
             return mutateCollaborationState(slug, state => {
                 state.notificationRequests = (state.notificationRequests || []).map((item, i) => i === index ? {...item, status, completedAt: new Date().toISOString().slice(0, 10)} : item);
             });
+        }
+
+        async function deliverNotificationRequest(slug, requestId) {
+            const state = await loadCollaborationState(slug) || {};
+            const request = (state.notificationRequests || []).find(item => item.id === requestId);
+            if (!request) return false;
+            const recipient = window.prompt('Recipient email address', request.recipient || '') || '';
+            const subject = window.prompt('Notification subject', `Action requested: ${request.action || 'Project collaboration update'}`) || '';
+            const body = window.prompt('Notification body', request.action || 'Please review the project collaboration workspace.') || '';
+            if (!recipient || !subject || !body) return false;
+            if (!window.confirm(`Send notification email to: ${recipient}\n\nSubject: ${subject}\n\n${body}\n\nContinue?`)) return false;
+            try {
+                const response = await fetch(`${API_BASE}/api/projects/${encodeURIComponent(slug)}/collaboration/notifications/deliver`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({requestId, recipient, subject, body}),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+                collaborationStateBySlug[slug] = data.state;
+                await renderCollaborationWorkspace();
+                showNotification('Notification delivered.');
+            } catch (error) {
+                showNotification(`Notification delivery failed: ${error.message}`, true);
+            }
+            return false;
         }
 
         function removeCollaborationCollectionItem(slug, collection, index) {
