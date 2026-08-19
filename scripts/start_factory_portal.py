@@ -262,6 +262,9 @@ def _portal_default_collaboration_state(slug: str) -> dict:
             {"id": "architecture-baseline", "title": "Architecture baseline", "status": "proposed", "owner": "", "rationale": "Review architecture overview and diagram before implementation approval.", "evidence": ""},
             {"id": "deployment-readiness", "title": "Deployment readiness", "status": "pending-evidence", "owner": "", "rationale": "Confirm environment, identity, networking, observability, and rollback plan.", "evidence": ""},
         ],
+        "teamLinks": [],
+        "discussionLinks": [],
+        "evidenceLinks": [],
         "notes": [],
     }
 
@@ -278,6 +281,9 @@ def _portal_load_collaboration_state(slug: str) -> dict | None:
     state.setdefault("participants", [])
     state.setdefault("workItems", [])
     state.setdefault("decisions", [])
+    state.setdefault("teamLinks", [])
+    state.setdefault("discussionLinks", [])
+    state.setdefault("evidenceLinks", [])
     state.setdefault("notes", [])
     return state
 
@@ -291,9 +297,12 @@ def _portal_normalize_collaboration_state(slug: str, payload: dict) -> dict:
         "participants": payload.get("participants") if isinstance(payload.get("participants"), list) else current.get("participants", []),
         "workItems": payload.get("workItems") if isinstance(payload.get("workItems"), list) else current.get("workItems", []),
         "decisions": payload.get("decisions") if isinstance(payload.get("decisions"), list) else current.get("decisions", []),
+        "teamLinks": payload.get("teamLinks") if isinstance(payload.get("teamLinks"), list) else current.get("teamLinks", []),
+        "discussionLinks": payload.get("discussionLinks") if isinstance(payload.get("discussionLinks"), list) else current.get("discussionLinks", []),
+        "evidenceLinks": payload.get("evidenceLinks") if isinstance(payload.get("evidenceLinks"), list) else current.get("evidenceLinks", []),
         "notes": payload.get("notes") if isinstance(payload.get("notes"), list) else current.get("notes", []),
     }
-    for collection_name in ("participants", "workItems", "decisions", "notes"):
+    for collection_name in ("participants", "workItems", "decisions", "teamLinks", "discussionLinks", "evidenceLinks", "notes"):
         normalized_items = []
         for item in next_state.get(collection_name, []):
             if isinstance(item, dict):
