@@ -2029,6 +2029,16 @@
             padding: 0.12rem 0.42rem;
         }
 
+        .collab-badge.warning {
+            background: #fff4ce;
+            color: #8a5a00;
+        }
+
+        .collab-badge.success {
+            background: #dff6dd;
+            color: #107c10;
+        }
+
         .collab-share-summary {
             white-space: pre-wrap;
             border: 1px solid #dbe7f3;
@@ -8677,8 +8687,13 @@
             const teamLinks = Array.isArray(state.teamLinks) ? state.teamLinks : [];
             const discussionLinks = Array.isArray(state.discussionLinks) ? state.discussionLinks : [];
             const evidenceLinks = Array.isArray(state.evidenceLinks) ? state.evidenceLinks : [];
+            const teamProvisioningRequests = Array.isArray(state.teamProvisioningRequests) ? state.teamProvisioningRequests : [];
+            const notificationRequests = Array.isArray(state.notificationRequests) ? state.notificationRequests : [];
+            const permissions = state.permissions && typeof state.permissions === 'object'
+                ? {owners: state.permissions.owners || [], editors: state.permissions.editors || [], viewers: state.permissions.viewers || []}
+                : {owners: [], editors: [], viewers: []};
             const notes = Array.isArray(state.notes) ? state.notes : [];
-            const summaryText = buildCollaborationSummary(project, state, {participants, workItems, decisions, teamLinks, discussionLinks, evidenceLinks, notes});
+            const summaryText = buildCollaborationSummary(project, state, {participants, workItems, decisions, teamLinks, discussionLinks, evidenceLinks, teamProvisioningRequests, notificationRequests, permissions, notes});
 
             host.innerHTML = `
                 <section class="collab-panel">
@@ -8759,6 +8774,11 @@
                 </section>
                 <section class="collab-panel">
                     <h4>Teams & Discussions</h4>
+                    <form class="collab-inline-form" onsubmit="return addTeamProvisioningRequest(event, '${escapeHtml(slug)}')">
+                        <input name="label" placeholder="Team/channel/chat request" required>
+                        <input name="owner" placeholder="Requester or owner">
+                        <button type="submit">Request Teams space</button>
+                    </form>
                     <form class="collab-inline-form" onsubmit="return addCollaborationLink(event, '${escapeHtml(slug)}', 'teamLinks')">
                         <input name="label" placeholder="Teams chat/channel label" required>
                         <input name="url" placeholder="Teams URL">
@@ -8770,9 +8790,43 @@
                         <button type="submit">Add discussion</button>
                     </form>
                     <div class="collab-artifact-list">
+                        ${renderTeamProvisioningRequests(teamProvisioningRequests, slug)}
                         ${renderCollabLinkList(teamLinks, slug, 'teamLinks')}
                         ${renderCollabLinkList(discussionLinks, slug, 'discussionLinks')}
                     </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Notifications & Action Requests</h4>
+                    <form class="collab-inline-form four-column" onsubmit="return addNotificationRequest(event, '${escapeHtml(slug)}')">
+                        <input name="recipient" placeholder="Owner/reviewer/approver" required>
+                        <input name="action" placeholder="Action needed" required>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <input name="dueDate" type="date" title="Due date">
+                        <button type="submit">Add request</button>
+                    </form>
+                    <div class="collab-artifact-list">
+                        ${renderNotificationRequests(notificationRequests, slug)}
+                    </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Collaboration Permissions</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationPermission(event, '${escapeHtml(slug)}')">
+                        <input name="principal" placeholder="user@contoso.com or group" required>
+                        <select name="role">
+                            <option value="viewers">Viewer</option>
+                            <option value="editors">Editor</option>
+                            <option value="owners">Owner</option>
+                        </select>
+                        <button type="submit">Grant</button>
+                    </form>
+                    <div class="collab-artifact-list">
+                        ${renderCollaborationPermissions(permissions, slug)}
+                    </div>
+                    <div class="collab-meta">Project owners and portal admins can edit by default. Editors and owners listed here can also update this workspace when Entra filtering is enabled.</div>
                 </section>
                 <section class="collab-panel">
                     <h4>Evidence Attachments</h4>
@@ -8851,6 +8905,44 @@
                 const link = href ? `<a class="collab-artifact" href="${href}" target="_blank" rel="noopener">${label}</a>` : `<div class="collab-artifact">${label}</div>`;
                 return `<div>${link}<button type="button" class="collab-mini-button" onclick="return removeCollaborationLink('${escapeHtml(slug)}', '${collection}', ${index})">Remove</button></div>`;
             }).join('') || '<div class="collab-meta">No links yet.</div>';
+        }
+
+        function renderTeamProvisioningRequests(items, slug) {
+            return (items || []).map((item, index) => `
+                <div class="collab-work-item">
+                    <strong>${escapeHtml(item.label || 'Teams space request')}</strong>
+                    <div class="collab-meta">Owner: ${escapeHtml(item.owner || 'Unassigned')} · Requested: ${escapeHtml(item.requestedAt || '')}</div>
+                    <div class="collab-badge-row"><span class="collab-badge ${item.status === 'created' ? 'success' : 'warning'}">${escapeHtml(item.status || 'requested')}</span></div>
+                    <div class="collab-card-actions">
+                        <button type="button" class="collab-mini-button" onclick="return updateTeamProvisioningStatus('${escapeHtml(slug)}', ${index}, 'created')">Mark created</button>
+                        <button type="button" class="collab-mini-button" onclick="return removeCollaborationCollectionItem('${escapeHtml(slug)}', 'teamProvisioningRequests', ${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('') || '<div class="collab-meta">No Teams provisioning requests yet.</div>';
+        }
+
+        function renderNotificationRequests(items, slug) {
+            return (items || []).map((item, index) => `
+                <div class="collab-work-item">
+                    <strong>${escapeHtml(item.action || 'Action request')}</strong>
+                    <div class="collab-meta">Recipient: ${escapeHtml(item.recipient || 'Unassigned')} · Priority: ${escapeHtml(item.priority || 'normal')}${item.dueDate ? ` · due ${escapeHtml(item.dueDate)}` : ''}</div>
+                    <div class="collab-badge-row"><span class="collab-badge ${item.status === 'completed' ? 'success' : 'warning'}">${escapeHtml(item.status || 'pending')}</span></div>
+                    <div class="collab-card-actions">
+                        <button type="button" class="collab-mini-button" onclick="return updateNotificationRequestStatus('${escapeHtml(slug)}', ${index}, 'completed')">Complete</button>
+                        <button type="button" class="collab-mini-button" onclick="return removeCollaborationCollectionItem('${escapeHtml(slug)}', 'notificationRequests', ${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('') || '<div class="collab-meta">No notification/action requests yet.</div>';
+        }
+
+        function renderCollaborationPermissions(permissions, slug) {
+            const rows = [];
+            ['owners', 'editors', 'viewers'].forEach(role => {
+                (permissions[role] || []).forEach((principal, index) => {
+                    rows.push(`<div class="collab-work-item"><strong>${escapeHtml(principal)}</strong><div class="collab-meta">${escapeHtml(role.slice(0, -1))}</div><button type="button" class="collab-mini-button" onclick="return removeCollaborationPermission('${escapeHtml(slug)}', '${role}', ${index})">Remove</button></div>`);
+                });
+            });
+            return rows.join('') || '<div class="collab-meta">No collaboration-specific permissions yet.</div>';
         }
 
         function safeCollabHref(value) {
@@ -9001,6 +9093,90 @@
             });
         }
 
+        function addTeamProvisioningRequest(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const label = form.elements.label.value.trim();
+            const owner = form.elements.owner.value.trim();
+            if (!label) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.teamProvisioningRequests = [...(state.teamProvisioningRequests || []), {
+                    id: `team-request-${Date.now()}`,
+                    label,
+                    owner,
+                    status: 'requested',
+                    requestedAt: new Date().toISOString().slice(0, 10),
+                }];
+            });
+        }
+
+        function updateTeamProvisioningStatus(slug, index, status) {
+            return mutateCollaborationState(slug, state => {
+                state.teamProvisioningRequests = (state.teamProvisioningRequests || []).map((item, i) => i === index ? {...item, status, completedAt: new Date().toISOString().slice(0, 10)} : item);
+            });
+        }
+
+        function addNotificationRequest(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const recipient = form.elements.recipient.value.trim();
+            const action = form.elements.action.value.trim();
+            const priority = form.elements.priority.value || 'normal';
+            const dueDate = form.elements.dueDate.value || '';
+            if (!recipient || !action) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.notificationRequests = [...(state.notificationRequests || []), {
+                    id: `notify-${Date.now()}`,
+                    recipient,
+                    action,
+                    priority,
+                    dueDate,
+                    status: 'pending',
+                    createdAt: new Date().toISOString().slice(0, 10),
+                }];
+            });
+        }
+
+        function updateNotificationRequestStatus(slug, index, status) {
+            return mutateCollaborationState(slug, state => {
+                state.notificationRequests = (state.notificationRequests || []).map((item, i) => i === index ? {...item, status, completedAt: new Date().toISOString().slice(0, 10)} : item);
+            });
+        }
+
+        function removeCollaborationCollectionItem(slug, collection, index) {
+            return mutateCollaborationState(slug, state => {
+                state[collection] = (state[collection] || []).filter((_, i) => i !== index);
+            });
+        }
+
+        function addCollaborationPermission(event, slug) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const principal = form.elements.principal.value.trim().toLowerCase();
+            const role = form.elements.role.value || 'viewers';
+            if (!principal) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state.permissions = state.permissions || {owners: [], editors: [], viewers: []};
+                state.permissions.owners = state.permissions.owners || [];
+                state.permissions.editors = state.permissions.editors || [];
+                state.permissions.viewers = state.permissions.viewers || [];
+                ['owners', 'editors', 'viewers'].forEach(key => {
+                    state.permissions[key] = (state.permissions[key] || []).filter(value => value !== principal);
+                });
+                state.permissions[role] = [...(state.permissions[role] || []), principal];
+            });
+        }
+
+        function removeCollaborationPermission(slug, role, index) {
+            return mutateCollaborationState(slug, state => {
+                state.permissions = state.permissions || {owners: [], editors: [], viewers: []};
+                state.permissions[role] = (state.permissions[role] || []).filter((_, i) => i !== index);
+            });
+        }
+
         function buildCollaborationSummary(project, state, view) {
             const lines = [];
             lines.push(`# ${project.title || project.slug || 'Project collaboration summary'}`);
@@ -9018,6 +9194,15 @@
             lines.push('');
             lines.push('## Links and evidence');
             [...(view.teamLinks || []), ...(view.discussionLinks || []), ...(view.evidenceLinks || [])].forEach(link => lines.push(`- ${link.label || 'Link'}${link.url ? `: ${link.url}` : ''}`));
+            lines.push('');
+            lines.push('## Teams provisioning');
+            (view.teamProvisioningRequests || []).forEach(item => lines.push(`- ${item.label || 'Teams space'}: ${item.status || 'requested'}${item.owner ? ` — ${item.owner}` : ''}`));
+            lines.push('');
+            lines.push('## Action requests');
+            (view.notificationRequests || []).forEach(item => lines.push(`- ${item.recipient || 'Recipient'}: ${item.action || 'Action needed'} — ${item.status || 'pending'}${item.dueDate ? ` — due ${item.dueDate}` : ''}`));
+            lines.push('');
+            lines.push('## Collaboration permissions');
+            ['owners', 'editors', 'viewers'].forEach(role => (view.permissions?.[role] || []).forEach(principal => lines.push(`- ${principal}: ${role.slice(0, -1)}`)));
             return lines.join('\n');
         }
 

@@ -265,6 +265,9 @@ def _portal_default_collaboration_state(slug: str) -> dict:
         "teamLinks": [],
         "discussionLinks": [],
         "evidenceLinks": [],
+        "teamProvisioningRequests": [],
+        "notificationRequests": [],
+        "permissions": {"owners": [], "editors": [], "viewers": []},
         "notes": [],
     }
 
@@ -284,6 +287,9 @@ def _portal_load_collaboration_state(slug: str) -> dict | None:
     state.setdefault("teamLinks", [])
     state.setdefault("discussionLinks", [])
     state.setdefault("evidenceLinks", [])
+    state.setdefault("teamProvisioningRequests", [])
+    state.setdefault("notificationRequests", [])
+    state.setdefault("permissions", {"owners": [], "editors": [], "viewers": []})
     state.setdefault("notes", [])
     return state
 
@@ -300,9 +306,12 @@ def _portal_normalize_collaboration_state(slug: str, payload: dict) -> dict:
         "teamLinks": payload.get("teamLinks") if isinstance(payload.get("teamLinks"), list) else current.get("teamLinks", []),
         "discussionLinks": payload.get("discussionLinks") if isinstance(payload.get("discussionLinks"), list) else current.get("discussionLinks", []),
         "evidenceLinks": payload.get("evidenceLinks") if isinstance(payload.get("evidenceLinks"), list) else current.get("evidenceLinks", []),
+        "teamProvisioningRequests": payload.get("teamProvisioningRequests") if isinstance(payload.get("teamProvisioningRequests"), list) else current.get("teamProvisioningRequests", []),
+        "notificationRequests": payload.get("notificationRequests") if isinstance(payload.get("notificationRequests"), list) else current.get("notificationRequests", []),
+        "permissions": payload.get("permissions") if isinstance(payload.get("permissions"), dict) else current.get("permissions", {"owners": [], "editors": [], "viewers": []}),
         "notes": payload.get("notes") if isinstance(payload.get("notes"), list) else current.get("notes", []),
     }
-    for collection_name in ("participants", "workItems", "decisions", "teamLinks", "discussionLinks", "evidenceLinks", "notes"):
+    for collection_name in ("participants", "workItems", "decisions", "teamLinks", "discussionLinks", "evidenceLinks", "teamProvisioningRequests", "notificationRequests", "notes"):
         normalized_items = []
         for item in next_state.get(collection_name, []):
             if isinstance(item, dict):
@@ -311,7 +320,36 @@ def _portal_normalize_collaboration_state(slug: str, payload: dict) -> dict:
                     for key, value in item.items()
                 })
         next_state[collection_name] = normalized_items[:100]
+    raw_permissions = next_state.get("permissions") if isinstance(next_state.get("permissions"), dict) else {}
+    next_state["permissions"] = {
+        key: [
+            str(value).strip().lower()[:240]
+            for value in raw_permissions.get(key, [])
+            if str(value).strip()
+        ][:100]
+        for key in ("owners", "editors", "viewers")
+    }
     return next_state
+
+
+def _portal_can_edit_collaboration(slug: str, state: dict, user: str | None) -> bool:
+    if AUTH_MODE != "entra":
+        return True
+    if _is_admin(user):
+        return True
+    normalized_user = (user or "").strip().lower()
+    if not normalized_user:
+        return False
+    if normalized_user in _project_owners(slug):
+        return True
+    permissions = state.get("permissions") if isinstance(state.get("permissions"), dict) else {}
+    editors = {
+        str(value).strip().lower()
+        for key in ("owners", "editors")
+        for value in permissions.get(key, [])
+        if str(value).strip()
+    }
+    return normalized_user in editors
 
 
 def _portal_app_pack_key(pack_id: str, version: str) -> str:
@@ -4206,6 +4244,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             return
         if not isinstance(payload, dict):
             self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+        current_state = _portal_load_collaboration_state(slug) or _portal_default_collaboration_state(slug)
+        if not _portal_can_edit_collaboration(slug, current_state, self._authorized_user()):
+            self._send_json({"error": "You do not have edit permission for this collaboration workspace"}, 403)
             return
         state = _portal_normalize_collaboration_state(slug, payload)
         _portal_write_json(_portal_collaboration_state_path(slug), state)
