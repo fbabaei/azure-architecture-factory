@@ -2040,16 +2040,41 @@
         }
 
         .collab-share-summary {
-            white-space: pre-wrap;
             border: 1px solid #dbe7f3;
             border-radius: 10px;
             background: #f8fbff;
             color: #123b5d;
-            font-size: 0.76rem;
+            font-size: 0.78rem;
             line-height: 1.45;
             max-height: 18rem;
             overflow: auto;
-            padding: 0.6rem;
+            padding: 0.8rem;
+        }
+
+        .collab-share-summary h3,
+        .collab-share-summary h4 {
+            margin: 0 0 0.45rem;
+            color: #123b5d;
+        }
+
+        .collab-share-summary h3 {
+            font-size: 1rem;
+        }
+
+        .collab-share-summary h4 {
+            border-top: 1px solid #dbe7f3;
+            font-size: 0.86rem;
+            margin-top: 0.8rem;
+            padding-top: 0.65rem;
+        }
+
+        .collab-share-summary p,
+        .collab-share-summary ul {
+            margin: 0.3rem 0 0.5rem;
+        }
+
+        .collab-share-summary ul {
+            padding-left: 1.15rem;
         }
 
         .collab-role strong,
@@ -8841,7 +8866,7 @@
                 </section>
                 <section class="collab-panel" style="grid-column:1 / -1;">
                     <h4>Export / Share View</h4>
-                    <div id="collab-summary-${escapeHtml(slug)}" class="collab-share-summary">${escapeHtml(summaryText)}</div>
+                    <div id="collab-summary-${escapeHtml(slug)}" class="collab-share-summary" data-markdown="${escapeHtml(summaryText)}">${renderCollaborationSummaryHtml(summaryText)}</div>
                 </section>
             `;
         }
@@ -9270,11 +9295,47 @@
             return lines.join('\n');
         }
 
+        function renderCollaborationSummaryHtml(markdown) {
+            const blocks = [];
+            let listItems = [];
+            const flushList = () => {
+                if (listItems.length) {
+                    blocks.push(`<ul>${listItems.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`);
+                    listItems = [];
+                }
+            };
+            String(markdown || '').split('\n').forEach(line => {
+                const text = line.trim();
+                if (!text) {
+                    flushList();
+                    return;
+                }
+                if (text.startsWith('# ')) {
+                    flushList();
+                    blocks.push(`<h3>${escapeHtml(text.slice(2))}</h3>`);
+                    return;
+                }
+                if (text.startsWith('## ')) {
+                    flushList();
+                    blocks.push(`<h4>${escapeHtml(text.slice(3))}</h4>`);
+                    return;
+                }
+                if (text.startsWith('- ')) {
+                    listItems.push(text.slice(2));
+                    return;
+                }
+                flushList();
+                blocks.push(`<p>${escapeHtml(text)}</p>`);
+            });
+            flushList();
+            return blocks.join('');
+        }
+
         async function copyCollaborationSummary(slug) {
             const node = document.getElementById(`collab-summary-${slug}`);
             if (!node) return false;
             try {
-                await navigator.clipboard.writeText(node.textContent || '');
+                await navigator.clipboard.writeText(node.dataset.markdown || node.innerText || '');
                 showNotification('Collaboration summary copied.');
             } catch (error) {
                 showNotification(`Copy failed: ${error.message}`, true);
