@@ -5176,7 +5176,7 @@
                                     <option value="">Loading projects...</option>
                                 </select>
                             </label>
-                            <a class="start-here-plan-link" href="docs/PROJECT_COLLABORATION_WORKSPACE.md" target="_blank" rel="noopener">Workspace guide</a>
+                            <a class="start-here-plan-link" href="/docs/PROJECT_COLLABORATION_WORKSPACE.md" target="_blank" rel="noopener">Workspace guide</a>
                         </div>
                         <div id="collab-workspace-content" class="collab-grid">
                             <div class="empty-state" style="grid-column:1 / -1;">
@@ -8822,14 +8822,10 @@
                     {role: 'Implementer', name: 'Assign implementer', description: 'Owns code, infrastructure, deployment package, and fixes.'},
                     {role: 'Reviewer / approver', name: 'Assign approver', description: 'Approves readiness, security, cost, and production gate decisions.'},
                 ];
+            const defaultWorkItems = getDefaultCollaborationWorkItems(artifactLinks.length);
             const workItems = Array.isArray(state.workItems) && state.workItems.length
                 ? state.workItems
-                : [
-                    {id: 'assign-owners', title: 'Assign project owner and reviewers', lane: 'todo', owner: '', status: 'open'},
-                    {id: 'review-artifacts', title: 'Review generated architecture and artifacts', lane: 'in_progress', owner: '', status: 'open'},
-                    {id: 'record-decisions', title: 'Record open decisions and approval needs', lane: 'blocked', owner: '', status: 'open'},
-                    {id: 'evidence', title: artifactLinks.length ? `${artifactLinks.length} artifact links available` : 'No artifact links found', lane: 'done', owner: '', status: 'done'},
-                ];
+                : defaultWorkItems;
             const decisions = Array.isArray(state.decisions) && state.decisions.length
                 ? state.decisions
                 : [
@@ -8882,6 +8878,9 @@
                             <input name="dueDate" type="date" title="Due date">
                             <button type="submit">Add work</button>
                         </form>
+                        <div class="collab-card-actions">
+                            <button type="button" class="collab-mini-button" onclick="return restoreDefaultCollaborationWorkItems('${escapeHtml(slug)}', ${artifactLinks.length})">Restore default board items</button>
+                        </div>
                         <div class="collab-work-board">
                             ${renderCollabLane('To do', workItems.filter(item => (item.lane || 'todo') === 'todo'), slug, 'todo')}
                             ${renderCollabLane('In progress', workItems.filter(item => item.lane === 'in_progress'), slug, 'in_progress')}
@@ -8975,6 +8974,15 @@
                     <div id="collab-summary-${escapeHtml(slug)}" class="collab-share-summary" data-markdown="${escapeHtml(summaryText)}">${renderCollaborationSummaryHtml(summaryText)}</div>
                 `)}
             `;
+        }
+
+        function getDefaultCollaborationWorkItems(artifactCount = 0) {
+            return [
+                {id: 'assign-owners', title: 'Assign project owner and reviewers', lane: 'todo', owner: '', status: 'open'},
+                {id: 'review-artifacts', title: 'Review generated architecture and artifacts', lane: 'in_progress', owner: '', status: 'open'},
+                {id: 'record-decisions', title: 'Record open decisions and approval needs', lane: 'blocked', owner: '', status: 'open'},
+                {id: 'evidence', title: artifactCount ? `${artifactCount} artifact links available` : 'No artifact links found', lane: 'done', owner: '', status: 'done'},
+            ];
         }
 
         function renderCollaborationModal(id, title, description, body) {
@@ -9207,6 +9215,16 @@
         function removeCollaborationWorkItem(slug, id) {
             return mutateCollaborationState(slug, state => {
                 state.workItems = (state.workItems || []).filter(item => item.id !== id);
+            });
+        }
+
+        function restoreDefaultCollaborationWorkItems(slug, artifactCount = 0) {
+            return mutateCollaborationState(slug, state => {
+                const existing = state.workItems || [];
+                const existingIds = new Set(existing.map(item => item.id).filter(Boolean));
+                const missingDefaults = getDefaultCollaborationWorkItems(artifactCount)
+                    .filter(item => !existingIds.has(item.id));
+                state.workItems = [...existing, ...missingDefaults];
             });
         }
 
