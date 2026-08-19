@@ -358,13 +358,37 @@
 
         .workspace-modal-view:not(.main-workspace-hidden) {
             position: fixed;
-            inset: 5.2rem 1.25rem 1.25rem;
+            inset: 0;
             z-index: 2600;
             overflow: auto;
-            background: rgba(248, 251, 255, 0.98);
+            background: rgba(5, 23, 39, 0.56);
+            border: 0;
+            border-radius: 0;
+            padding: 5.2rem 1.25rem 1.25rem;
+            box-shadow: none;
+        }
+
+        .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-header,
+        .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-body {
+            width: min(1080px, 96vw);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-header {
             border: 1px solid #bfd8ee;
-            border-radius: 18px;
-            padding: 0.9rem;
+            border-bottom: 0;
+            border-radius: 18px 18px 0 0;
+            cursor: default;
+            box-shadow: 0 18px 50px rgba(5, 23, 39, 0.22);
+        }
+
+        .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-body {
+            max-height: calc(100vh - 12rem);
+            overflow: auto;
+            background: #ffffff;
+            border: 1px solid #bfd8ee;
+            border-radius: 0 0 18px 18px;
             box-shadow: 0 28px 80px rgba(5, 23, 39, 0.32);
         }
 
@@ -429,8 +453,12 @@
             }
 
             .workspace-modal-view:not(.main-workspace-hidden) {
-                inset: 4.8rem 0.5rem 0.5rem;
-                padding: 0.5rem;
+                inset: 0;
+                padding: 4.8rem 0.5rem 0.5rem;
+            }
+
+            .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-body {
+                max-height: calc(100vh - 9rem);
             }
 
             .all-workspace-modal-launchers {
@@ -8681,7 +8709,7 @@
             switch (action) {
                 case 'csa':
                     openUserMapModal(event);
-                    window.setTimeout(() => toggleWorkspaceCard('assist-workspace', true), 150);
+                    window.setTimeout(() => selectMainWorkspaceTab('assist-workspace'), 150);
                     break;
                 case 'architecture':
                     setPrimaryServiceTab('build-workspace', { updateHash: true, scroll: true });
@@ -8716,6 +8744,9 @@
         function expandWorkspaceCard(cardId, event = null) {
             if (event) {
                 event.preventDefault();
+            }
+            if (MAIN_WORKSPACE_MODAL_IDS?.has(cardId)) {
+                return selectMainWorkspaceTab(cardId, event);
             }
             if (PRIMARY_SERVICE_CARD_IDS.includes(cardId)) {
                 return selectPrimaryServiceTab(cardId, event);
@@ -8771,7 +8802,7 @@
 
         function toggleDocsPanel(event, forceExpand = null) {
             if (event) event.preventDefault();
-            toggleWorkspaceCard('assist-workspace', true);
+            selectMainWorkspaceTab('assist-workspace');
             const docsSection = document.getElementById('docs-quick-links');
             if (!docsSection) return false;
             const shouldExpand = forceExpand === null
@@ -8786,7 +8817,7 @@
                 event.preventDefault();
             }
 
-            toggleWorkspaceCard('assist-workspace', true);
+            selectMainWorkspaceTab('assist-workspace');
 
             const csaSection = document.getElementById('csa-companion');
             if (!csaSection) return false;
