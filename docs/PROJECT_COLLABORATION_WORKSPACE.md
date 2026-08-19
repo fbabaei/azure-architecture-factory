@@ -26,6 +26,9 @@ The persisted state includes:
 - Teams/project communication links
 - meeting notes and discussion links
 - evidence links
+- Teams provisioning requests
+- notification/action requests
+- collaboration-specific permissions
 - notes
 
 The portal exposes this state through:
@@ -59,14 +62,17 @@ Implemented collaboration enhancements:
 - meeting notes and discussion links
 - evidence links for Waza evals, architecture reviews, deployment checks, cost reviews, and readiness reports
 - export/share summary that can be copied for project reviews
+- Teams provisioning request tracking
+- notification/action request tracking
+- collaboration-specific owners, editors, and viewers with server-side edit enforcement in Entra mode
 
 Remaining future enhancements:
 
-- live Teams chat/channel provisioning
-- owner/reviewer notifications
-- collaboration-specific edit permissions beyond the existing project visibility/owner model
+- live Microsoft Graph Teams chat/channel creation
+- live outbound Teams/email notifications to owners and reviewers
 
 ## Future phases
 
 - Add approval workflow history.
-- Add notification and assignment support.
+- Add Microsoft Graph-backed Teams provisioning.
+- Add outbound notification delivery after user-approved message templates are defined.
