@@ -294,6 +294,100 @@
             display: none;
         }
 
+        .main-workspace-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0.4rem 0 1.25rem;
+        }
+
+        .main-workspace-tab {
+            border: 1px solid #b8d2ea;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+            color: #124267;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0.85rem 1rem;
+            text-align: left;
+            box-shadow: 0 8px 20px rgba(18, 50, 74, 0.08);
+        }
+
+        .main-workspace-tab strong {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1.1;
+            margin-bottom: 0.18rem;
+        }
+
+        .main-workspace-tab span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+
+        .main-workspace-tab.active,
+        .main-workspace-tab:hover,
+        .main-workspace-tab:focus-visible {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .main-workspace-tab.active span,
+        .main-workspace-tab:hover span,
+        .main-workspace-tab:focus-visible span {
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        .main-workspace-hidden {
+            display: none !important;
+        }
+
+        .workspace-modal-view:not(.main-workspace-hidden) {
+            position: fixed;
+            inset: 1.25rem;
+            z-index: 2600;
+            overflow: auto;
+            background: rgba(248, 251, 255, 0.98);
+            border: 1px solid #bfd8ee;
+            border-radius: 18px;
+            padding: 0.9rem;
+            box-shadow: 0 28px 80px rgba(5, 23, 39, 0.32);
+        }
+
+        .workspace-modal-close {
+            border: 1px solid #9cc1e2;
+            background: #ffffff;
+            color: #124267;
+            border-radius: 999px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 800;
+            padding: 0.35rem 0.85rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-workspace-tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .workspace-modal-view:not(.main-workspace-hidden) {
+                inset: 0.5rem;
+                padding: 0.5rem;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .main-workspace-tabs {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .primary-service-card.collapsed {
             display: none;
         }
@@ -4407,7 +4501,7 @@
             </div>
         </section>
 
-        <section id="assist-workspace" class="workspace-card collapsed first-time-hide" aria-label="Assist workspace">
+        <section id="assist-workspace" class="workspace-card collapsed first-time-hide main-workspace-hidden workspace-modal-view" aria-label="Assist workspace">
             <div class="workspace-card-header" onclick="expandWorkspaceCard('assist-workspace', event)">
                 <div>
                     <h3 class="workspace-card-title">Assist Workspace</h3>
@@ -4567,10 +4661,25 @@
                 <a class="workspace-chip service-tab" data-service-tab="build-workspace" href="#build-workspace" role="tab" aria-controls="build-workspace" onclick="return selectPrimaryServiceTab('build-workspace', event)"><span class="service-tab-icon" aria-hidden="true">🏗️</span>Azure Architecture Factory</a>
                 <a class="workspace-chip service-tab active" data-service-tab="application-zone-workspace" href="#application-zone-workspace" role="tab" aria-controls="application-zone-workspace" aria-selected="true" onclick="return selectPrimaryServiceTab('application-zone-workspace', event)"><span class="service-tab-icon" aria-hidden="true">📦</span>AI Apps & Agents as a Service</a>
             </div>
-            <a class="workspace-chip" href="#projects-workspace">Projects</a>
-            <a class="workspace-chip" href="#collaboration-workspace">Collaborate</a>
-            <a class="workspace-chip" href="#analyze-workspace">Analyze</a>
-            <a class="workspace-chip" href="#assist-workspace">Assist</a>
+        </div>
+
+        <div class="main-workspace-tabs" role="tablist" aria-label="Project workspaces">
+            <button type="button" class="main-workspace-tab active" data-main-workspace-tab="projects-workspace" role="tab" aria-selected="true" onclick="return selectMainWorkspaceTab('projects-workspace', event)">
+                <strong>Projects</strong>
+                <span>Find generated projects and outputs.</span>
+            </button>
+            <button type="button" class="main-workspace-tab" data-main-workspace-tab="collaboration-workspace" role="tab" aria-selected="false" onclick="return selectMainWorkspaceTab('collaboration-workspace', event)">
+                <strong>Collaborate</strong>
+                <span>People, work board, evidence, decisions.</span>
+            </button>
+            <button type="button" class="main-workspace-tab" data-main-workspace-tab="analyze-workspace" role="tab" aria-selected="false" onclick="return selectMainWorkspaceTab('analyze-workspace', event)">
+                <strong>Analyze</strong>
+                <span>Architecture rationale and pattern deep dive.</span>
+            </button>
+            <button type="button" class="main-workspace-tab" data-main-workspace-tab="assist-workspace" role="tab" aria-selected="false" onclick="return selectMainWorkspaceTab('assist-workspace', event)">
+                <strong>Assist</strong>
+                <span>Factory helper, docs, and CSA companion.</span>
+            </button>
         </div>
 
         <!-- Design Analysis -->
@@ -5112,7 +5221,7 @@
                 </div>
             </section>
 
-            <section id="collaboration-workspace" class="workspace-card" aria-label="Project Collaboration workspace">
+            <section id="collaboration-workspace" class="workspace-card main-workspace-hidden" aria-label="Project Collaboration workspace">
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('collaboration-workspace', event)">
                     <div>
                         <h3 class="workspace-card-title">Project Collaboration Workspace</h3>
@@ -5557,7 +5666,7 @@
                 </div>
             </section>
 
-            <section id="analyze-workspace" class="workspace-card collapsed" aria-label="Analyze workspace">
+            <section id="analyze-workspace" class="workspace-card collapsed main-workspace-hidden workspace-modal-view" aria-label="Analyze workspace">
                 <div class="workspace-card-header" onclick="expandWorkspaceCard('analyze-workspace', event)">
                     <div>
                         <h3 class="workspace-card-title">Analyze Workspace</h3>
@@ -8337,6 +8446,81 @@
             return setPrimaryServiceTab(cardId, { updateHash: true, scroll: true });
         }
 
+        const MAIN_WORKSPACE_IDS = ['projects-workspace', 'collaboration-workspace', 'analyze-workspace', 'assist-workspace'];
+        const MAIN_WORKSPACE_MODAL_IDS = new Set(['analyze-workspace', 'assist-workspace']);
+        let activeInlineMainWorkspace = 'projects-workspace';
+
+        function ensureWorkspaceModalClose(card) {
+            if (!card || card.querySelector('.workspace-modal-close')) return;
+            const header = card.querySelector('.workspace-card-header');
+            if (!header) return;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'workspace-modal-close';
+            button.textContent = 'Back to workspace tabs';
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeMainWorkspaceModal(card.id);
+            });
+            header.appendChild(button);
+        }
+
+        function updateMainWorkspaceTabs(activeId) {
+            document.querySelectorAll('[data-main-workspace-tab]').forEach(tab => {
+                const isActive = tab.dataset.mainWorkspaceTab === activeId;
+                tab.classList.toggle('active', isActive);
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+        }
+
+        function selectMainWorkspaceTab(cardId, event = null) {
+            if (event) event.preventDefault();
+            if (!MAIN_WORKSPACE_IDS.includes(cardId)) return false;
+            const target = document.getElementById(cardId);
+            if (!target) return false;
+
+            if (MAIN_WORKSPACE_MODAL_IDS.has(cardId)) {
+                ensureWorkspaceModalClose(target);
+                target.classList.remove('main-workspace-hidden', 'collapsed');
+                updateMainWorkspaceTabs(cardId);
+                history.pushState(null, '', `#${cardId}`);
+                const close = target.querySelector('.workspace-modal-close');
+                if (close) close.focus({preventScroll: true});
+                return false;
+            }
+
+            activeInlineMainWorkspace = cardId;
+            MAIN_WORKSPACE_IDS.forEach(id => {
+                const card = document.getElementById(id);
+                if (!card) return;
+                if (id === cardId) {
+                    card.classList.remove('main-workspace-hidden', 'collapsed');
+                } else {
+                    card.classList.add('main-workspace-hidden');
+                    if (MAIN_WORKSPACE_MODAL_IDS.has(id)) card.classList.add('collapsed');
+                }
+            });
+            updateMainWorkspaceTabs(cardId);
+            history.pushState(null, '', `#${cardId}`);
+            target.scrollIntoView({behavior: 'smooth', block: 'start'});
+            return false;
+        }
+
+        function closeMainWorkspaceModal(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) card.classList.add('main-workspace-hidden', 'collapsed');
+            updateMainWorkspaceTabs(activeInlineMainWorkspace);
+            history.pushState(null, '', `#${activeInlineMainWorkspace}`);
+            return false;
+        }
+
+        function initializeMainWorkspaceTabs() {
+            const hash = (window.location.hash || '').replace(/^#/, '');
+            const initial = MAIN_WORKSPACE_IDS.includes(hash) ? hash : 'projects-workspace';
+            selectMainWorkspaceTab(initial);
+        }
+
         function setFirstTimeMode(enabled, event = null) {
             if (event) {
                 event.preventDefault();
@@ -9734,12 +9918,17 @@
             }
 
             if (hash === '#csa-companion' || hash === '#docs-quick-links' || hash === '#assist-workspace') {
-                toggleWorkspaceCard('assist-workspace', true);
+                selectMainWorkspaceTab('assist-workspace');
                 return;
             }
 
             if (hash === '#projects' || hash === '#projects-workspace') {
-                toggleWorkspaceCard('projects-workspace', true);
+                selectMainWorkspaceTab('projects-workspace');
+                return;
+            }
+
+            if (hash === '#collaboration-workspace') {
+                selectMainWorkspaceTab('collaboration-workspace');
                 return;
             }
 
@@ -9759,7 +9948,7 @@
             }
 
             if (hash === '#design-analysis' || hash.startsWith('#analysis-') || hash === '#analyze-workspace') {
-                toggleWorkspaceCard('analyze-workspace', true);
+                selectMainWorkspaceTab('analyze-workspace');
             }
         }
 
@@ -10807,8 +10996,16 @@
             initHeaderMoreMenu();
             promoteServiceWorkspaces();
             initializePrimaryServiceTabs();
+            initializeMainWorkspaceTabs();
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
+                    const openWorkspaceModal = MAIN_WORKSPACE_IDS
+                        .map(id => document.getElementById(id))
+                        .find(card => card && MAIN_WORKSPACE_MODAL_IDS.has(card.id) && !card.classList.contains('main-workspace-hidden'));
+                    if (openWorkspaceModal) {
+                        closeMainWorkspaceModal(openWorkspaceModal.id);
+                        return;
+                    }
                     const modal = document.getElementById('user-map-panel');
                     if (modal && !modal.hidden) {
                         closeUserMapModal(event);
