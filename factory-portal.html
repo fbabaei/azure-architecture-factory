@@ -296,9 +296,10 @@
 
         .main-workspace-tabs {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0.75rem;
             margin: 0.4rem 0 1.25rem;
+            scroll-margin-top: 6.5rem;
         }
 
         .main-workspace-tab {
@@ -347,9 +348,17 @@
             display: none !important;
         }
 
+        #projects-workspace,
+        #collaboration-workspace,
+        #analyze-workspace,
+        #assist-workspace,
+        .workspace-card {
+            scroll-margin-top: 6.5rem;
+        }
+
         .workspace-modal-view:not(.main-workspace-hidden) {
             position: fixed;
-            inset: 1.25rem;
+            inset: 5.2rem 1.25rem 1.25rem;
             z-index: 2600;
             overflow: auto;
             background: rgba(248, 251, 255, 0.98);
@@ -357,6 +366,22 @@
             border-radius: 18px;
             padding: 0.9rem;
             box-shadow: 0 28px 80px rgba(5, 23, 39, 0.32);
+        }
+
+        body.main-workspace-all-view .workspace-modal-view:not(.main-workspace-hidden) {
+            position: static;
+            inset: auto;
+            z-index: auto;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--border);
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 10px 24px rgba(18, 50, 74, 0.06);
+        }
+
+        body.main-workspace-all-view .workspace-modal-close {
+            display: none;
         }
 
         .workspace-modal-close {
@@ -377,7 +402,7 @@
             }
 
             .workspace-modal-view:not(.main-workspace-hidden) {
-                inset: 0.5rem;
+                inset: 4.8rem 0.5rem 0.5rem;
                 padding: 0.5rem;
             }
         }
@@ -4664,7 +4689,11 @@
         </div>
 
         <div class="main-workspace-tabs" role="tablist" aria-label="Project workspaces">
-            <button type="button" class="main-workspace-tab active" data-main-workspace-tab="projects-workspace" role="tab" aria-selected="true" onclick="return selectMainWorkspaceTab('projects-workspace', event)">
+            <button type="button" class="main-workspace-tab active" data-main-workspace-tab="all-workspaces" role="tab" aria-selected="true" onclick="return selectMainWorkspaceTab('all-workspaces', event)">
+                <strong>All</strong>
+                <span>Show every project workspace together.</span>
+            </button>
+            <button type="button" class="main-workspace-tab" data-main-workspace-tab="projects-workspace" role="tab" aria-selected="false" onclick="return selectMainWorkspaceTab('projects-workspace', event)">
                 <strong>Projects</strong>
                 <span>Find generated projects and outputs.</span>
             </button>
@@ -8448,7 +8477,7 @@
 
         const MAIN_WORKSPACE_IDS = ['projects-workspace', 'collaboration-workspace', 'analyze-workspace', 'assist-workspace'];
         const MAIN_WORKSPACE_MODAL_IDS = new Set(['analyze-workspace', 'assist-workspace']);
-        let activeInlineMainWorkspace = 'projects-workspace';
+        let activeInlineMainWorkspace = 'all-workspaces';
 
         function ensureWorkspaceModalClose(card) {
             if (!card || card.querySelector('.workspace-modal-close')) return;
@@ -8476,9 +8505,24 @@
 
         function selectMainWorkspaceTab(cardId, event = null) {
             if (event) event.preventDefault();
+            if (cardId === 'all-workspaces') {
+                document.body.classList.add('main-workspace-all-view');
+                MAIN_WORKSPACE_IDS.forEach(id => {
+                    const card = document.getElementById(id);
+                    if (!card) return;
+                    card.classList.remove('main-workspace-hidden', 'collapsed');
+                });
+                activeInlineMainWorkspace = 'all-workspaces';
+                updateMainWorkspaceTabs('all-workspaces');
+                history.pushState(null, '', '#all-workspaces');
+                document.querySelector('.main-workspace-tabs')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+                return false;
+            }
+
             if (!MAIN_WORKSPACE_IDS.includes(cardId)) return false;
             const target = document.getElementById(cardId);
             if (!target) return false;
+            document.body.classList.remove('main-workspace-all-view');
 
             if (MAIN_WORKSPACE_MODAL_IDS.has(cardId)) {
                 ensureWorkspaceModalClose(target);
@@ -8510,14 +8554,18 @@
         function closeMainWorkspaceModal(cardId) {
             const card = document.getElementById(cardId);
             if (card) card.classList.add('main-workspace-hidden', 'collapsed');
+            if (activeInlineMainWorkspace === 'all-workspaces') {
+                return selectMainWorkspaceTab('all-workspaces');
+            }
             updateMainWorkspaceTabs(activeInlineMainWorkspace);
             history.pushState(null, '', `#${activeInlineMainWorkspace}`);
+            document.querySelector('.main-workspace-tabs')?.scrollIntoView({behavior: 'smooth', block: 'start'});
             return false;
         }
 
         function initializeMainWorkspaceTabs() {
             const hash = (window.location.hash || '').replace(/^#/, '');
-            const initial = MAIN_WORKSPACE_IDS.includes(hash) ? hash : 'projects-workspace';
+            const initial = hash === 'all-workspaces' || MAIN_WORKSPACE_IDS.includes(hash) ? hash : 'all-workspaces';
             selectMainWorkspaceTab(initial);
         }
 
@@ -9911,6 +9959,11 @@
         function syncWorkspaceFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
             if (!hash) return;
+
+            if (hash === '#all-workspaces') {
+                selectMainWorkspaceTab('all-workspaces');
+                return;
+            }
 
             if (hash === '#intake' || hash === '#modernization' || hash === '#build-workspace') {
                 setPrimaryServiceTab('build-workspace', { scroll: true });
