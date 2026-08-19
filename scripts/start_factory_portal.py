@@ -4172,6 +4172,11 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         if request_path.startswith("/factory-templates/"):
             return self._serve_factory_template_file(request_path)
 
+        # Serve docs/*.md through the same rendered Markdown viewer used for
+        # factory-template guidance, instead of exposing raw Markdown source.
+        if request_path.startswith("/docs/") and request_path.endswith(".md"):
+            return self._serve_docs_markdown_file(request_path)
+
         # Default file serving
         return super().do_GET()
 
@@ -7693,6 +7698,83 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             self.wfile.write(content)
         except (OSError, IOError) as e:
             logger.error("Error serving factory template file %s: %s", file_path, e)
+            self.send_error(500, "Internal Server Error")
+
+    def _serve_docs_markdown_file(self, request_path: str):
+        rel_path = request_path[len("/docs/"):]
+        if ".." in rel_path or rel_path.startswith("/") or "\\" in rel_path:
+            self.send_error(400, "Invalid path")
+            return
+
+        docs_root = (FACTORY_REPO_ROOT / "docs").resolve()
+        file_path = (docs_root / rel_path).resolve()
+        if docs_root not in file_path.parents and file_path.parent != docs_root:
+            self.send_error(403, "Forbidden")
+            return
+        if not file_path.exists() or not file_path.is_file() or file_path.suffix != ".md":
+            self.send_error(404, "Not Found")
+            return
+
+        try:
+            markdown_text = file_path.read_text(encoding="utf-8")
+            markdown_json = json.dumps(markdown_text)
+            html_wrapper = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{html.escape(file_path.stem)}</title>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }}
+        .container {{ max-width: 900px; margin: 0 auto; padding: 40px 20px; background: white; min-height: 100vh; }}
+        h1, h2, h3, h4, h5, h6 {{ margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }}
+        h1 {{ font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }}
+        h2 {{ font-size: 1.5em; }}
+        h3 {{ font-size: 1.25em; }}
+        p {{ margin-bottom: 16px; }}
+        ul, ol {{ margin-left: 2em; margin-bottom: 16px; }}
+        li {{ margin-bottom: 8px; }}
+        code {{ background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; }}
+        pre {{ background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; margin-bottom: 16px; }}
+        pre code {{ background: none; padding: 0; }}
+        blockquote {{ border-left: 4px solid #ddd; padding-left: 16px; margin: 16px 0; color: #666; }}
+        table {{ border-collapse: collapse; width: 100%; margin: 16px 0; }}
+        th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+        th {{ background: #f6f8fa; font-weight: 600; }}
+        a {{ color: #0366d6; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+        .back-link {{ margin-bottom: 20px; }}
+        .back-link a {{ font-size: 0.9em; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="javascript:history.back()">← Back</a>
+        </div>
+        <div id="content"></div>
+    </div>
+    <script>
+        const md = new markdownit({{
+            html: false,
+            linkify: true,
+            typographer: true
+        }});
+        const markdown = {markdown_json};
+        document.getElementById('content').innerHTML = md.render(markdown);
+    </script>
+</body>
+</html>""".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", len(html_wrapper))
+            self.send_header("Cache-Control", "public, max-age=3600")
+            self.end_headers()
+            self.wfile.write(html_wrapper)
+        except (OSError, UnicodeDecodeError) as e:
+            logger.error("Error serving docs markdown file %s: %s", file_path, e)
             self.send_error(500, "Internal Server Error")
 
     def _resolve_project_root(self, slug: str) -> pathlib.Path | None:
