@@ -370,17 +370,24 @@
 
         .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-header,
         .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-body {
-            width: min(1080px, 96vw);
+            width: min(980px, 86vw);
             margin-left: auto;
             margin-right: auto;
+            transform: translate(var(--workspace-modal-x, 0px), var(--workspace-modal-y, 0px));
         }
 
         .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-header {
             border: 1px solid #bfd8ee;
             border-bottom: 0;
             border-radius: 18px 18px 0 0;
-            cursor: default;
+            cursor: grab;
             box-shadow: 0 18px 50px rgba(5, 23, 39, 0.22);
+            touch-action: none;
+            user-select: none;
+        }
+
+        .workspace-modal-view.workspace-modal-dragging > .workspace-card-header {
+            cursor: grabbing;
         }
 
         .workspace-modal-view:not(.main-workspace-hidden) > .workspace-card-body {
@@ -8547,21 +8554,101 @@
         const MAIN_WORKSPACE_IDS = ['projects-workspace', 'collaboration-workspace', 'analyze-workspace', 'assist-workspace'];
         const MAIN_WORKSPACE_MODAL_IDS = new Set(['analyze-workspace', 'assist-workspace']);
         let activeInlineMainWorkspace = 'all-workspaces';
+        let workspaceModalDragState = null;
 
         function ensureWorkspaceModalClose(card) {
-            if (!card || card.querySelector('.workspace-modal-close')) return;
+            if (!card) return;
             const header = card.querySelector('.workspace-card-header');
             if (!header) return;
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'workspace-modal-close';
-            button.textContent = 'Back to workspace tabs';
-            button.addEventListener('click', event => {
-                event.preventDefault();
-                event.stopPropagation();
-                closeMainWorkspaceModal(card.id);
-            });
-            header.appendChild(button);
+            if (!card.querySelector('.workspace-modal-close')) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'workspace-modal-close';
+                button.textContent = 'Back to workspace tabs';
+                button.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    closeMainWorkspaceModal(card.id);
+                });
+                header.appendChild(button);
+            }
+            if (!card.dataset.workspaceDragReady) {
+                header.addEventListener('pointerdown', startWorkspaceModalDrag);
+                header.addEventListener('pointermove', moveWorkspaceModalDrag);
+                header.addEventListener('pointerup', endWorkspaceModalDrag);
+                header.addEventListener('pointercancel', endWorkspaceModalDrag);
+                card.dataset.workspaceDragReady = 'true';
+            }
+        }
+
+        function workspaceModalOffset(card) {
+            return {
+                x: Number.parseFloat(card?.style.getPropertyValue('--workspace-modal-x')) || 0,
+                y: Number.parseFloat(card?.style.getPropertyValue('--workspace-modal-y')) || 0,
+            };
+        }
+
+        function setWorkspaceModalOffset(card, x, y) {
+            if (!card) return;
+            card.style.setProperty('--workspace-modal-x', `${Math.round(x)}px`);
+            card.style.setProperty('--workspace-modal-y', `${Math.round(y)}px`);
+        }
+
+        function startWorkspaceModalDrag(event) {
+            if (event.button !== undefined && event.button !== 0) return;
+            if (event.target?.closest?.('button, a, input, select, textarea')) return;
+            const card = event.currentTarget.closest('.workspace-modal-view');
+            const header = card?.querySelector('.workspace-card-header');
+            const body = card?.querySelector('.workspace-card-body');
+            if (!card || !header || !body || card.classList.contains('main-workspace-hidden')) return;
+            const headerRect = header.getBoundingClientRect();
+            const bodyRect = body.getBoundingClientRect();
+            const offset = workspaceModalOffset(card);
+            workspaceModalDragState = {
+                pointerId: event.pointerId,
+                card,
+                startX: event.clientX,
+                startY: event.clientY,
+                startOffsetX: offset.x,
+                startOffsetY: offset.y,
+                startRect: {
+                    left: Math.min(headerRect.left, bodyRect.left),
+                    top: Math.min(headerRect.top, bodyRect.top),
+                    right: Math.max(headerRect.right, bodyRect.right),
+                    bottom: Math.max(headerRect.bottom, bodyRect.bottom),
+                },
+            };
+            card.classList.add('workspace-modal-dragging');
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+        }
+
+        function moveWorkspaceModalDrag(event) {
+            const drag = workspaceModalDragState;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const margin = 12;
+            const candidateX = drag.startOffsetX + event.clientX - drag.startX;
+            const candidateY = drag.startOffsetY + event.clientY - drag.startY;
+            const dx = candidateX - drag.startOffsetX;
+            const dy = candidateY - drag.startOffsetY;
+            const minX = margin - drag.startRect.left + drag.startOffsetX;
+            const maxX = window.innerWidth - margin - drag.startRect.right + drag.startOffsetX;
+            const minY = margin - drag.startRect.top + drag.startOffsetY;
+            const maxY = window.innerHeight - margin - drag.startRect.bottom + drag.startOffsetY;
+            setWorkspaceModalOffset(
+                drag.card,
+                Math.max(minX, Math.min(candidateX, maxX)),
+                Math.max(minY, Math.min(candidateY, maxY)),
+            );
+            event.preventDefault();
+        }
+
+        function endWorkspaceModalDrag(event) {
+            const drag = workspaceModalDragState;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            event.currentTarget.releasePointerCapture?.(event.pointerId);
+            drag.card.classList.remove('workspace-modal-dragging');
+            workspaceModalDragState = null;
         }
 
         function updateMainWorkspaceTabs(activeId) {
