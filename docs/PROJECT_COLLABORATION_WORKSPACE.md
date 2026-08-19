@@ -30,6 +30,20 @@ The portal exposes this state through:
 - `GET /api/projects/{slug}/collaboration`
 - `POST /api/projects/{slug}/collaboration`
 
+## Onboarding an existing project
+
+Use **Project Collaboration Workspace > Onboard an existing project** to register a project that was created outside the portal.
+
+The portal posts to `POST /api/projects/onboard` and creates:
+
+- a project feed entry in `factory-projects.generated.json`
+- a lightweight `projects/<slug>/project-manifest.json`
+- starter project artifacts when links are not supplied
+- default per-project collaboration state
+- a best-effort owner assignment for Entra-filtered deployments
+
+After onboarding, the project appears in the collaboration project dropdown and can use the same participants, work board, artifact review, and decision log features as generated projects.
+
 ## Future phases
 
 - Integrate Teams channel/chat links.

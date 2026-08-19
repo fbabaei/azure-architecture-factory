@@ -192,6 +192,8 @@ AAPAAS_INSTANCES_DIR = AAPAAS_ROOT / "operations" / "instances"
 AAPAAS_HEALTH_DIR = AAPAAS_ROOT / "operations" / "health"
 AAPAAS_SCHEDULER_REPORT = AAPAAS_ROOT / "operations" / "scheduler" / "casewright-scheduler.generated.json"
 COLLABORATION_STATE_DIR = AAPAAS_ROOT / "operations" / "collaboration"
+PROJECT_FEED_PATH = FACTORY_REPO_ROOT / "factory-projects.generated.json"
+PROJECTS_DIR = FACTORY_REPO_ROOT / "projects"
 APPLICATION_ZONE_RUNTIME_INSTANCES: dict[str, dict] = {}
 # Optional: set this to a Teams Incoming Webhook URL to receive a notification
 # whenever a user submits a token request.
@@ -215,6 +217,23 @@ def _portal_write_json(path: pathlib.Path, data: dict) -> None:
 
 def _portal_safe_slug(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "").strip())[:120].strip("-")
+
+
+def _portal_text(value, limit: int = 240) -> str:
+    return str(value or "").strip()[:limit]
+
+
+def _portal_safe_artifact_link(value) -> str:
+    link = str(value or "").strip()
+    if not link:
+        return ""
+    if len(link) > 1000:
+        raise ValueError("Artifact links must be 1000 characters or fewer")
+    if re.match(r"^https?://", link, re.IGNORECASE):
+        return link
+    if link.startswith("//") or "\\" in link or ":" in link:
+        raise ValueError("Artifact links must be HTTPS URLs or safe relative portal paths")
+    return link.lstrip("/")
 
 
 def _portal_collaboration_state_path(slug: str) -> pathlib.Path:
@@ -4086,6 +4105,10 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
             if not self._require_auth_for_mutation():
                 return
             return self._handle_csa_copilot_ask()
+        if path == "/api/projects/onboard":
+            if not self._require_auth_for_mutation():
+                return
+            return self._handle_project_onboard()
         if path == "/api/application-zone/validate-inputs":
             return self._handle_application_zone_validate_inputs()
         if path == "/api/application-zone/instances":
@@ -4178,6 +4201,150 @@ class FactoryPortalHandler(SimpleHTTPRequestHandler):
         state = _portal_normalize_collaboration_state(slug, payload)
         _portal_write_json(_portal_collaboration_state_path(slug), state)
         self._send_json({"ok": True, "state": state}, 200)
+
+    def _handle_project_onboard(self):
+        content_length = self._safe_content_length()
+        if content_length is None:
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(body) if body else {}
+        except Exception as exc:
+            self._send_json({"error": f"Invalid request: {exc}"}, 400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "Request body must be a JSON object"}, 400)
+            return
+
+        title = _portal_text(payload.get("title"), 160)
+        if not title:
+            self._send_json({"error": "Project title is required"}, 400)
+            return
+        slug = _portal_safe_slug(payload.get("slug") or title).lower()
+        if not slug:
+            self._send_json({"error": "Project slug is required"}, 400)
+            return
+        if not _is_slug_visible(slug):
+            self._send_json({"error": "Project slug is not allowed by this deployment"}, 403)
+            return
+
+        status = _portal_text(payload.get("status") or "Onboarding", 80)
+        generated_from = _portal_text(payload.get("generatedFrom") or payload.get("source") or "Existing project onboarded through portal", 240)
+        summary = _portal_text(payload.get("summary"), 1200)
+        owner = _portal_text(payload.get("owner") or self._authorized_user(), 240)
+
+        raw_links = payload.get("links") if isinstance(payload.get("links"), dict) else {}
+        links: dict[str, str] = {}
+        try:
+            for key in ("readme", "architectureOverview", "diagram", "deploy", "traceability", "guideReport"):
+                safe_link = _portal_safe_artifact_link(raw_links.get(key))
+                if safe_link:
+                    links[key] = safe_link
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, 400)
+            return
+
+        project_root = PROJECTS_DIR / slug
+        docs_dir = project_root / "docs"
+        diagrams_dir = project_root / "diagrams"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        diagrams_dir.mkdir(parents=True, exist_ok=True)
+
+        default_links = {
+            "readme": f"projects/{slug}/README.md",
+            "architectureOverview": f"projects/{slug}/docs/architecture-overview.md",
+            "deploy": f"projects/{slug}/DEPLOY.md",
+            "traceability": f"projects/{slug}/docs/traceability-matrix.md",
+        }
+        for key, value in default_links.items():
+            links.setdefault(key, value)
+
+        now = _utcnow_iso()
+        readme_path = project_root / "README.md"
+        if not readme_path.exists():
+            readme_path.write_text(
+                f"# {title}\n\n"
+                "This existing project was onboarded through the AI Factory Services portal for collaboration tracking.\n\n"
+                f"- Status: {status}\n"
+                f"- Source: {generated_from}\n"
+                f"- Owner: {owner or 'Unassigned'}\n\n"
+                f"{summary}\n",
+                encoding="utf-8",
+            )
+        architecture_path = docs_dir / "architecture-overview.md"
+        if not architecture_path.exists():
+            architecture_path.write_text(
+                f"# Architecture overview\n\nAdd architecture context, scope, constraints, and review notes for {title}.\n",
+                encoding="utf-8",
+            )
+        deploy_path = project_root / "DEPLOY.md"
+        if not deploy_path.exists():
+            deploy_path.write_text(
+                f"# Deployment guide\n\nAdd environment, deployment, validation, and rollback notes for {title}.\n",
+                encoding="utf-8",
+            )
+        traceability_path = docs_dir / "traceability-matrix.md"
+        if not traceability_path.exists():
+            traceability_path.write_text(
+                "# Traceability matrix\n\n| Requirement | Artifact | Status |\n| --- | --- | --- |\n| Existing project onboarding | Collaboration workspace | Onboarded |\n",
+                encoding="utf-8",
+            )
+
+        manifest = {
+            "slug": slug,
+            "title": title,
+            "status": status,
+            "source_brd": generated_from,
+            "created_at": now,
+            "generation_options": {"onboardedExistingProject": True},
+            "links": links,
+            "onboarding": {
+                "source": generated_from,
+                "summary": summary,
+                "owner": owner,
+                "onboardedAt": now,
+            },
+        }
+        _portal_write_json(project_root / "project-manifest.json", manifest)
+
+        feed = _portal_read_json(PROJECT_FEED_PATH) or {}
+        projects = [p for p in (feed.get("projects") or []) if isinstance(p, dict)]
+        record = {
+            "slug": slug,
+            "title": title,
+            "status": status,
+            "generatedFrom": generated_from,
+            "generatedAt": now,
+            "options": {"onboardedExistingProject": True},
+            "links": links,
+            "implementationLanguage": _portal_text(payload.get("implementationLanguage"), 80),
+            "iacTool": _portal_text(payload.get("iacTool"), 80),
+        }
+        replaced = False
+        for index, existing in enumerate(projects):
+            if existing.get("slug") == slug:
+                projects[index] = {**existing, **record}
+                replaced = True
+                break
+        if not replaced:
+            projects.insert(0, record)
+        feed["generatedAt"] = now
+        feed["projects"] = projects
+        _portal_write_json(PROJECT_FEED_PATH, feed)
+
+        if owner:
+            _record_project_owner(slug, owner)
+
+        state = _portal_load_collaboration_state(slug)
+        self._send_json(
+            {
+                "ok": True,
+                "status": "updated" if replaced else "created",
+                "project": record,
+                "collaboration": state,
+            },
+            200 if replaced else 201,
+        )
 
     def do_OPTIONS(self):
         self.send_response(204)
