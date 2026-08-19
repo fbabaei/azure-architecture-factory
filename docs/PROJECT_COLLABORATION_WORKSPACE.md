@@ -23,6 +23,9 @@ The persisted state includes:
 - participants
 - work items
 - decisions
+- Teams/project communication links
+- meeting notes and discussion links
+- evidence links
 - notes
 
 The portal exposes this state through:
@@ -44,9 +47,26 @@ The portal posts to `POST /api/projects/onboard` and creates:
 
 After onboarding, the project appears in the collaboration project dropdown and can use the same participants, work board, artifact review, and decision log features as generated projects.
 
+## Collaboration recommendation coverage
+
+Implemented collaboration enhancements:
+
+- persistent per-project collaboration state
+- project-level Teams/chat/channel links
+- editable work board fields for owner, due date, status, blocker, and evidence
+- decision metadata for approver, date, rationale, status, and evidence
+- participant management with reviewer/approver flags
+- meeting notes and discussion links
+- evidence links for Waza evals, architecture reviews, deployment checks, cost reviews, and readiness reports
+- export/share summary that can be copied for project reviews
+
+Remaining future enhancements:
+
+- live Teams chat/channel provisioning
+- owner/reviewer notifications
+- collaboration-specific edit permissions beyond the existing project visibility/owner model
+
 ## Future phases
 
-- Integrate Teams channel/chat links.
 - Add approval workflow history.
-- Add Waza/eval evidence links.
 - Add notification and assignment support.

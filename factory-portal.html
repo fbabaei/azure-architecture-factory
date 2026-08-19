@@ -1932,6 +1932,14 @@
             margin: 0 0 0.65rem;
         }
 
+        .collab-inline-form.four-column {
+            grid-template-columns: 1.4fr 1fr 0.8fr 0.7fr auto;
+        }
+
+        .collab-inline-form.decision-form {
+            grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr auto;
+        }
+
         .collab-inline-form input,
         .collab-inline-form select {
             border: 1px solid #c9dced;
@@ -1998,6 +2006,42 @@
             padding: 0.55rem;
         }
 
+        .collab-card-actions {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.45rem;
+        }
+
+        .collab-badge-row {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            margin-top: 0.35rem;
+        }
+
+        .collab-badge {
+            border-radius: 999px;
+            background: #e8f3ff;
+            color: #005a9e;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 0.12rem 0.42rem;
+        }
+
+        .collab-share-summary {
+            white-space: pre-wrap;
+            border: 1px solid #dbe7f3;
+            border-radius: 10px;
+            background: #f8fbff;
+            color: #123b5d;
+            font-size: 0.76rem;
+            line-height: 1.45;
+            max-height: 18rem;
+            overflow: auto;
+            padding: 0.6rem;
+        }
+
         .collab-role strong,
         .collab-decision strong,
         .collab-work-item strong {
@@ -2046,6 +2090,8 @@
             .collab-onboard-form,
             .collab-toolbar,
             .collab-inline-form,
+            .collab-inline-form.four-column,
+            .collab-inline-form.decision-form,
             .collab-grid,
             .collab-work-board {
                 grid-template-columns: 1fr;
@@ -8628,6 +8674,11 @@
                     {id: 'deployment-readiness', title: 'Deployment readiness', status: 'pending-evidence', owner: '', rationale: 'Confirm environment, identity, networking, observability, and rollback plan.', evidence: ''},
                     {id: 'production-gate', title: 'Production gate', status: 'not-started', owner: '', rationale: 'Requires named owner approval and readiness evidence before deployment.', evidence: ''},
                 ];
+            const teamLinks = Array.isArray(state.teamLinks) ? state.teamLinks : [];
+            const discussionLinks = Array.isArray(state.discussionLinks) ? state.discussionLinks : [];
+            const evidenceLinks = Array.isArray(state.evidenceLinks) ? state.evidenceLinks : [];
+            const notes = Array.isArray(state.notes) ? state.notes : [];
+            const summaryText = buildCollaborationSummary(project, state, {participants, workItems, decisions, teamLinks, discussionLinks, evidenceLinks, notes});
 
             host.innerHTML = `
                 <section class="collab-panel">
@@ -8637,28 +8688,39 @@
                     <div class="collab-meta">Generated from: ${generatedFrom}</div>
                     <div class="collab-meta">Last generated: ${escapeHtml(generatedAt)}</div>
                     <div class="collab-meta">Current milestone: Review generated artifacts and assign owners for validation.</div>
+                    <div class="collab-card-actions">
+                        <button type="button" class="collab-mini-button" onclick="return copyCollaborationSummary('${escapeHtml(slug)}')">Copy summary</button>
+                    </div>
                 </section>
                 <section class="collab-panel">
                     <h4>People & Roles</h4>
-                    <form class="collab-inline-form" onsubmit="return addCollaborationParticipant(event, '${escapeHtml(slug)}')">
+                    <form class="collab-inline-form four-column" onsubmit="return addCollaborationParticipant(event, '${escapeHtml(slug)}')">
                         <input name="role" placeholder="Role" required>
                         <input name="name" placeholder="Name or group" required>
+                        <select name="kind">
+                            <option value="participant">Participant</option>
+                            <option value="reviewer">Reviewer</option>
+                            <option value="approver">Approver</option>
+                        </select>
+                        <input name="description" placeholder="Scope or note">
                         <button type="submit">Add</button>
                     </form>
                     <div class="collab-role-list">
-                        ${participants.map((participant, index) => renderCollabRole(participant.role || 'Role', participant.name || 'Assign person', participant.description || '', slug, index)).join('')}
+                        ${participants.map((participant, index) => renderCollabRole(participant, slug, index)).join('')}
                     </div>
                 </section>
                 <section class="collab-panel" style="grid-column:1 / -1;">
                     <h4>Work Board</h4>
-                    <form class="collab-inline-form" onsubmit="return addCollaborationWorkItem(event, '${escapeHtml(slug)}')">
+                    <form class="collab-inline-form four-column" onsubmit="return addCollaborationWorkItem(event, '${escapeHtml(slug)}')">
                         <input name="title" placeholder="New task, blocker, or action item" required>
+                        <input name="owner" placeholder="Owner">
                         <select name="lane">
                             <option value="todo">To do</option>
                             <option value="in_progress">In progress</option>
                             <option value="blocked">Blocked / decisions</option>
                             <option value="done">Done / evidence</option>
                         </select>
+                        <input name="dueDate" type="date" title="Due date">
                         <button type="submit">Add work</button>
                     </form>
                     <div class="collab-work-board">
@@ -8679,34 +8741,124 @@
                 </section>
                 <section class="collab-panel">
                     <h4>Decision Log</h4>
-                    <form class="collab-inline-form" onsubmit="return addCollaborationDecision(event, '${escapeHtml(slug)}')">
+                    <form class="collab-inline-form decision-form" onsubmit="return addCollaborationDecision(event, '${escapeHtml(slug)}')">
                         <input name="title" placeholder="Decision title" required>
-                        <input name="rationale" placeholder="Rationale or evidence link">
+                        <input name="rationale" placeholder="Rationale">
+                        <input name="approver" placeholder="Approver">
+                        <select name="status">
+                            <option value="proposed">Proposed</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="pending-evidence">Pending evidence</option>
+                        </select>
                         <button type="submit">Add decision</button>
                     </form>
                     <div class="collab-decision-list">
-                        ${decisions.map((decision, index) => renderCollabDecision(decision.title || 'Decision', decision.status || 'proposed', decision.rationale || '', slug, index)).join('')}
+                        ${decisions.map((decision, index) => renderCollabDecision(decision, slug, index)).join('')}
                     </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Teams & Discussions</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationLink(event, '${escapeHtml(slug)}', 'teamLinks')">
+                        <input name="label" placeholder="Teams chat/channel label" required>
+                        <input name="url" placeholder="Teams URL">
+                        <button type="submit">Add Teams link</button>
+                    </form>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationLink(event, '${escapeHtml(slug)}', 'discussionLinks')">
+                        <input name="label" placeholder="Meeting notes or thread" required>
+                        <input name="url" placeholder="Meeting, Loop, or thread URL">
+                        <button type="submit">Add discussion</button>
+                    </form>
+                    <div class="collab-artifact-list">
+                        ${renderCollabLinkList(teamLinks, slug, 'teamLinks')}
+                        ${renderCollabLinkList(discussionLinks, slug, 'discussionLinks')}
+                    </div>
+                </section>
+                <section class="collab-panel">
+                    <h4>Evidence Attachments</h4>
+                    <form class="collab-inline-form" onsubmit="return addCollaborationLink(event, '${escapeHtml(slug)}', 'evidenceLinks')">
+                        <input name="label" placeholder="Waza eval, review, check, or report" required>
+                        <input name="url" placeholder="Evidence URL or artifact path">
+                        <button type="submit">Add evidence</button>
+                    </form>
+                    <div class="collab-artifact-list">
+                        ${renderCollabLinkList(evidenceLinks, slug, 'evidenceLinks')}
+                    </div>
+                </section>
+                <section class="collab-panel" style="grid-column:1 / -1;">
+                    <h4>Export / Share View</h4>
+                    <div id="collab-summary-${escapeHtml(slug)}" class="collab-share-summary">${escapeHtml(summaryText)}</div>
                 </section>
             `;
         }
 
-        function renderCollabRole(role, person, description, slug, index) {
+        function renderCollabRole(participant, slug, index) {
+            const kind = participant.kind || 'participant';
+            const badges = [
+                kind !== 'participant' ? kind : '',
+                participant.isReviewer ? 'reviewer' : '',
+                participant.isApprover ? 'approver' : '',
+            ].filter(Boolean);
             const remove = slug !== undefined ? `<button type="button" class="collab-mini-button" onclick="return removeCollaborationParticipant('${escapeHtml(slug)}', ${index})">Remove</button>` : '';
-            return `<div class="collab-role"><strong>${escapeHtml(role)} · ${escapeHtml(person)}</strong><div class="collab-meta">${escapeHtml(description)}</div>${remove}</div>`;
+            return `<div class="collab-role">
+                <strong>${escapeHtml(participant.role || 'Role')} · ${escapeHtml(participant.name || 'Assign person')}</strong>
+                <div class="collab-meta">${escapeHtml(participant.description || '')}</div>
+                ${badges.length ? `<div class="collab-badge-row">${badges.map(badge => `<span class="collab-badge">${escapeHtml(badge)}</span>`).join('')}</div>` : ''}
+                <div class="collab-card-actions">
+                    <button type="button" class="collab-mini-button" onclick="return toggleCollaborationParticipantFlag('${escapeHtml(slug)}', ${index}, 'isReviewer')">Reviewer</button>
+                    <button type="button" class="collab-mini-button" onclick="return toggleCollaborationParticipantFlag('${escapeHtml(slug)}', ${index}, 'isApprover')">Approver</button>
+                    ${remove}
+                </div>
+            </div>`;
         }
 
         function renderCollabLane(title, items, slug, lane) {
             return `
                 <div class="collab-work-lane">
                     <div class="collab-lane-title">${escapeHtml(title)}</div>
-                    ${(items || []).map(item => `<div class="collab-work-item"><strong>${escapeHtml(item.title || item)}</strong><div class="collab-meta">${escapeHtml(item.owner || '')}${item.status ? ` · ${escapeHtml(item.status)}` : ''}</div><button type="button" class="collab-mini-button" onclick="return moveCollaborationWorkItem('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}', '${lane === 'done' ? 'todo' : 'done'}')">${lane === 'done' ? 'Reopen' : 'Mark done'}</button></div>`).join('') || '<div class="collab-meta">No items.</div>'}
+                    ${(items || []).map(item => `<div class="collab-work-item">
+                        <strong>${escapeHtml(item.title || item)}</strong>
+                        <div class="collab-meta">${escapeHtml(item.owner || 'Unassigned')}${item.status ? ` · ${escapeHtml(item.status)}` : ''}${item.dueDate ? ` · due ${escapeHtml(item.dueDate)}` : ''}</div>
+                        ${item.blocker ? `<div class="collab-meta">Blocker: ${escapeHtml(item.blocker)}</div>` : ''}
+                        ${item.evidence ? `<div class="collab-meta">Evidence: ${escapeHtml(item.evidence)}</div>` : ''}
+                        <div class="collab-card-actions">
+                            <button type="button" class="collab-mini-button" onclick="return editCollaborationWorkItem('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}')">Edit</button>
+                            <button type="button" class="collab-mini-button" onclick="return moveCollaborationWorkItem('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}', '${lane === 'done' ? 'todo' : 'done'}')">${lane === 'done' ? 'Reopen' : 'Mark done'}</button>
+                            <button type="button" class="collab-mini-button" onclick="return removeCollaborationWorkItem('${escapeHtml(slug)}', '${escapeHtml(item.id || '')}')">Remove</button>
+                        </div>
+                    </div>`).join('') || '<div class="collab-meta">No items.</div>'}
                 </div>`;
         }
 
-        function renderCollabDecision(title, status, rationale, slug, index) {
+        function renderCollabDecision(decision, slug, index) {
             const remove = slug !== undefined ? `<button type="button" class="collab-mini-button" onclick="return removeCollaborationDecision('${escapeHtml(slug)}', ${index})">Remove</button>` : '';
-            return `<div class="collab-decision"><strong>${escapeHtml(title)} · ${escapeHtml(status)}</strong><div class="collab-meta">${escapeHtml(rationale)}</div>${remove}</div>`;
+            return `<div class="collab-decision">
+                <strong>${escapeHtml(decision.title || 'Decision')} · ${escapeHtml(decision.status || 'proposed')}</strong>
+                <div class="collab-meta">${escapeHtml(decision.rationale || '')}</div>
+                <div class="collab-meta">${decision.approver ? `Approver: ${escapeHtml(decision.approver)}` : 'Approver: unassigned'}${decision.date ? ` · Date: ${escapeHtml(decision.date)}` : ''}</div>
+                ${decision.evidence ? `<div class="collab-meta">Evidence: ${escapeHtml(decision.evidence)}</div>` : ''}
+                <div class="collab-card-actions">
+                    <button type="button" class="collab-mini-button" onclick="return editCollaborationDecision('${escapeHtml(slug)}', ${index})">Edit</button>
+                    ${remove}
+                </div>
+            </div>`;
+        }
+
+        function renderCollabLinkList(items, slug, collection) {
+            return (items || []).map((item, index) => {
+                const label = escapeHtml(item.label || item.title || 'Link');
+                const href = escapeHtml(safeCollabHref(item.url || item.href || ''));
+                const link = href ? `<a class="collab-artifact" href="${href}" target="_blank" rel="noopener">${label}</a>` : `<div class="collab-artifact">${label}</div>`;
+                return `<div>${link}<button type="button" class="collab-mini-button" onclick="return removeCollaborationLink('${escapeHtml(slug)}', '${collection}', ${index})">Remove</button></div>`;
+            }).join('') || '<div class="collab-meta">No links yet.</div>';
+        }
+
+        function safeCollabHref(value) {
+            const href = String(value || '').trim();
+            if (!href) return '';
+            if (/^https?:\/\//i.test(href)) return href;
+            if (href.startsWith('//') || href.includes('\\') || href.includes(':')) return '';
+            return href.replace(/^\/+/, '');
         }
 
         async function mutateCollaborationState(slug, mutator) {
@@ -8727,10 +8879,25 @@
             const form = event.currentTarget;
             const role = form.elements.role.value.trim();
             const name = form.elements.name.value.trim();
+            const kind = form.elements.kind?.value || 'participant';
+            const description = form.elements.description?.value.trim() || 'Added from portal collaboration workspace.';
             if (!role || !name) return false;
             form.reset();
             return mutateCollaborationState(slug, state => {
-                state.participants = [...(state.participants || []), {role, name, description: 'Added from portal collaboration workspace.'}];
+                state.participants = [...(state.participants || []), {
+                    role,
+                    name,
+                    kind,
+                    description,
+                    isReviewer: kind === 'reviewer',
+                    isApprover: kind === 'approver',
+                }];
+            });
+        }
+
+        function toggleCollaborationParticipantFlag(slug, index, flag) {
+            return mutateCollaborationState(slug, state => {
+                state.participants = (state.participants || []).map((participant, i) => i === index ? {...participant, [flag]: !participant[flag]} : participant);
             });
         }
 
@@ -8744,11 +8911,13 @@
             event.preventDefault();
             const form = event.currentTarget;
             const title = form.elements.title.value.trim();
+            const owner = form.elements.owner?.value.trim() || '';
             const lane = form.elements.lane.value || 'todo';
+            const dueDate = form.elements.dueDate?.value || '';
             if (!title) return false;
             form.reset();
             return mutateCollaborationState(slug, state => {
-                state.workItems = [...(state.workItems || []), {id: `work-${Date.now()}`, title, lane, owner: '', status: 'open'}];
+                state.workItems = [...(state.workItems || []), {id: `work-${Date.now()}`, title, lane, owner, dueDate, status: lane === 'done' ? 'done' : 'open', blocker: '', evidence: ''}];
             });
         }
 
@@ -8758,15 +8927,53 @@
             });
         }
 
+        function editCollaborationWorkItem(slug, id) {
+            return mutateCollaborationState(slug, state => {
+                state.workItems = (state.workItems || []).map(item => {
+                    if (item.id !== id) return item;
+                    const title = window.prompt('Task title', item.title || '') ?? item.title;
+                    const owner = window.prompt('Owner', item.owner || '') ?? item.owner;
+                    const dueDate = window.prompt('Due date (YYYY-MM-DD)', item.dueDate || '') ?? item.dueDate;
+                    const status = window.prompt('Status', item.status || 'open') ?? item.status;
+                    const blocker = window.prompt('Blocker / risk', item.blocker || '') ?? item.blocker;
+                    const evidence = window.prompt('Evidence link or note', item.evidence || '') ?? item.evidence;
+                    return {...item, title: title.trim(), owner: owner.trim(), dueDate: dueDate.trim(), status: status.trim(), blocker: blocker.trim(), evidence: evidence.trim()};
+                });
+            });
+        }
+
+        function removeCollaborationWorkItem(slug, id) {
+            return mutateCollaborationState(slug, state => {
+                state.workItems = (state.workItems || []).filter(item => item.id !== id);
+            });
+        }
+
         function addCollaborationDecision(event, slug) {
             event.preventDefault();
             const form = event.currentTarget;
             const title = form.elements.title.value.trim();
             const rationale = form.elements.rationale.value.trim();
+            const approver = form.elements.approver?.value.trim() || '';
+            const status = form.elements.status?.value || 'proposed';
             if (!title) return false;
             form.reset();
             return mutateCollaborationState(slug, state => {
-                state.decisions = [...(state.decisions || []), {id: `decision-${Date.now()}`, title, status: 'proposed', owner: '', rationale, evidence: ''}];
+                state.decisions = [...(state.decisions || []), {id: `decision-${Date.now()}`, title, status, owner: approver, approver, date: new Date().toISOString().slice(0, 10), rationale, evidence: ''}];
+            });
+        }
+
+        function editCollaborationDecision(slug, index) {
+            return mutateCollaborationState(slug, state => {
+                state.decisions = (state.decisions || []).map((decision, i) => {
+                    if (i !== index) return decision;
+                    const title = window.prompt('Decision title', decision.title || '') ?? decision.title;
+                    const status = window.prompt('Decision status', decision.status || 'proposed') ?? decision.status;
+                    const approver = window.prompt('Approver', decision.approver || decision.owner || '') ?? (decision.approver || decision.owner || '');
+                    const date = window.prompt('Decision date (YYYY-MM-DD)', decision.date || '') ?? decision.date;
+                    const rationale = window.prompt('Rationale', decision.rationale || '') ?? decision.rationale;
+                    const evidence = window.prompt('Evidence link or note', decision.evidence || '') ?? decision.evidence;
+                    return {...decision, title: title.trim(), status: status.trim(), approver: approver.trim(), owner: approver.trim(), date: date.trim(), rationale: rationale.trim(), evidence: evidence.trim()};
+                });
             });
         }
 
@@ -8774,6 +8981,56 @@
             return mutateCollaborationState(slug, state => {
                 state.decisions = (state.decisions || []).filter((_, i) => i !== index);
             });
+        }
+
+        function addCollaborationLink(event, slug, collection) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const label = form.elements.label.value.trim();
+            const url = form.elements.url.value.trim();
+            if (!label) return false;
+            form.reset();
+            return mutateCollaborationState(slug, state => {
+                state[collection] = [...(state[collection] || []), {id: `${collection}-${Date.now()}`, label, url}];
+            });
+        }
+
+        function removeCollaborationLink(slug, collection, index) {
+            return mutateCollaborationState(slug, state => {
+                state[collection] = (state[collection] || []).filter((_, i) => i !== index);
+            });
+        }
+
+        function buildCollaborationSummary(project, state, view) {
+            const lines = [];
+            lines.push(`# ${project.title || project.slug || 'Project collaboration summary'}`);
+            lines.push(`Status: ${project.status || 'Unknown'}`);
+            lines.push(`Generated from: ${project.generatedFrom || 'Unknown source'}`);
+            lines.push('');
+            lines.push('## Participants');
+            (view.participants || []).forEach(p => lines.push(`- ${p.role || 'Role'}: ${p.name || 'Unassigned'}${p.isApprover ? ' (approver)' : p.isReviewer ? ' (reviewer)' : ''}`));
+            lines.push('');
+            lines.push('## Work');
+            (view.workItems || []).forEach(item => lines.push(`- [${item.status || item.lane || 'open'}] ${item.title || 'Work item'}${item.owner ? ` — ${item.owner}` : ''}${item.dueDate ? ` — due ${item.dueDate}` : ''}`));
+            lines.push('');
+            lines.push('## Decisions');
+            (view.decisions || []).forEach(d => lines.push(`- ${d.title || 'Decision'}: ${d.status || 'proposed'}${d.approver ? ` — approver ${d.approver}` : ''}${d.evidence ? ` — evidence ${d.evidence}` : ''}`));
+            lines.push('');
+            lines.push('## Links and evidence');
+            [...(view.teamLinks || []), ...(view.discussionLinks || []), ...(view.evidenceLinks || [])].forEach(link => lines.push(`- ${link.label || 'Link'}${link.url ? `: ${link.url}` : ''}`));
+            return lines.join('\n');
+        }
+
+        async function copyCollaborationSummary(slug) {
+            const node = document.getElementById(`collab-summary-${slug}`);
+            if (!node) return false;
+            try {
+                await navigator.clipboard.writeText(node.textContent || '');
+                showNotification('Collaboration summary copied.');
+            } catch (error) {
+                showNotification(`Copy failed: ${error.message}`, true);
+            }
+            return false;
         }
 
         function toggleProjectView() {
