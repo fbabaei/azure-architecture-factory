@@ -4106,6 +4106,15 @@
             display: none !important;
         }
 
+        body.first-time-mode #assist-workspace.workspace-modal-view:not(.main-workspace-hidden),
+        body.first-time-mode #assist-workspace.workspace-modal-view:not(.main-workspace-hidden) .first-time-hide {
+            display: block !important;
+        }
+
+        body.first-time-mode #assist-workspace.workspace-modal-view:not(.main-workspace-hidden) .docs-csa-row {
+            display: flex !important;
+        }
+
         .new-user-progress-panel,
         .environment-clarity-panel,
         .context-help-block {
@@ -8689,6 +8698,9 @@
             if (MAIN_WORKSPACE_MODAL_IDS.has(cardId)) {
                 ensureWorkspaceModalClose(target);
                 target.classList.remove('main-workspace-hidden', 'collapsed');
+                if (cardId === 'assist-workspace') {
+                    prepareAssistWorkspaceModal();
+                }
                 updateMainWorkspaceTabs(cardId);
                 history.pushState(null, '', `#${cardId}`);
                 const close = target.querySelector('.workspace-modal-close');
@@ -8729,6 +8741,21 @@
             const hash = (window.location.hash || '').replace(/^#/, '');
             const initial = hash === 'all-workspaces' || MAIN_WORKSPACE_IDS.includes(hash) ? hash : 'all-workspaces';
             selectMainWorkspaceTab(initial);
+        }
+
+        function prepareAssistWorkspaceModal() {
+            const helperPanel = document.getElementById('helper-panel');
+            const helperIcon = document.getElementById('helper-toggle-icon');
+            if (helperPanel) {
+                helperPanel.style.maxHeight = '460px';
+                helperPanel.style.opacity = '1';
+            }
+            if (helperIcon) {
+                helperIcon.style.transform = 'rotate(0deg)';
+            }
+            if (typeof renderHelperHome === 'function') {
+                renderHelperHome();
+            }
         }
 
         function setFirstTimeMode(enabled, event = null) {
